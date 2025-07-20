@@ -1,4 +1,7 @@
-# SUNA-ALSHAM AutoML + Learn Agent PyTorch Real
+# SUNA-ALSHAM AutoML + Learn Agent Pure Python
+# Consenso: Grok + GenSpark + Gemini + Validação Externa
+
+# Web Framework
 fastapi>=0.100.0
 uvicorn[standard]>=0.20.0
 pydantic>=2.0.0
@@ -10,11 +13,6 @@ optuna>=3.0.0
 scikit-learn>=1.2.0
 numpy>=1.20.0
 pandas>=1.5.0
-
-# Meta-Learning (Learn Agent) - PyTorch Real
-torch>=1.12.0
-torchvision>=0.13.0
-learn2learn>=0.1.7
 
 # Database
 supabase>=1.0.0
