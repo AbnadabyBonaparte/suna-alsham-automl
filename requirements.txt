@@ -1,5 +1,5 @@
-# SUNA-ALSHAM AutoML + Learn Agent - Requirements
-# Sistema Auto-Evolutivo com Meta-Learning MAML
+# SUNA-ALSHAM AutoML + Learn Agent - Requirements Corrigido
+# Sistema Auto-Evolutivo com Meta-Learning (Mock MAML)
 
 # Web Framework
 fastapi>=0.100.0
@@ -14,10 +14,9 @@ scikit-learn>=1.2.0
 numpy>=1.20.0
 pandas>=1.5.0
 
-# Meta-Learning (Learn Agent) - NEW
-learn2learn>=0.1.7
+# Meta-Learning (Learn Agent) - Mock version
 torch>=1.12.0
-torchvision>=0.13.0
+# learn2learn>=0.1.7  # Commented out - build issues on Railway
 
 # Database
 supabase>=1.0.0
