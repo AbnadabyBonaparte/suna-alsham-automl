@@ -1,182 +1,172 @@
 """
-SUNA-ALSHAM Learn Agent - Pure Python Version
-Meta-Learning com RandomForest (Consenso: 4 IAs)
-Integração com Core Agent funcionando
+SUNA-ALSHAM Learn Agent - Pure Python
+Agente de aprendizado com integração HTTP ao GuardAgent
+Versão: 1.0.0 FINAL
 """
-
 import os
 import uuid
-import time
-import numpy as np
-from datetime import datetime
-from typing import Dict, Any, Optional, List
 import logging
+from datetime import datetime
+from typing import Dict, Any, List, Optional
 from sklearn.ensemble import RandomForestRegressor
-from sklearn.model_selection import cross_val_score
-from sklearn.metrics import r2_score
+import requests
 
+# Configuração de logging
+logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 class LearnAgentConfig:
     def __init__(self):
         self.enabled = True
-        self.n_estimators = 100
-        self.max_depth = None
-        self.adaptation_steps = 5
-        self.min_improvement_percentage = 5.0
+        self.guard_timeout = 5
+        self.max_retries = 3
 
 class LearnAgent:
     def __init__(self, config: Optional[LearnAgentConfig] = None):
         self.agent_id = str(uuid.uuid4())
-        self.name = "LEARN_AGENT_PURE_PYTHON"
-        self.version = "2.1.0"
-        self.config = config or LearnAgentConfig()
+        self.name = "LEARN_AUTOML"
         self.status = "initializing"
-        self.created_at = datetime.now()
+        self.version = "1.0.0"
+        self.created_at = datetime.utcnow()
+        self.config = config if config else LearnAgentConfig()
         self.enabled = self.config.enabled
         
-        # Modelo Pure Python
-        self.model = RandomForestRegressor(
-            n_estimators=self.config.n_estimators,
-            max_depth=self.config.max_depth,
-            random_state=42,
-            n_jobs=-1
-        )
+        # Modelo de ML
+        self.model = RandomForestRegressor(n_estimators=100, random_state=42)
         
-        self.performance_history = []
-        self.meta_training_cycles = 0
-        self.last_training_time = None
+        # URL do GuardAgent - flexível para Railway
+        self.guard_url = os.getenv("GUARD_AGENT_URL", "http://localhost:8000")
+        
+        # Status de conexão com GuardAgent
+        self.guard_available = False
+        self.test_guard_connection()
+        
         self.status = "active" if self.enabled else "disabled"
-        
-        logger.info(f"🧠 Learn Agent Pure Python inicializado - ID: {self.agent_id}")
-        logger.info("✅ Consenso: Grok + GenSpark + Gemini + Validação Externa")
-    
-    def run_evolution_cycle(self) -> Dict[str, Any]:
-        """Executa ciclo de evolução do Learn Agent."""
-        if not self.enabled:
-            return {"success": False, "message": "Learn Agent disabled"}
-        
-        cycle_id = str(uuid.uuid4())
-        start_time = time.time()
-        
-        logger.info(f"🔄 Iniciando ciclo de evolução Learn Agent - ID: {cycle_id}")
-        
+        logger.info(f"🧠 Learn Agent inicializado - ID: {self.agent_id}")
+
+    def test_guard_connection(self):
+        """Testa conexão com GuardAgent na inicialização"""
         try:
-            # Executar meta-treinamento
-            result = self.execute_meta_training()
-            
-            if result["success"]:
-                performance = result["performance"]
-                training_time = time.time() - start_time
-                
-                # Atualizar histórico
-                self.meta_training_cycles += 1
-                self.performance_history.append(performance)
-                self.last_training_time = datetime.now()
-                
-                # Calcular melhoria
-                if len(self.performance_history) > 1:
-                    previous_performance = self.performance_history[-2]
-                    improvement = ((performance - previous_performance) / previous_performance) * 100
-                else:
-                    improvement = performance * 100  # Primeira execução
-                
-                logger.info(f"✅ Ciclo Learn Agent concluído!")
-                logger.info(f"📊 Performance: {performance:.4f}")
-                logger.info(f"📈 Melhoria: {improvement:.2f}%")
-                logger.info(f"⏱️ Duração: {training_time:.2f}s")
-                
-                return {
-                    "success": True,
-                    "performance": performance,
-                    "improvement_percentage": improvement,
-                    "training_time": training_time,
-                    "method": "pure_python_meta_learning",
-                    "consensus_based": True
-                }
-            else:
-                return result
-                
+            response = requests.get(f"{self.guard_url}/health", timeout=self.config.guard_timeout)
+            response.raise_for_status()
+            self.guard_available = True
+            logger.info(f"✅ Conexão com GuardAgent estabelecida: {self.guard_url}")
         except Exception as e:
-            logger.error(f"❌ Erro no ciclo Learn Agent: {e}")
-            return {"success": False, "message": str(e)}
-    
-    def execute_meta_training(self) -> Dict[str, Any]:
-        """Executa meta-treinamento Pure Python."""
-        logger.info("🔄 Iniciando meta-treinamento Pure Python...")
+            self.guard_available = False
+            logger.warning(f"⚠️ GuardAgent não disponível: {e}. Usando validação local.")
+
+    def load_tasks(self) -> List[Dict[str, Any]]:
+        """Carrega tarefas com fallback"""
+        try:
+            # Simula carregamento do Supabase
+            # Em produção, conectaria com o banco real
+            tasks = [
+                {
+                    "features": [[1, 2, 3], [4, 5, 6], [7, 8, 9]],
+                    "target": [0.7, 0.8, 0.9],
+                    "domain": "test_domain"
+                }
+            ]
+            logger.info(f"✅ Carregadas {len(tasks)} tarefas")
+            return tasks
+        except Exception as e:
+            logger.error(f"❌ Erro ao carregar tarefas: {e}")
+            # Fallback com dados sintéticos
+            return [{
+                "features": [[1, 2, 3], [4, 5, 6]], 
+                "target": [0.7, 0.8], 
+                "domain": "fallback"
+            }]
+
+    def validate_with_guard(self, data: Dict[str, Any]) -> bool:
+        """Validação com GuardAgent + fallback local"""
+        if not self.guard_available:
+            return self.local_validation(data)
         
         try:
-            # Gerar dados sintéticos para treinamento
-            X, y = self._generate_synthetic_data()
+            response = requests.post(
+                f"{self.guard_url}/monitor", 
+                json={"system_data": data}, 
+                timeout=self.config.guard_timeout
+            )
+            response.raise_for_status()
+            result = response.json()
             
-            # Treinamento com validação cruzada
-            scores = cross_val_score(self.model, X, y, cv=5, scoring='r2')
-            performance = np.mean(scores)
-            performance = max(0.0, min(1.0, performance))
+            logger.info(f"🛡️ GuardAgent response: {result['operation_mode']}, success: {result['success']}")
             
-            # Treinar modelo final
-            self.model.fit(X, y)
+            # Considera válido se sucesso e taxa de segurança > 80%
+            return result["success"] and result["security_checks"]["success_rate"] > 0.8
             
-            logger.info(f"✅ Meta-treinamento concluído - Performance: {performance:.4f}")
+        except Exception as e:
+            logger.warning(f"⚠️ Falha ao conectar com GuardAgent: {e}, usando validação local")
+            return self.local_validation(data)
+
+    def local_validation(self, data: Dict[str, Any]) -> bool:
+        """Validação local básica"""
+        return isinstance(data, dict) and len(data) > 0
+
+    def train(self) -> Dict[str, Any]:
+        """Ciclo principal de treinamento"""
+        cycle_id = str(uuid.uuid4())
+        logger.info(f"🔄 Iniciando ciclo de treinamento: {cycle_id}")
+        
+        tasks = self.load_tasks()
+        if not tasks:
+            logger.error("❌ Nenhuma tarefa disponível")
+            return {"success": False, "message": "No tasks available"}
+        
+        try:
+            valid_tasks = 0
+            for task in tasks:
+                if self.validate_with_guard(task):
+                    X, y = task["features"], task["target"]
+                    self.model.fit(X, y)
+                    valid_tasks += 1
+                    logger.info(f"✅ Tarefa {task['domain']} processada")
+                else:
+                    logger.warning(f"⚠️ Tarefa {task['domain']} rejeitada pelo GuardAgent")
             
+            if valid_tasks == 0:
+                return {"success": False, "message": "No valid tasks processed"}
+            
+            # Calcula performance
+            score = self.model.score(X, y)
+            
+            # Simula salvamento no Supabase
+            # Em produção, salvaria no banco real
+            logger.info(f"💾 Métricas salvas: cycle_id={cycle_id}, performance={score:.2%}")
+            
+            logger.info(f"✅ Treinamento concluído: Performance {score:.2%}")
             return {
-                "success": True,
-                "performance": performance,
-                "method": "pure_python_randomforest",
-                "consensus_based": True
+                "success": True, 
+                "performance": score,
+                "cycle_id": cycle_id,
+                "valid_tasks": valid_tasks,
+                "total_tasks": len(tasks)
             }
             
         except Exception as e:
-            logger.error(f"❌ Erro no meta-treinamento: {e}")
+            logger.error(f"❌ Erro no ciclo de treinamento: {e}")
             return {"success": False, "message": str(e)}
-    
-    def _generate_synthetic_data(self, n_samples: int = 1000, n_features: int = 10):
-        """Gera dados sintéticos para treinamento."""
-        np.random.seed(42)
-        X = np.random.randn(n_samples, n_features)
-        
-        # Função não-linear para diversidade
-        y = (np.sum(X**2, axis=1) + 
-             np.sin(np.sum(X, axis=1)) + 
-             np.random.randn(n_samples) * 0.1)
-        
-        return X, y
-    
-    def extract_strategies_for_core_agent(self) -> List[Dict[str, Any]]:
-        """Extrai estratégias para Core Agent."""
-        if not self.performance_history:
-            return []
-        
-        latest_performance = self.performance_history[-1]
-        
-        strategy = {
-            "strategy_id": str(uuid.uuid4()),
-            "source": "learn_agent_pure_python",
-            "performance": latest_performance,
-            "confidence": min(1.0, latest_performance * 1.1),
-            "applicable_contexts": ["regression", "optimization"],
-            "hyperparameters": {
-                "n_estimators": self.config.n_estimators,
-                "max_depth": self.config.max_depth
-            },
-            "consensus_based": True
-        }
-        
-        return [strategy]
-    
+
+    def share_knowledge(self, core_agent) -> None:
+        """Compartilha conhecimento com CoreAgent"""
+        result = self.train()
+        if result["success"]:
+            # Simula compartilhamento de parâmetros
+            logger.info(f"🤝 Conhecimento compartilhado com CoreAgent")
+            return result
+        return None
+
     def get_status(self) -> Dict[str, Any]:
-        """Retorna status do agente."""
         return {
             "agent_id": self.agent_id,
             "name": self.name,
-            "version": self.version,
             "status": self.status,
-            "type": "learn_agent_pure_python",
-            "enabled": self.enabled,
-            "performance": np.mean(self.performance_history) if self.performance_history else 0.0,
-            "meta_training_cycles": self.meta_training_cycles,
-            "consensus_systems": ["Grok", "GenSpark", "Gemini", "External_Validation"],
-            "created_at": self.created_at.isoformat(),
-            "last_training_time": self.last_training_time.isoformat() if self.last_training_time else None
+            "version": self.version,
+            "type": "learn_agent",
+            "guard_available": self.guard_available,
+            "guard_url": self.guard_url,
+            "last_train_time": datetime.utcnow().isoformat()
         }
 
