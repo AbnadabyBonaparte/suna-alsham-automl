@@ -179,3 +179,4 @@ class LearnAgent:
             "created_at": self.created_at.isoformat(),
             "last_training_time": self.last_training_time.isoformat() if self.last_training_time else None
         }
+
