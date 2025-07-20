@@ -1,86 +1,42 @@
 # =====================================================
-# SUNA-ALSHAM AutoML - Requirements (CORRIGIDO)
-# Sistema Auto-Evolutivo de IA com AutoML Real
+# SUNA-ALSHAM AutoML - Requirements MINIMALISTA
+# Versão simplificada para garantir build success
 # =====================================================
 
 # =====================================================
-# WEB FRAMEWORK E API
+# WEB FRAMEWORK (ESSENCIAL)
 # =====================================================
-fastapi==0.104.1
-uvicorn[standard]==0.24.0
-pydantic==2.5.0
-httpx==0.25.2
+fastapi>=0.100.0
+uvicorn[standard]>=0.20.0
+pydantic>=2.0.0
 
 # =====================================================
-# DATABASE E SUPABASE
+# AUTOML CORE (ESSENCIAL)
 # =====================================================
-supabase==2.3.0
-postgrest-py==0.13.0
-gotrue-py==2.3.0
-realtime-py==0.1.5
-storage3==0.7.4
+optuna>=3.0.0
+scikit-learn>=1.2.0
+numpy>=1.20.0
+pandas>=1.5.0
 
 # =====================================================
-# AUTOML E MACHINE LEARNING
+# DATABASE (SIMPLIFICADO)
 # =====================================================
-# Otimização Automática
-optuna==3.4.0
-hyperopt==0.2.7
-
-# Machine Learning Core
-scikit-learn==1.3.2
-numpy==1.24.4
-pandas==2.1.4
-
-# Tracking e Monitoramento
-mlflow==2.8.1
-prometheus-client==0.19.0
+supabase>=1.0.0
 
 # =====================================================
-# SCIENTIFIC COMPUTING
+# UTILITIES (ESSENCIAL)
 # =====================================================
-scipy==1.11.4
-statsmodels==0.14.0
+requests>=2.28.0
+python-dotenv>=1.0.0
+pyyaml>=6.0.0
 
 # =====================================================
-# UTILITIES E HELPERS
+# LOGGING (BÁSICO)
 # =====================================================
-python-dotenv==1.0.0
-pyyaml==6.0.1
-requests==2.31.0
-urllib3==2.1.0
+colorama>=0.4.0
 
 # =====================================================
-# LOGGING E MONITORING
+# PRODUCTION (OPCIONAL)
 # =====================================================
-structlog==23.2.0
-colorama==0.4.6
-
-# =====================================================
-# DEVELOPMENT TOOLS (OPTIONAL)
-# =====================================================
-pytest==7.4.3
-pytest-cov==4.1.0
-black==23.11.0
-flake8==6.1.0
-
-# =====================================================
-# PRODUCTION OPTIMIZATIONS
-# =====================================================
-gunicorn==21.2.0
-psutil==5.9.6
-
-# =====================================================
-# SECURITY
-# =====================================================
-cryptography==41.0.7
-bcrypt==4.1.2
-
-# =====================================================
-# COMPATIBILITY PINS
-# =====================================================
-# Ensure compatibility with Railway/Render
-setuptools>=65.0.0
-wheel>=0.38.0
-pip>=23.0.0
+gunicorn>=20.0.0
 
