@@ -1,12 +1,7 @@
 # =====================================================
-# SUNA-ALSHAM AutoML - Requirements
+# SUNA-ALSHAM AutoML - Requirements (CORRIGIDO)
 # Sistema Auto-Evolutivo de IA com AutoML Real
 # =====================================================
-
-# =====================================================
-# CORE PYTHON DEPENDENCIES
-# =====================================================
-python>=3.11.0
 
 # =====================================================
 # WEB FRAMEWORK E API
