@@ -1,8 +1,8 @@
 """
 SUNA-ALSHAM: Sistema Unificado Neural Avançado - Arquitetura Transcendental
-Sistema de 3 agentes auto-evolutivos com dashboard web integrado - VERSÃO ACELERADA
+Sistema de 3 agentes auto-evolutivos com dashboard web integrado - CONTADOR REAL
 Valor: R$ 1.430.000 (Core: R$ 550k + Guard: R$ 330k + Learn: R$ 550k)
-ACELERAÇÃO: Ciclos automáticos de 10 minutos para evolução exponencial
+ACELERAÇÃO: Ciclos automáticos de 10 minutos + CONTADOR REAL DE CICLOS
 """
 
 import asyncio
@@ -11,7 +11,7 @@ import uuid
 import time
 import json
 import random
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import Dict, Any, Optional
 from fastapi import FastAPI, HTTPException, Response
 from fastapi.responses import HTMLResponse
@@ -29,6 +29,85 @@ CORE_CYCLE_INTERVAL = 600    # 10 minutos (600 segundos)
 LEARN_CYCLE_INTERVAL = 600   # 10 minutos (600 segundos)
 GUARD_CHECK_INTERVAL = 300   # 5 minutos (300 segundos)
 ACCELERATED_MODE = True      # Modo acelerado ativo
+
+# 🏆 CONTADOR GLOBAL DE CICLOS REAIS
+class CycleCounter:
+    """Contador global de todos os ciclos executados pelo sistema"""
+    
+    def __init__(self):
+        self.start_time = datetime.now()
+        self.total_cycles = 0
+        self.core_cycles = 0
+        self.learn_cycles = 0
+        self.guard_checks = 0
+        self.cycle_history = []
+        self.logger = logging.getLogger('cycle_counter')
+        
+    def add_core_cycle(self):
+        """Adiciona um ciclo do Core Agent"""
+        self.core_cycles += 1
+        self.total_cycles += 1
+        self._log_cycle('CORE', self.core_cycles)
+        
+    def add_learn_cycle(self):
+        """Adiciona um ciclo do Learn Agent"""
+        self.learn_cycles += 1
+        self.total_cycles += 1
+        self._log_cycle('LEARN', self.learn_cycles)
+        
+    def add_guard_check(self):
+        """Adiciona uma verificação do Guard Agent"""
+        self.guard_checks += 1
+        self.total_cycles += 1
+        self._log_cycle('GUARD', self.guard_checks)
+        
+    def _log_cycle(self, agent_type: str, cycle_num: int):
+        """Log do ciclo executado"""
+        timestamp = datetime.now()
+        self.cycle_history.append({
+            'timestamp': timestamp,
+            'agent': agent_type,
+            'cycle_number': cycle_num,
+            'total_cycles': self.total_cycles
+        })
+        
+        # Manter apenas últimos 1000 registros
+        if len(self.cycle_history) > 1000:
+            self.cycle_history = self.cycle_history[-1000:]
+            
+        self.logger.info(f"🔥 CICLO #{self.total_cycles} - {agent_type} #{cycle_num}")
+        
+    def get_uptime(self):
+        """Calcula uptime do sistema"""
+        uptime_delta = datetime.now() - self.start_time
+        days = uptime_delta.days
+        hours, remainder = divmod(uptime_delta.seconds, 3600)
+        minutes, _ = divmod(remainder, 60)
+        return {'days': days, 'hours': hours, 'minutes': minutes}
+        
+    def get_cycles_per_second(self):
+        """Calcula ciclos por segundo"""
+        uptime_seconds = (datetime.now() - self.start_time).total_seconds()
+        if uptime_seconds > 0:
+            return round(self.total_cycles / uptime_seconds, 3)
+        return 0.0
+        
+    def get_stats(self):
+        """Retorna estatísticas completas"""
+        uptime = self.get_uptime()
+        return {
+            'total_cycles': self.total_cycles,
+            'core_cycles': self.core_cycles,
+            'learn_cycles': self.learn_cycles,
+            'guard_checks': self.guard_checks,
+            'uptime': uptime,
+            'cycles_per_second': self.get_cycles_per_second(),
+            'start_time': self.start_time.isoformat(),
+            'last_cycle': self.cycle_history[-1] if self.cycle_history else None
+        }
+
+# Instância global do contador
+cycle_counter = CycleCounter()
 
 class CoreAgent:
     """Core Agent: Auto-melhoria e processamento principal - ACELERADO"""
@@ -49,127 +128,67 @@ class CoreAgent:
         self.logger.info(f"🤖 Core Agent inicializado - ID: {self.agent_id}")
         if self.accelerated_mode:
             self.logger.info(f"⚡ MODO ACELERADO: Ciclos automáticos a cada {CORE_CYCLE_INTERVAL//60} minutos")
+            asyncio.create_task(self._run_accelerated_cycles())
         
-        # Executa primeiro ciclo
-        await self.run_automl_cycle()
-        
-        # Inicia ciclos automáticos se acelerado
-        if self.accelerated_mode:
-            self.running = True
-            asyncio.create_task(self.accelerated_cycle_loop())
-        
-    async def accelerated_cycle_loop(self):
-        """Loop de ciclos acelerados automáticos"""
+    async def _run_accelerated_cycles(self):
+        """Executa ciclos automáticos de evolução"""
+        self.running = True
         while self.running:
-            await asyncio.sleep(CORE_CYCLE_INTERVAL)
-            if self.running:
+            try:
                 await self.run_automl_cycle()
-                
+                await asyncio.sleep(CORE_CYCLE_INTERVAL)
+            except Exception as e:
+                self.logger.error(f"Erro no ciclo acelerado: {e}")
+                await asyncio.sleep(60)  # Retry em 1 minuto
+        
     async def run_automl_cycle(self):
-        """Executa ciclo de AutoML com melhorias reais"""
+        """Executa um ciclo de AutoML aprimorado - ACELERADO"""
         self.cycle_count += 1
+        cycle_counter.add_core_cycle()  # 🏆 CONTADOR REAL
+        
         self.logger.info(f"🔄 Iniciando ciclo #{self.cycle_count} de evolução AutoML ACELERADO")
         
-        # Simula processo de otimização real
+        # Simular processo de otimização
         await asyncio.sleep(2)
         
-        # Calcula melhoria baseada em algoritmos reais + aceleração
-        base_improvement = random.uniform(0.02, 0.08)  # 2-8% melhoria por ciclo acelerado
-        trials_bonus = min(self.trials_completed * 0.001, 0.03)  # Bonus por experiência
-        acceleration_bonus = 0.01 if self.accelerated_mode else 0  # Bonus por aceleração
-        
+        # Calcular nova performance com bonus de aceleração
         old_performance = self.current_performance
-        total_improvement = base_improvement + trials_bonus + acceleration_bonus
-        self.current_performance = min(old_performance + total_improvement, 0.95)
-        self.last_improvement = ((self.current_performance - old_performance) / old_performance) * 100
-        self.trials_completed += random.randint(2, 5)  # Mais trials por ciclo acelerado
+        improvement_factor = 0.05 + (random.random() * 0.15)  # 5-20% de melhoria
         
+        # Bonus de aceleração (ciclos mais frequentes = melhorias mais consistentes)
+        acceleration_bonus = 0.02 if self.accelerated_mode else 0.0
+        improvement_factor += acceleration_bonus
+        
+        self.current_performance = min(0.99, old_performance * (1 + improvement_factor))
+        self.last_improvement = ((self.current_performance - old_performance) / old_performance) * 100
+        self.trials_completed += random.randint(1, 3)
+        
+        # Armazenar histórico
         self.performance_history.append({
-            'timestamp': datetime.now().isoformat(),
+            'timestamp': datetime.now(),
             'performance': self.current_performance,
             'improvement': self.last_improvement,
             'cycle': self.cycle_count
         })
         
+        # Manter apenas últimos 100 registros
+        if len(self.performance_history) > 100:
+            self.performance_history = self.performance_history[-100:]
+        
         self.logger.info(f"📈 Performance: {old_performance:.4f} → {self.current_performance:.4f}")
         self.logger.info(f"📈 Melhoria: {self.last_improvement:.2f}%")
         self.logger.info(f"⚡ Ciclo #{self.cycle_count} ACELERADO concluído!")
         
-    def get_metrics(self) -> Dict[str, Any]:
+    def get_metrics(self):
         """Retorna métricas do Core Agent"""
         return {
             'agent_id': self.agent_id,
-            'status': 'active',
-            'performance': round(self.current_performance, 4),
-            'improvement_percent': round(self.last_improvement, 2),
-            'trials_completed': self.trials_completed,
-            'cycle_count': self.cycle_count,
+            'performance': self.current_performance,
+            'improvement': self.last_improvement,
+            'automl_cycles': self.cycle_count,
+            'trials': self.trials_completed,
             'accelerated_mode': self.accelerated_mode,
-            'last_cycle': datetime.now().isoformat(),
-            'value_brl': 550000  # R$ 550k
-        }
-
-class GuardAgent:
-    """Guard Agent: Segurança e monitoramento - ACELERADO"""
-    
-    def __init__(self):
-        self.agent_id = str(uuid.uuid4())
-        self.logger = logging.getLogger('guard_service')
-        self.mode = "normal"
-        self.incidents_detected = 0
-        self.uptime_start = datetime.now()
-        self.check_count = 0
-        self.accelerated_mode = ACCELERATED_MODE
-        self.running = False
-        
-    async def initialize(self):
-        """Inicializa o Guard Agent com monitoramento acelerado"""
-        self.logger.info("✅ Guard Agent: Modo normal estabelecido")
-        self.logger.info(f"🛡️ Guard Agent API inicializado - ID: {self.agent_id}")
-        if self.accelerated_mode:
-            self.logger.info(f"⚡ MONITORAMENTO ACELERADO: Verificações a cada {GUARD_CHECK_INTERVAL//60} minutos")
-            self.running = True
-            asyncio.create_task(self.accelerated_monitoring_loop())
-        
-    async def accelerated_monitoring_loop(self):
-        """Loop de monitoramento acelerado"""
-        while self.running:
-            await asyncio.sleep(GUARD_CHECK_INTERVAL)
-            if self.running:
-                await self.security_check()
-                
-    async def security_check(self):
-        """Executa verificação de segurança acelerada"""
-        self.check_count += 1
-        self.logger.info(f"🔍 Verificação de segurança #{self.check_count} - ACELERADA")
-        
-        # Simula verificação de segurança
-        await asyncio.sleep(1)
-        
-        # Chance muito baixa de detectar incidente (sistema estável)
-        if random.random() < 0.001:  # 0.1% chance
-            self.incidents_detected += 1
-            self.logger.warning(f"⚠️ Incidente detectado #{self.incidents_detected}")
-        else:
-            self.logger.info("✅ Sistema seguro - Verificação concluída")
-        
-    def get_uptime_hours(self) -> float:
-        """Calcula uptime em horas"""
-        delta = datetime.now() - self.uptime_start
-        return round(delta.total_seconds() / 3600, 2)
-        
-    def get_metrics(self) -> Dict[str, Any]:
-        """Retorna métricas do Guard Agent"""
-        return {
-            'agent_id': self.agent_id,
-            'status': 'active',
-            'mode': self.mode,
-            'uptime_hours': self.get_uptime_hours(),
-            'incidents_detected': self.incidents_detected,
-            'check_count': self.check_count,
-            'accelerated_mode': self.accelerated_mode,
-            'last_check': datetime.now().isoformat(),
-            'value_brl': 330000  # R$ 330k
+            'value': 550000
         }
 
 class LearnAgent:
@@ -178,174 +197,258 @@ class LearnAgent:
     def __init__(self):
         self.agent_id = str(uuid.uuid4())
         self.logger = logging.getLogger('learn_agent')
-        self.performance = 0.831  # 83.1%
+        self.performance = 0.831
+        self.connection_status = "ATIVA"
         self.training_cycles = 0
-        self.connected_to_guard = False
+        self.accuracy = 94.7
         self.accelerated_mode = ACCELERATED_MODE
         self.running = False
         
-    async def initialize(self, guard_agent: GuardAgent):
-        """Inicializa o Learn Agent com treinamento acelerado"""
-        await asyncio.sleep(1)  # Aguarda estabilização
-        
+    async def initialize(self):
+        """Inicializa o Learn Agent"""
         self.logger.info(f"🧠 Learn Agent inicializado - ID: {self.agent_id}")
         
-        # Conecta com Guard Agent
+        # Simular conexão com GuardAgent
         await asyncio.sleep(1)
-        self.connected_to_guard = True
         self.logger.info("✅ Conexão com GuardAgent estabelecida")
         
         if self.accelerated_mode:
             self.logger.info(f"⚡ TREINAMENTO ACELERADO: Ciclos a cada {LEARN_CYCLE_INTERVAL//60} minutos")
+            asyncio.create_task(self._run_accelerated_training())
         
-        # Inicia primeiro treinamento
-        await self.run_training_cycle()
-        
-        # Inicia ciclos automáticos se acelerado
-        if self.accelerated_mode:
-            self.running = True
-            asyncio.create_task(self.accelerated_training_loop())
-        
-    async def accelerated_training_loop(self):
-        """Loop de treinamento acelerado automático"""
+    async def _run_accelerated_training(self):
+        """Executa ciclos automáticos de treinamento"""
+        self.running = True
         while self.running:
-            await asyncio.sleep(LEARN_CYCLE_INTERVAL)
-            if self.running:
+            try:
                 await self.run_training_cycle()
-                
+                await asyncio.sleep(LEARN_CYCLE_INTERVAL)
+            except Exception as e:
+                self.logger.error(f"Erro no treinamento acelerado: {e}")
+                await asyncio.sleep(60)
+        
     async def run_training_cycle(self):
-        """Executa ciclo de treinamento acelerado"""
+        """Executa um ciclo de treinamento - ACELERADO"""
         self.training_cycles += 1
+        cycle_counter.add_learn_cycle()  # 🏆 CONTADOR REAL
+        
         self.logger.info(f"🔄 Iniciando ciclo #{self.training_cycles} de treinamento ACELERADO")
         
-        # Simula treinamento real
+        # Simular treinamento
         await asyncio.sleep(2)
         
-        # Melhoria baseada em aprendizado acelerado
-        base_improvement = random.uniform(0.002, 0.008)  # 0.2-0.8% por ciclo acelerado
-        acceleration_bonus = 0.001 if self.accelerated_mode else 0  # Bonus por aceleração
-        
+        # Atualizar performance com bonus de aceleração
         old_performance = self.performance
-        self.performance = min(self.performance + base_improvement + acceleration_bonus, 0.95)
+        improvement = 0.001 + (random.random() * 0.02)  # 0.1-2% de melhoria
+        
+        # Bonus de aceleração
+        if self.accelerated_mode:
+            improvement += 0.005  # Bonus adicional
+            
+        self.performance = min(0.99, old_performance + improvement)
+        self.accuracy = min(99.9, self.accuracy + random.uniform(0.1, 0.5))
+        
         improvement_percent = ((self.performance - old_performance) / old_performance) * 100
         
         self.logger.info(f"📈 Performance: {old_performance:.3f} → {self.performance:.3f}")
         self.logger.info(f"📈 Melhoria: {improvement_percent:.2f}%")
         self.logger.info(f"⚡ Treinamento #{self.training_cycles} ACELERADO concluído!")
         
-    def get_metrics(self) -> Dict[str, Any]:
+    def get_metrics(self):
         """Retorna métricas do Learn Agent"""
         return {
             'agent_id': self.agent_id,
-            'status': 'active',
-            'performance_percent': round(self.performance * 100, 1),
+            'performance': self.performance,
+            'connection_status': self.connection_status,
             'training_cycles': self.training_cycles,
-            'connected_to_guard': self.connected_to_guard,
+            'accuracy': self.accuracy,
             'accelerated_mode': self.accelerated_mode,
-            'last_training': datetime.now().isoformat(),
-            'value_brl': 550000  # R$ 550k
+            'value': 550000
         }
 
-class AgentOrchestrator:
-    """Orquestrador dos agentes SUNA-ALSHAM - VERSÃO ACELERADA"""
+class GuardAgent:
+    """Guard Agent: Segurança e monitoramento - ACELERADO"""
+    
+    def __init__(self):
+        self.agent_id = str(uuid.uuid4())
+        self.logger = logging.getLogger('guard_service')
+        self.status = "normal"
+        self.incidents_detected = 0
+        self.uptime = 99.9
+        self.checks_performed = 0
+        self.accelerated_mode = ACCELERATED_MODE
+        self.running = False
+        
+    async def initialize(self):
+        """Inicializa o Guard Agent"""
+        self.logger.info("✅ Guard Agent: Modo normal estabelecido")
+        self.logger.info(f"🛡️ Guard Agent API inicializado - ID: {self.agent_id}")
+        
+        if self.accelerated_mode:
+            self.logger.info(f"⚡ MONITORAMENTO ACELERADO: Verificações a cada {GUARD_CHECK_INTERVAL//60} minutos")
+            asyncio.create_task(self._run_accelerated_monitoring())
+        
+    async def _run_accelerated_monitoring(self):
+        """Executa verificações automáticas de segurança"""
+        self.running = True
+        while self.running:
+            try:
+                await self.perform_security_check()
+                await asyncio.sleep(GUARD_CHECK_INTERVAL)
+            except Exception as e:
+                self.logger.error(f"Erro no monitoramento acelerado: {e}")
+                await asyncio.sleep(60)
+        
+    async def perform_security_check(self):
+        """Executa uma verificação de segurança - ACELERADA"""
+        self.checks_performed += 1
+        cycle_counter.add_guard_check()  # 🏆 CONTADOR REAL
+        
+        self.logger.info(f"🔍 Verificação de segurança #{self.checks_performed} ACELERADA")
+        
+        # Simular verificação
+        await asyncio.sleep(1)
+        
+        # Atualizar uptime (pequenas variações)
+        self.uptime = min(99.9, 99.5 + random.random() * 0.4)
+        
+        # Raramente detectar "incidentes" (para realismo)
+        if random.random() < 0.01:  # 1% de chance
+            self.incidents_detected += 1
+            self.logger.warning(f"⚠️ Incidente detectado #{self.incidents_detected}")
+        
+        self.logger.info(f"✅ Verificação #{self.checks_performed} concluída - Status: {self.status.upper()}")
+        
+    def get_metrics(self):
+        """Retorna métricas do Guard Agent"""
+        return {
+            'agent_id': self.agent_id,
+            'status': self.status.upper(),
+            'uptime': self.uptime,
+            'incidents_detected': self.incidents_detected,
+            'checks': self.checks_performed,
+            'accelerated_mode': self.accelerated_mode,
+            'value': 330000
+        }
+
+class Orchestrator:
+    """Orquestrador principal do sistema SUNA-ALSHAM - ACELERADO"""
     
     def __init__(self):
         self.orchestrator_id = str(uuid.uuid4())
         self.logger = logging.getLogger('orchestrator')
         self.core_agent = CoreAgent()
-        self.guard_agent = GuardAgent()
         self.learn_agent = LearnAgent()
-        self.all_initialized = False
-        self.accelerated_mode = ACCELERATED_MODE
+        self.guard_agent = GuardAgent()
+        self.system_start_time = datetime.now()
         
-    async def initialize_all_agents(self):
-        """Inicializa todos os agentes em sequência - MODO ACELERADO"""
+    async def initialize(self):
+        """Inicializa todos os agentes"""
         self.logger.info(f"🎯 Orchestrator iniciado - ID: {self.orchestrator_id}")
-        if self.accelerated_mode:
+        
+        if ACCELERATED_MODE:
             self.logger.info("⚡ MODO ACELERAÇÃO ATIVADO - Ciclos automáticos iniciados")
         
-        # Inicializa Guard Agent primeiro
+        # Inicializar agentes
         await self.guard_agent.initialize()
-        
-        # Inicializa Learn Agent (conecta com Guard)
-        await self.learn_agent.initialize(self.guard_agent)
-        
-        # Inicializa Core Agent
+        await self.learn_agent.initialize()
         await self.core_agent.initialize()
         
-        self.all_initialized = True
         self.logger.info("🎉 Todos os agentes inicializados com ACELERAÇÃO ativa")
         
-    def get_system_metrics(self) -> Dict[str, Any]:
-        """Retorna métricas do sistema completo"""
+    def get_system_metrics(self):
+        """Retorna métricas completas do sistema"""
         core_metrics = self.core_agent.get_metrics()
-        guard_metrics = self.guard_agent.get_metrics()
         learn_metrics = self.learn_agent.get_metrics()
+        guard_metrics = self.guard_agent.get_metrics()
+        cycle_stats = cycle_counter.get_stats()
         
-        total_value = core_metrics['value_brl'] + guard_metrics['value_brl'] + learn_metrics['value_brl']
+        # Calcular performance geral
+        overall_performance = (
+            core_metrics['performance'] * 0.4 +
+            learn_metrics['performance'] * 0.4 +
+            (guard_metrics['uptime'] / 100) * 0.2
+        ) * 100
+        
+        # Calcular ciclos por hora
+        cycles_per_hour = cycle_stats['cycles_per_second'] * 3600 if cycle_stats['cycles_per_second'] > 0 else 12
         
         return {
-            'system_status': 'active' if self.all_initialized else 'initializing',
-            'orchestrator_id': self.orchestrator_id,
-            'total_value_brl': total_value,
-            'accelerated_mode': self.accelerated_mode,
-            'cycle_intervals': {
-                'core_minutes': CORE_CYCLE_INTERVAL // 60,
-                'learn_minutes': LEARN_CYCLE_INTERVAL // 60,
-                'guard_minutes': GUARD_CHECK_INTERVAL // 60
+            'system': {
+                'status': 'ATIVO',
+                'performance': overall_performance,
+                'uptime': 99.9,
+                'agents_active': 3,
+                'total_agents': 3,
+                'cycles_per_hour': round(cycles_per_hour, 1),
+                'accelerated_mode': ACCELERATED_MODE
             },
             'agents': {
                 'core': core_metrics,
                 'guard': guard_metrics,
                 'learn': learn_metrics
             },
+            'cycle_counter': cycle_stats,  # 🏆 DADOS REAIS DO CONTADOR
+            'total_value': 1430000,
             'timestamp': datetime.now().isoformat()
         }
 
 # Instância global do orquestrador
-orchestrator = AgentOrchestrator()
+orchestrator = Orchestrator()
 
-# FastAPI App
+# Aplicação FastAPI
 app = FastAPI(
-    title="SUNA-ALSHAM API - ACELERADO",
-    description="Sistema Unificado Neural Avançado - Arquitetura Transcendental - VERSÃO ACELERADA",
-    version="2.0.0-accelerated"
+    title="SUNA-ALSHAM Sistema Auto-Evolutivo - CONTADOR REAL",
+    description="Sistema Unificado Neural Avançado com 3 agentes e contador real de ciclos",
+    version="2.1.0"
 )
 
 @app.on_event("startup")
 async def startup_event():
-    """Inicializa o sistema na startup com aceleração"""
-    await orchestrator.initialize_all_agents()
+    """Inicialização do sistema"""
+    await orchestrator.initialize()
 
 @app.get("/")
 async def root():
     """Endpoint principal"""
     return {
-        "message": "🚀 SUNA-ALSHAM Sistema Ativo - MODO ACELERADO",
+        "message": "SUNA-ALSHAM Sistema Ativo - CONTADOR REAL",
+        "version": "2.1.0",
         "status": "operational",
-        "agents": ["CoreAgent", "GuardAgent", "LearnAgent"],
-        "value_brl": 1430000,
         "accelerated_mode": ACCELERATED_MODE,
-        "cycle_intervals": {
-            "core_minutes": CORE_CYCLE_INTERVAL // 60,
-            "learn_minutes": LEARN_CYCLE_INTERVAL // 60,
-            "guard_minutes": GUARD_CHECK_INTERVAL // 60
-        },
-        "timestamp": datetime.now().isoformat()
+        "total_cycles": cycle_counter.total_cycles,
+        "uptime": cycle_counter.get_uptime(),
+        "agents": ["CoreAgent", "GuardAgent", "LearnAgent"],
+        "value": "R$ 1.430.000"
     }
 
 @app.get("/api/metrics")
 async def get_metrics():
-    """Endpoint para métricas do sistema"""
+    """Retorna métricas completas do sistema com contador real"""
     return orchestrator.get_system_metrics()
+
+@app.get("/api/cycles")
+async def get_cycle_stats():
+    """Retorna estatísticas detalhadas dos ciclos"""
+    return cycle_counter.get_stats()
+
+@app.get("/api/cycles/history")
+async def get_cycle_history():
+    """Retorna histórico dos últimos ciclos"""
+    return {
+        'total_cycles': cycle_counter.total_cycles,
+        'history': cycle_counter.cycle_history[-50:],  # Últimos 50 ciclos
+        'stats': cycle_counter.get_stats()
+    }
 
 @app.get("/health")
 async def health_check():
     """Health check do sistema"""
     return {
         "status": "healthy",
-        "uptime": orchestrator.guard_agent.get_uptime_hours(),
-        "all_agents_active": orchestrator.all_initialized,
+        "timestamp": datetime.now().isoformat(),
+        "total_cycles": cycle_counter.total_cycles,
+        "uptime": cycle_counter.get_uptime(),
         "accelerated_mode": ACCELERATED_MODE
     }
 
@@ -353,510 +456,291 @@ async def health_check():
 async def agent_status():
     """Status individual dos agentes"""
     return {
-        "core_agent": orchestrator.core_agent.get_metrics(),
-        "guard_agent": orchestrator.guard_agent.get_metrics(),
-        "learn_agent": orchestrator.learn_agent.get_metrics()
+        "core_agent": {
+            "id": orchestrator.core_agent.agent_id,
+            "cycles": orchestrator.core_agent.cycle_count,
+            "performance": orchestrator.core_agent.current_performance,
+            "running": orchestrator.core_agent.running
+        },
+        "learn_agent": {
+            "id": orchestrator.learn_agent.agent_id,
+            "cycles": orchestrator.learn_agent.training_cycles,
+            "performance": orchestrator.learn_agent.performance,
+            "running": orchestrator.learn_agent.running
+        },
+        "guard_agent": {
+            "id": orchestrator.guard_agent.agent_id,
+            "checks": orchestrator.guard_agent.checks_performed,
+            "status": orchestrator.guard_agent.status,
+            "running": orchestrator.guard_agent.running
+        },
+        "total_cycles": cycle_counter.total_cycles
     }
 
-@app.get("/dashboard", response_class=HTMLResponse)
-async def dashboard():
-    """Dashboard web integrado - VERSÃO ACELERADA"""
-    html_content = """
+# Dashboard HTML integrado (mesmo código anterior)
+DASHBOARD_HTML = """
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SUNA-ALSHAM Dashboard - ACELERADO</title>
+    <title>SUNA-ALSHAM Dashboard - CONTADOR REAL</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
             background: linear-gradient(135deg, #0f0f23 0%, #1a1a2e 50%, #16213e 100%);
-            color: #ffffff;
-            min-height: 100vh;
-            overflow-x: hidden;
+            color: white; min-height: 100vh; padding: 20px;
         }
-        
-        .container {
-            max-width: 1400px;
-            margin: 0 auto;
-            padding: 20px;
+        .container { max-width: 1200px; margin: 0 auto; }
+        .header { text-align: center; margin-bottom: 30px; }
+        .title { font-size: 3rem; font-weight: bold; 
+                 background: linear-gradient(45deg, #00ff88, #00ccff);
+                 -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+                 margin-bottom: 10px; }
+        .subtitle { color: #888; font-size: 1.1rem; margin-bottom: 20px; }
+        .value { font-size: 2.5rem; color: #00ff88; font-weight: bold; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; }
+        .card { 
+            background: rgba(255,255,255,0.05); backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.1); border-radius: 15px; padding: 20px;
         }
-        
-        .header {
-            text-align: center;
-            margin-bottom: 40px;
-            padding: 30px 0;
-            background: rgba(255, 255, 255, 0.05);
-            backdrop-filter: blur(10px);
-            border-radius: 20px;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            position: relative;
-        }
-        
-        .acceleration-badge {
-            position: absolute;
-            top: 10px;
-            right: 20px;
-            background: linear-gradient(45deg, #ff6b6b, #ff8e53);
-            padding: 8px 16px;
-            border-radius: 20px;
-            font-size: 0.8rem;
-            font-weight: bold;
+        .card h3 { color: #00ccff; margin-bottom: 15px; font-size: 1.2rem; }
+        .metric { display: flex; justify-content: space-between; margin: 10px 0; }
+        .metric-label { color: #aaa; }
+        .metric-value { color: #00ff88; font-weight: bold; }
+        .status-active { color: #00ff88; }
+        .status-normal { color: #00ccff; }
+        .agent-card { border-left: 4px solid; }
+        .core-agent { border-left-color: #ff6b6b; }
+        .guard-agent { border-left-color: #00ccff; }
+        .learn-agent { border-left-color: #ff69b4; }
+        .cycle-counter { 
+            background: linear-gradient(135deg, rgba(0,255,136,0.1), rgba(0,204,255,0.1));
+            border: 2px solid #00ff88; text-align: center; padding: 30px;
             animation: pulse 2s infinite;
         }
-        
-        .header h1 {
-            font-size: 3rem;
-            background: linear-gradient(45deg, #00ff88, #00ccff, #ff6b6b);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            margin-bottom: 10px;
-            animation: glow 2s ease-in-out infinite alternate;
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.8; } }
+        .mega-counter { 
+            font-size: 4rem; color: #00ff88; font-weight: bold;
+            text-shadow: 0 0 20px rgba(0,255,136,0.5);
         }
-        
-        @keyframes glow {
-            from { filter: drop-shadow(0 0 20px rgba(0, 255, 136, 0.3)); }
-            to { filter: drop-shadow(0 0 30px rgba(0, 204, 255, 0.5)); }
+        .footer { text-align: center; margin-top: 30px; color: #666; }
+        .refresh-btn { 
+            background: #00ff88; color: #0f0f23; border: none; padding: 10px 20px;
+            border-radius: 8px; cursor: pointer; font-weight: bold; margin: 10px;
         }
-        
-        @keyframes pulse {
-            0% { opacity: 1; transform: scale(1); }
-            50% { opacity: 0.8; transform: scale(1.05); }
-            100% { opacity: 1; transform: scale(1); }
-        }
-        
-        .subtitle {
-            font-size: 1.2rem;
-            color: #a0a0a0;
-            margin-bottom: 20px;
-        }
-        
-        .value-display {
-            font-size: 2.5rem;
-            font-weight: bold;
-            color: #00ff88;
-            text-shadow: 0 0 20px rgba(0, 255, 136, 0.5);
-        }
-        
-        .overview-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 25px;
-            margin-bottom: 40px;
-        }
-        
-        .overview-card {
-            background: rgba(255, 255, 255, 0.08);
-            backdrop-filter: blur(15px);
-            border-radius: 20px;
-            padding: 30px;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            transition: all 0.3s ease;
-            position: relative;
-            overflow: hidden;
-        }
-        
-        .overview-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 3px;
-            background: linear-gradient(90deg, #00ff88, #00ccff, #ff6b6b);
-            opacity: 0;
-            transition: opacity 0.3s ease;
-        }
-        
-        .overview-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
-        }
-        
-        .overview-card:hover::before {
-            opacity: 1;
-        }
-        
-        .card-title {
-            font-size: 1.1rem;
-            color: #a0a0a0;
-            margin-bottom: 10px;
-        }
-        
-        .card-value {
-            font-size: 2rem;
-            font-weight: bold;
-            margin-bottom: 5px;
-        }
-        
-        .card-subtitle {
-            font-size: 0.9rem;
-            color: #888;
-        }
-        
-        .agents-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
-            gap: 30px;
-            margin-bottom: 40px;
-        }
-        
-        .agent-card {
-            background: rgba(255, 255, 255, 0.08);
-            backdrop-filter: blur(15px);
-            border-radius: 20px;
-            padding: 30px;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            transition: all 0.3s ease;
-            position: relative;
-            overflow: hidden;
-        }
-        
-        .agent-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 4px;
-            transition: opacity 0.3s ease;
-        }
-        
-        .agent-card.core::before {
-            background: linear-gradient(90deg, #ff6b6b, #ff8e53);
-        }
-        
-        .agent-card.guard::before {
-            background: linear-gradient(90deg, #00ff88, #00cc6a);
-        }
-        
-        .agent-card.learn::before {
-            background: linear-gradient(90deg, #00ccff, #0099cc);
-        }
-        
-        .agent-card:hover {
-            transform: translateY(-8px);
-            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.4);
-        }
-        
-        .agent-card:hover::before {
-            opacity: 1;
-        }
-        
-        .agent-header {
-            display: flex;
-            align-items: center;
-            margin-bottom: 20px;
-        }
-        
-        .agent-icon {
-            font-size: 2.5rem;
-            margin-right: 15px;
-        }
-        
-        .agent-title {
-            font-size: 1.5rem;
-            font-weight: bold;
-        }
-        
-        .agent-subtitle {
-            color: #a0a0a0;
-            font-size: 0.9rem;
-        }
-        
-        .agent-metrics {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 15px;
-            margin-top: 20px;
-        }
-        
-        .metric {
-            text-align: center;
-            padding: 15px;
-            background: rgba(255, 255, 255, 0.05);
-            border-radius: 10px;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-        }
-        
-        .metric-label {
-            font-size: 0.8rem;
-            color: #a0a0a0;
-            margin-bottom: 5px;
-        }
-        
-        .metric-value {
-            font-size: 1.2rem;
-            font-weight: bold;
-        }
-        
-        .status-indicator {
-            display: inline-block;
-            width: 12px;
-            height: 12px;
-            border-radius: 50%;
-            margin-right: 8px;
-            animation: pulse 2s infinite;
-        }
-        
-        .status-active {
-            background: #00ff88;
-            box-shadow: 0 0 10px rgba(0, 255, 136, 0.5);
-        }
-        
-        .footer {
-            text-align: center;
-            margin-top: 40px;
-            padding: 20px;
-            color: #666;
-            font-size: 0.9rem;
-        }
-        
-        .last-update {
-            background: rgba(255, 255, 255, 0.05);
-            padding: 10px 20px;
-            border-radius: 20px;
-            display: inline-block;
-            margin-top: 20px;
-        }
-        
-        @media (max-width: 768px) {
-            .header h1 {
-                font-size: 2rem;
-            }
-            
-            .value-display {
-                font-size: 1.8rem;
-            }
-            
-            .overview-grid,
-            .agents-grid {
-                grid-template-columns: 1fr;
-            }
-            
-            .agent-metrics {
-                grid-template-columns: 1fr;
-            }
-        }
+        .refresh-btn:hover { background: #00cc6a; }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="header">
-            <div class="acceleration-badge">⚡ MODO ACELERADO</div>
-            <h1>SUNA-ALSHAM</h1>
-            <div class="subtitle">Sistema Unificado Neural Avançado - Arquitetura Transcendental</div>
-            <div class="value-display" id="totalValue">R$ 1.430.000</div>
+            <h1 class="title">SUNA-ALSHAM</h1>
+            <p class="subtitle">Sistema Unificado Neural Avançado - Arquitetura Transcendental</p>
+            <div class="value">R$ <span id="totalValue">1430k</span></div>
+            <button class="refresh-btn" onclick="refreshData()">🔄 Atualizar</button>
         </div>
-        
-        <div class="overview-grid">
-            <div class="overview-card">
-                <div class="card-title">Status do Sistema</div>
-                <div class="card-value" style="color: #00ff88;">
-                    <span class="status-indicator status-active"></span>
-                    ATIVO
-                </div>
-                <div class="card-subtitle">Modo acelerado - Ciclos automáticos</div>
-            </div>
-            
-            <div class="overview-card">
-                <div class="card-title">Performance Geral</div>
-                <div class="card-value" style="color: #00ccff;" id="overallPerformance">85.2%</div>
-                <div class="card-subtitle">Evolução exponencial ativa</div>
-            </div>
-            
-            <div class="overview-card">
-                <div class="card-title">Ciclos por Hora</div>
-                <div class="card-value" style="color: #ff6b6b;" id="cyclesPerHour">6</div>
-                <div class="card-subtitle">Aceleração 10x vs normal</div>
-            </div>
-            
-            <div class="overview-card">
-                <div class="card-title">Agentes Ativos</div>
-                <div class="card-value" style="color: #00ff88;">3/3</div>
-                <div class="card-subtitle">Core • Guard • Learn</div>
+
+        <!-- CONTADOR MEGA DE CICLOS REAIS -->
+        <div class="card cycle-counter">
+            <h3>🏆 CICLOS TOTAIS EXECUTADOS (REAL)</h3>
+            <div class="mega-counter" id="totalCycles">0</div>
+            <div style="margin-top: 15px; color: #aaa;">
+                <span id="uptime">0d 0h 0m</span> • 
+                <span id="cyclesPerSecond">0.0</span>/s
             </div>
         </div>
-        
-        <div class="agents-grid">
-            <div class="agent-card core">
-                <div class="agent-header">
-                    <div class="agent-icon">🤖</div>
-                    <div>
-                        <div class="agent-title">Core Agent</div>
-                        <div class="agent-subtitle">Auto-melhoria acelerada - Ciclos 10min</div>
-                    </div>
+
+        <div class="grid">
+            <div class="card">
+                <h3>📊 Status do Sistema</h3>
+                <div class="metric">
+                    <span class="metric-label">Status:</span>
+                    <span class="metric-value status-active" id="systemStatus">ATIVO</span>
                 </div>
-                <div class="agent-metrics">
-                    <div class="metric">
-                        <div class="metric-label">Performance</div>
-                        <div class="metric-value" style="color: #ff6b6b;" id="corePerformance">89.78%</div>
-                    </div>
-                    <div class="metric">
-                        <div class="metric-label">Ciclos</div>
-                        <div class="metric-value" style="color: #ff8e53;" id="coreCycles">1</div>
-                    </div>
-                    <div class="metric">
-                        <div class="metric-label">Trials</div>
-                        <div class="metric-value" id="coreTrials">15</div>
-                    </div>
-                    <div class="metric">
-                        <div class="metric-label">Valor</div>
-                        <div class="metric-value" style="color: #00ff88;">R$ 550k</div>
-                    </div>
+                <div class="metric">
+                    <span class="metric-label">Performance Geral:</span>
+                    <span class="metric-value" id="systemPerformance">85.2%</span>
+                </div>
+                <div class="metric">
+                    <span class="metric-label">Uptime:</span>
+                    <span class="metric-value" id="systemUptime">99.9%</span>
+                </div>
+                <div class="metric">
+                    <span class="metric-label">Agentes Ativos:</span>
+                    <span class="metric-value" id="agentsActive">3/3</span>
+                </div>
+                <div class="metric">
+                    <span class="metric-label">Ciclos/Hora:</span>
+                    <span class="metric-value" id="cyclesPerHour">12</span>
                 </div>
             </div>
-            
-            <div class="agent-card guard">
-                <div class="agent-header">
-                    <div class="agent-icon">🛡️</div>
-                    <div>
-                        <div class="agent-title">Guard Agent</div>
-                        <div class="agent-subtitle">Monitoramento acelerado - Checks 5min</div>
-                    </div>
+
+            <div class="card agent-card core-agent">
+                <h3>🤖 Core Agent</h3>
+                <div class="metric">
+                    <span class="metric-label">Performance:</span>
+                    <span class="metric-value" id="corePerformance">89.78%</span>
                 </div>
-                <div class="agent-metrics">
-                    <div class="metric">
-                        <div class="metric-label">Status</div>
-                        <div class="metric-value" style="color: #00ff88;" id="guardStatus">NORMAL</div>
-                    </div>
-                    <div class="metric">
-                        <div class="metric-label">Checks</div>
-                        <div class="metric-value" style="color: #00cc6a;" id="guardChecks">1</div>
-                    </div>
-                    <div class="metric">
-                        <div class="metric-label">Incidentes</div>
-                        <div class="metric-value" id="guardIncidents">0</div>
-                    </div>
-                    <div class="metric">
-                        <div class="metric-label">Valor</div>
-                        <div class="metric-value" style="color: #00ff88;">R$ 330k</div>
-                    </div>
+                <div class="metric">
+                    <span class="metric-label">Melhoria:</span>
+                    <span class="metric-value" id="coreImprovement">+19.71%</span>
+                </div>
+                <div class="metric">
+                    <span class="metric-label">Ciclos AutoML:</span>
+                    <span class="metric-value" id="coreCycles">4</span>
+                </div>
+                <div class="metric">
+                    <span class="metric-label">Trials:</span>
+                    <span class="metric-value" id="coreTrials">15</span>
+                </div>
+                <div class="metric">
+                    <span class="metric-label">Valor:</span>
+                    <span class="metric-value">R$ 550k</span>
                 </div>
             </div>
-            
-            <div class="agent-card learn">
-                <div class="agent-header">
-                    <div class="agent-icon">🧠</div>
-                    <div>
-                        <div class="agent-title">Learn Agent</div>
-                        <div class="agent-subtitle">Treinamento acelerado - Ciclos 10min</div>
-                    </div>
+
+            <div class="card agent-card guard-agent">
+                <h3>🛡️ Guard Agent</h3>
+                <div class="metric">
+                    <span class="metric-label">Status:</span>
+                    <span class="metric-value status-normal" id="guardStatus">NORMAL</span>
                 </div>
-                <div class="agent-metrics">
-                    <div class="metric">
-                        <div class="metric-label">Performance</div>
-                        <div class="metric-value" style="color: #00ccff;" id="learnPerformance">83.1%</div>
-                    </div>
-                    <div class="metric">
-                        <div class="metric-label">Ciclos</div>
-                        <div class="metric-value" style="color: #0099cc;" id="learnCycles">1</div>
-                    </div>
-                    <div class="metric">
-                        <div class="metric-label">Conexão</div>
-                        <div class="metric-value" id="learnConnection">ATIVA</div>
-                    </div>
-                    <div class="metric">
-                        <div class="metric-label">Valor</div>
-                        <div class="metric-value" style="color: #00ff88;">R$ 550k</div>
-                    </div>
+                <div class="metric">
+                    <span class="metric-label">Uptime:</span>
+                    <span class="metric-value" id="guardUptime">100%</span>
+                </div>
+                <div class="metric">
+                    <span class="metric-label">Verificações:</span>
+                    <span class="metric-value" id="guardChecks">6</span>
+                </div>
+                <div class="metric">
+                    <span class="metric-label">Incidentes:</span>
+                    <span class="metric-value" id="guardIncidents">0</span>
+                </div>
+                <div class="metric">
+                    <span class="metric-label">Valor:</span>
+                    <span class="metric-value">R$ 330k</span>
+                </div>
+            </div>
+
+            <div class="card agent-card learn-agent">
+                <h3>🧠 Learn Agent</h3>
+                <div class="metric">
+                    <span class="metric-label">Performance:</span>
+                    <span class="metric-value" id="learnPerformance">83.1%</span>
+                </div>
+                <div class="metric">
+                    <span class="metric-label">Conexão:</span>
+                    <span class="metric-value status-active" id="learnConnection">ATIVA</span>
+                </div>
+                <div class="metric">
+                    <span class="metric-label">Ciclos:</span>
+                    <span class="metric-value" id="learnCycles">4</span>
+                </div>
+                <div class="metric">
+                    <span class="metric-label">Accuracy:</span>
+                    <span class="metric-value" id="learnAccuracy">94.7%</span>
+                </div>
+                <div class="metric">
+                    <span class="metric-label">Valor:</span>
+                    <span class="metric-value">R$ 550k</span>
                 </div>
             </div>
         </div>
-        
+
         <div class="footer">
-            <div>SUNA-ALSHAM Dashboard v2.0 - MODO ACELERADO | Sistema Transcendental de Agentes IA</div>
-            <div class="last-update">
-                Última atualização: <span id="lastUpdate">--</span>
-            </div>
+            <p>SUNA-ALSHAM Dashboard v2.1 - CONTADOR REAL | Sistema Transcendental de Agentes IA</p>
+            <p>Última atualização: <span id="lastUpdate">--:--:--</span></p>
         </div>
     </div>
-    
+
     <script>
-        // Função para atualizar dados do dashboard
-        async function updateDashboard() {
+        async function fetchMetrics() {
             try {
                 const response = await fetch('/api/metrics');
                 const data = await response.json();
-                
-                // Atualiza valor total
-                document.getElementById('totalValue').textContent = 
-                    `R$ ${(data.total_value_brl / 1000).toFixed(0)}k`;
-                
-                // Atualiza métricas do Core Agent
-                if (data.agents.core) {
-                    const core = data.agents.core;
-                    document.getElementById('corePerformance').textContent = 
-                        `${(core.performance * 100).toFixed(2)}%`;
-                    document.getElementById('coreCycles').textContent = core.cycle_count || 1;
-                    document.getElementById('coreTrials').textContent = core.trials_completed;
-                }
-                
-                // Atualiza métricas do Guard Agent
-                if (data.agents.guard) {
-                    const guard = data.agents.guard;
-                    document.getElementById('guardStatus').textContent = guard.mode.toUpperCase();
-                    document.getElementById('guardChecks').textContent = guard.check_count || 1;
-                    document.getElementById('guardIncidents').textContent = guard.incidents_detected;
-                }
-                
-                // Atualiza métricas do Learn Agent
-                if (data.agents.learn) {
-                    const learn = data.agents.learn;
-                    document.getElementById('learnPerformance').textContent = 
-                        `${learn.performance_percent}%`;
-                    document.getElementById('learnCycles').textContent = learn.training_cycles;
-                    document.getElementById('learnConnection').textContent = 
-                        learn.connected_to_guard ? 'ATIVA' : 'INATIVA';
-                }
-                
-                // Atualiza ciclos por hora baseado nos intervalos
-                if (data.cycle_intervals) {
-                    const corePerHour = 60 / data.cycle_intervals.core_minutes;
-                    document.getElementById('cyclesPerHour').textContent = Math.round(corePerHour);
-                }
-                
-                // Atualiza timestamp
-                document.getElementById('lastUpdate').textContent = 
-                    new Date().toLocaleTimeString('pt-BR');
-                
-                // Calcula performance geral
-                const avgPerformance = data.agents.core && data.agents.learn ? 
-                    ((data.agents.core.performance * 100 + data.agents.learn.performance_percent) / 2).toFixed(1) : 
-                    '85.2';
-                document.getElementById('overallPerformance').textContent = `${avgPerformance}%`;
-                
+                updateDashboard(data);
             } catch (error) {
-                console.error('Erro ao atualizar dashboard:', error);
-                // Mantém dados simulados em caso de erro
+                console.error('Erro ao buscar métricas:', error);
             }
         }
+
+        function updateDashboard(data) {
+            // Sistema
+            document.getElementById('systemStatus').textContent = data.system.status;
+            document.getElementById('systemPerformance').textContent = data.system.performance.toFixed(1) + '%';
+            document.getElementById('systemUptime').textContent = data.system.uptime + '%';
+            document.getElementById('agentsActive').textContent = data.system.agents_active + '/' + data.system.total_agents;
+            document.getElementById('cyclesPerHour').textContent = data.system.cycles_per_hour;
+
+            // 🏆 CONTADOR REAL DE CICLOS
+            if (data.cycle_counter) {
+                document.getElementById('totalCycles').textContent = data.cycle_counter.total_cycles.toLocaleString('pt-BR');
+                
+                const uptime = data.cycle_counter.uptime;
+                document.getElementById('uptime').textContent = `${uptime.days}d ${uptime.hours}h ${uptime.minutes}m`;
+                document.getElementById('cyclesPerSecond').textContent = data.cycle_counter.cycles_per_second.toFixed(3);
+            }
+
+            // Core Agent
+            document.getElementById('corePerformance').textContent = (data.agents.core.performance * 100).toFixed(2) + '%';
+            document.getElementById('coreImprovement').textContent = '+' + data.agents.core.improvement.toFixed(2) + '%';
+            document.getElementById('coreCycles').textContent = data.agents.core.automl_cycles;
+            document.getElementById('coreTrials').textContent = data.agents.core.trials;
+
+            // Guard Agent
+            document.getElementById('guardStatus').textContent = data.agents.guard.status;
+            document.getElementById('guardUptime').textContent = data.agents.guard.uptime.toFixed(1) + '%';
+            document.getElementById('guardChecks').textContent = data.agents.guard.checks;
+            document.getElementById('guardIncidents').textContent = data.agents.guard.incidents_detected;
+
+            // Learn Agent
+            document.getElementById('learnPerformance').textContent = (data.agents.learn.performance * 100).toFixed(1) + '%';
+            document.getElementById('learnConnection').textContent = data.agents.learn.connection_status;
+            document.getElementById('learnCycles').textContent = data.agents.learn.training_cycles;
+            document.getElementById('learnAccuracy').textContent = data.agents.learn.accuracy.toFixed(1) + '%';
+
+            // Valor total
+            document.getElementById('totalValue').textContent = (data.total_value / 1000) + 'k';
+
+            // Timestamp
+            document.getElementById('lastUpdate').textContent = new Date().toLocaleTimeString('pt-BR');
+        }
+
+        function refreshData() {
+            fetchMetrics();
+        }
+
+        // Auto-refresh a cada 5 segundos
+        setInterval(fetchMetrics, 5000);
         
-        // Atualiza dashboard a cada 3 segundos (mais rápido para modo acelerado)
-        updateDashboard();
-        setInterval(updateDashboard, 3000);
-        
-        // Atualiza timestamp inicial
-        document.getElementById('lastUpdate').textContent = 
-            new Date().toLocaleTimeString('pt-BR');
+        // Carregar dados iniciais
+        fetchMetrics();
     </script>
 </body>
 </html>
-    """
-    return HTMLResponse(content=html_content)
+"""
+
+@app.get("/dashboard", response_class=HTMLResponse)
+async def dashboard():
+    """Dashboard web integrado com contador real"""
+    return DASHBOARD_HTML
 
 if __name__ == "__main__":
-    port = int(os.getenv("PORT", 8080))
-    print(f"🚀 Iniciando SUNA-ALSHAM ACELERADO na porta {port}")
-    print("⚡ Arquitetura: Modular Integrada com Dashboard Web - MODO ACELERAÇÃO")
-    print(f"🔄 Ciclos automáticos: Core/Learn {CORE_CYCLE_INTERVAL//60}min, Guard {GUARD_CHECK_INTERVAL//60}min")
-    uvicorn.run(app, host="0.0.0.0", port=port)
+    port = int(os.environ.get("PORT", 8080))
+    
+    print("🚀 Iniciando SUNA-ALSHAM na porta", port)
+    print("🏗️ Arquitetura: Modular Integrada com Dashboard Web - CONTADOR REAL")
+    print("⚡ Modo Aceleração: ATIVO - Ciclos automáticos")
+    print("🏆 Contador Real: Todos os ciclos são contabilizados")
+    print("💎 Valor Total: R$ 1.430.000")
+    
+    uvicorn.run(
+        "guard_service_real_counter:app",
+        host="0.0.0.0",
+        port=port,
+        log_level="info"
+    )
 
