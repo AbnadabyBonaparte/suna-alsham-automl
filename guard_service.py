@@ -477,8 +477,6 @@ async def agent_status():
         "total_cycles": cycle_counter.total_cycles
     }
 
-# Dashboard HTML integrado (mesmo código anterior)
-DASHBOARD_HTML = """
 # Dashboard HTML integrado - LUXURY EDITION
 DASHBOARD_HTML = """<!DOCTYPE html>
 <html lang="pt-BR">
@@ -1254,7 +1252,6 @@ DASHBOARD_HTML = """<!DOCTYPE html>
                 updateDashboard(data);
             } catch (error) {
                 console.error('Error fetching data:', error);
-                // Fallback to existing dashboard functionality if API fails
             }
         }
 
@@ -1429,12 +1426,11 @@ DASHBOARD_HTML = """<!DOCTYPE html>
         });
     </script>
 </body>
-</html>
-"""
+</html>"""
 
 @app.get("/dashboard", response_class=HTMLResponse)
 async def dashboard():
-    """Dashboard web integrado com contador real"""
+    """Dashboard web integrado com contador real - LUXURY EDITION"""
     return DASHBOARD_HTML
 
 if __name__ == "__main__":
@@ -1445,6 +1441,7 @@ if __name__ == "__main__":
     print("⚡ Modo Aceleração: ATIVO - Ciclos automáticos")
     print("🏆 Contador Real: Todos os ciclos são contabilizados")
     print("💎 Valor Total: R$ 1.430.000")
+    print("✨ Dashboard: Luxury Edition com efeitos 3D")
     
     uvicorn.run(
         "guard_service_real_counter:app",
@@ -1452,4 +1449,3 @@ if __name__ == "__main__":
         port=port,
         log_level="info"
     )
-
