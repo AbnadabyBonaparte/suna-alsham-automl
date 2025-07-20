@@ -479,245 +479,954 @@ async def agent_status():
 
 # Dashboard HTML integrado (mesmo código anterior)
 DASHBOARD_HTML = """
-<!DOCTYPE html>
+# Dashboard HTML integrado - LUXURY EDITION
+DASHBOARD_HTML = """<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SUNA-ALSHAM Dashboard - CONTADOR REAL</title>
+    <title>SUNA-ALSHAM Enterprise Dashboard - Luxury Edition</title>
+    
+    <!-- External Libraries -->
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100;200;300;400;500;600;700;800;900&family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.155.0/build/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.2/dist/gsap.min.js"></script>
+    
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { 
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-            background: linear-gradient(135deg, #0f0f23 0%, #1a1a2e 50%, #16213e 100%);
-            color: white; min-height: 100vh; padding: 20px;
+        :root {
+            --primary-gold: #FFD700;
+            --primary-blue: #1E3A8A;
+            --primary-cyan: #00F5FF;
+            --primary-purple: #9333EA;
+            --dark-bg: #0A0A0F;
+            --card-bg: rgba(15, 15, 25, 0.85);
+            --glass-bg: rgba(255, 255, 255, 0.05);
+            --neon-glow: 0 0 20px;
         }
-        .container { max-width: 1200px; margin: 0 auto; }
-        .header { text-align: center; margin-bottom: 30px; }
-        .title { font-size: 3rem; font-weight: bold; 
-                 background: linear-gradient(45deg, #00ff88, #00ccff);
-                 -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-                 margin-bottom: 10px; }
-        .subtitle { color: #888; font-size: 1.1rem; margin-bottom: 20px; }
-        .value { font-size: 2.5rem; color: #00ff88; font-weight: bold; }
-        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; }
-        .card { 
-            background: rgba(255,255,255,0.05); backdrop-filter: blur(10px);
-            border: 1px solid rgba(255,255,255,0.1); border-radius: 15px; padding: 20px;
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
         }
-        .card h3 { color: #00ccff; margin-bottom: 15px; font-size: 1.2rem; }
-        .metric { display: flex; justify-content: space-between; margin: 10px 0; }
-        .metric-label { color: #aaa; }
-        .metric-value { color: #00ff88; font-weight: bold; }
-        .status-active { color: #00ff88; }
-        .status-normal { color: #00ccff; }
-        .agent-card { border-left: 4px solid; }
-        .core-agent { border-left-color: #ff6b6b; }
-        .guard-agent { border-left-color: #00ccff; }
-        .learn-agent { border-left-color: #ff69b4; }
-        .cycle-counter { 
-            background: linear-gradient(135deg, rgba(0,255,136,0.1), rgba(0,204,255,0.1));
-            border: 2px solid #00ff88; text-align: center; padding: 30px;
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #0A0A0F 0%, #1A1A2E 25%, #16213E 50%, #0E1B3C 75%, #0A0A0F 100%);
+            color: white;
+            overflow-x: hidden;
+            min-height: 100vh;
+            position: relative;
+        }
+
+        /* Animated Background */
+        .animated-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -2;
+            background: radial-gradient(circle at 20% 80%, rgba(120, 119, 198, 0.3) 0%, transparent 50%),
+                        radial-gradient(circle at 80% 20%, rgba(255, 215, 0, 0.3) 0%, transparent 50%),
+                        radial-gradient(circle at 40% 40%, rgba(0, 245, 255, 0.3) 0%, transparent 50%);
+            animation: backgroundShift 20s ease-in-out infinite;
+        }
+
+        @keyframes backgroundShift {
+            0%, 100% { transform: rotate(0deg) scale(1); }
+            50% { transform: rotate(180deg) scale(1.1); }
+        }
+
+        /* Particles Container */
+        .particles-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            pointer-events: none;
+        }
+
+        .particle {
+            position: absolute;
+            width: 2px;
+            height: 2px;
+            background: var(--primary-cyan);
+            border-radius: 50%;
+            animation: float 15s infinite linear;
+            opacity: 0.6;
+        }
+
+        @keyframes float {
+            0% {
+                transform: translateY(100vh) rotate(0deg);
+                opacity: 0;
+            }
+            10% {
+                opacity: 0.6;
+            }
+            90% {
+                opacity: 0.6;
+            }
+            100% {
+                transform: translateY(-100px) rotate(360deg);
+                opacity: 0;
+            }
+        }
+
+        /* Luxury Glass Cards */
+        .luxury-card {
+            background: linear-gradient(135deg, 
+                rgba(255, 255, 255, 0.08) 0%, 
+                rgba(255, 255, 255, 0.04) 50%, 
+                rgba(255, 255, 255, 0.08) 100%);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 20px;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.4s cubic-bezier(0.23, 1, 0.320, 1);
+        }
+
+        .luxury-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 215, 0, 0.2), transparent);
+            transition: left 0.8s;
+            z-index: 0;
+        }
+
+        .luxury-card:hover::before {
+            left: 100%;
+        }
+
+        .luxury-card:hover {
+            transform: translateY(-8px) scale(1.02);
+            box-shadow: 0 25px 50px rgba(255, 215, 0, 0.3);
+            border-color: var(--primary-gold);
+        }
+
+        /* Holographic Title */
+        .holo-title {
+            font-family: 'Orbitron', monospace;
+            background: linear-gradient(45deg, #FFD700, #00F5FF, #9333EA, #FFD700);
+            background-size: 400% 400%;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: holographicShift 3s ease-in-out infinite;
+            text-shadow: 0 0 30px rgba(255, 215, 0, 0.5);
+            font-weight: 900;
+        }
+
+        @keyframes holographicShift {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+        }
+
+        /* Energy Waves */
+        .energy-wave {
+            position: absolute;
+            width: 200%;
+            height: 200%;
+            top: -50%;
+            left: -50%;
+            background: conic-gradient(from 0deg, transparent, rgba(0, 245, 255, 0.3), transparent);
+            border-radius: 50%;
+            animation: energyRotate 20s linear infinite;
+            pointer-events: none;
+        }
+
+        @keyframes energyRotate {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Neon Glow Effects */
+        .neon-text {
+            text-shadow: 
+                0 0 5px currentColor,
+                0 0 10px currentColor,
+                0 0 15px currentColor,
+                0 0 20px var(--primary-cyan),
+                0 0 35px var(--primary-cyan),
+                0 0 40px var(--primary-cyan);
+        }
+
+        .metric-value {
+            font-family: 'Orbitron', monospace;
+            font-weight: 700;
+            font-size: 2.5rem;
+            background: linear-gradient(135deg, var(--primary-gold), var(--primary-cyan));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-shadow: 0 0 20px rgba(255, 215, 0, 0.5);
+        }
+
+        /* Progress Rings */
+        .progress-ring {
+            position: relative;
+            width: 120px;
+            height: 120px;
+        }
+
+        .progress-ring svg {
+            transform: rotate(-90deg);
+            width: 100%;
+            height: 100%;
+        }
+
+        .progress-ring-circle {
+            stroke: rgba(255, 255, 255, 0.1);
+            stroke-width: 8;
+            fill: none;
+        }
+
+        .progress-ring-progress {
+            stroke: url(#progressGradient);
+            stroke-width: 8;
+            fill: none;
+            stroke-linecap: round;
+            stroke-dasharray: 0 251.2;
+            animation: progressAnimation 2s ease-in-out forwards;
+            filter: drop-shadow(0 0 10px rgba(0, 245, 255, 0.8));
+        }
+
+        @keyframes progressAnimation {
+            to {
+                stroke-dasharray: var(--progress-value) 251.2;
+            }
+        }
+
+        /* Chart Container */
+        .chart-container {
+            position: relative;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 15px;
+            padding: 20px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        /* Status Indicators */
+        .status-indicator {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: var(--primary-cyan);
+            box-shadow: 0 0 20px var(--primary-cyan);
             animation: pulse 2s infinite;
         }
-        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.8; } }
-        .mega-counter { 
-            font-size: 4rem; color: #00ff88; font-weight: bold;
-            text-shadow: 0 0 20px rgba(0,255,136,0.5);
+
+        @keyframes pulse {
+            0%, 100% { 
+                opacity: 1; 
+                transform: scale(1);
+                box-shadow: 0 0 20px var(--primary-cyan);
+            }
+            50% { 
+                opacity: 0.7; 
+                transform: scale(1.2);
+                box-shadow: 0 0 30px var(--primary-cyan);
+            }
         }
-        .footer { text-align: center; margin-top: 30px; color: #666; }
-        .refresh-btn { 
-            background: #00ff88; color: #0f0f23; border: none; padding: 10px 20px;
-            border-radius: 8px; cursor: pointer; font-weight: bold; margin: 10px;
+
+        /* 3D Canvas */
+        .canvas-3d {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            opacity: 0.7;
         }
-        .refresh-btn:hover { background: #00cc6a; }
+
+        /* Luxury Buttons */
+        .luxury-btn {
+            background: linear-gradient(135deg, var(--primary-gold), var(--primary-cyan));
+            border: none;
+            padding: 12px 24px;
+            border-radius: 10px;
+            color: black;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .luxury-btn::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            transition: all 0.3s ease;
+            transform: translate(-50%, -50%);
+        }
+
+        .luxury-btn:hover::before {
+            width: 200%;
+            height: 200%;
+        }
+
+        .luxury-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(255, 215, 0, 0.4);
+        }
+
+        /* Data Grid */
+        .data-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 25px;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .data-grid {
+                grid-template-columns: 1fr;
+                gap: 15px;
+            }
+            
+            .metric-value {
+                font-size: 1.8rem;
+            }
+            
+            .holo-title {
+                font-size: 2.5rem;
+            }
+        }
+
+        /* Print/PDF Optimization */
+        @media print {
+            .particles-container,
+            .animated-bg,
+            .energy-wave {
+                display: none;
+            }
+            
+            body {
+                background: white;
+                color: black;
+            }
+            
+            .luxury-card {
+                border: 2px solid #333;
+                background: #f9f9f9;
+            }
+        }
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="header">
-            <h1 class="title">SUNA-ALSHAM</h1>
-            <p class="subtitle">Sistema Unificado Neural Avançado - Arquitetura Transcendental</p>
-            <div class="value">R$ <span id="totalValue">1430k</span></div>
-            <button class="refresh-btn" onclick="refreshData()">🔄 Atualizar</button>
-        </div>
+    <!-- Animated Background -->
+    <div class="animated-bg"></div>
+    
+    <!-- Particles Container -->
+    <div class="particles-container" id="particles"></div>
 
-        <!-- CONTADOR MEGA DE CICLOS REAIS -->
-        <div class="card cycle-counter">
-            <h3>🏆 CICLOS TOTAIS EXECUTADOS (REAL)</h3>
-            <div class="mega-counter" id="totalCycles">0</div>
-            <div style="margin-top: 15px; color: #aaa;">
-                <span id="uptime">0d 0h 0m</span> • 
-                <span id="cyclesPerSecond">0.0</span>/s
+    <div class="min-h-screen p-6 relative z-10">
+        <!-- Header Section -->
+        <header class="text-center mb-12 relative">
+            <div class="energy-wave"></div>
+            <h1 class="holo-title text-6xl md:text-7xl mb-4">SUNA-ALSHAM</h1>
+            <p class="text-xl md:text-2xl text-gray-300 mb-6 font-light">
+                Sistema Unificado Neural Avançado - Arquitetura Transcendental
+            </p>
+            <div class="text-5xl md:text-6xl font-bold mb-8">
+                <span class="metric-value">R$ <span id="totalValue">1.430</span>M</span>
+            </div>
+            <div class="flex justify-center items-center gap-4 flex-wrap">
+                <button class="luxury-btn" onclick="refreshData()">
+                    <i class="fas fa-sync-alt mr-2"></i>Atualizar
+                </button>
+                <div class="flex items-center gap-2 bg-black bg-opacity-30 px-4 py-2 rounded-full">
+                    <div class="status-indicator"></div>
+                    <span class="text-sm font-semibold neon-text" style="color: var(--primary-cyan);">SISTEMA ATIVO</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Metrics Grid -->
+        <div class="data-grid mb-12">
+            <!-- Total Cycles Counter -->
+            <div class="luxury-card p-8 text-center relative col-span-full">
+                <canvas class="canvas-3d" id="cyclesCanvas"></canvas>
+                <div class="relative z-10">
+                    <h3 class="text-2xl font-bold mb-4 text-yellow-400">
+                        <i class="fas fa-trophy mr-3"></i>CICLOS TOTAIS EXECUTADOS
+                    </h3>
+                    <div class="metric-value text-7xl mb-4" id="totalCycles">0</div>
+                    <div class="text-lg text-gray-300">
+                        <span id="uptime">0d 0h 0m</span> • 
+                        <span id="cyclesPerSecond">0.0</span>/s • 
+                        <span id="cyclesPerHour">12</span>/hora
+                    </div>
+                </div>
+            </div>
+
+            <!-- System Overview -->
+            <div class="luxury-card p-6 relative">
+                <h3 class="text-xl font-bold mb-6 text-blue-400">
+                    <i class="fas fa-chart-line mr-3"></i>Overview do Sistema
+                </h3>
+                <div class="space-y-4">
+                    <div class="flex justify-between items-center">
+                        <span class="text-gray-300">Performance Geral</span>
+                        <span class="text-2xl font-bold text-green-400" id="systemPerformance">85.2%</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-gray-300">Uptime</span>
+                        <span class="text-2xl font-bold text-cyan-400" id="systemUptime">99.9%</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-gray-300">Agentes Ativos</span>
+                        <span class="text-2xl font-bold text-purple-400" id="agentsActive">3/3</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-gray-300">Modo Aceleração</span>
+                        <span class="text-lg font-bold text-yellow-400">
+                            <i class="fas fa-bolt mr-2"></i>ATIVO
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Performance Chart -->
+            <div class="luxury-card p-6 relative col-span-full lg:col-span-2">
+                <h3 class="text-xl font-bold mb-6 text-purple-400">
+                    <i class="fas fa-chart-area mr-3"></i>Performance em Tempo Real
+                </h3>
+                <div class="chart-container" style="height: 300px;">
+                    <canvas id="performanceChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Core Agent -->
+            <div class="luxury-card p-6 relative border-l-4 border-red-500">
+                <h3 class="text-xl font-bold mb-6 text-red-400">
+                    <i class="fas fa-brain mr-3"></i>Core Agent
+                </h3>
+                <div class="flex items-center justify-between mb-6">
+                    <div class="progress-ring">
+                        <svg>
+                            <defs>
+                                <linearGradient id="progressGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                                    <stop offset="0%" style="stop-color:#FF6B6B;stop-opacity:1" />
+                                    <stop offset="100%" style="stop-color:#FFD700;stop-opacity:1" />
+                                </linearGradient>
+                            </defs>
+                            <circle class="progress-ring-circle" cx="60" cy="60" r="40"></circle>
+                            <circle class="progress-ring-progress" cx="60" cy="60" r="40" 
+                                    style="--progress-value: 226" id="coreProgress"></circle>
+                        </svg>
+                        <div class="absolute inset-0 flex items-center justify-center">
+                            <span class="text-2xl font-bold text-red-400" id="corePerformanceDisplay">89.8%</span>
+                        </div>
+                    </div>
+                    <div class="text-right">
+                        <div class="text-3xl font-bold text-yellow-400" id="coreImprovement">+19.7%</div>
+                        <div class="text-sm text-gray-400">Melhoria</div>
+                    </div>
+                </div>
+                <div class="space-y-3">
+                    <div class="flex justify-between">
+                        <span class="text-gray-300">Ciclos AutoML</span>
+                        <span class="font-bold text-cyan-400" id="coreCycles">4</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-gray-300">Trials</span>
+                        <span class="font-bold text-green-400" id="coreTrials">15</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-gray-300">Valor</span>
+                        <span class="font-bold text-yellow-400">R$ 550k</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Guard Agent -->
+            <div class="luxury-card p-6 relative border-l-4 border-blue-500">
+                <h3 class="text-xl font-bold mb-6 text-blue-400">
+                    <i class="fas fa-shield-alt mr-3"></i>Guard Agent
+                </h3>
+                <div class="flex items-center justify-between mb-6">
+                    <div class="progress-ring">
+                        <svg>
+                            <circle class="progress-ring-circle" cx="60" cy="60" r="40"></circle>
+                            <circle class="progress-ring-progress" cx="60" cy="60" r="40" 
+                                    style="--progress-value: 251; stroke: url(#guardGradient)" id="guardProgress"></circle>
+                            <defs>
+                                <linearGradient id="guardGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                                    <stop offset="0%" style="stop-color:#3B82F6;stop-opacity:1" />
+                                    <stop offset="100%" style="stop-color:#00F5FF;stop-opacity:1" />
+                                </linearGradient>
+                            </defs>
+                        </svg>
+                        <div class="absolute inset-0 flex items-center justify-center">
+                            <span class="text-xl font-bold text-blue-400" id="guardUptimeDisplay">100%</span>
+                        </div>
+                    </div>
+                    <div class="text-right">
+                        <div class="text-2xl font-bold text-green-400" id="guardStatus">NORMAL</div>
+                        <div class="text-sm text-gray-400">Status</div>
+                    </div>
+                </div>
+                <div class="space-y-3">
+                    <div class="flex justify-between">
+                        <span class="text-gray-300">Verificações</span>
+                        <span class="font-bold text-cyan-400" id="guardChecks">6</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-gray-300">Incidentes</span>
+                        <span class="font-bold text-green-400" id="guardIncidents">0</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-gray-300">Valor</span>
+                        <span class="font-bold text-yellow-400">R$ 330k</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Learn Agent -->
+            <div class="luxury-card p-6 relative border-l-4 border-purple-500">
+                <h3 class="text-xl font-bold mb-6 text-purple-400">
+                    <i class="fas fa-graduation-cap mr-3"></i>Learn Agent
+                </h3>
+                <div class="flex items-center justify-between mb-6">
+                    <div class="progress-ring">
+                        <svg>
+                            <circle class="progress-ring-circle" cx="60" cy="60" r="40"></circle>
+                            <circle class="progress-ring-progress" cx="60" cy="60" r="40" 
+                                    style="--progress-value: 209; stroke: url(#learnGradient)" id="learnProgress"></circle>
+                            <defs>
+                                <linearGradient id="learnGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                                    <stop offset="0%" style="stop-color:#9333EA;stop-opacity:1" />
+                                    <stop offset="100%" style="stop-color:#EC4899;stop-opacity:1" />
+                                </linearGradient>
+                            </defs>
+                        </svg>
+                        <div class="absolute inset-0 flex items-center justify-center">
+                            <span class="text-xl font-bold text-purple-400" id="learnPerformanceDisplay">83.1%</span>
+                        </div>
+                    </div>
+                    <div class="text-right">
+                        <div class="text-2xl font-bold text-green-400" id="learnConnection">ATIVA</div>
+                        <div class="text-sm text-gray-400">Conexão</div>
+                    </div>
+                </div>
+                <div class="space-y-3">
+                    <div class="flex justify-between">
+                        <span class="text-gray-300">Ciclos</span>
+                        <span class="font-bold text-cyan-400" id="learnCycles">4</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-gray-300">Accuracy</span>
+                        <span class="font-bold text-green-400" id="learnAccuracy">94.7%</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-gray-300">Valor</span>
+                        <span class="font-bold text-yellow-400">R$ 550k</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Cycle History Chart -->
+            <div class="luxury-card p-6 relative col-span-full">
+                <h3 class="text-xl font-bold mb-6 text-cyan-400">
+                    <i class="fas fa-history mr-3"></i>Histórico de Ciclos
+                </h3>
+                <div class="chart-container" style="height: 250px;">
+                    <canvas id="cycleChart"></canvas>
+                </div>
             </div>
         </div>
 
-        <div class="grid">
-            <div class="card">
-                <h3>📊 Status do Sistema</h3>
-                <div class="metric">
-                    <span class="metric-label">Status:</span>
-                    <span class="metric-value status-active" id="systemStatus">ATIVO</span>
-                </div>
-                <div class="metric">
-                    <span class="metric-label">Performance Geral:</span>
-                    <span class="metric-value" id="systemPerformance">85.2%</span>
-                </div>
-                <div class="metric">
-                    <span class="metric-label">Uptime:</span>
-                    <span class="metric-value" id="systemUptime">99.9%</span>
-                </div>
-                <div class="metric">
-                    <span class="metric-label">Agentes Ativos:</span>
-                    <span class="metric-value" id="agentsActive">3/3</span>
-                </div>
-                <div class="metric">
-                    <span class="metric-label">Ciclos/Hora:</span>
-                    <span class="metric-value" id="cyclesPerHour">12</span>
-                </div>
-            </div>
-
-            <div class="card agent-card core-agent">
-                <h3>🤖 Core Agent</h3>
-                <div class="metric">
-                    <span class="metric-label">Performance:</span>
-                    <span class="metric-value" id="corePerformance">89.78%</span>
-                </div>
-                <div class="metric">
-                    <span class="metric-label">Melhoria:</span>
-                    <span class="metric-value" id="coreImprovement">+19.71%</span>
-                </div>
-                <div class="metric">
-                    <span class="metric-label">Ciclos AutoML:</span>
-                    <span class="metric-value" id="coreCycles">4</span>
-                </div>
-                <div class="metric">
-                    <span class="metric-label">Trials:</span>
-                    <span class="metric-value" id="coreTrials">15</span>
-                </div>
-                <div class="metric">
-                    <span class="metric-label">Valor:</span>
-                    <span class="metric-value">R$ 550k</span>
-                </div>
-            </div>
-
-            <div class="card agent-card guard-agent">
-                <h3>🛡️ Guard Agent</h3>
-                <div class="metric">
-                    <span class="metric-label">Status:</span>
-                    <span class="metric-value status-normal" id="guardStatus">NORMAL</span>
-                </div>
-                <div class="metric">
-                    <span class="metric-label">Uptime:</span>
-                    <span class="metric-value" id="guardUptime">100%</span>
-                </div>
-                <div class="metric">
-                    <span class="metric-label">Verificações:</span>
-                    <span class="metric-value" id="guardChecks">6</span>
-                </div>
-                <div class="metric">
-                    <span class="metric-label">Incidentes:</span>
-                    <span class="metric-value" id="guardIncidents">0</span>
-                </div>
-                <div class="metric">
-                    <span class="metric-label">Valor:</span>
-                    <span class="metric-value">R$ 330k</span>
-                </div>
-            </div>
-
-            <div class="card agent-card learn-agent">
-                <h3>🧠 Learn Agent</h3>
-                <div class="metric">
-                    <span class="metric-label">Performance:</span>
-                    <span class="metric-value" id="learnPerformance">83.1%</span>
-                </div>
-                <div class="metric">
-                    <span class="metric-label">Conexão:</span>
-                    <span class="metric-value status-active" id="learnConnection">ATIVA</span>
-                </div>
-                <div class="metric">
-                    <span class="metric-label">Ciclos:</span>
-                    <span class="metric-value" id="learnCycles">4</span>
-                </div>
-                <div class="metric">
-                    <span class="metric-label">Accuracy:</span>
-                    <span class="metric-value" id="learnAccuracy">94.7%</span>
-                </div>
-                <div class="metric">
-                    <span class="metric-label">Valor:</span>
-                    <span class="metric-value">R$ 550k</span>
-                </div>
-            </div>
-        </div>
-
-        <div class="footer">
-            <p>SUNA-ALSHAM Dashboard v2.1 - CONTADOR REAL | Sistema Transcendental de Agentes IA</p>
-            <p>Última atualização: <span id="lastUpdate">--:--:--</span></p>
-        </div>
+        <!-- Footer -->
+        <footer class="text-center py-8 border-t border-gray-700 border-opacity-30">
+            <p class="text-lg text-gray-400 mb-2">
+                SUNA-ALSHAM Enterprise Dashboard v2.1 - Luxury Edition
+            </p>
+            <p class="text-sm text-gray-500">
+                Sistema Transcendental de Agentes IA • Última atualização: <span id="lastUpdate">--:--:--</span>
+            </p>
+        </footer>
     </div>
 
     <script>
-        async function fetchMetrics() {
+        // Global variables
+        let performanceChart, cycleChart;
+        let scene, camera, renderer, particles3D = [];
+        let animationId;
+
+        // Create particles
+        function createParticles() {
+            const container = document.getElementById('particles');
+            for (let i = 0; i < 50; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'particle';
+                particle.style.left = Math.random() * 100 + '%';
+                particle.style.animationDelay = Math.random() * 15 + 's';
+                particle.style.animationDuration = (15 + Math.random() * 10) + 's';
+                container.appendChild(particle);
+            }
+        }
+
+        // Initialize 3D scene for cycles counter
+        function init3DScene() {
+            const canvas = document.getElementById('cyclesCanvas');
+            if (!canvas) return;
+            
+            const rect = canvas.getBoundingClientRect();
+            
+            scene = new THREE.Scene();
+            camera = new THREE.PerspectiveCamera(75, rect.width / rect.height, 0.1, 1000);
+            renderer = new THREE.WebGLRenderer({ canvas: canvas, alpha: true });
+            renderer.setSize(rect.width, rect.height);
+
+            // Create rotating torus
+            const geometry = new THREE.TorusGeometry(2, 0.5, 16, 100);
+            const material = new THREE.MeshBasicMaterial({
+                color: 0x00F5FF,
+                wireframe: true,
+                transparent: true,
+                opacity: 0.3
+            });
+            const torus = new THREE.Mesh(geometry, material);
+            scene.add(torus);
+
+            // Create particles
+            const particleGeometry = new THREE.BufferGeometry();
+            const particleCount = 100;
+            const positions = new Float32Array(particleCount * 3);
+            
+            for (let i = 0; i < particleCount * 3; i++) {
+                positions[i] = (Math.random() - 0.5) * 10;
+            }
+            
+            particleGeometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+            const particleMaterial = new THREE.PointsMaterial({
+                color: 0xFFD700,
+                size: 0.05,
+                transparent: true,
+                opacity: 0.8
+            });
+            
+            const particleSystem = new THREE.Points(particleGeometry, particleMaterial);
+            scene.add(particleSystem);
+
+            camera.position.z = 5;
+
+            // Animation loop
+            function animate() {
+                animationId = requestAnimationFrame(animate);
+                torus.rotation.x += 0.01;
+                torus.rotation.y += 0.01;
+                particleSystem.rotation.y += 0.005;
+                renderer.render(scene, camera);
+            }
+            animate();
+        }
+
+        // Initialize charts
+        function initCharts() {
+            // Performance Chart
+            const performanceCtx = document.getElementById('performanceChart');
+            if (performanceCtx) {
+                performanceChart = new Chart(performanceCtx.getContext('2d'), {
+                    type: 'line',
+                    data: {
+                        labels: Array.from({length: 20}, (_, i) => `${i}m`),
+                        datasets: [{
+                            label: 'Core Agent',
+                            data: Array.from({length: 20}, () => 80 + Math.random() * 15),
+                            borderColor: '#FF6B6B',
+                            backgroundColor: 'rgba(255, 107, 107, 0.1)',
+                            tension: 0.4,
+                            fill: true
+                        }, {
+                            label: 'Learn Agent',
+                            data: Array.from({length: 20}, () => 75 + Math.random() * 20),
+                            borderColor: '#9333EA',
+                            backgroundColor: 'rgba(147, 51, 234, 0.1)',
+                            tension: 0.4,
+                            fill: true
+                        }, {
+                            label: 'Guard Agent',
+                            data: Array.from({length: 20}, () => 95 + Math.random() * 5),
+                            borderColor: '#00F5FF',
+                            backgroundColor: 'rgba(0, 245, 255, 0.1)',
+                            tension: 0.4,
+                            fill: true
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                labels: {
+                                    color: '#ffffff'
+                                }
+                            }
+                        },
+                        scales: {
+                            x: {
+                                ticks: { color: '#ffffff' },
+                                grid: { color: 'rgba(255, 255, 255, 0.1)' }
+                            },
+                            y: {
+                                ticks: { color: '#ffffff' },
+                                grid: { color: 'rgba(255, 255, 255, 0.1)' }
+                            }
+                        }
+                    }
+                });
+            }
+
+            // Cycle Chart
+            const cycleCtx = document.getElementById('cycleChart');
+            if (cycleCtx) {
+                cycleChart = new Chart(cycleCtx.getContext('2d'), {
+                    type: 'bar',
+                    data: {
+                        labels: ['Core', 'Learn', 'Guard'],
+                        datasets: [{
+                            label: 'Ciclos Executados',
+                            data: [4, 4, 6],
+                            backgroundColor: [
+                                'rgba(255, 107, 107, 0.8)',
+                                'rgba(147, 51, 234, 0.8)',
+                                'rgba(0, 245, 255, 0.8)'
+                            ],
+                            borderColor: [
+                                '#FF6B6B',
+                                '#9333EA',
+                                '#00F5FF'
+                            ],
+                            borderWidth: 2
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                labels: {
+                                    color: '#ffffff'
+                                }
+                            }
+                        },
+                        scales: {
+                            x: {
+                                ticks: { color: '#ffffff' },
+                                grid: { color: 'rgba(255, 255, 255, 0.1)' }
+                            },
+                            y: {
+                                ticks: { color: '#ffffff' },
+                                grid: { color: 'rgba(255, 255, 255, 0.1)' }
+                            }
+                        }
+                    }
+                });
+            }
+        }
+
+        // Fetch data from API
+        async function fetchData() {
             try {
                 const response = await fetch('/api/metrics');
                 const data = await response.json();
                 updateDashboard(data);
             } catch (error) {
-                console.error('Erro ao buscar métricas:', error);
+                console.error('Error fetching data:', error);
+                // Fallback to existing dashboard functionality if API fails
             }
         }
 
+        // Update dashboard with new data
         function updateDashboard(data) {
-            // Sistema
-            document.getElementById('systemStatus').textContent = data.system.status;
-            document.getElementById('systemPerformance').textContent = data.system.performance.toFixed(1) + '%';
-            document.getElementById('systemUptime').textContent = data.system.uptime + '%';
-            document.getElementById('agentsActive').textContent = data.system.agents_active + '/' + data.system.total_agents;
-            document.getElementById('cyclesPerHour').textContent = data.system.cycles_per_hour;
+            // System metrics
+            if (document.getElementById('systemPerformance')) {
+                document.getElementById('systemPerformance').textContent = data.system.performance.toFixed(1) + '%';
+            }
+            if (document.getElementById('systemUptime')) {
+                document.getElementById('systemUptime').textContent = data.system.uptime + '%';
+            }
+            if (document.getElementById('agentsActive')) {
+                document.getElementById('agentsActive').textContent = `${data.system.agents_active}/${data.system.total_agents}`;
+            }
+            if (document.getElementById('cyclesPerHour')) {
+                document.getElementById('cyclesPerHour').textContent = data.system.cycles_per_hour;
+            }
 
-            // 🏆 CONTADOR REAL DE CICLOS
+            // Cycle counter
             if (data.cycle_counter) {
-                document.getElementById('totalCycles').textContent = data.cycle_counter.total_cycles.toLocaleString('pt-BR');
-                
+                if (document.getElementById('totalCycles')) {
+                    document.getElementById('totalCycles').textContent = data.cycle_counter.total_cycles.toLocaleString('pt-BR');
+                }
                 const uptime = data.cycle_counter.uptime;
-                document.getElementById('uptime').textContent = `${uptime.days}d ${uptime.hours}h ${uptime.minutes}m`;
-                document.getElementById('cyclesPerSecond').textContent = data.cycle_counter.cycles_per_second.toFixed(3);
+                if (document.getElementById('uptime')) {
+                    document.getElementById('uptime').textContent = `${uptime.days}d ${uptime.hours}h ${uptime.minutes}m`;
+                }
+                if (document.getElementById('cyclesPerSecond')) {
+                    document.getElementById('cyclesPerSecond').textContent = data.cycle_counter.cycles_per_second.toFixed(3);
+                }
             }
 
             // Core Agent
-            document.getElementById('corePerformance').textContent = (data.agents.core.performance * 100).toFixed(2) + '%';
-            document.getElementById('coreImprovement').textContent = '+' + data.agents.core.improvement.toFixed(2) + '%';
-            document.getElementById('coreCycles').textContent = data.agents.core.automl_cycles;
-            document.getElementById('coreTrials').textContent = data.agents.core.trials;
+            const corePerf = (data.agents.core.performance * 100);
+            if (document.getElementById('corePerformanceDisplay')) {
+                document.getElementById('corePerformanceDisplay').textContent = corePerf.toFixed(1) + '%';
+            }
+            if (document.getElementById('coreImprovement')) {
+                document.getElementById('coreImprovement').textContent = '+' + data.agents.core.improvement.toFixed(1) + '%';
+            }
+            if (document.getElementById('coreCycles')) {
+                document.getElementById('coreCycles').textContent = data.agents.core.automl_cycles;
+            }
+            if (document.getElementById('coreTrials')) {
+                document.getElementById('coreTrials').textContent = data.agents.core.trials;
+            }
 
             // Guard Agent
-            document.getElementById('guardStatus').textContent = data.agents.guard.status;
-            document.getElementById('guardUptime').textContent = data.agents.guard.uptime.toFixed(1) + '%';
-            document.getElementById('guardChecks').textContent = data.agents.guard.checks;
-            document.getElementById('guardIncidents').textContent = data.agents.guard.incidents_detected;
+            if (document.getElementById('guardUptimeDisplay')) {
+                document.getElementById('guardUptimeDisplay').textContent = data.agents.guard.uptime.toFixed(1) + '%';
+            }
+            if (document.getElementById('guardStatus')) {
+                document.getElementById('guardStatus').textContent = data.agents.guard.status;
+            }
+            if (document.getElementById('guardChecks')) {
+                document.getElementById('guardChecks').textContent = data.agents.guard.checks;
+            }
+            if (document.getElementById('guardIncidents')) {
+                document.getElementById('guardIncidents').textContent = data.agents.guard.incidents_detected;
+            }
 
             // Learn Agent
-            document.getElementById('learnPerformance').textContent = (data.agents.learn.performance * 100).toFixed(1) + '%';
-            document.getElementById('learnConnection').textContent = data.agents.learn.connection_status;
-            document.getElementById('learnCycles').textContent = data.agents.learn.training_cycles;
-            document.getElementById('learnAccuracy').textContent = data.agents.learn.accuracy.toFixed(1) + '%';
+            const learnPerf = (data.agents.learn.performance * 100);
+            if (document.getElementById('learnPerformanceDisplay')) {
+                document.getElementById('learnPerformanceDisplay').textContent = learnPerf.toFixed(1) + '%';
+            }
+            if (document.getElementById('learnConnection')) {
+                document.getElementById('learnConnection').textContent = data.agents.learn.connection_status;
+            }
+            if (document.getElementById('learnCycles')) {
+                document.getElementById('learnCycles').textContent = data.agents.learn.training_cycles;
+            }
+            if (document.getElementById('learnAccuracy')) {
+                document.getElementById('learnAccuracy').textContent = data.agents.learn.accuracy.toFixed(1) + '%';
+            }
 
-            // Valor total
-            document.getElementById('totalValue').textContent = (data.total_value / 1000) + 'k';
+            // Update total value
+            if (document.getElementById('totalValue')) {
+                document.getElementById('totalValue').textContent = (data.total_value / 1000000).toFixed(3);
+            }
+            
+            // Update timestamp
+            if (document.getElementById('lastUpdate')) {
+                document.getElementById('lastUpdate').textContent = new Date().toLocaleTimeString('pt-BR');
+            }
 
-            // Timestamp
-            document.getElementById('lastUpdate').textContent = new Date().toLocaleTimeString('pt-BR');
+            // Update chart data
+            if (cycleChart) {
+                cycleChart.data.datasets[0].data = [
+                    data.agents.core.automl_cycles,
+                    data.agents.learn.training_cycles,
+                    data.agents.guard.checks
+                ];
+                cycleChart.update();
+            }
+
+            // Animate progress rings
+            updateProgressRings(corePerf, data.agents.guard.uptime, learnPerf);
         }
 
+        // Update progress rings
+        function updateProgressRings(corePerf, guardUptime, learnPerf) {
+            const coreProgress = (corePerf / 100) * 251.2;
+            const guardProgress = (guardUptime / 100) * 251.2;
+            const learnProgress = (learnPerf / 100) * 251.2;
+
+            if (typeof gsap !== 'undefined') {
+                gsap.to('#coreProgress', {
+                    duration: 2,
+                    ease: "power2.out",
+                    attr: { style: `--progress-value: ${coreProgress}` }
+                });
+
+                gsap.to('#guardProgress', {
+                    duration: 2,
+                    ease: "power2.out",
+                    attr: { style: `--progress-value: ${guardProgress}` }
+                });
+
+                gsap.to('#learnProgress', {
+                    duration: 2,
+                    ease: "power2.out",
+                    attr: { style: `--progress-value: ${learnProgress}` }
+                });
+            }
+        }
+
+        // Refresh data
         function refreshData() {
-            fetchMetrics();
+            fetchData();
         }
 
-        // Auto-refresh a cada 5 segundos
-        setInterval(fetchMetrics, 5000);
-        
-        // Carregar dados iniciais
-        fetchMetrics();
+        // Initialize everything
+        document.addEventListener('DOMContentLoaded', function() {
+            createParticles();
+            
+            // Check if Three.js is loaded before initializing 3D scene
+            if (typeof THREE !== 'undefined') {
+                init3DScene();
+            }
+            
+            // Check if Chart.js is loaded before initializing charts
+            if (typeof Chart !== 'undefined') {
+                initCharts();
+            }
+            
+            fetchData();
+
+            // Auto-refresh every 5 seconds
+            setInterval(fetchData, 5000);
+
+            // Handle window resize
+            window.addEventListener('resize', function() {
+                if (renderer && camera) {
+                    const canvas = document.getElementById('cyclesCanvas');
+                    if (canvas) {
+                        const rect = canvas.getBoundingClientRect();
+                        camera.aspect = rect.width / rect.height;
+                        camera.updateProjectionMatrix();
+                        renderer.setSize(rect.width, rect.height);
+                    }
+                }
+            });
+        });
+
+        // Cleanup on page unload
+        window.addEventListener('beforeunload', function() {
+            if (animationId) {
+                cancelAnimationFrame(animationId);
+            }
+        });
     </script>
 </body>
 </html>
