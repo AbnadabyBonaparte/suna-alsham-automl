@@ -2,7 +2,7 @@
 SUNA-ALSHAM: Sistema Unificado Neural Avançado - Arquitetura Transcendental PERFECT 10/10
 Sistema de 3 agentes auto-evolutivos com dashboard web integrado - VERSÃO DEFINITIVA
 Valor: R$ 1.430.000 (Core: R$ 550k + Guard: R$ 330k + Learn: R$ 550k)
-MELHORIAS: WebSocket + Event Log + Gráficos Empilhados + Drill-Down + Animações
+MELHORIAS: WebSocket + Event Log + Gráficos Empilhados + Drill-Down + Animações + 5 Temas
 """
 
 import asyncio
@@ -343,10 +343,10 @@ class CoreAgent:
                 for h in self.performance_history[-20:]
             ],
             'techniques_used': list(set([d['technique'] for d in self.detailed_history])),
-            'avg_processing_time': sum([d['processing_time'] for d in self.detailed_history[-10:]]) / min(10, len(self.detailed_history)),
+            'avg_processing_time': sum([d['processing_time'] for d in self.detailed_history[-10:]]) / min(10, len(self.detailed_history)) if self.detailed_history else 0,
             'system_resources': {
-                'avg_memory': sum([d['memory_usage'] for d in self.detailed_history[-5:]]) / min(5, len(self.detailed_history)),
-                'avg_cpu': sum([d['cpu_usage'] for d in self.detailed_history[-5:]]) / min(5, len(self.detailed_history))
+                'avg_memory': sum([d['memory_usage'] for d in self.detailed_history[-5:]]) / min(5, len(self.detailed_history)) if self.detailed_history else 0,
+                'avg_cpu': sum([d['cpu_usage'] for d in self.detailed_history[-5:]]) / min(5, len(self.detailed_history)) if self.detailed_history else 0
             }
         }
 
@@ -660,8 +660,8 @@ orchestrator = Orchestrator()
 
 # Aplicação FastAPI
 app = FastAPI(
-    title="SUNA-ALSHAM Sistema Auto-Evolutivo - PERFECT 10/10",
-    description="Sistema Unificado Neural Avançado com WebSocket, Event Log e todas as melhorias",
+    title="SUNA-ALSHAM Sistema Auto-Evolutivo - PERFECT 10/10 + 5 Temas",
+    description="Sistema Unificado Neural Avançado com WebSocket, Event Log, 5 Temas e todas as melhorias",
     version="3.0.0"
 )
 
@@ -710,7 +710,7 @@ async def websocket_endpoint(websocket: WebSocket):
 async def root():
     """Endpoint principal"""
     return {
-        "message": "SUNA-ALSHAM Sistema Ativo - PERFECT 10/10",
+        "message": "SUNA-ALSHAM Sistema Ativo - PERFECT 10/10 + 5 Temas",
         "version": "3.0.0",
         "status": "operational",
         "accelerated_mode": ACCELERATED_MODE,
@@ -718,7 +718,7 @@ async def root():
         "uptime": cycle_counter.get_uptime(),
         "agents": ["CoreAgent", "GuardAgent", "LearnAgent"],
         "value": "R$ 1.430.000",
-        "features": ["WebSocket", "Event Log", "Drill-Down", "Stacked Charts"]
+        "features": ["WebSocket", "Event Log", "Drill-Down", "Stacked Charts", "5 Temas", "Modais"]
     }
 
 @app.get("/api/metrics")
@@ -797,11 +797,11 @@ async def dashboard():
     return """
     <html>
         <head>
-            <meta http-equiv="refresh" content="0; url=https://gkjyvpnf.gensparkspace.com/">
+            <meta http-equiv="refresh" content="0; url=https://recehtfh.gensparkspace.com/">
         </head>
         <body>
-            <p>Redirecionando para o Dashboard SUNA-ALSHAM 10/10...</p>
-            <p><a href="https://gkjyvpnf.gensparkspace.com/">Clique aqui se não redirecionou automaticamente</a></p>
+            <p>Redirecionando para o Dashboard SUNA-ALSHAM 10/10 com 5 Temas...</p>
+            <p><a href="https://recehtfh.gensparkspace.com/">Clique aqui se não redirecionou automaticamente</a></p>
         </body>
     </html>
     """
@@ -809,14 +809,15 @@ async def dashboard():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 8080))
     
-    print("🚀 Iniciando SUNA-ALSHAM PERFECT 10/10 na porta", port)
+    print("🚀 Iniciando SUNA-ALSHAM PERFECT 10/10 + 5 Temas na porta", port)
     print("🏗️ Arquitetura: Modular com WebSocket + Event System")
     print("⚡ Modo Aceleração: ATIVO - Ciclos automáticos")
     print("🏆 Contador Real: Todos os ciclos contabilizados")
     print("💎 Valor Total: R$ 1.430.000")
-    print("✨ Dashboard: 10/10 Edition com todas as melhorias")
-    print("🎯 Features: WebSocket, Event Log, Drill-Down, Stacked Charts")
-    print("🔗 Dashboard URL: https://gkjyvpnf.gensparkspace.com/")
+    print("✨ Dashboard: 10/10 Edition com 5 temas transcendentais")
+    print("🎯 Features: WebSocket, Event Log, Drill-Down, Stacked Charts, Modais")
+    print("🎨 Temas: Luxury Glass, Quantum Void, Neural Twilight, Cyber Aurora, Transcendental Light")
+    print("🔗 Dashboard URL: https://recehtfh.gensparkspace.com/")
     
     uvicorn.run(
         "suna_alsham_perfect:app",  # Nome do arquivo
