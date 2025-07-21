@@ -2,7 +2,7 @@
 SUNA-ALSHAM: Sistema Unificado Neural Avançado - Arquitetura Transcendental PERFECT 10/10
 Sistema de 3 agentes auto-evolutivos com dashboard web integrado - VERSÃO DEFINITIVA CORRIGIDA
 Valor: R$ 1.430.000 (Core: R$ 550k + Guard: R$ 330k + Learn: R$ 550k)
-CORREÇÃO: WebSocket + Fallback Inteligente + HTML Dashboard Integrado
+CORREÇÃO: WebSocket + Fallback Inteligente + HTML Dashboard Integrado + Serialização JSON Corrigida
 """
 
 import asyncio
@@ -39,9 +39,9 @@ LEARN_CYCLE_INTERVAL = 300   # 5 minutos para demonstração mais rápida
 GUARD_CHECK_INTERVAL = 180   # 3 minutos para demonstração mais rápida
 ACCELERATED_MODE = True      # Modo acelerado ativo
 
-# 🏆 EVENT SYSTEM COM FALLBACK INTELIGENTE
+# 🏆 EVENT SYSTEM COM FALLBACK INTELIGENTE E SERIALIZAÇÃO JSON CORRIGIDA
 class EventSystem:
-    """Sistema de eventos com suporte WebSocket + Fallback HTTP"""
+    """Sistema de eventos com suporte WebSocket + Fallback HTTP + Serialização JSON Corrigida"""
     
     def __init__(self):
         self.connections: List = []
@@ -70,12 +70,25 @@ class EventSystem:
             self.connections.remove(websocket)
             self.logger.info(f"🔌 Conexão removida: {len(self.connections)} ativas")
     
+    def _make_json_serializable(self, obj):
+        """🔧 CORREÇÃO: Converte objetos para JSON serializável"""
+        if isinstance(obj, dict):
+            return {key: self._make_json_serializable(value) for key, value in obj.items()}
+        elif isinstance(obj, list):
+            return [self._make_json_serializable(item) for item in obj]
+        elif isinstance(obj, datetime):
+            return obj.isoformat()
+        elif hasattr(obj, '__dict__'):
+            return self._make_json_serializable(obj.__dict__)
+        else:
+            return obj
+    
     async def broadcast_event(self, event: Dict):
         """Transmite evento - WebSocket OU armazena para polling"""
         # Adicionar timestamp e ID
         event_with_meta = {
             **event,
-            'timestamp': datetime.now().isoformat(),
+            'timestamp': datetime.now().isoformat(),  # Já convertido para string
             'id': str(uuid.uuid4())[:8]
         }
         
@@ -96,11 +109,16 @@ class EventSystem:
         }
     
     async def _websocket_broadcast(self, event):
-        """Transmite via WebSocket"""
+        """🔧 CORREÇÃO: Transmite via WebSocket com serialização corrigida"""
         disconnected = []
+        
+        # Converter para JSON serializável
+        serializable_event = self._make_json_serializable(event)
+        
         for connection in self.connections:
             try:
-                await connection.send_json(event)
+                await connection.send_json(serializable_event)
+                self.logger.debug(f"📡 Evento enviado via WebSocket: {serializable_event.get('type', 'unknown')}")
             except Exception as e:
                 self.logger.warning(f"⚠️ Conexão WebSocket falhou: {e}")
                 disconnected.append(connection)
@@ -117,9 +135,9 @@ class EventSystem:
         """Retorna dados para polling HTTP"""
         return self.polling_data
 
-# 🏆 CONTADOR GLOBAL DE CICLOS REAIS ROBUSTO
+# 🏆 CONTADOR GLOBAL DE CICLOS REAIS ROBUSTO COM SERIALIZAÇÃO CORRIGIDA
 class CycleCounter:
-    """Contador global robusto que sempre funciona"""
+    """Contador global robusto que sempre funciona com serialização JSON corrigida"""
     
     def __init__(self, event_system: EventSystem):
         self.start_time = datetime.now()
@@ -184,7 +202,7 @@ class CycleCounter:
         })
     
     async def _log_cycle(self, agent_type: str, cycle_num: int, data: Dict):
-        """Log robusto que sempre funciona"""
+        """🔧 CORREÇÃO: Log robusto com serialização corrigida"""
         timestamp = datetime.now()
         
         # Histórico local
@@ -203,7 +221,7 @@ class CycleCounter:
         # Log tradicional
         self.logger.info(f"🔥 CICLO #{self.total_cycles} - {agent_type} #{cycle_num}")
         
-        # Evento para dashboard
+        # Evento para dashboard (com strings, não datetime)
         event_icons = {'CORE': '🤖', 'LEARN': '🧠', 'GUARD': '🛡️'}
         event_colors = {'CORE': '#FF6B6B', 'LEARN': '#9333EA', 'GUARD': '#00F5FF'}
         
@@ -215,12 +233,13 @@ class CycleCounter:
             'message': f"{agent_type} Agent completou ciclo #{cycle_num}",
             'details': data,
             'total_cycles': self.total_cycles,
-            'timestamp': timestamp.strftime('%H:%M:%S')
+            'timestamp': timestamp.strftime('%H:%M:%S')  # String, não datetime
         }
         
         # Broadcast robusto
         try:
             await self.event_system.broadcast_event(event)
+            self.logger.debug(f"✅ Evento {agent_type} #{cycle_num} transmitido")
         except Exception as e:
             self.logger.warning(f"⚠️ Falha no broadcast: {e}")
     
@@ -240,7 +259,7 @@ class CycleCounter:
         return 0.0
     
     def get_stats(self):
-        """Retorna estatísticas completas"""
+        """🔧 CORREÇÃO: Retorna estatísticas com serialização corrigida"""
         uptime = self.get_uptime()
         cycles_per_second = self.get_cycles_per_second()
         
@@ -252,9 +271,14 @@ class CycleCounter:
             'uptime': uptime,
             'cycles_per_second': cycles_per_second,
             'cycles_per_hour': round(cycles_per_second * 3600, 1),
-            'start_time': self.start_time.isoformat(),
-            'last_cycle': self.cycle_history[-1] if self.cycle_history else None,
-            'last_cycle_time': self.last_cycle_time.isoformat()
+            'start_time': self.start_time.isoformat(),  # String
+            'last_cycle_time': self.last_cycle_time.isoformat(),  # String
+            'last_cycle': {
+                'agent': self.cycle_history[-1]['agent'],
+                'cycle_number': self.cycle_history[-1]['cycle_number'],
+                'total_cycles': self.cycle_history[-1]['total_cycles'],
+                'timestamp': self.cycle_history[-1]['timestamp'].isoformat()  # String
+            } if self.cycle_history else None
         }
 
 # Instâncias globais
@@ -1600,14 +1624,15 @@ async def dashboard():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 8080))
     
-    print("🚀 Iniciando SUNA-ALSHAM GUARD SERVICE CORRIGIDO")
-    print("🏗️ Arquitetura: WebSocket + Fallback HTTP Polling")
+    print("🚀 Iniciando SUNA-ALSHAM GUARD SERVICE CORRIGIDO COM SERIALIZAÇÃO JSON")
+    print("🏗️ Arquitetura: WebSocket + Fallback HTTP Polling + Serialização Corrigida")
     print("⚡ Modo: DEMO com ciclos acelerados")
     print("🏆 Contador: Funcionando independente de WebSocket")
     print("💎 Valor: R$ 1.430.000")
     print("✨ Dashboard: HTML integrado no guard_service.py")
+    print("🔧 CORREÇÃO: Serialização JSON datetime corrigida")
     print("🎯 Funcionalidades:")
-    print("   - ✅ WebSocket quando disponível")
+    print("   - ✅ WebSocket quando disponível (SEM ERROS JSON)")
     print("   - ✅ HTTP Polling como fallback")
     print("   - ✅ Contador de ciclos sempre ativo")
     print("   - ✅ 3 Agentes auto-evolutivos")
