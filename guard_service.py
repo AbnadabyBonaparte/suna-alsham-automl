@@ -2331,6 +2331,18 @@ async def dashboard():
     
     return HTMLResponse(content=dashboard_html)
 
+# 📱 ROTA MOBILE PWA ADICIONADA
+@app.get("/mobile", response_class=HTMLResponse)
+async def mobile_dashboard():
+    """Dashboard PWA mobile - Versão otimizada para dispositivos móveis"""
+    try:
+        with open('dashboard_mobile.html', 'r', encoding='utf-8') as file:
+            mobile_html = file.read()
+        return HTMLResponse(content=mobile_html)
+    except FileNotFoundError:
+        # Fallback para versão desktop se mobile não existir
+        return await dashboard()
+
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 8080))
     
@@ -2342,6 +2354,7 @@ if __name__ == "__main__":
     print("✨ Dashboard: Integrado COM CONTADOR DE CICLOS CORRIGIDO")
     print("🎯 Features: WebSocket, Event Log, Contador Real, HTTP Fallback")
     print("🌐 Dashboard: /dashboard (SEM redirecionamento externo)")
+    print("📱 Mobile PWA: /mobile (Versão otimizada para celular)")
     print("🔥 CONTADOR DE CICLOS: Funcionando em tempo real COM CORREÇÕES")
     print("🔧 CORREÇÕES: URL WebSocket, Serialização datetime, HTTP Fallback")
     
