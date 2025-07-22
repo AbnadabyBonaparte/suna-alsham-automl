@@ -370,7 +370,7 @@ class BaseNetworkAgent:
             except Exception as e:
                 logger.error(f"❌ Erro no loop do agente {self.agent_id}: {e}")
             
-            time.sleep(0.1)  # 100ms de delay
+            time.sleep(30)  # 30 segundos de delay - adequado para monitoramento
     
     def _process_tasks(self):
         """Processa tarefas na fila"""
