@@ -1,0 +1,83 @@
+{
+  "timestamp": "2025-07-22T11:36:54.908903",
+  "platform": "railway",
+  "environment": "production",
+  "status": "NEEDS_ATTENTION",
+  "optimizations": [
+    {
+      "category": "memory",
+      "optimization": "memory_allocation",
+      "impact": "HIGH",
+      "before_value": "default",
+      "after_value": "1GB",
+      "improvement_percentage": 25.0
+    },
+    {
+      "category": "concurrency",
+      "optimization": "worker_processes",
+      "impact": "HIGH",
+      "before_value": 1,
+      "after_value": 8,
+      "improvement_percentage": 400.0
+    },
+    {
+      "category": "cache",
+      "optimization": "redis_cache",
+      "impact": "MEDIUM",
+      "before_value": "no_cache",
+      "after_value": "redis_optimized",
+      "improvement_percentage": 40.0
+    },
+    {
+      "category": "database",
+      "optimization": "connection_pool",
+      "impact": "MEDIUM",
+      "before_value": 5,
+      "after_value": 20,
+      "improvement_percentage": 30.0
+    }
+  ],
+  "performance_metrics": {
+    "memory_usage_mb": 884.64453125,
+    "cpu_usage_percent": 0.7,
+    "disk_usage_percent": 19.6,
+    "estimated_throughput": 800,
+    "estimated_latency_ms": 50,
+    "cache_hit_rate": 0.85
+  },
+  "security_checks": {
+    "secret_key_set": false,
+    "debug_disabled": true,
+    "https_enabled": false,
+    "rate_limiting_enabled": true,
+    "input_validation_enabled": true,
+    "cors_configured": true,
+    "logging_enabled": true,
+    "authentication_required": true,
+    "authorization_implemented": true,
+    "input_sanitization": true,
+    "output_encoding": true,
+    "sql_injection_protection": true,
+    "xss_protection": true,
+    "csrf_protection": true
+  },
+  "recommendations": [
+    "Configure Redis para cache de alta performance",
+    "Implemente monitoramento com Prometheus/Grafana",
+    "Configure auto-scaling baseado em CPU/memória",
+    "Implemente health checks robustos",
+    "Configure backup automático de dados",
+    "Implemente rate limiting por IP",
+    "Configure logs estruturados para análise",
+    "Implemente circuit breaker para APIs externas"
+  ],
+  "estimated_cost": {
+    "base_cost": 20.0,
+    "redis_cost": 0,
+    "monitoring_cost": 10.0,
+    "backup_cost": 5.0,
+    "total_monthly": 35.0,
+    "total_yearly": 420.0
+  },
+  "deployment_time": 3.1085205078125
+}
