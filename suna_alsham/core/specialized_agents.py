@@ -28,10 +28,13 @@ import numpy as np
 import openai
 import os
 
-from multi_agent_network import (
-    BaseNetworkAgent, AgentType, MessageType, Priority, 
-    AgentCapability, MessageBus, AgentMessage
-)
+# Importações locais para evitar circular import
+import sys
+import os
+sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+
+from multi_agent_network import BaseNetworkAgent, AgentType, MessageType, Priority, AgentCapability, MessageBus, AgentMessage
+
 
 logger = logging.getLogger(__name__)
 
