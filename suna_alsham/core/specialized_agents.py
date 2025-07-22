@@ -69,8 +69,9 @@ class OptimizationAgent(BaseNetworkAgent):
             resource_cost=0.3
         ))
         
-        # Adicionar handler para notificações
+        # Adicionar handlers para mensagens
         self.message_handlers[MessageType.NOTIFICATION] = self._handle_notification
+        self.message_handlers[MessageType.HEARTBEAT] = self._handle_heartbeat
     
     def _handle_request(self, message: AgentMessage):
         """Handler para requisições de otimização"""
@@ -114,6 +115,10 @@ class OptimizationAgent(BaseNetworkAgent):
                     
         except Exception as e:
             logger.error(f"❌ Erro processando notificação no OptimizationAgent: {e}")
+    
+    def _handle_heartbeat(self, message: AgentMessage):
+        """Handler para mensagens de heartbeat"""
+        logger.debug(f"💓 {self.agent_id} recebeu heartbeat de {message.sender_id}")
     
     def _optimize_performance(self, message: AgentMessage):
         """Otimiza performance baseado em métricas"""
@@ -262,8 +267,9 @@ class SecurityAgent(BaseNetworkAgent):
             resource_cost=0.5
         ))
         
-        # Adicionar handler para notificações
+        # Adicionar handlers para mensagens
         self.message_handlers[MessageType.NOTIFICATION] = self._handle_notification
+        self.message_handlers[MessageType.HEARTBEAT] = self._handle_heartbeat
     
     def _handle_request(self, message: AgentMessage):
         """Handler para requisições de segurança"""
@@ -319,6 +325,10 @@ class SecurityAgent(BaseNetworkAgent):
                     
         except Exception as e:
             logger.error(f"❌ Erro processando notificação no SecurityAgent: {e}")
+    
+    def _handle_heartbeat(self, message: AgentMessage):
+        """Handler para mensagens de heartbeat"""
+        logger.debug(f"💓 {self.agent_id} recebeu heartbeat de {message.sender_id}")
     
     def _scan_threats(self, message: AgentMessage):
         """Escaneia ameaças no sistema"""
@@ -443,8 +453,9 @@ class LearningAgent(BaseNetworkAgent):
             resource_cost=0.8
         ))
         
-        # Adicionar handler para notificações
+        # Adicionar handlers para mensagens
         self.message_handlers[MessageType.NOTIFICATION] = self._handle_notification
+        self.message_handlers[MessageType.HEARTBEAT] = self._handle_heartbeat
     
     def _handle_request(self, message: AgentMessage):
         """Handler para requisições de aprendizado"""
@@ -504,6 +515,10 @@ class LearningAgent(BaseNetworkAgent):
                     
         except Exception as e:
             logger.error(f"❌ Erro processando notificação no LearningAgent: {e}")
+    
+    def _handle_heartbeat(self, message: AgentMessage):
+        """Handler para mensagens de heartbeat"""
+        logger.debug(f"💓 {self.agent_id} recebeu heartbeat de {message.sender_id}")
     
     def _analyze_alert_trends(self, metric: str):
         """Analisa tendências nos alertas"""
@@ -745,6 +760,9 @@ class DataAgent(BaseNetworkAgent):
             accuracy_score=0.97,
             resource_cost=0.2
         ))
+        
+        # Adicionar handler para heartbeat
+        self.message_handlers[MessageType.HEARTBEAT] = self._handle_heartbeat
     
     def _handle_request(self, message: AgentMessage):
         """Handler para requisições de dados"""
@@ -758,6 +776,10 @@ class DataAgent(BaseNetworkAgent):
             self._transform_data(message)
         else:
             super()._handle_request(message)
+    
+    def _handle_heartbeat(self, message: AgentMessage):
+        """Handler para mensagens de heartbeat"""
+        logger.debug(f"💓 {self.agent_id} recebeu heartbeat de {message.sender_id}")
     
     def _process_data(self, message: AgentMessage):
         """Processa dados brutos"""
@@ -869,6 +891,13 @@ class MonitoringAgent(BaseNetworkAgent):
             accuracy_score=0.98,
             resource_cost=0.1
         ))
+        
+        # Adicionar handler para heartbeat
+        self.message_handlers[MessageType.HEARTBEAT] = self._handle_heartbeat
+    
+    def _handle_heartbeat(self, message: AgentMessage):
+        """Handler para mensagens de heartbeat"""
+        logger.debug(f"💓 {self.agent_id} recebeu heartbeat de {message.sender_id}")
     
     def _agent_specific_logic(self):
         """Lógica específica do agente de monitoramento"""
