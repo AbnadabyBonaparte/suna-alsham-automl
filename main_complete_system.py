@@ -1,5 +1,4 @@
-"""
-🌟 SUNA-ALSHAM Multi-Agent System v2.0
+"""🌟 SUNA-ALSHAM Multi-Agent System v2.0
 Sistema multi-agente com capacidades de IA avançada
 
 CORREÇÕES IMPLEMENTADAS:
@@ -9,6 +8,7 @@ CORREÇÕES IMPLEMENTADAS:
 ✅ Funciona com/sem Redis
 ✅ Tratamento robusto de erros
 ✅ Inicialização dos 7 agentes especializados
+✅ Adicionados 4 novos agentes para maior robustez
 """
 
 import asyncio
@@ -43,8 +43,9 @@ logger.info(f"🔗 REDIS_URL configurada: {'✅' if os.getenv('REDIS_URL') else 
 try:
     from suna_alsham.core.multi_agent_network import MultiAgentNetwork
     from suna_alsham.core.specialized_agents import (
-    OptimizationAgent, SecurityAgent, LearningAgent, 
-    DataAgent, MonitoringAgent
+        OptimizationAgent, SecurityAgent, LearningAgent, 
+        DataAgent, MonitoringAgent, CollaborationAgent, 
+        ComplianceAgent, UserExperienceAgent, PredictiveAnalyticsAgent
     )
     from suna_alsham.core.ai_powered_agents import SelfEvolvingAgent, AIOptimizationAgent
     logger.info("✅ Todos os módulos importados com sucesso")
@@ -52,7 +53,7 @@ except ImportError as e:
     logger.error(f"❌ Erro na importação: {e}")
     logger.error("🔍 Verifique se todos os arquivos estão presentes:")
     logger.error("   - multi_agent_network.py")
-    logger.error("   - specialized_agents.py") 
+    logger.error("   - specialized_agents.py")
     logger.error("   - ai_powered_agents.py")
     sys.exit(1)
 
@@ -137,6 +138,10 @@ class EnhancedSystemManager:
             ("monitor_001", MonitoringAgent, "Monitoramento de sistema"),
             ("evolving_001", SelfEvolvingAgent, "Auto-evolução com IA"),
             ("ai_optimizer_001", AIOptimizationAgent, "Otimização com IA"),
+            ("collaboration_001", CollaborationAgent, "Coordenação entre agentes"),
+            ("compliance_001", ComplianceAgent, "Conformidade regulatória"),
+            ("user_experience_001", UserExperienceAgent, "Otimização da experiência do usuário"),
+            ("predictive_analytics_001", PredictiveAnalyticsAgent, "Análise preditiva"),
         ]
         
         successful_agents = 0
@@ -176,51 +181,34 @@ class EnhancedSystemManager:
         
         logger.info(f"🎯 Total de {successful_agents} agentes especializados criados e prontos")
     
-    async def run_system_demo(self, duration: int):
-        """Executa uma demonstração do sistema por um período"""
-        logger.info(f"🚀 Iniciando demonstração do sistema por {duration} segundos")
+    async def run_system_continuously(self):
+        """Executa o sistema continuamente com ciclos regulares"""
+        logger.info("🚀 Iniciando execução contínua do sistema")
         
-        start_time = time.time()
-        last_status_log = 0
-        
-        while self.is_running and not self.shutdown_requested and (time.time() - start_time) < duration:
+        while self.is_running and not self.shutdown_requested:
             try:
                 current_time = time.time()
-                elapsed = current_time - start_time
+                elapsed = current_time - self.start_time
                 
-                if current_time - last_status_log >= 30:
-                    logger.info(f"⏱️ Demonstração em andamento: {elapsed:.0f}s/{duration}s")
+                if int(elapsed) % 30 == 0 and int(elapsed) > 0:
+                    logger.info(f"⏱️ Sistema em andamento: {int(elapsed/60)} minuto(s) de uptime")
                     try:
                         network_status = self.network.get_network_status()
                         logger.info(f"📊 Status da rede: {network_status}")
                     except Exception as e:
                         logger.warning(f"⚠️ Erro coletando status da rede: {e}")
                     
-                    active_agents = 0
-                    for agent_id, agent in self.agents.items():
-                        try:
-                            if hasattr(agent, 'status') and agent.status == 'running':
-                                active_agents += 1
-                            logger.debug(f"🤖 Agente {agent_id}: {getattr(agent, 'status', 'unknown')}")
-                        except Exception as e:
-                            logger.debug(f"⚠️ Erro verificando status do agente {agent_id}: {e}")
-                    
+                    active_agents = sum(1 for agent in self.agents.values() if hasattr(agent, 'status') and agent.status == 'running')
                     logger.info(f"🤖 Agentes ativos: {active_agents}/{len(self.agents)}")
-                    last_status_log = current_time
                 
                 if int(elapsed) % 60 == 0 and int(elapsed) > 0:
                     logger.info(f"🔄 Sistema operando normalmente - {int(elapsed/60)} minuto(s) de uptime")
                 
-                await asyncio.sleep(5)
-                
+                await asyncio.sleep(300)  # 5 minutos por ciclo
+            
             except Exception as e:
-                logger.error(f"❌ Erro durante demonstração: {e}", exc_info=True)
-                break
-        
-        if self.shutdown_requested:
-            logger.info("🛑 Demonstração interrompida por solicitação de shutdown")
-        else:
-            logger.info("🏁 Demonstração concluída com sucesso")
+                logger.error(f"❌ Erro durante execução contínua: {e}", exc_info=True)
+                await asyncio.sleep(5)  # Pausa antes de tentar novamente
     
     def shutdown_system(self):
         """Desliga o sistema de forma segura"""
@@ -260,9 +248,8 @@ def main():
             logger.error("❌ Falha crítica na inicialização do sistema")
             sys.exit(1)
         
-        demo_duration = int(os.getenv("DEMO_DURATION", "3600"))
-        logger.info(f"⏱️ Duração da demonstração: {demo_duration} segundos")
-        asyncio.run(system_manager.run_system_demo(demo_duration))
+        logger.info("⏱️ Iniciando execução contínua")
+        asyncio.run(system_manager.run_system_continuously())
         
     except KeyboardInterrupt:
         logger.info("🛑 Interrupção pelo usuário (Ctrl+C)")
