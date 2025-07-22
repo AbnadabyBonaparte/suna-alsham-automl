@@ -433,26 +433,6 @@ class NetworkCoordinator(BaseNetworkAgent):
             
             logger.debug(f"💓 Heartbeat recebido do agente {agent_id}")
     
-    def get_network_status(self) -> Dict[str, Any]:
-        """Retorna status da rede"""
-        now = datetime.now()
-        active_agents = 0
-        
-        for agent_id, info in self.registered_agents.items():
-            if (now - info["last_seen"]).seconds < 60:  # Ativo se heartbeat < 60s
-                active_agents += 1
-        
-        self.network_metrics.total_agents = len(self.registered_agents)
-        self.network_metrics.active_agents = active_agents
-        self.network_metrics.timestamp = now
-        
-        return {
-            "coordinator_id": self.agent_id,
-            "network_metrics": asdict(self.network_metrics),
-            "registered_agents": self.registered_agents,
-            "message_bus_stats": self.message_bus.delivery_stats
-        }
-    
     def assign_task_to_best_agent(self, task_type: str, task_data: Dict[str, Any]) -> Optional[str]:
         """Atribui tarefa ao melhor agente disponível"""
         # Lógica simples de seleção - pode ser expandida
@@ -567,7 +547,23 @@ class MultiAgentNetwork:
     
     def get_network_status(self) -> Dict[str, Any]:
         """Retorna status completo da rede"""
-        return self.coordinator.get_network_status()
+        now = datetime.now()
+        
+        # Contar agentes ativos baseado na rede real
+        active_agents = sum(1 for agent in self.agents.values() if agent.status == "running")
+        
+        # Atualizar métricas do coordenador
+        self.coordinator.network_metrics.total_agents = len(self.agents)
+        self.coordinator.network_metrics.active_agents = active_agents
+        self.coordinator.network_metrics.timestamp = now
+        
+        return {
+            "coordinator_id": self.coordinator.agent_id,
+            "network_metrics": asdict(self.coordinator.network_metrics),
+            "registered_agents": {agent_id: {"status": agent.status, "type": agent.agent_type.value} 
+                                for agent_id, agent in self.agents.items()},
+            "message_bus_stats": self.message_bus.delivery_stats
+        }
     
     def assign_task(self, task_type: str, task_data: Dict[str, Any]) -> Optional[str]:
         """Atribui uma tarefa à rede"""
@@ -647,4 +643,3 @@ if __name__ == "__main__":
         print("\n🛑 Interrompido pelo usuário")
     finally:
         network.stop()
-
