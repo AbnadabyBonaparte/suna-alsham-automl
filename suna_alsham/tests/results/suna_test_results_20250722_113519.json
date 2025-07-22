@@ -1,0 +1,153 @@
+{
+  "suite_name": "SUNA-ALSHAM Comprehensive Test Suite",
+  "total_tests": 9,
+  "passed_tests": 9,
+  "failed_tests": 0,
+  "skipped_tests": 0,
+  "total_duration": 0.39792609214782715,
+  "coverage_percentage": 100.0,
+  "performance_metrics": {
+    "avg_test_duration": 0.04402401712205675,
+    "max_test_duration": 0.1032097339630127,
+    "min_test_duration": 7.152557373046875e-07,
+    "tests_per_second": 22.61726531030429
+  },
+  "test_results": [
+    {
+      "test_name": "message_bus_communication",
+      "status": "PASS",
+      "duration": 0.10283041000366211,
+      "details": {
+        "message_sent": true,
+        "message_id": "e285cae1-3527-4c11-8b94-16209b272aa0",
+        "latency_ms": 102.83041000366211
+      },
+      "timestamp": "2025-07-22T11:35:18.916213",
+      "error_message": null
+    },
+    {
+      "test_name": "agent_coordination",
+      "status": "PASS",
+      "duration": 7.152557373046875e-07,
+      "details": {
+        "agents_created": 5,
+        "coordination_time": 0.05,
+        "conflicts_resolved": 0,
+        "load_balanced": true
+      },
+      "timestamp": "2025-07-22T11:35:18.916508",
+      "error_message": null
+    },
+    {
+      "test_name": "throughput_test",
+      "status": "PASS",
+      "duration": 0.1032097339630127,
+      "details": {
+        "avg_messages_per_second": 9705.206080459056,
+        "max_messages_per_second": 9770.32775047171,
+        "min_messages_per_second": 9622.390970198903,
+        "total_batches": 10
+      },
+      "timestamp": "2025-07-22T11:35:19.019798",
+      "error_message": null
+    },
+    {
+      "test_name": "scalability_test",
+      "status": "PASS",
+      "duration": 0.08721661567687988,
+      "details": {
+        "agent_counts": [
+          1,
+          5,
+          10,
+          20,
+          50
+        ],
+        "response_times": [
+          0.0011191368103027344,
+          0.005223274230957031,
+          0.010295391082763672,
+          0.020238161087036133,
+          0.050325632095336914
+        ],
+        "scalability_factor": 44.96825734980827,
+        "linear_scaling": false
+      },
+      "timestamp": "2025-07-22T11:35:19.107284",
+      "error_message": null
+    },
+    {
+      "test_name": "input_validation",
+      "status": "PASS",
+      "duration": 1.6927719116210938e-05,
+      "details": {
+        "total_tests": 5,
+        "blocked_inputs": 5,
+        "success_rate": 1.0,
+        "security_level": "HIGH"
+      },
+      "timestamp": "2025-07-22T11:35:19.107551",
+      "error_message": null
+    },
+    {
+      "test_name": "rate_limiting",
+      "status": "PASS",
+      "duration": 8.106231689453125e-06,
+      "details": {
+        "total_requests": 100,
+        "blocked_requests": 49,
+        "blocking_rate": 0.49,
+        "rate_limit_active": true
+      },
+      "timestamp": "2025-07-22T11:35:19.107625",
+      "error_message": null
+    },
+    {
+      "test_name": "ai_reflection",
+      "status": "PASS",
+      "duration": 9.5367431640625e-07,
+      "details": {
+        "code_analyzed": true,
+        "improvements_suggested": 3,
+        "confidence_score": 0.85,
+        "reflection_time": 0.5
+      },
+      "timestamp": "2025-07-22T11:35:19.107680",
+      "error_message": null
+    },
+    {
+      "test_name": "cache_performance",
+      "status": "PASS",
+      "duration": 8.58306884765625e-06,
+      "details": {
+        "cache_hits": 34,
+        "cache_misses": 66,
+        "hit_rate": 0.34,
+        "total_queries": 100
+      },
+      "timestamp": "2025-07-22T11:35:19.107736",
+      "error_message": null
+    },
+    {
+      "test_name": "real_time_metrics",
+      "status": "PASS",
+      "duration": 0.10292410850524902,
+      "details": {
+        "metrics_collected": 10,
+        "collection_rate": 97.15896639988881,
+        "avg_cpu": 54,
+        "avg_memory": 66.75
+      },
+      "timestamp": "2025-07-22T11:35:19.210821",
+      "error_message": null
+    }
+  ],
+  "timestamp": "2025-07-22T11:35:19.211041",
+  "system_info": {
+    "python_version": "3.11.0rc1 (main, Aug 12 2022, 10:02:14) [GCC 11.2.0]",
+    "platform": "linux",
+    "cpu_count": 4,
+    "memory_total": 4133244928,
+    "disk_usage": 19.6
+  }
+}
