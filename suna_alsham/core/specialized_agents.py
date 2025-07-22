@@ -68,6 +68,9 @@ class OptimizationAgent(BaseNetworkAgent):
             accuracy_score=0.88,
             resource_cost=0.3
         ))
+        
+        # Adicionar handler para notificações
+        self.message_handlers[MessageType.NOTIFICATION] = self._handle_notification
     
     def _handle_request(self, message: AgentMessage):
         """Handler para requisições de otimização"""
@@ -79,6 +82,38 @@ class OptimizationAgent(BaseNetworkAgent):
             self._allocate_resources(message)
         else:
             super()._handle_request(message)
+    
+    def _handle_notification(self, message: AgentMessage):
+        """Handler para notificações de alertas"""
+        try:
+            alert_type = message.content.get("alert_type")
+            alert = message.content.get("alert", {})
+            
+            if alert_type == "threshold_exceeded":
+                metric = alert.get("metric")
+                value = alert.get("value")
+                threshold = alert.get("threshold")
+                
+                # Reagir a alertas específicos
+                if metric in ["response_time", "cpu_usage", "memory_usage"]:
+                    logger.info(f"🔧 OptimizationAgent reagindo ao alerta: {metric} = {value} (threshold: {threshold})")
+                    
+                    # Simular otimização automática
+                    optimization_id = str(uuid.uuid4())
+                    logger.info(f"✅ Otimização automática {optimization_id} iniciada para {metric}")
+                    
+                    # Armazenar no histórico
+                    self.optimization_history.append({
+                        "id": optimization_id,
+                        "timestamp": datetime.now(),
+                        "trigger": "alert",
+                        "metric": metric,
+                        "value": value,
+                        "action": "auto_optimization"
+                    })
+                    
+        except Exception as e:
+            logger.error(f"❌ Erro processando notificação no OptimizationAgent: {e}")
     
     def _optimize_performance(self, message: AgentMessage):
         """Otimiza performance baseado em métricas"""
@@ -226,6 +261,9 @@ class SecurityAgent(BaseNetworkAgent):
             accuracy_score=0.91,
             resource_cost=0.5
         ))
+        
+        # Adicionar handler para notificações
+        self.message_handlers[MessageType.NOTIFICATION] = self._handle_notification
     
     def _handle_request(self, message: AgentMessage):
         """Handler para requisições de segurança"""
@@ -239,6 +277,48 @@ class SecurityAgent(BaseNetworkAgent):
             self._security_audit(message)
         else:
             super()._handle_request(message)
+    
+    def _handle_notification(self, message: AgentMessage):
+        """Handler para notificações de alertas"""
+        try:
+            alert_type = message.content.get("alert_type")
+            alert = message.content.get("alert", {})
+            
+            if alert_type == "threshold_exceeded":
+                metric = alert.get("metric")
+                value = alert.get("value")
+                threshold = alert.get("threshold")
+                
+                # Reagir a alertas de segurança
+                if metric in ["error_rate", "active_connections"]:
+                    logger.info(f"🛡️ SecurityAgent reagindo ao alerta: {metric} = {value} (threshold: {threshold})")
+                    
+                    # Simular ação de segurança
+                    security_action_id = str(uuid.uuid4())
+                    
+                    if metric == "error_rate":
+                        logger.info(f"🔒 Implementando rate limiting - Ação {security_action_id}")
+                        action = "rate_limiting"
+                    elif metric == "active_connections":
+                        logger.info(f"🛡️ Ativando proteção DDoS - Ação {security_action_id}")
+                        action = "ddos_protection"
+                    
+                    # Atualizar score de segurança
+                    self.security_score = max(50, self.security_score - 2)
+                    
+                    # Armazenar evento de segurança
+                    self.security_events.append({
+                        "id": security_action_id,
+                        "timestamp": datetime.now(),
+                        "trigger": "alert",
+                        "metric": metric,
+                        "value": value,
+                        "action": action,
+                        "security_score": self.security_score
+                    })
+                    
+        except Exception as e:
+            logger.error(f"❌ Erro processando notificação no SecurityAgent: {e}")
     
     def _scan_threats(self, message: AgentMessage):
         """Escaneia ameaças no sistema"""
@@ -362,6 +442,9 @@ class LearningAgent(BaseNetworkAgent):
             accuracy_score=0.93,
             resource_cost=0.8
         ))
+        
+        # Adicionar handler para notificações
+        self.message_handlers[MessageType.NOTIFICATION] = self._handle_notification
     
     def _handle_request(self, message: AgentMessage):
         """Handler para requisições de aprendizado"""
@@ -375,6 +458,79 @@ class LearningAgent(BaseNetworkAgent):
             self._update_knowledge(message)
         else:
             super()._handle_request(message)
+    
+    def _handle_notification(self, message: AgentMessage):
+        """Handler para notificações de alertas"""
+        try:
+            alert_type = message.content.get("alert_type")
+            alert = message.content.get("alert", {})
+            
+            if alert_type == "threshold_exceeded":
+                metric = alert.get("metric")
+                value = alert.get("value")
+                threshold = alert.get("threshold")
+                
+                logger.info(f"🧠 LearningAgent aprendendo com alerta: {metric} = {value} (threshold: {threshold})")
+                
+                # Atualizar base de conhecimento
+                pattern_id = str(uuid.uuid4())
+                
+                # Armazenar padrão observado
+                pattern = {
+                    "id": pattern_id,
+                    "timestamp": datetime.now(),
+                    "type": "alert_pattern",
+                    "metric": metric,
+                    "value": value,
+                    "threshold": threshold,
+                    "severity": alert.get("severity", "medium")
+                }
+                
+                # Adicionar à base de conhecimento
+                if metric not in self.knowledge_base:
+                    self.knowledge_base[metric] = []
+                
+                self.knowledge_base[metric].append(pattern)
+                
+                # Manter apenas últimos 100 padrões por métrica
+                if len(self.knowledge_base[metric]) > 100:
+                    self.knowledge_base[metric] = self.knowledge_base[metric][-100:]
+                
+                logger.info(f"📚 Padrão {pattern_id} adicionado à base de conhecimento para {metric}")
+                
+                # Analisar tendências se temos dados suficientes
+                if len(self.knowledge_base[metric]) >= 5:
+                    self._analyze_alert_trends(metric)
+                    
+        except Exception as e:
+            logger.error(f"❌ Erro processando notificação no LearningAgent: {e}")
+    
+    def _analyze_alert_trends(self, metric: str):
+        """Analisa tendências nos alertas"""
+        try:
+            patterns = self.knowledge_base[metric]
+            values = [p["value"] for p in patterns[-10:]]  # Últimos 10 valores
+            
+            if len(values) >= 3:
+                trend = self._detect_trend(values)
+                if trend:
+                    logger.info(f"📈 Tendência detectada para {metric}: {trend['description']}")
+                    
+                    # Armazenar insight
+                    insight = {
+                        "metric": metric,
+                        "trend": trend,
+                        "timestamp": datetime.now(),
+                        "confidence": trend.get("confidence", 0.5)
+                    }
+                    
+                    if "insights" not in self.knowledge_base:
+                        self.knowledge_base["insights"] = []
+                    
+                    self.knowledge_base["insights"].append(insight)
+                    
+        except Exception as e:
+            logger.error(f"❌ Erro analisando tendências: {e}")
     
     def _train_model(self, message: AgentMessage):
         """Treina um modelo de machine learning"""
@@ -819,4 +975,3 @@ if __name__ == "__main__":
         print("\n🛑 Interrompido pelo usuário")
     finally:
         network.stop()
-
