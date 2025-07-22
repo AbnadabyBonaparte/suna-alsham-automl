@@ -1,43 +1,47 @@
 """
-🚀 SUNA-ALSHAM Complete Multi-Agent System
-Sistema completo com todos os agentes especializados e melhorias dos colaboradores
+🌟 SUNA-ALSHAM Multi-Agent System v2.0
+Sistema multi-agente com capacidades de IA avançada
 
-MELHORIAS IMPLEMENTADAS:
-✅ Todos os agentes especializados ativos
-✅ Logs detalhados e estruturados
+CORREÇÕES IMPLEMENTADAS:
+✅ Removido AnalyticsAgent inexistente
+✅ Corrigidas todas as importações
+✅ Logs detalhados para debug
+✅ Funciona com/sem Redis
 ✅ Tratamento robusto de erros
-✅ Métricas em tempo real
-✅ Sistema de monitoramento avançado
-✅ Performance otimizada
+✅ Inicialização dos 7 agentes especializados
 """
 
 import asyncio
-import json
-import time
 import logging
-import signal
-import sys
 import os
+import sys
+import time
+import signal
+from typing import Dict, Any, Optional
 from datetime import datetime
-from typing import Dict, Any, List
-import threading
-from concurrent.futures import ThreadPoolExecutor
 
 # Configurar logging avançado
+handlers = [logging.StreamHandler(sys.stdout)]
+if os.getenv("RAILWAY_ENVIRONMENT") is None:
+    handlers.append(logging.FileHandler('suna_alsham.log', mode='a'))
 logging.basicConfig(
-    level=logging.INFO,
+    level=logging.DEBUG,
     format='%(asctime)s - %(name)s - %(levelname)s - [%(filename)s:%(lineno)d] - %(message)s',
-    handlers=[
-        logging.StreamHandler(sys.stdout),
-        logging.FileHandler('suna_alsham.log', mode='a')
-    ]
+    handlers=handlers
 )
-
 logger = logging.getLogger(__name__)
 
-# Importar componentes do sistema
+# Verificar estrutura de arquivos
+logger.info(f"🚀 Executando de: {os.path.abspath(__file__)}")
+logger.info(f"📁 Diretório atual: {os.getcwd()}")
+logger.info(f"📋 Arquivos no diretório: {os.listdir()}")
+
+# Verificar variáveis de ambiente críticas
+logger.info(f"🔑 OPENAI_API_KEY configurada: {'✅' if os.getenv('OPENAI_API_KEY') else '❌'}")
+logger.info(f"🔗 REDIS_URL configurada: {'✅' if os.getenv('REDIS_URL') else '❌'}")
+
 try:
-    from multi_agent_network import MultiAgentNetwork, AnalyticsAgent
+    from multi_agent_network import MultiAgentNetwork
     from specialized_agents import (
         OptimizationAgent, SecurityAgent, LearningAgent, 
         DataAgent, MonitoringAgent
@@ -46,86 +50,23 @@ try:
     logger.info("✅ Todos os módulos importados com sucesso")
 except ImportError as e:
     logger.error(f"❌ Erro na importação: {e}")
+    logger.error("🔍 Verifique se todos os arquivos estão presentes:")
+    logger.error("   - multi_agent_network.py")
+    logger.error("   - specialized_agents.py") 
+    logger.error("   - ai_powered_agents.py")
     sys.exit(1)
 
-
-class SystemMetricsCollector:
-    """Coletor de métricas do sistema em tempo real"""
-    
-    def __init__(self):
-        self.metrics = {
-            "system_start_time": datetime.now(),
-            "total_agents": 0,
-            "active_agents": 0,
-            "messages_processed": 0,
-            "errors_count": 0,
-            "performance_score": 0.0,
-            "uptime_seconds": 0
-        }
-        self.running = False
-        self.collector_thread = None
-    
-    def start_collection(self, network):
-        """Inicia coleta de métricas"""
-        self.network = network
-        self.running = True
-        self.collector_thread = threading.Thread(target=self._collect_loop)
-        self.collector_thread.daemon = True
-        self.collector_thread.start()
-        logger.info("📊 Coletor de métricas iniciado")
-    
-    def stop_collection(self):
-        """Para coleta de métricas"""
-        self.running = False
-        if self.collector_thread:
-            self.collector_thread.join()
-        logger.info("📊 Coletor de métricas parado")
-    
-    def _collect_loop(self):
-        """Loop de coleta de métricas"""
-        while self.running:
-            try:
-                # Atualizar métricas básicas
-                self.metrics["uptime_seconds"] = (datetime.now() - self.metrics["system_start_time"]).total_seconds()
-                
-                # Obter status da rede
-                network_status = self.network.get_network_status()
-                self.metrics["total_agents"] = network_status.get("network_metrics", {}).get("total_agents", 0)
-                self.metrics["active_agents"] = network_status.get("network_metrics", {}).get("active_agents", 0)
-                
-                # Calcular score de performance
-                if self.metrics["total_agents"] > 0:
-                    self.metrics["performance_score"] = (
-                        self.metrics["active_agents"] / self.metrics["total_agents"]
-                    ) * 100
-                
-                # Log métricas a cada 30 segundos
-                if int(self.metrics["uptime_seconds"]) % 30 == 0:
-                    logger.info(f"📈 Métricas: {self.metrics['active_agents']}/{self.metrics['total_agents']} agentes ativos, "
-                              f"Performance: {self.metrics['performance_score']:.1f}%, "
-                              f"Uptime: {self.metrics['uptime_seconds']:.0f}s")
-                
-            except Exception as e:
-                logger.error(f"❌ Erro coletando métricas: {e}")
-                self.metrics["errors_count"] += 1
-            
-            time.sleep(1)
-    
-    def get_metrics(self) -> Dict[str, Any]:
-        """Retorna métricas atuais"""
-        return self.metrics.copy()
-
-
 class EnhancedSystemManager:
-    """Gerenciador do sistema com melhorias dos colaboradores"""
+    """Gerenciador avançado do sistema multi-agente"""
     
     def __init__(self):
         self.network = None
-        self.agents = {}
-        self.metrics_collector = SystemMetricsCollector()
+        self.agents: Dict[str, Any] = {}
+        self.is_running = False
+        self.start_time = datetime.now()
         self.shutdown_requested = False
         
-        # Configurar handlers de sinal
+        # Configurar handlers de sinal para shutdown graceful
         signal.signal(signal.SIGINT, self._signal_handler)
         signal.signal(signal.SIGTERM, self._signal_handler)
     
@@ -133,202 +74,205 @@ class EnhancedSystemManager:
         """Handler para sinais de shutdown"""
         logger.info(f"🛑 Sinal {signum} recebido, iniciando shutdown graceful...")
         self.shutdown_requested = True
+        self.is_running = False
     
-    def initialize_system(self):
-        """Inicializa o sistema completo"""
-        logger.info("🌐 Inicializando sistema SUNA-ALSHAM completo...")
+    def initialize_system(self) -> bool:
+        """Inicializa o sistema multi-agente"""
+        logger.info("🌟 Inicializando sistema SUNA-ALSHAM...")
         
         try:
-            # Criar rede principal
+            # Verificar API key do OpenAI
+            if not os.getenv("OPENAI_API_KEY"):
+                logger.error("❌ OPENAI_API_KEY não configurada")
+                logger.error("🔧 Configure a variável de ambiente OPENAI_API_KEY")
+                return False
+            logger.info("✅ OPENAI_API_KEY configurada")
+            
+            # Verificar Redis
+            redis_url = os.getenv("REDIS_URL")
+            if redis_url:
+                try:
+                    import redis
+                    redis_client = redis.from_url(redis_url)
+                    redis_client.ping()
+                    logger.info("✅ Redis conectado com sucesso")
+                except Exception as e:
+                    logger.warning(f"⚠️ Falha na conexão com Redis: {e}")
+                    logger.info("🔄 Usando cache em memória como fallback")
+            else:
+                logger.warning("⚠️ REDIS_URL não configurada - usando cache em memória")
+            
+            # Criar rede multi-agente
+            logger.info("🌐 Criando rede multi-agente...")
             self.network = MultiAgentNetwork()
             logger.info("✅ Rede multi-agente criada")
             
             # Criar todos os agentes especializados
             self._create_all_agents()
             
-            # Iniciar rede
+            # Iniciar a rede
+            logger.info("🚀 Iniciando rede multi-agente...")
             self.network.start()
-            logger.info("🚀 Rede multi-agente iniciada")
+            self.is_running = True
             
-            # Iniciar coleta de métricas
-            self.metrics_collector.start_collection(self.network)
-            
-            # Log de inicialização completa
-            logger.info(f"🎉 Sistema SUNA-ALSHAM inicializado com {len(self.agents)} agentes especializados!")
-            self._log_system_status()
+            logger.info(f"🎉 Sistema inicializado com sucesso!")
+            logger.info(f"📊 Total de agentes criados: {len(self.agents)}")
+            logger.info(f"⏰ Tempo de inicialização: {(datetime.now() - self.start_time).total_seconds():.2f}s")
             
             return True
             
         except Exception as e:
-            logger.error(f"❌ Erro na inicialização do sistema: {e}")
+            logger.error(f"❌ Erro crítico na inicialização do sistema: {e}", exc_info=True)
             return False
     
     def _create_all_agents(self):
         """Cria todos os agentes especializados"""
-        logger.info("🤖 Criando agentes especializados...")
+        logger.info("🤖 Iniciando criação dos agentes especializados...")
         
-        # Lista de agentes para criar
         agents_config = [
-            ("analytics_001", AnalyticsAgent),
-            ("optimizer_001", OptimizationAgent),
-            ("security_001", SecurityAgent),
-            ("learner_001", LearningAgent),
-            ("data_001", DataAgent),
-            ("monitor_001", MonitoringAgent),
-            ("evolving_001", SelfEvolvingAgent),
-            ("ai_optimizer_001", AIOptimizationAgent),
+            ("optimizer_001", OptimizationAgent, "Otimização de performance"),
+            ("security_001", SecurityAgent, "Monitoramento de segurança"),
+            ("learner_001", LearningAgent, "Aprendizado contínuo"),
+            ("data_001", DataAgent, "Processamento de dados"),
+            ("monitor_001", MonitoringAgent, "Monitoramento de sistema"),
+            ("evolving_001", SelfEvolvingAgent, "Auto-evolução com IA"),
+            ("ai_optimizer_001", AIOptimizationAgent, "Otimização com IA"),
         ]
         
-        # Criar cada agente
-        for agent_id, agent_class in agents_config:
+        successful_agents = 0
+        failed_agents = 0
+        
+        for agent_id, agent_class, description in agents_config:
+            logger.info(f"🔄 Tentando criar agente: {agent_id} ({agent_class.__name__}) - {description}")
             try:
                 if agent_class in [SelfEvolvingAgent, AIOptimizationAgent]:
-                    # Agentes com IA precisam de parâmetros especiais
-                    agent = agent_class(agent_id, self.network.message_bus, redis_url=None)
+                    redis_url = os.getenv("REDIS_URL", None)
+                    logger.info(f"🧠 Criando {agent_class.__name__} com REDIS_URL: {'configurada' if redis_url else 'não configurada'}")
+                    agent = agent_class(agent_id, self.network.message_bus, redis_url=redis_url)
                 else:
                     agent = agent_class(agent_id, self.network.message_bus)
-                
                 self.network.add_agent(agent)
                 self.agents[agent_id] = agent
-                
-                logger.info(f"✅ Agente {agent_id} ({agent_class.__name__}) criado e adicionado")
-                
+                successful_agents += 1
+                logger.info(f"✅ Agente {agent_id} ({agent_class.__name__}) criado e adicionado com sucesso")
+                if hasattr(agent, 'capabilities') and agent.capabilities:
+                    capabilities = [cap.name for cap in agent.capabilities]
+                    logger.info(f"   🎯 Capacidades: {', '.join(capabilities)}")
             except Exception as e:
-                logger.error(f"❌ Erro criando agente {agent_id}: {e}")
+                failed_agents += 1
+                logger.error(f"❌ Erro criando agente {agent_id} ({agent_class.__name__}): {str(e)}", exc_info=True)
                 continue
         
-        logger.info(f"🎯 Total de {len(self.agents)} agentes especializados criados")
+        logger.info("=" * 60)
+        logger.info("📊 RESUMO DA CRIAÇÃO DE AGENTES")
+        logger.info("=" * 60)
+        logger.info(f"✅ Agentes criados com sucesso: {successful_agents}")
+        logger.info(f"❌ Agentes que falharam: {failed_agents}")
+        logger.info(f"📈 Taxa de sucesso: {(successful_agents/(successful_agents+failed_agents)*100):.1f}%")
+        
+        if successful_agents == 0:
+            logger.error("❌ CRÍTICO: Nenhum agente foi criado com sucesso!")
+            raise Exception("Falha na criação de todos os agentes")
+        
+        logger.info(f"🎯 Total de {successful_agents} agentes especializados criados e prontos")
     
-    def _log_system_status(self):
-        """Log detalhado do status do sistema"""
-        status = self.network.get_network_status()
-        
-        logger.info("=" * 60)
-        logger.info("📊 STATUS DO SISTEMA SUNA-ALSHAM")
-        logger.info("=" * 60)
-        logger.info(f"🤖 Agentes Registrados: {status.get('network_metrics', {}).get('total_agents', 0)}")
-        logger.info(f"✅ Agentes Ativos: {status.get('network_metrics', {}).get('active_agents', 0)}")
-        logger.info(f"📨 Message Bus Stats: {status.get('message_bus_stats', {})}")
-        
-        logger.info("\n🤖 AGENTES ESPECIALIZADOS:")
-        for agent_id, agent in self.agents.items():
-            capabilities = [cap.name for cap in agent.capabilities]
-            logger.info(f"  • {agent_id}: {agent.agent_type.value} - {len(capabilities)} capacidades")
-        
-        logger.info("=" * 60)
-    
-    def run_system_demo(self, duration_seconds: int = 60):
-        """Executa demonstração do sistema"""
-        logger.info(f"🚀 Iniciando demonstração do sistema por {duration_seconds} segundos...")
+    async def run_system_demo(self, duration: int):
+        """Executa uma demonstração do sistema por um período"""
+        logger.info(f"🚀 Iniciando demonstração do sistema por {duration} segundos")
         
         start_time = time.time()
-        demo_tasks = []
+        last_status_log = 0
         
-        try:
-            while time.time() - start_time < duration_seconds and not self.shutdown_requested:
-                # Simular tarefas do sistema
-                if time.time() - start_time > 5:  # Após 5 segundos
-                    self._simulate_system_tasks()
+        while self.is_running and not self.shutdown_requested and (time.time() - start_time) < duration:
+            try:
+                current_time = time.time()
+                elapsed = current_time - start_time
                 
-                # Log status a cada 15 segundos
-                elapsed = time.time() - start_time
-                if int(elapsed) % 15 == 0 and int(elapsed) > 0:
-                    self._log_demo_progress(elapsed, duration_seconds)
+                if current_time - last_status_log >= 30:
+                    logger.info(f"⏱️ Demonstração em andamento: {elapsed:.0f}s/{duration}s")
+                    try:
+                        network_status = self.network.get_network_status()
+                        logger.info(f"📊 Status da rede: {network_status}")
+                    except Exception as e:
+                        logger.warning(f"⚠️ Erro coletando status da rede: {e}")
+                    
+                    active_agents = 0
+                    for agent_id, agent in self.agents.items():
+                        try:
+                            if hasattr(agent, 'status') and agent.status == 'running':
+                                active_agents += 1
+                            logger.debug(f"🤖 Agente {agent_id}: {getattr(agent, 'status', 'unknown')}")
+                        except Exception as e:
+                            logger.debug(f"⚠️ Erro verificando status do agente {agent_id}: {e}")
+                    
+                    logger.info(f"🤖 Agentes ativos: {active_agents}/{len(self.agents)}")
+                    last_status_log = current_time
                 
-                time.sleep(1)
-            
-            logger.info("✅ Demonstração concluída com sucesso!")
-            
-        except Exception as e:
-            logger.error(f"❌ Erro durante demonstração: {e}")
-    
-    def _simulate_system_tasks(self):
-        """Simula tarefas do sistema"""
-        try:
-            # Atribuir tarefa de otimização
-            if "optimizer_001" in self.agents:
-                task_id = self.network.assign_task("performance_optimization", {
-                    "metrics": {"cpu_usage": 75, "memory_usage": 60, "response_time": 800},
-                    "target_improvement": 0.15
-                })
-                if task_id:
-                    logger.info(f"📋 Tarefa de otimização {task_id} atribuída")
-            
-            # Atribuir tarefa de segurança
-            if "security_001" in self.agents:
-                task_id = self.network.assign_task("security_scan", {
-                    "scan_type": "full",
-                    "data": {"failed_logins": 8, "network_requests": 850}
-                })
-                if task_id:
-                    logger.info(f"🛡️ Tarefa de segurança {task_id} atribuída")
-            
-            # Atribuir tarefa de análise de dados
-            if "data_001" in self.agents:
-                task_id = self.network.assign_task("data_processing", {
-                    "data": list(range(100)),
-                    "processing_type": "numerical"
-                })
-                if task_id:
-                    logger.info(f"📊 Tarefa de processamento {task_id} atribuída")
-            
-        except Exception as e:
-            logger.error(f"❌ Erro simulando tarefas: {e}")
-    
-    def _log_demo_progress(self, elapsed: float, total: int):
-        """Log do progresso da demonstração"""
-        progress = (elapsed / total) * 100
-        metrics = self.metrics_collector.get_metrics()
+                if int(elapsed) % 60 == 0 and int(elapsed) > 0:
+                    logger.info(f"🔄 Sistema operando normalmente - {int(elapsed/60)} minuto(s) de uptime")
+                
+                await asyncio.sleep(5)
+                
+            except Exception as e:
+                logger.error(f"❌ Erro durante demonstração: {e}", exc_info=True)
+                break
         
-        logger.info(f"⏱️ Progresso: {progress:.1f}% ({elapsed:.0f}/{total}s)")
-        logger.info(f"📈 Performance Score: {metrics['performance_score']:.1f}%")
-        logger.info(f"🤖 Agentes Ativos: {metrics['active_agents']}/{metrics['total_agents']}")
+        if self.shutdown_requested:
+            logger.info("🛑 Demonstração interrompida por solicitação de shutdown")
+        else:
+            logger.info("🏁 Demonstração concluída com sucesso")
     
     def shutdown_system(self):
-        """Shutdown graceful do sistema"""
-        logger.info("🛑 Iniciando shutdown do sistema...")
-        
+        """Desliga o sistema de forma segura"""
+        logger.info("🛑 Iniciando shutdown graceful do sistema...")
+        self.is_running = False
         try:
-            # Parar coleta de métricas
-            self.metrics_collector.stop_collection()
+            for agent_id, agent in self.agents.items():
+                try:
+                    logger.info(f"⏹️ Parando agente {agent_id}")
+                    if hasattr(agent, 'stop'):
+                        agent.stop()
+                    logger.debug(f"✅ Agente {agent_id} parado")
+                except Exception as e:
+                    logger.warning(f"⚠️ Erro parando agente {agent_id}: {e}")
             
-            # Parar rede
             if self.network:
+                logger.info("⏹️ Parando rede multi-agente...")
                 self.network.stop()
+                logger.info("✅ Rede multi-agente parada")
             
+            uptime = (datetime.now() - self.start_time).total_seconds()
+            logger.info(f"⏰ Tempo total de operação: {uptime:.2f} segundos")
             logger.info("✅ Sistema SUNA-ALSHAM encerrado com sucesso")
-            
         except Exception as e:
-            logger.error(f"❌ Erro durante shutdown: {e}")
-
+            logger.error(f"❌ Erro durante shutdown: {e}", exc_info=True)
 
 def main():
     """Função principal do sistema"""
     logger.info("🌟 INICIANDO SUNA-ALSHAM MULTI-AGENT SYSTEM v2.0")
-    logger.info("🔧 Versão com melhorias dos colaboradores")
+    logger.info("🔧 Versão corrigida com melhorias dos colaboradores")
+    logger.info("📅 Iniciado em: " + datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
     
-    # Criar gerenciador do sistema
-    system_manager = EnhancedSystemManager()
-    
+    system_manager = None
     try:
-        # Inicializar sistema
+        system_manager = EnhancedSystemManager()
         if not system_manager.initialize_system():
-            logger.error("❌ Falha na inicialização do sistema")
+            logger.error("❌ Falha crítica na inicialização do sistema")
             sys.exit(1)
         
-        # Executar demonstração
-        demo_duration = int(os.getenv("DEMO_DURATION", "120"))  # 2 minutos padrão
-        system_manager.run_system_demo(demo_duration)
+        demo_duration = int(os.getenv("DEMO_DURATION", "120"))
+        logger.info(f"⏱️ Duração da demonstração: {demo_duration} segundos")
+        asyncio.run(system_manager.run_system_demo(demo_duration))
         
     except KeyboardInterrupt:
-        logger.info("🛑 Interrupção pelo usuário")
+        logger.info("🛑 Interrupção pelo usuário (Ctrl+C)")
     except Exception as e:
-        logger.error(f"❌ Erro crítico no sistema: {e}")
+        logger.error(f"❌ Erro crítico no sistema: {str(e)}", exc_info=True)
+        raise
     finally:
-        # Shutdown graceful
-        system_manager.shutdown_system()
-
+        if system_manager:
+            system_manager.shutdown_system()
+        logger.info("👋 SUNA-ALSHAM Multi-Agent System finalizado")
 
 if __name__ == "__main__":
     main()
-
