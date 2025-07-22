@@ -41,12 +41,12 @@ logger.info(f"🔑 OPENAI_API_KEY configurada: {'✅' if os.getenv('OPENAI_API_K
 logger.info(f"🔗 REDIS_URL configurada: {'✅' if os.getenv('REDIS_URL') else '❌'}")
 
 try:
-    from multi_agent_network import MultiAgentNetwork
-    from specialized_agents import (
-        OptimizationAgent, SecurityAgent, LearningAgent, 
-        DataAgent, MonitoringAgent
+    from suna_alsham.core.multi_agent_network import MultiAgentNetwork
+    from suna_alsham.core.specialized_agents import (
+    OptimizationAgent, SecurityAgent, LearningAgent, 
+    DataAgent, MonitoringAgent
     )
-    from ai_powered_agents import SelfEvolvingAgent, AIOptimizationAgent
+    from suna_alsham.core.ai_powered_agents import SelfEvolvingAgent, AIOptimizationAgent
     logger.info("✅ Todos os módulos importados com sucesso")
 except ImportError as e:
     logger.error(f"❌ Erro na importação: {e}")
