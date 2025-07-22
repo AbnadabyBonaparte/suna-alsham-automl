@@ -260,7 +260,7 @@ def main():
             logger.error("❌ Falha crítica na inicialização do sistema")
             sys.exit(1)
         
-        demo_duration = int(os.getenv("DEMO_DURATION", "120"))
+        demo_duration = int(os.getenv("DEMO_DURATION", "3600"))
         logger.info(f"⏱️ Duração da demonstração: {demo_duration} segundos")
         asyncio.run(system_manager.run_system_demo(demo_duration))
         
