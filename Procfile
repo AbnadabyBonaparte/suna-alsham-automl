@@ -1,1 +1,1 @@
-worker: python main_complete_system.py
+web: python start.py
