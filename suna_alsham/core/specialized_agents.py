@@ -31,19 +31,17 @@ import os
 import sys
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
-from multi_agent_network import BaseNetworkAgent, AgentType, MessageType, Priority, AgentCapability, MessageBus, AgentMessage
+from ..multi_agent_network import BaseNetworkAgent, AgentType, MessageType, Priority, AgentCapability, MessageBus, AgentMessage
 
 logger = logging.getLogger(__name__)
 
 class OptimizationAgent(BaseNetworkAgent):
     """Agente especializado em otimização de performance"""
-    
+
     def __init__(self, agent_id: str, message_bus: MessageBus):
         super().__init__(agent_id, AgentType.OPTIMIZER, message_bus)
-        
         self.optimization_history: List[Dict] = []
         self.current_optimizations: Dict[str, Any] = {}
-        
         self.add_capability(AgentCapability(
             name="performance_optimization",
             description="Otimização de performance de sistemas",
@@ -53,7 +51,6 @@ class OptimizationAgent(BaseNetworkAgent):
             accuracy_score=0.92,
             resource_cost=0.4
         ))
-        
         self.add_capability(AgentCapability(
             name="resource_allocation",
             description="Alocação inteligente de recursos",
@@ -63,7 +60,6 @@ class OptimizationAgent(BaseNetworkAgent):
             accuracy_score=0.88,
             resource_cost=0.3
         ))
-        
         self.message_handlers[MessageType.NOTIFICATION] = self._handle_notification
         self.message_handlers[MessageType.HEARTBEAT] = self._handle_heartbeat
 
@@ -153,7 +149,6 @@ class OptimizationAgent(BaseNetworkAgent):
         return recommendations
 
     def _allocate_resources(self, message: AgentMessage):
-        # Implementação básica para alocação de recursos
         resource_data = message.content.get("resource_data", {})
         allocation_plan = {"status": "allocated", "details": f"Allocated based on {resource_data}"}
         self.send_message(message.sender_id, MessageType.RESPONSE, {"status": "success", "result": allocation_plan})
@@ -161,14 +156,12 @@ class OptimizationAgent(BaseNetworkAgent):
 
 class SecurityAgent(BaseNetworkAgent):
     """Agente especializado em segurança"""
-    
+
     def __init__(self, agent_id: str, message_bus: MessageBus):
         super().__init__(agent_id, AgentType.GUARD, message_bus)
-        
         self.security_events: List[Dict] = []
         self.threat_patterns: Dict[str, Any] = {}
         self.security_score = 95.0
-        
         self.add_capability(AgentCapability(
             name="threat_detection",
             description="Detecção de ameaças em tempo real",
@@ -178,7 +171,6 @@ class SecurityAgent(BaseNetworkAgent):
             accuracy_score=0.96,
             resource_cost=0.2
         ))
-        
         self.add_capability(AgentCapability(
             name="vulnerability_assessment",
             description="Avaliação de vulnerabilidades",
@@ -188,7 +180,6 @@ class SecurityAgent(BaseNetworkAgent):
             accuracy_score=0.91,
             resource_cost=0.5
         ))
-        
         self.message_handlers[MessageType.NOTIFICATION] = self._handle_notification
         self.message_handlers[MessageType.HEARTBEAT] = self._handle_heartbeat
 
@@ -266,16 +257,20 @@ class SecurityAgent(BaseNetworkAgent):
             recommendations.extend(["Maintain current security measures", "Schedule regular security audits"])
         return recommendations
 
+    def _assess_vulnerability(self, message: AgentMessage):
+        pass  # Implementação pendente
+
+    def _security_audit(self, message: AgentMessage):
+        pass  # Implementação pendente
+
 class LearningAgent(BaseNetworkAgent):
     """Agente especializado em aprendizado contínuo"""
-    
+
     def __init__(self, agent_id: str, message_bus: MessageBus):
         super().__init__(agent_id, AgentType.LEARN, message_bus)
-        
         self.learning_models: Dict[str, Any] = {}
         self.training_history: List[Dict] = []
         self.knowledge_base: Dict[str, Any] = {}
-        
         self.add_capability(AgentCapability(
             name="pattern_recognition",
             description="Reconhecimento de padrões em dados",
@@ -285,7 +280,6 @@ class LearningAgent(BaseNetworkAgent):
             accuracy_score=0.89,
             resource_cost=0.6
         ))
-        
         self.add_capability(AgentCapability(
             name="model_training",
             description="Treinamento de modelos de ML",
@@ -295,7 +289,6 @@ class LearningAgent(BaseNetworkAgent):
             accuracy_score=0.93,
             resource_cost=0.8
         ))
-        
         self.message_handlers[MessageType.NOTIFICATION] = self._handle_notification
         self.message_handlers[MessageType.HEARTBEAT] = self._handle_heartbeat
 
@@ -479,15 +472,16 @@ class LearningAgent(BaseNetworkAgent):
         denominator = sum((x - mean_val) ** 2 for x in data)
         return numerator / denominator if denominator != 0 else 0
 
+    def _update_knowledge(self, message: AgentMessage):
+        pass  # Implementação pendente
+
 class DataAgent(BaseNetworkAgent):
     """Agente especializado em processamento de dados"""
-    
+
     def __init__(self, agent_id: str, message_bus: MessageBus):
         super().__init__(agent_id, AgentType.SPECIALIST, message_bus)
-        
         self.data_cache: Dict[str, Any] = {}
         self.processing_stats: Dict[str, int] = {"processed": 0, "cached": 0, "errors": 0}
-        
         self.add_capability(AgentCapability(
             name="data_transformation",
             description="Transformação e limpeza de dados",
@@ -497,7 +491,6 @@ class DataAgent(BaseNetworkAgent):
             accuracy_score=0.94,
             resource_cost=0.3
         ))
-        
         self.add_capability(AgentCapability(
             name="data_validation",
             description="Validação de qualidade de dados",
@@ -507,7 +500,6 @@ class DataAgent(BaseNetworkAgent):
             accuracy_score=0.97,
             resource_cost=0.2
         ))
-        
         self.message_handlers[MessageType.HEARTBEAT] = self._handle_heartbeat
 
     def _handle_request(self, message: AgentMessage):
@@ -568,14 +560,12 @@ class DataAgent(BaseNetworkAgent):
         return data
 
     def _validate_data(self, message: AgentMessage):
-        # Implementação básica para validação
         dataset = message.content.get("dataset", {})
         validation_report = {"status": "valid", "details": f"Validated {len(dataset)} records"}
         self.send_message(message.sender_id, MessageType.RESPONSE, {"status": "success", "result": validation_report})
         logger.info(f"✅ Dados validados para {message.sender_id}")
 
     def _transform_data(self, message: AgentMessage):
-        # Implementação básica para transformação
         raw_data = message.content.get("raw_data", {})
         transformed_data = {"transformed": f"Transformed {raw_data}"}
         self.send_message(message.sender_id, MessageType.RESPONSE, {"status": "success", "result": transformed_data})
@@ -583,12 +573,10 @@ class DataAgent(BaseNetworkAgent):
 
 class IntegrationAgent(BaseNetworkAgent):
     """Agente especializado em integração com sistemas externos"""
-    
+
     def __init__(self, agent_id: str, message_bus: MessageBus):
         super().__init__(agent_id, AgentType.INTEGRATOR, message_bus)
-        
         self.integration_points: Dict[str, Any] = {}
-        
         self.add_capability(AgentCapability(
             name="external_integration",
             description="Integração com APIs externas",
@@ -598,7 +586,6 @@ class IntegrationAgent(BaseNetworkAgent):
             accuracy_score=0.95,
             resource_cost=0.4
         ))
-        
         self.message_handlers[MessageType.REQUEST] = self._handle_request
         self.message_handlers[MessageType.HEARTBEAT] = self._handle_heartbeat
 
@@ -627,10 +614,9 @@ class IntegrationAgent(BaseNetworkAgent):
 
 class MonitoringAgent(BaseNetworkAgent):
     """Agente especializado em monitoramento de sistema"""
-    
+
     def __init__(self, agent_id: str, message_bus: MessageBus):
         super().__init__(agent_id, AgentType.MONITOR, message_bus)
-        
         self.monitoring_data: Dict[str, List] = defaultdict(list)
         self.alerts: List[Dict] = []
         self.thresholds: Dict[str, float] = {
@@ -639,7 +625,6 @@ class MonitoringAgent(BaseNetworkAgent):
             "response_time": 1000.0,
             "error_rate": 5.0
         }
-        
         self.add_capability(AgentCapability(
             name="system_monitoring",
             description="Monitoramento de métricas de sistema",
@@ -649,7 +634,6 @@ class MonitoringAgent(BaseNetworkAgent):
             accuracy_score=0.98,
             resource_cost=0.1
         ))
-        
         self.message_handlers[MessageType.HEARTBEAT] = self._handle_heartbeat
 
     def _handle_heartbeat(self, message: AgentMessage):
@@ -696,12 +680,10 @@ class MonitoringAgent(BaseNetworkAgent):
 
 class PredictionAgent(BaseNetworkAgent):
     """Agente especializado em análise preditiva"""
-    
+
     def __init__(self, agent_id: str, message_bus: MessageBus):
         super().__init__(agent_id, AgentType.PREDICTOR, message_bus)
-        
         self.prediction_models: Dict[str, Any] = {}
-        
         self.add_capability(AgentCapability(
             name="predictive_analysis",
             description="Previsão de métricas futuras",
@@ -711,7 +693,6 @@ class PredictionAgent(BaseNetworkAgent):
             accuracy_score=0.90,
             resource_cost=0.5
         ))
-        
         self.message_handlers[MessageType.REQUEST] = self._handle_request
         self.message_handlers[MessageType.HEARTBEAT] = self._handle_heartbeat
 
@@ -742,12 +723,10 @@ class PredictionAgent(BaseNetworkAgent):
 
 class AutomationAgent(BaseNetworkAgent):
     """Agente especializado em automação de tarefas"""
-    
+
     def __init__(self, agent_id: str, message_bus: MessageBus):
         super().__init__(agent_id, AgentType.AUTOMATOR, message_bus)
-        
         self.automation_tasks: Dict[str, Any] = {}
-        
         self.add_capability(AgentCapability(
             name="task_automation",
             description="Automação de tarefas repetitivas",
@@ -757,7 +736,6 @@ class AutomationAgent(BaseNetworkAgent):
             accuracy_score=0.95,
             resource_cost=0.3
         ))
-        
         self.message_handlers[MessageType.REQUEST] = self._handle_request
         self.message_handlers[MessageType.HEARTBEAT] = self._handle_heartbeat
 
@@ -784,10 +762,8 @@ class AutomationAgent(BaseNetworkAgent):
         logger.info(f"🤖 Tarefa {task_id} automatizada para {message.sender_id}")
 
 if __name__ == "__main__":
-    from multi_agent_network import MultiAgentNetwork
-    
+    from ..multi_agent_network import MultiAgentNetwork
     network = MultiAgentNetwork()
-    
     optimization_agent = OptimizationAgent("optimizer_001", network.message_bus)
     security_agent = SecurityAgent("security_001", network.message_bus)
     learning_agent = LearningAgent("learning_001", network.message_bus)
@@ -796,7 +772,6 @@ if __name__ == "__main__":
     monitoring_agent = MonitoringAgent("monitor_001", network.message_bus)
     prediction_agent = PredictionAgent("prediction_001", network.message_bus)
     automation_agent = AutomationAgent("automation_001", network.message_bus)
-    
     network.add_agent(optimization_agent)
     network.add_agent(security_agent)
     network.add_agent(learning_agent)
@@ -805,19 +780,17 @@ if __name__ == "__main__":
     network.add_agent(monitoring_agent)
     network.add_agent(prediction_agent)
     network.add_agent(automation_agent)
-    
+
     try:
         network.start()
         print("🌐 Rede multi-agente com agentes especializados iniciada!")
         print("Agentes ativos:")
         for agent_id, agent in network.agents.items():
             print(f"  - {agent_id} ({agent.agent_type.value})")
-        
         time.sleep(10)
         status = network.get_network_status()
         print(f"\n📊 Status da rede: {status['network_metrics']['active_agents']} agentes ativos")
         input("\nPressione Enter para parar...")
-        
     except KeyboardInterrupt:
         print("\n🛑 Interrompido pelo usuário")
     finally:
