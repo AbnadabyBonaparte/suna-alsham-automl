@@ -1,265 +1,116 @@
-"""🌟 SUNA-ALSHAM Multi-Agent System v2.0
-Sistema multi-agente com capacidades de IA avançada
-
-CORREÇÕES IMPLEMENTADAS:
-✅ Removido AnalyticsAgent inexistente
-✅ Corrigidas todas as importações
-✅ Logs detalhados para debug
-✅ Funciona com/sem Redis
-✅ Tratamento robusto de erros
-✅ Inicialização dos 7 agentes especializados
-✅ Adicionados 4 novos agentes para maior robustez
+"""
+SUNA-ALSHAM Sistema Completo
+Sistema principal com correção de importações
 """
 
 import asyncio
 import logging
 import os
 import sys
-import time
-import signal
-from typing import Dict, Any, Optional
-from datetime import datetime
+from pathlib import Path
 
-# Configurar logging avançado
-handlers = [logging.StreamHandler(sys.stdout)]
-if os.getenv("RAILWAY_ENVIRONMENT") is None:
-    handlers.append(logging.FileHandler('suna_alsham.log', mode='a'))
+# Configurar logging
 logging.basicConfig(
-    level=logging.DEBUG,
-    format='%(asctime)s - %(name)s - %(levelname)s - [%(filename)s:%(lineno)d] - %(message)s',
-    handlers=handlers
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - [%(filename)s:%(lineno)d] - %(message)s'
 )
 logger = logging.getLogger(__name__)
 
-# Verificar estrutura de arquivos
-logger.info(f"🚀 Executando de: {os.path.abspath(__file__)}")
-logger.info(f"📁 Diretório atual: {os.getcwd()}")
-logger.info(f"📋 Arquivos no diretório: {os.listdir()}")
-
-# Verificar variáveis de ambiente críticas
-logger.info(f"🔑 OPENAI_API_KEY configurada: {'✅' if os.getenv('OPENAI_API_KEY') else '❌'}")
-logger.info(f"🔗 REDIS_URL configurada: {'✅' if os.getenv('REDIS_URL') else '❌'}")
-
-try:
-    from suna_alsham.core.multi_agent_network import MultiAgentNetwork
-    from suna_alsham.core.specialized_agents import (
-        OptimizationAgent, SecurityAgent, LearningAgent, 
-        DataAgent, MonitoringAgent, CollaborationAgent, 
-        ComplianceAgent, UserExperienceAgent, PredictiveAnalyticsAgent
-    )
-    from suna_alsham.core.ai_powered_agents import SelfEvolvingAgent, AIOptimizationAgent
-    logger.info("✅ Todos os módulos importados com sucesso")
-except ImportError as e:
-    logger.error(f"❌ Erro na importação: {e}")
-    logger.error("🔍 Verifique se todos os arquivos estão presentes:")
-    logger.error("   - multi_agent_network.py")
-    logger.error("   - specialized_agents.py")
-    logger.error("   - ai_powered_agents.py")
-    sys.exit(1)
-
-class EnhancedSystemManager:
-    """Gerenciador avançado do sistema multi-agente"""
-    
-    def __init__(self):
-        self.network = None
-        self.agents: Dict[str, Any] = {}
-        self.is_running = False
-        self.start_time = datetime.now()
-        self.shutdown_requested = False
-        
-        # Configurar handlers de sinal para shutdown graceful
-        signal.signal(signal.SIGINT, self._signal_handler)
-        signal.signal(signal.SIGTERM, self._signal_handler)
-    
-    def _signal_handler(self, signum, frame):
-        """Handler para sinais de shutdown"""
-        logger.info(f"🛑 Sinal {signum} recebido, iniciando shutdown graceful...")
-        self.shutdown_requested = True
-        self.is_running = False
-    
-    def initialize_system(self) -> bool:
-        """Inicializa o sistema multi-agente"""
-        logger.info("🌟 Inicializando sistema SUNA-ALSHAM...")
-        
-        try:
-            # Verificar API key do OpenAI
-            if not os.getenv("OPENAI_API_KEY"):
-                logger.error("❌ OPENAI_API_KEY não configurada")
-                logger.error("🔧 Configure a variável de ambiente OPENAI_API_KEY")
-                return False
-            logger.info("✅ OPENAI_API_KEY configurada")
-            
-            # Verificar Redis
-            redis_url = os.getenv("REDIS_URL")
-            if redis_url:
-                try:
-                    import redis
-                    redis_client = redis.from_url(redis_url)
-                    redis_client.ping()
-                    logger.info("✅ Redis conectado com sucesso")
-                except Exception as e:
-                    logger.warning(f"⚠️ Falha na conexão com Redis: {e}")
-                    logger.info("🔄 Usando cache em memória como fallback")
-            else:
-                logger.warning("⚠️ REDIS_URL não configurada - usando cache em memória")
-            
-            # Criar rede multi-agente
-            logger.info("🌐 Criando rede multi-agente...")
-            self.network = MultiAgentNetwork()
-            logger.info("✅ Rede multi-agente criada")
-            
-            # Criar todos os agentes especializados
-            self._create_all_agents()
-            
-            # Iniciar a rede
-            logger.info("🚀 Iniciando rede multi-agente...")
-            self.network.start()
-            self.is_running = True
-            
-            logger.info(f"🎉 Sistema inicializado com sucesso!")
-            logger.info(f"📊 Total de agentes criados: {len(self.agents)}")
-            logger.info(f"⏰ Tempo de inicialização: {(datetime.now() - self.start_time).total_seconds():.2f}s")
-            
-            return True
-            
-        except Exception as e:
-            logger.error(f"❌ Erro crítico na inicialização do sistema: {e}", exc_info=True)
-            return False
-    
-    def _create_all_agents(self):
-        """Cria todos os agentes especializados"""
-        logger.info("🤖 Iniciando criação dos agentes especializados...")
-        
-        agents_config = [
-            ("optimizer_001", OptimizationAgent, "Otimização de performance"),
-            ("security_001", SecurityAgent, "Monitoramento de segurança"),
-            ("learner_001", LearningAgent, "Aprendizado contínuo"),
-            ("data_001", DataAgent, "Processamento de dados"),
-            ("monitor_001", MonitoringAgent, "Monitoramento de sistema"),
-            ("evolving_001", SelfEvolvingAgent, "Auto-evolução com IA"),
-            ("ai_optimizer_001", AIOptimizationAgent, "Otimização com IA"),
-            ("collaboration_001", CollaborationAgent, "Coordenação entre agentes"),
-            ("compliance_001", ComplianceAgent, "Conformidade regulatória"),
-            ("user_experience_001", UserExperienceAgent, "Otimização da experiência do usuário"),
-            ("predictive_analytics_001", PredictiveAnalyticsAgent, "Análise preditiva"),
-        ]
-        
-        successful_agents = 0
-        failed_agents = 0
-        
-        for agent_id, agent_class, description in agents_config:
-            logger.info(f"🔄 Tentando criar agente: {agent_id} ({agent_class.__name__}) - {description}")
-            try:
-                if agent_class in [SelfEvolvingAgent, AIOptimizationAgent]:
-                    redis_url = os.getenv("REDIS_URL", None)
-                    logger.info(f"🧠 Criando {agent_class.__name__} com REDIS_URL: {'configurada' if redis_url else 'não configurada'}")
-                    agent = agent_class(agent_id, self.network.message_bus, redis_url=redis_url)
-                else:
-                    agent = agent_class(agent_id, self.network.message_bus)
-                self.network.add_agent(agent)
-                self.agents[agent_id] = agent
-                successful_agents += 1
-                logger.info(f"✅ Agente {agent_id} ({agent_class.__name__}) criado e adicionado com sucesso")
-                if hasattr(agent, 'capabilities') and agent.capabilities:
-                    capabilities = [cap.name for cap in agent.capabilities]
-                    logger.info(f"   🎯 Capacidades: {', '.join(capabilities)}")
-            except Exception as e:
-                failed_agents += 1
-                logger.error(f"❌ Erro criando agente {agent_id} ({agent_class.__name__}): {str(e)}", exc_info=True)
-                continue
-        
-        logger.info("=" * 60)
-        logger.info("📊 RESUMO DA CRIAÇÃO DE AGENTES")
-        logger.info("=" * 60)
-        logger.info(f"✅ Agentes criados com sucesso: {successful_agents}")
-        logger.info(f"❌ Agentes que falharam: {failed_agents}")
-        logger.info(f"📈 Taxa de sucesso: {(successful_agents/(successful_agents+failed_agents)*100):.1f}%")
-        
-        if successful_agents == 0:
-            logger.error("❌ CRÍTICO: Nenhum agente foi criado com sucesso!")
-            raise Exception("Falha na criação de todos os agentes")
-        
-        logger.info(f"🎯 Total de {successful_agents} agentes especializados criados e prontos")
-    
-    async def run_system_continuously(self):
-        """Executa o sistema continuamente com ciclos regulares"""
-        logger.info("🚀 Iniciando execução contínua do sistema")
-        
-        while self.is_running and not self.shutdown_requested:
-            try:
-                current_time = time.time()
-                elapsed = current_time - self.start_time
-                
-                if int(elapsed) % 30 == 0 and int(elapsed) > 0:
-                    logger.info(f"⏱️ Sistema em andamento: {int(elapsed/60)} minuto(s) de uptime")
-                    try:
-                        network_status = self.network.get_network_status()
-                        logger.info(f"📊 Status da rede: {network_status}")
-                    except Exception as e:
-                        logger.warning(f"⚠️ Erro coletando status da rede: {e}")
-                    
-                    active_agents = sum(1 for agent in self.agents.values() if hasattr(agent, 'status') and agent.status == 'running')
-                    logger.info(f"🤖 Agentes ativos: {active_agents}/{len(self.agents)}")
-                
-                if int(elapsed) % 60 == 0 and int(elapsed) > 0:
-                    logger.info(f"🔄 Sistema operando normalmente - {int(elapsed/60)} minuto(s) de uptime")
-                
-                await asyncio.sleep(300)  # 5 minutos por ciclo
-            
-            except Exception as e:
-                logger.error(f"❌ Erro durante execução contínua: {e}", exc_info=True)
-                await asyncio.sleep(5)  # Pausa antes de tentar novamente
-    
-    def shutdown_system(self):
-        """Desliga o sistema de forma segura"""
-        logger.info("🛑 Iniciando shutdown graceful do sistema...")
-        self.is_running = False
-        try:
-            for agent_id, agent in self.agents.items():
-                try:
-                    logger.info(f"⏹️ Parando agente {agent_id}")
-                    if hasattr(agent, 'stop'):
-                        agent.stop()
-                    logger.debug(f"✅ Agente {agent_id} parado")
-                except Exception as e:
-                    logger.warning(f"⚠️ Erro parando agente {agent_id}: {e}")
-            
-            if self.network:
-                logger.info("⏹️ Parando rede multi-agente...")
-                self.network.stop()
-                logger.info("✅ Rede multi-agente parada")
-            
-            uptime = (datetime.now() - self.start_time).total_seconds()
-            logger.info(f"⏰ Tempo total de operação: {uptime:.2f} segundos")
-            logger.info("✅ Sistema SUNA-ALSHAM encerrado com sucesso")
-        except Exception as e:
-            logger.error(f"❌ Erro durante shutdown: {e}", exc_info=True)
-
 def main():
-    """Função principal do sistema"""
-    logger.info("🌟 INICIANDO SUNA-ALSHAM MULTI-AGENT SYSTEM v2.0")
-    logger.info("🔧 Versão corrigida com melhorias dos colaboradores")
-    logger.info("📅 Iniciado em: " + datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
-    
-    system_manager = None
+    """Função principal com tratamento de erros melhorado"""
     try:
-        system_manager = EnhancedSystemManager()
-        if not system_manager.initialize_system():
-            logger.error("❌ Falha crítica na inicialização do sistema")
-            sys.exit(1)
+        logger.info(f"🚀 Executando de: {__file__}")
+        logger.info(f"📁 Diretório atual: {os.getcwd()}")
+        logger.info(f"📋 Arquivos no diretório: {os.listdir('.')}")
         
-        logger.info("⏱️ Iniciando execução contínua")
-        asyncio.run(system_manager.run_system_continuously())
+        # Verificar variáveis de ambiente
+        openai_key = os.getenv('OPENAI_API_KEY')
+        redis_url = os.getenv('REDIS_URL')
         
-    except KeyboardInterrupt:
-        logger.info("🛑 Interrupção pelo usuário (Ctrl+C)")
+        logger.info(f"🔑 OPENAI_API_KEY configurada: {'✅' if openai_key else '❌'}")
+        logger.info(f"🔗 REDIS_URL configurada: {'✅' if redis_url else '❌'}")
+        
+        # Verificar se pasta suna_alsham existe
+        suna_path = Path('suna_alsham')
+        if not suna_path.exists():
+            logger.error("❌ Pasta 'suna_alsham' não encontrada!")
+            return False
+        
+        # Listar arquivos na pasta suna_alsham
+        suna_files = list(suna_path.glob('*.py'))
+        logger.info(f"📁 Arquivos em suna_alsham/: {[f.name for f in suna_files]}")
+        
+        # Tentar importações com tratamento de erro individual
+        try:
+            from suna_alsham.multi_agent_network import network
+            logger.info("✅ multi_agent_network importado com sucesso")
+        except ImportError as e:
+            logger.error(f"❌ Erro importando multi_agent_network: {e}")
+            return False
+        
+        try:
+            from suna_alsham.specialized_agents import create_specialized_agents
+            logger.info("✅ specialized_agents importado com sucesso")
+        except ImportError as e:
+            logger.error(f"❌ Erro importando specialized_agents: {e}")
+            return False
+        
+        try:
+            from suna_alsham.ai_powered_agents import create_ai_agents
+            logger.info("✅ ai_powered_agents importado com sucesso")
+        except ImportError as e:
+            logger.error(f"❌ Erro importando ai_powered_agents: {e}")
+            return False
+        
+        # Se chegou até aqui, todas as importações funcionaram
+        logger.info("🎉 Todas as importações funcionaram!")
+        
+        # Inicializar sistema
+        asyncio.run(initialize_system(network, create_specialized_agents, create_ai_agents))
+        
+        return True
+        
     except Exception as e:
-        logger.error(f"❌ Erro crítico no sistema: {str(e)}", exc_info=True)
+        logger.error(f"❌ Erro geral no sistema: {e}")
+        import traceback
+        logger.error(f"📋 Traceback: {traceback.format_exc()}")
+        return False
+
+async def initialize_system(network, create_specialized_agents, create_ai_agents):
+    """Inicializa o sistema completo"""
+    try:
+        logger.info("🚀 Inicializando sistema SUNA-ALSHAM...")
+        
+        # Inicializar rede
+        await network.initialize()
+        
+        # Criar agentes especializados
+        specialized_agents = await create_specialized_agents()
+        
+        # Criar agentes com IA
+        ai_agents = await create_ai_agents()
+        
+        # Registrar agentes na rede
+        all_agents = {**specialized_agents, **ai_agents}
+        for agent_name, agent in all_agents.items():
+            await network.register_agent(agent_name, agent)
+        
+        # Status final
+        status = await network.get_network_status()
+        logger.info(f"✅ Sistema inicializado com {status['stats']['total_agents']} agentes")
+        
+        # Manter sistema rodando
+        logger.info("🔄 Sistema em execução...")
+        while True:
+            await asyncio.sleep(60)  # Aguardar 1 minuto
+            status = await network.get_network_status()
+            logger.info(f"📊 Status: {status['stats']['active_agents']} agentes ativos")
+            
+    except Exception as e:
+        logger.error(f"❌ Erro inicializando sistema: {e}")
         raise
-    finally:
-        if system_manager:
-            system_manager.shutdown_system()
-        logger.info("👋 SUNA-ALSHAM Multi-Agent System finalizado")
 
 if __name__ == "__main__":
-    main()
+    success = main()
+    if not success:
+        sys.exit(1)
