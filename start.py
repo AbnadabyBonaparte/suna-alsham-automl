@@ -12,6 +12,9 @@ from pathlib import Path
 # Adicionar diretório atual ao path
 sys.path.append(str(Path(__file__).parent))
 
+# 🚀 Importar sistema de 20 agentes
+from main_complete_system_v2 import SUNAAlshamSystemV2
+
 def get_port():
     """Detecta a porta do Railway ou usa padrão"""
     return int(os.environ.get("PORT", 8080))
@@ -37,6 +40,33 @@ async def startup_sequence():
         print(f"✅ Redis configurado: {redis_url[:20]}...")
     else:
         print("⚠️ Redis não configurado - usando cache em memória")
+    
+    # 🚀 Inicializar sistema de 20 agentes
+    print("🤖 Inicializando SUNA-ALSHAM Sistema Completo v2.0...")
+    try:
+        suna_system = SUNAAlshamSystemV2()
+        success = await suna_system.initialize_complete_system()
+        
+        if success:
+            print(f"✅ Sistema inicializado com {suna_system.total_agents} agentes")
+            print(f"📊 Categorias: {suna_system.agent_categories}")
+            
+            # Executar demonstração inicial
+            demo_task = {
+                'id': 'startup_demo',
+                'type': 'system_check',
+                'complexity': 'low',
+                'description': 'Verificação inicial do sistema'
+            }
+            
+            demo_result = await suna_system.execute_system_wide_task(demo_task)
+            print(f"🎯 Demo executada: {demo_result.get('orchestration_result', {}).get('execution_status', 'completed')}")
+            
+        else:
+            print("⚠️ Falha na inicialização do sistema de agentes - continuando com fallback")
+            
+    except Exception as e:
+        print(f"⚠️ Erro inicializando sistema de agentes: {e} - continuando com fallback")
     
     print("✅ Sequência de inicialização concluída")
 
@@ -96,4 +126,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
