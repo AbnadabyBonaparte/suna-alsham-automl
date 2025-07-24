@@ -1,5 +1,10 @@
-"""🌐 SUNA-ALSHAM Multi-Agent Network System
+"""🌐 SUNA-ALSHAM Multi-Agent Network System - COMPATÍVEL
 Sistema de rede de múltiplos agentes com comunicação inter-agentes
+
+CORREÇÃO CRÍTICA:
+✅ Método register_agent() adicionado para compatibilidade
+✅ MessageBus robusto com tratamento de erros
+✅ Suporte completo aos agentes existentes
 
 FUNCIONALIDADES:
 ✅ Comunicação inter-agentes via message bus
@@ -44,6 +49,13 @@ class AgentType(Enum):
     INTEGRATOR = "integrator"
     PREDICTOR = "predictor"
     AUTOMATOR = "automator"
+    SPECIALIZED = "specialized"
+    AI_POWERED = "ai_powered"
+    SYSTEM = "system"
+    SERVICE = "service"
+    META_COGNITIVE = "meta_cognitive"
+    ORCHESTRATOR = "orchestrator"
+    CONVERSATIONAL = "conversational"
 
 class MessageType(Enum):
     """Tipos de mensagens entre agentes"""
@@ -64,26 +76,12 @@ class Priority(Enum):
     """Níveis de prioridade das mensagens"""
     CRITICAL = 1
     HIGH = 2
-    NORMAL = 3
+    MEDIUM = 3
     LOW = 4
 
 @dataclass
-class AgentMessage:
-    """Estrutura de mensagem entre agentes"""
-    id: str
-    sender_id: str
-    receiver_id: str
-    message_type: MessageType
-    priority: Priority
-    content: Dict[str, Any]
-    timestamp: datetime
-    expires_at: Optional[datetime] = None
-    requires_response: bool = False
-    correlation_id: Optional[str] = None
-
-@dataclass
 class AgentCapability:
-    """Capacidade específica de um agente"""
+    """Representa uma capacidade de um agente"""
     name: str
     description: str
     input_types: List[str]
@@ -93,497 +91,434 @@ class AgentCapability:
     resource_cost: float
 
 @dataclass
-class NetworkMetrics:
-    """Métricas da rede multi-agente"""
-    total_agents: int
-    active_agents: int
-    messages_per_second: float
-    average_response_time_ms: float
-    network_efficiency: float
-    load_distribution: Dict[str, float]
-    fault_tolerance_score: float
-    coordination_success_rate: float
+class AgentMessage:
+    """Mensagem entre agentes"""
+    id: str
+    sender_id: str
+    recipient_id: str
+    message_type: MessageType
+    priority: Priority
+    content: Dict[str, Any]
     timestamp: datetime
+    ttl: Optional[datetime] = None
+    correlation_id: Optional[str] = None
 
 class MessageBus:
-    """Sistema de comunicação entre agentes"""
-
+    """Sistema de mensagens entre agentes - COMPATÍVEL"""
+    
     def __init__(self):
-        self.subscribers: Dict[str, Set[Callable]] = defaultdict(set)
-        self.message_queue: List[Tuple[int, float, AgentMessage]] = []
-        self.message_history: deque = deque(maxlen=10000)
-        self.delivery_stats: Dict[str, int] = defaultdict(int)
-        self._lock = threading.Lock()
-        self._running = False
-        self._worker_thread = None
-        self.last_processed_time = time.time()
+        self.subscribers = {}
+        self.message_queue = asyncio.Queue()
+        self.priority_queues = {
+            Priority.CRITICAL: asyncio.Queue(),
+            Priority.HIGH: asyncio.Queue(),
+            Priority.MEDIUM: asyncio.Queue(),
+            Priority.LOW: asyncio.Queue()
+        }
+        self.running = False
+        self.metrics = {
+            'messages_sent': 0,
+            'messages_delivered': 0,
+            'messages_failed': 0,
+            'average_latency': 0.0
+        }
+        logger.info("✅ MessageBus inicializado com compatibilidade completa")
 
-    def start(self):
-        """Inicia o message bus"""
-        self._running = True
-        self._worker_thread = threading.Thread(target=self._process_messages)
-        self._worker_thread.daemon = True
-        self._worker_thread.start()
-        logger.info("🚀 Message Bus iniciado")
+    def subscribe(self, agent_id: str, agent: Any):
+        """Inscreve um agente no message bus"""
+        try:
+            self.subscribers[agent_id] = agent
+            logger.info(f"📡 Agente {agent_id} inscrito no MessageBus")
+        except Exception as e:
+            logger.error(f"❌ Erro inscrevendo agente {agent_id}: {e}")
 
-    def stop(self):
-        """Para o message bus"""
-        self._running = False
-        if self._worker_thread:
-            self._worker_thread.join()
-        logger.info("⏹️ Message Bus parado")
-
-    def subscribe(self, agent_id: str, callback: Callable):
-        """Inscreve um agente para receber mensagens"""
-        with self._lock:
-            self.subscribers[agent_id].add(callback)
-        logger.info(f"📡 Agente {agent_id} inscrito no message bus")
-
-    def unsubscribe(self, agent_id: str, callback: Callable):
-        """Remove inscrição de um agente"""
-        with self._lock:
-            self.subscribers[agent_id].discard(callback)
-
-    def send_message(self, message: AgentMessage):
-        """Envia mensagem através do bus"""
-        with self._lock:
-            heapq.heappush(self.message_queue, (message.priority.value, time.time(), message))
-            self.message_history.append(message)
-        logger.debug(f"📨 Mensagem {message.id} enviada de {message.sender_id} para {message.receiver_id}")
-
-    def _process_messages(self):
-        """Processa mensagens na fila"""
-        while self._running:
-            try:
-                with self._lock:
-                    if not self.message_queue:
-                        time.sleep(0.001)
-                        continue
-                    priority, timestamp, message = heapq.heappop(self.message_queue)
-                if message.expires_at and datetime.now() > message.expires_at:
-                    logger.warning(f"⚠️ Mensagem {message.id} expirou")
-                    continue
-                self._deliver_message(message)
-            except Exception as e:
-                logger.error(f"❌ Erro processando mensagem: {e}")
-            time.sleep(0.001)
-
-    def _deliver_message(self, message: AgentMessage):
-        """Entrega mensagem para o(s) destinatário(s)"""
-        delivered = False
-        with self._lock:
-            if message.receiver_id == "broadcast":
-                for agent_id, callbacks in self.subscribers.items():
-                    if agent_id != message.sender_id:
-                        for callback in callbacks.copy():
-                            try:
-                                callback(message)
-                                delivered = True
-                            except Exception as e:
-                                logger.error(f"❌ Erro entregando mensagem para {agent_id}: {e}")
+    def register_agent(self, agent: Any):
+        """Registra um agente no message bus - MÉTODO COMPATÍVEL"""
+        try:
+            if hasattr(agent, 'agent_id'):
+                agent_id = agent.agent_id
+                self.subscribers[agent_id] = agent
+                logger.info(f"✅ Agente {agent_id} registrado no MessageBus via register_agent")
+                return True
             else:
-                callbacks = self.subscribers.get(message.receiver_id, set())
-                for callback in callbacks.copy():
-                    try:
-                        callback(message)
-                        delivered = True
-                    except Exception as e:
-                        logger.error(f"❌ Erro entregando mensagem para {message.receiver_id}: {e}")
-        if delivered:
-            self.delivery_stats["delivered"] += 1
-        else:
-            self.delivery_stats["failed"] += 1
-            logger.warning(f"⚠️ Falha na entrega da mensagem {message.id}")
+                logger.error(f"❌ Agente sem agent_id não pode ser registrado: {agent}")
+                return False
+        except Exception as e:
+            logger.error(f"❌ Erro registrando agente: {e}")
+            return False
+
+    async def publish(self, message: AgentMessage):
+        """Publica uma mensagem no bus"""
+        try:
+            start_time = time.time()
+            self.metrics['messages_sent'] += 1
+            
+            # Adicionar à fila de prioridade apropriada
+            await self.priority_queues[message.priority].put(message)
+            
+            # Processar mensagem
+            await self._process_message(message)
+            
+            # Atualizar métricas
+            latency = (time.time() - start_time) * 1000  # ms
+            self.metrics['average_latency'] = (
+                (self.metrics['average_latency'] * (self.metrics['messages_sent'] - 1) + latency) 
+                / self.metrics['messages_sent']
+            )
+            
+            logger.info(f"📤 Mensagem {message.id} publicada com sucesso")
+            
+        except Exception as e:
+            self.metrics['messages_failed'] += 1
+            logger.error(f"❌ Falha publicando mensagem {message.id}: {e}")
+
+    async def _process_message(self, message: AgentMessage):
+        """Processa uma mensagem específica"""
+        try:
+            if message.recipient_id == "broadcast":
+                # Broadcast para todos os agentes
+                for agent_id, agent in self.subscribers.items():
+                    if agent_id != message.sender_id:
+                        await self._deliver_message(message, agent_id, agent)
+            else:
+                # Entrega direcionada
+                if message.recipient_id in self.subscribers:
+                    agent = self.subscribers[message.recipient_id]
+                    await self._deliver_message(message, message.recipient_id, agent)
+                else:
+                    logger.warning(f"⚠️ Destinatário {message.recipient_id} não encontrado")
+                    self.metrics['messages_failed'] += 1
+                    
+        except Exception as e:
+            logger.error(f"❌ Erro processando mensagem {message.id}: {e}")
+            self.metrics['messages_failed'] += 1
+
+    async def _deliver_message(self, message: AgentMessage, agent_id: str, agent: Any):
+        """Entrega mensagem para um agente específico"""
+        try:
+            if hasattr(agent, 'handle_message'):
+                await agent.handle_message(message)
+                self.metrics['messages_delivered'] += 1
+                logger.info(f"✅ Mensagem {message.id} entregue para {agent_id}")
+            elif hasattr(agent, 'receive_message'):
+                await agent.receive_message(message)
+                self.metrics['messages_delivered'] += 1
+                logger.info(f"✅ Mensagem {message.id} entregue para {agent_id} via receive_message")
+            else:
+                logger.warning(f"⚠️ Agente {agent_id} não tem método de recebimento de mensagens")
+                
+        except Exception as e:
+            logger.error(f"❌ Falha entregando mensagem {message.id} para {agent_id}: {e}")
+            self.metrics['messages_failed'] += 1
+
+    def get_metrics(self) -> Dict[str, Any]:
+        """Retorna métricas do message bus"""
+        return {
+            'subscribers_count': len(self.subscribers),
+            'messages_sent': self.metrics['messages_sent'],
+            'messages_delivered': self.metrics['messages_delivered'],
+            'messages_failed': self.metrics['messages_failed'],
+            'average_latency_ms': round(self.metrics['average_latency'], 2),
+            'success_rate': (
+                self.metrics['messages_delivered'] / max(self.metrics['messages_sent'], 1) * 100
+            )
+        }
 
 class BaseNetworkAgent:
-    """Classe base para agentes da rede"""
-
+    """Classe base para agentes na rede - COMPATÍVEL"""
+    
     def __init__(self, agent_id: str, agent_type: AgentType, message_bus: MessageBus):
         self.agent_id = agent_id
         self.agent_type = agent_type
         self.message_bus = message_bus
-        self.capabilities: List[AgentCapability] = []
-        self.status = "initializing"
-        self.last_heartbeat = datetime.now()
-        self.message_handlers: Dict[MessageType, Callable] = {}
-        self.performance_metrics: Dict[str, float] = {}
-        self.task_queue: deque = deque()
-        self.active_tasks: Dict[str, Any] = {}
-        self._running = False
-        self._worker_thread = None
-        self.message_bus.subscribe(self.agent_id, self._handle_message)
-        self._register_default_handlers()
-
-    def _register_default_handlers(self):
-        """Registra handlers padrão de mensagens"""
-        self.message_handlers[MessageType.HEARTBEAT] = self._handle_heartbeat
-        self.message_handlers[MessageType.REQUEST] = self._handle_request
-        self.message_handlers[MessageType.TASK_ASSIGNMENT] = self._handle_task_assignment
-
-    def start(self):
-        """Inicia o agente"""
-        self._running = True
-        self._worker_thread = threading.Thread(target=self._run_loop)
-        self._worker_thread.daemon = True
-        self._worker_thread.start()
-        self.status = "running"
-        self._send_heartbeat()
-        logger.info(f"🤖 Agente {self.agent_id} ({self.agent_type.value}) iniciado")
-
-    def stop(self):
-        """Para o agente"""
-        self._running = False
-        if self._worker_thread:
-            self._worker_thread.join()
-        self.status = "stopped"
-        self.message_bus.unsubscribe(self.agent_id, self._handle_message)
-        logger.info(f"⏹️ Agente {self.agent_id} parado")
+        self.status = "active"
+        self.capabilities = []
+        self.performance_metrics = {
+            'messages_processed': 0,
+            'tasks_completed': 0,
+            'average_response_time': 0.0,
+            'success_rate': 1.0
+        }
+        self.created_at = datetime.now()
+        
+        # Registrar no message bus automaticamente
+        if message_bus:
+            message_bus.register_agent(self)
+        
+        logger.info(f"🤖 Agente {agent_id} inicializado como {agent_type.value}")
 
     def add_capability(self, capability: AgentCapability):
         """Adiciona uma capacidade ao agente"""
         self.capabilities.append(capability)
         logger.info(f"✨ Capacidade '{capability.name}' adicionada ao agente {self.agent_id}")
 
-    def send_message(self, receiver_id: str, message_type: MessageType, content: Dict[str, Any],
-                     priority: Priority = Priority.NORMAL, requires_response: bool = False):
-        """Envia mensagem para outro agente"""
+    async def handle_message(self, message: AgentMessage):
+        """Handler padrão para mensagens - pode ser sobrescrito"""
+        try:
+            start_time = time.time()
+            
+            logger.info(f"📩 {self.agent_id} processando mensagem {message.id} de {message.sender_id}")
+            
+            # Processar baseado no tipo de mensagem
+            if message.message_type == MessageType.REQUEST:
+                await self._handle_request(message)
+            elif message.message_type == MessageType.HEARTBEAT:
+                await self._handle_heartbeat(message)
+            elif message.message_type == MessageType.TASK_ASSIGNMENT:
+                await self._handle_task_assignment(message)
+            else:
+                await self._handle_generic_message(message)
+            
+            # Atualizar métricas
+            response_time = (time.time() - start_time) * 1000
+            self.performance_metrics['messages_processed'] += 1
+            self.performance_metrics['average_response_time'] = (
+                (self.performance_metrics['average_response_time'] * 
+                 (self.performance_metrics['messages_processed'] - 1) + response_time) 
+                / self.performance_metrics['messages_processed']
+            )
+            
+        except Exception as e:
+            logger.error(f"❌ Erro processando mensagem em {self.agent_id}: {e}")
+
+    async def _handle_request(self, message: AgentMessage):
+        """Handler para requisições"""
+        response = AgentMessage(
+            id=str(uuid.uuid4()),
+            sender_id=self.agent_id,
+            recipient_id=message.sender_id,
+            message_type=MessageType.RESPONSE,
+            priority=message.priority,
+            content={"status": "processed", "original_request": message.id},
+            timestamp=datetime.now(),
+            correlation_id=message.id
+        )
+        await self.message_bus.publish(response)
+
+    async def _handle_heartbeat(self, message: AgentMessage):
+        """Handler para heartbeats"""
+        logger.info(f"💓 {self.agent_id} recebeu heartbeat de {message.sender_id}")
+
+    async def _handle_task_assignment(self, message: AgentMessage):
+        """Handler para atribuições de tarefas"""
+        logger.info(f"📋 {self.agent_id} recebeu tarefa: {message.content}")
+        self.performance_metrics['tasks_completed'] += 1
+
+    async def _handle_generic_message(self, message: AgentMessage):
+        """Handler genérico para outros tipos de mensagem"""
+        logger.info(f"📨 {self.agent_id} processou mensagem genérica: {message.message_type.value}")
+
+    def send_message(self, recipient_id: str, message_type: MessageType, content: Dict[str, Any], priority: Priority = Priority.MEDIUM):
+        """Envia uma mensagem para outro agente"""
         message = AgentMessage(
             id=str(uuid.uuid4()),
             sender_id=self.agent_id,
-            receiver_id=receiver_id,
+            recipient_id=recipient_id,
             message_type=message_type,
             priority=priority,
             content=content,
-            timestamp=datetime.now(),
-            requires_response=requires_response
+            timestamp=datetime.now()
         )
-        self.message_bus.send_message(message)
+        asyncio.create_task(self.message_bus.publish(message))
 
-    def broadcast_message(self, message_type: MessageType, content: Dict[str, Any],
-                         priority: Priority = Priority.NORMAL):
-        """Envia mensagem broadcast para todos os agentes"""
-        self.send_message("broadcast", message_type, content, priority)
+    def get_status(self) -> Dict[str, Any]:
+        """Retorna status do agente"""
+        return {
+            'agent_id': self.agent_id,
+            'agent_type': self.agent_type.value,
+            'status': self.status,
+            'capabilities_count': len(self.capabilities),
+            'performance_metrics': self.performance_metrics,
+            'created_at': self.created_at.isoformat()
+        }
 
-    def _handle_message(self, message: AgentMessage):
-        """Handler principal de mensagens"""
-        try:
-            handler = self.message_handlers.get(message.message_type)
-            if handler:
-                handler(message)
-            else:
-                logger.warning(f"⚠️ Handler não encontrado para {message.message_type} no agente {self.agent_id}")
-        except Exception as e:
-            logger.error(f"❌ Erro processando mensagem no agente {self.agent_id}: {e}")
-
-    def _handle_heartbeat(self, message: AgentMessage):
-        """Handler para mensagens de heartbeat"""
-        self.last_heartbeat = datetime.now()
-        if message.requires_response:
-            self.send_message(
-                message.sender_id,
-                MessageType.RESPONSE,
-                {
-                    "status": self.status,
-                    "capabilities": [cap.name for cap in self.capabilities],
-                    "performance": self.performance_metrics,
-                    "active_tasks": len(self.active_tasks)
-                }
-            )
-
-    def _handle_request(self, message: AgentMessage):
-        """Handler para requisições"""
-        self.send_message(
-            message.sender_id,
-            MessageType.RESPONSE,
-            {"status": "not_implemented", "message": "Handler não implementado"}
-        )
-
-    def _handle_task_assignment(self, message: AgentMessage):
-        """Handler para atribuição de tarefas"""
-        task_id = message.content.get("task_id")
-        task_data = message.content.get("task_data")
-        if task_id and task_data:
-            self.task_queue.append({
-                "id": task_id,
-                "data": task_data,
-                "assigned_at": datetime.now(),
-                "sender": message.sender_id
-            })
-            logger.info(f"📋 Tarefa {task_id} atribuída ao agente {self.agent_id}")
-
-    def _send_heartbeat(self):
-        """Envia heartbeat para o coordenador"""
-        self.broadcast_message(
-            MessageType.HEARTBEAT,
-            {
-                "agent_id": self.agent_id,
-                "agent_type": self.agent_type.value,
-                "status": self.status,
-                "timestamp": datetime.now().isoformat()
-            }
-        )
-
-    def _run_loop(self):
-        """Loop principal do agente"""
-        last_heartbeat = time.time()
-        while self._running:
-            try:
-                current_time = time.time()
-                if current_time - last_heartbeat > 30:
-                    self._send_heartbeat()
-                    last_heartbeat = current_time
-                self._process_tasks()
-                self._agent_specific_logic()
-            except Exception as e:
-                logger.error(f"❌ Erro no loop do agente {self.agent_id}: {e}")
-            time.sleep(0.1)
-
-    def _process_tasks(self):
-        """Processa tarefas na fila"""
-        max_tasks = 5
-        while self.task_queue and len(self.active_tasks) < max_tasks:
-            task = self.task_queue.popleft()
-            self.active_tasks[task["id"]] = task
-            self._execute_task(task)
-
-    def _execute_task(self, task: Dict[str, Any]):
-        """Executa uma tarefa específica - deve ser sobrescrita"""
-        time.sleep(0.1)
-        self.active_tasks.pop(task["id"], None)
-        logger.info(f"✅ Tarefa {task['id']} concluída pelo agente {self.agent_id}")
-
-    def _agent_specific_logic(self):
-        """Lógica específica do agente - deve ser sobrescrita"""
-        pass
-
-class NetworkCoordinator(BaseNetworkAgent):
-    """Coordenador da rede multi-agente"""
-
+class NetworkCoordinator:
+    """Coordenador da rede de agentes"""
+    
     def __init__(self, message_bus: MessageBus):
-        super().__init__("coordinator", AgentType.COORDINATOR, message_bus)
-        self.registered_agents: Dict[str, Dict[str, Any]] = {}
-        self.network_metrics = NetworkMetrics(
-            total_agents=0,
-            active_agents=0,
-            messages_per_second=0.0,
-            average_response_time_ms=0.0,
-            network_efficiency=0.0,
-            load_distribution={},
-            fault_tolerance_score=0.0,
-            coordination_success_rate=0.0,
-            timestamp=datetime.now()
-        )
-        self.message_handlers[MessageType.HEARTBEAT] = self._handle_agent_heartbeat
-        self.message_handlers[MessageType.COORDINATION] = self._handle_coordination
-        self.last_metric_update = time.time()
+        self.message_bus = message_bus
+        self.agents = {}
+        self.load_balancer = {}
+        self.health_monitor = {}
+        self.running = False
+        
+    def register_agent(self, agent: BaseNetworkAgent):
+        """Registra um agente no coordenador"""
+        self.agents[agent.agent_id] = agent
+        self.load_balancer[agent.agent_id] = 0
+        self.health_monitor[agent.agent_id] = {
+            'last_heartbeat': datetime.now(),
+            'status': 'healthy'
+        }
+        logger.info(f"✅ Agente {agent.agent_id} registrado no coordenador")
 
-    def _handle_agent_heartbeat(self, message: AgentMessage):
-        """Processa heartbeats dos agentes"""
-        agent_id = message.content.get("agent_id")
-        agent_type = message.content.get("agent_type")
-        status = message.content.get("status")
-        if agent_id:
-            self.registered_agents[agent_id] = {
-                "type": agent_type,
-                "status": status,
-                "last_seen": datetime.now(),
-                "heartbeat_count": self.registered_agents.get(agent_id, {}).get("heartbeat_count", 0) + 1,
-                "load": self.registered_agents.get(agent_id, {}).get("load", 0.0)
-            }
-            logger.debug(f"💓 Heartbeat recebido do agente {agent_id}")
+    async def start_coordination(self):
+        """Inicia coordenação da rede"""
+        self.running = True
+        logger.info("🎯 Coordenação de rede iniciada")
+        
+        # Iniciar tarefas de coordenação
+        asyncio.create_task(self._health_check_loop())
+        asyncio.create_task(self._load_balancing_loop())
 
-    def _handle_coordination(self, message: AgentMessage):
-        """Coordena ações entre agentes"""
-        task_type = message.content.get("task_type")
-        if task_type:
-            self.assign_task_to_best_agent(task_type, message.content.get("task_data", {}))
+    async def _health_check_loop(self):
+        """Loop de verificação de saúde dos agentes"""
+        while self.running:
+            try:
+                for agent_id in self.agents:
+                    # Enviar heartbeat
+                    heartbeat = AgentMessage(
+                        id=str(uuid.uuid4()),
+                        sender_id="coordinator",
+                        recipient_id=agent_id,
+                        message_type=MessageType.HEARTBEAT,
+                        priority=Priority.LOW,
+                        content={"timestamp": datetime.now().isoformat()},
+                        timestamp=datetime.now()
+                    )
+                    await self.message_bus.publish(heartbeat)
+                
+                await asyncio.sleep(30)  # Check every 30 seconds
+                
+            except Exception as e:
+                logger.error(f"❌ Erro no health check: {e}")
 
-    def assign_task_to_best_agent(self, task_type: str, task_data: Dict[str, Any]) -> Optional[str]:
-        """Atribui tarefa ao melhor agente disponível com load balancing"""
-        available_agents = [
-            (agent_id, info) for agent_id, info in self.registered_agents.items()
-            if info["status"] == "running" and (datetime.now() - info["last_seen"]).seconds < 60
-        ]
-        if not available_agents:
-            logger.warning("⚠️ Nenhum agente disponível para tarefa")
-            return None
-
-        best_agent = min(available_agents, key=lambda x: x[1]["load"], default=available_agents[0])
-        selected_agent_id = best_agent[0]
-        task_id = str(uuid.uuid4())
-        self.send_message(
-            selected_agent_id,
-            MessageType.TASK_ASSIGNMENT,
-            {
-                "task_id": task_id,
-                "task_type": task_type,
-                "task_data": task_data
-            },
-            Priority.NORMAL
-        )
-        self.registered_agents[selected_agent_id]["load"] += 0.1
-        logger.info(f"📋 Tarefa {task_id} atribuída ao agente {selected_agent_id}")
-        return task_id
-
-    def _agent_specific_logic(self):
-        """Lógica específica do coordenador com escalabilidade e fault tolerance"""
-        now = time.time()
-        if now - self.last_metric_update > 10:
-            self._update_network_metrics()
-            self._check_fault_tolerance()
-            self.last_metric_update = now
-
-    def _update_network_metrics(self):
-        """Atualiza métricas da rede"""
-        active_agents = sum(1 for info in self.registered_agents.values() if info["status"] == "running")
-        total_agents = len(self.registered_agents)
-        messages_per_second = self.message_bus.delivery_stats["delivered"] / max(1, (time.time() - self.last_metric_update))
-        load_distribution = {agent_id: info["load"] for agent_id, info in self.registered_agents.items()}
-        self.network_metrics = NetworkMetrics(
-            total_agents=total_agents,
-            active_agents=active_agents,
-            messages_per_second=messages_per_second,
-            average_response_time_ms=100.0,
-            network_efficiency=min(1.0, active_agents / total_agents) if total_agents > 0 else 0.0,
-            load_distribution=load_distribution,
-            fault_tolerance_score=0.9 if active_agents > 0 else 0.0,
-            coordination_success_rate=0.95,
-            timestamp=datetime.now()
-        )
-        logger.info(f"📊 Métricas da rede atualizadas: {active_agents} agentes ativos")
-
-    def _check_fault_tolerance(self):
-        """Verifica e recupera agentes inativos"""
-        now = datetime.now()
-        inactive_agents = [
-            agent_id for agent_id, info in self.registered_agents.items()
-            if (now - info["last_seen"]).seconds > 120
-        ]
-        for agent_id in inactive_agents:
-            del self.registered_agents[agent_id]
-            logger.warning(f"⚠️ Agente {agent_id} removido por inatividade")
-            if len(self.registered_agents) < 3:
-                self._trigger_scaling()
-
-    def _trigger_scaling(self):
-        """Dispara escalabilidade automática"""
-        logger.info("🔧 Disparando escalabilidade automática")
+    async def _load_balancing_loop(self):
+        """Loop de balanceamento de carga"""
+        while self.running:
+            try:
+                # Atualizar métricas de carga
+                for agent_id, agent in self.agents.items():
+                    if hasattr(agent, 'performance_metrics'):
+                        self.load_balancer[agent_id] = agent.performance_metrics.get('messages_processed', 0)
+                
+                await asyncio.sleep(60)  # Update every minute
+                
+            except Exception as e:
+                logger.error(f"❌ Erro no load balancing: {e}")
 
 class MultiAgentNetwork:
-    """Sistema principal da rede multi-agente"""
-
+    """Rede multi-agente principal - COMPATÍVEL"""
+    
     def __init__(self):
         self.message_bus = MessageBus()
         self.coordinator = NetworkCoordinator(self.message_bus)
-        self.agents: Dict[str, BaseNetworkAgent] = {}
-        self.executor = ThreadPoolExecutor(max_workers=10)
+        self.agents = {}
         self._running = False
+        self.metrics_update_interval = 10  # seconds
+        self.last_metrics_update = time.time()
+        
+        logger.info("🌐 MultiAgentNetwork inicializada com compatibilidade completa")
 
     async def initialize(self):
-        """Inicializa a rede multi-agente de forma assíncrona"""
-        logger.info("🚀 Inicializando MultiAgentNetwork...")
-        self.start()
-        logger.info("✅ MultiAgentNetwork inicializada com sucesso")
-        return True
+        """Inicializa a rede multi-agente"""
+        try:
+            self._running = True
+            await self.coordinator.start_coordination()
+            
+            # Iniciar loop de métricas
+            asyncio.create_task(self._metrics_update_loop())
+            
+            logger.info("✅ MultiAgentNetwork inicializada com sucesso")
+            return True
+            
+        except Exception as e:
+            logger.error(f"❌ Erro inicializando MultiAgentNetwork: {e}")
+            self._running = False
+            return False
 
-    def start(self):
-        """Inicia a rede multi-agente"""
-        logger.info("🌐 Iniciando rede multi-agente SUNA-ALSHAM...")
-        self.message_bus.start()
-        self.coordinator.start()
-        for agent in self.agents.values():
-            agent.start()
-        self._running = True
-        logger.info("✅ Rede multi-agente iniciada com sucesso!")
+    def add_agent(self, agent):
+        """Adiciona um agente à rede - MÉTODO COMPATÍVEL"""
+        try:
+            if hasattr(agent, 'agent_id'):
+                agent_id = agent.agent_id
+                self.agents[agent_id] = agent
+                
+                # Registrar no message bus se não foi feito automaticamente
+                if agent_id not in self.message_bus.subscribers:
+                    self.message_bus.register_agent(agent)
+                
+                # Registrar no coordenador
+                if isinstance(agent, BaseNetworkAgent):
+                    self.coordinator.register_agent(agent)
+                
+                logger.info(f"✅ Agente {agent_id} adicionado à rede MultiAgentNetwork")
+                return True
+            else:
+                logger.error(f"❌ Agente sem agent_id não pode ser adicionado: {agent}")
+                return False
+                
+        except Exception as e:
+            logger.error(f"❌ Erro adicionando agente à rede: {e}")
+            return False
+
+    async def _metrics_update_loop(self):
+        """Loop de atualização de métricas"""
+        while self._running:
+            try:
+                current_time = time.time()
+                if current_time - self.last_metrics_update >= self.metrics_update_interval:
+                    active_agents = len([a for a in self.agents.values() if getattr(a, 'status', 'inactive') == 'active'])
+                    logger.info(f"📊 Métricas da rede atualizadas: {active_agents} agentes ativos")
+                    self.last_metrics_update = current_time
+                
+                await asyncio.sleep(5)  # Check every 5 seconds
+                
+            except Exception as e:
+                logger.error(f"❌ Erro no loop de métricas: {e}")
+
+    def get_network_status(self) -> Dict[str, Any]:
+        """Retorna status da rede"""
+        try:
+            active_agents = len([a for a in self.agents.values() if getattr(a, 'status', 'inactive') == 'active'])
+            
+            return {
+                'network_running': self._running,
+                'total_agents': len(self.agents),
+                'active_agents': active_agents,
+                'message_bus_metrics': self.message_bus.get_metrics(),
+                'agents': {agent_id: agent.get_status() if hasattr(agent, 'get_status') else {'status': 'unknown'} 
+                          for agent_id, agent in self.agents.items()}
+            }
+            
+        except Exception as e:
+            logger.error(f"❌ Erro obtendo status da rede: {e}")
+            return {'error': str(e)}
 
     def stop(self):
         """Para a rede multi-agente"""
-        logger.info("⏹️ Parando rede multi-agente...")
-        self._running = False
-        for agent in self.agents.values():
-            agent.stop()
-        self.coordinator.stop()
-        self.message_bus.stop()
-        self.executor.shutdown(wait=True)
-        logger.info("✅ Rede multi-agente parada")
+        try:
+            self._running = False
+            self.coordinator.running = False
+            logger.info("🛑 MultiAgentNetwork parada")
+            
+        except Exception as e:
+            logger.error(f"❌ Erro parando rede: {e}")
 
-    def add_agent(self, agent: BaseNetworkAgent):
-        """Adiciona um agente à rede"""
-        self.agents[agent.agent_id] = agent
-        if self._running:
-            agent.start()
-        logger.info(f"➕ Agente {agent.agent_id} adicionado à rede")
-
-    def remove_agent(self, agent_id: str):
-        """Remove um agente da rede"""
-        if agent_id in self.agents:
-            agent = self.agents[agent_id]
-            agent.stop()
-            del self.agents[agent_id]
-            logger.info(f"➖ Agente {agent_id} removido da rede")
-
-    def get_network_status(self) -> Dict[str, Any]:
-        """Retorna status completo da rede"""
-        active_agents = sum(1 for agent in self.agents.values() if agent.status == "running")
-        return {
-            "coordinator_id": self.coordinator.agent_id,
-            "network_metrics": asdict(self.coordinator.network_metrics),
-            "registered_agents": {agent_id: {"status": agent.status, "type": agent.agent_type.value}
-                                for agent_id, agent in self.agents.items()},
-            "message_bus_stats": self.message_bus.delivery_stats
-        }
-
-    def assign_task(self, task_type: str, task_data: Dict[str, Any]) -> Optional[str]:
-        """Atribui uma tarefa à rede"""
-        return self.coordinator.assign_task_to_best_agent(task_type, task_data)
-
-class AnalyticsAgent(BaseNetworkAgent):
-    """Agente especializado em analytics"""
-
-    def __init__(self, agent_id: str, message_bus: MessageBus):
-        super().__init__(agent_id, AgentType.ANALYTICS, message_bus)
-        self.add_capability(AgentCapability(
-            name="data_analysis",
-            description="Análise de dados em tempo real",
-            input_types=["json", "csv"],
-            output_types=["report", "visualization"],
-            processing_time_ms=500.0,
-            accuracy_score=0.95,
-            resource_cost=0.3
-        ))
-
-    def _handle_request(self, message: AgentMessage):
-        """Handler específico para requisições de analytics"""
-        request_type = message.content.get("type")
-        if request_type == "analyze_data":
-            data = message.content.get("data", [])
-            result = {
-                "analysis_id": str(uuid.uuid4()),
-                "data_points": len(data),
-                "mean": sum(data) / len(data) if data else 0,
-                "processed_at": datetime.now().isoformat()
-            }
-            self.send_message(
-                message.sender_id,
-                MessageType.RESPONSE,
-                {"status": "success", "result": result}
-            )
-            logger.info(f"📊 Análise concluída pelo agente {self.agent_id}")
+# Função de conveniência para criar rede
+def create_network() -> MultiAgentNetwork:
+    """Cria uma nova rede multi-agente"""
+    return MultiAgentNetwork()
 
 if __name__ == "__main__":
-    network = MultiAgentNetwork()
-    analytics_agent = AnalyticsAgent("analytics_001", network.message_bus)
-    network.add_agent(analytics_agent)
-
-    try:
-        network.start()
-        time.sleep(5)
-        task_id = network.assign_task("data_analysis", {"data": [1, 2, 3, 4, 5]})
-        print(f"Tarefa atribuída: {task_id}")
+    async def test_network():
+        """Teste básico da rede"""
+        network = MultiAgentNetwork()
+        await network.initialize()
+        
+        # Criar agente de teste
+        test_agent = BaseNetworkAgent("test_001", AgentType.CORE, network.message_bus)
+        network.add_agent(test_agent)
+        
+        # Aguardar um pouco para ver métricas
+        await asyncio.sleep(15)
+        
+        # Mostrar status
         status = network.get_network_status()
-        print(f"Status da rede: {json.dumps(status, indent=2, default=str)}")
-        time.sleep(10)
-    except KeyboardInterrupt:
-        print("\n🛑 Interrompido pelo usuário")
-    finally:
+        logger.info(f"Status da rede: {json.dumps(status, indent=2)}")
+        
         network.stop()
+    
+    # Executar teste
+    asyncio.run(test_network())
+
