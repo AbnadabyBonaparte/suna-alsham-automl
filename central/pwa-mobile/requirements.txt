@@ -1,0 +1,48 @@
+# ALSHAM QUANTUM v11.0 - PWA Mobile Dependencies
+# Progressive Web App with offline support
+# Flask server optimized for mobile experience
+# Core Flask Framework
+Flask==2.3.3
+Flask-CORS==4.0.0
+Flask-SocketIO==5.3.6
+Flask-Caching==2.1.0
+# WebSocket & Real-time Communication
+python-socketio==5.10.0
+websocket-client==1.6.4
+eventlet==0.33.3
+# HTTP Requests & API Integration
+requests==2.31.0
+httpx==0.24.1
+urllib3==2.0.4
+# PWA & Service Worker Support
+pwa-tools==1.2.1
+manifest-parser==0.5.2
+workbox-cli==6.6.0
+# Mobile & Touch Optimization
+user-agents==2.2.0
+mobile-detect==1.1.2
+device-detector==5.1.1
+# Caching & Performance
+redis==5.0.1
+memcached==1.2.0
+diskcache==5.6.3
+# JSON & Data Processing
+orjson==3.9.7
+ujson==5.8.0
+jsonschema==4.19.1
+# Environment & Configuration
+python-dotenv==1.0.0
+configparser==6.0.0
+pydantic==2.4.2
+# Production Server
+gunicorn==21.2.0
+gevent==23.7.0
+Werkzeug==2.3.7
+# Security & Authentication
+PyJWT==2.8.0
+cryptography==41.0.4
+bcrypt==4.0.1
+# Monitoring & Logging
+loguru==0.7.2
+prometheus-client==0.17.1
+sentry-sdk==1.32.0
