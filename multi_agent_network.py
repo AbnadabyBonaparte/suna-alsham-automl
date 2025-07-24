@@ -40,10 +40,10 @@ class AgentType(Enum):
     COORDINATOR = "coordinator"
     SPECIALIST = "specialist"
     MONITOR = "monitor"
-    EVOLVER = "evolver"  # Adicionado para SelfEvolvingAgent
-    INTEGRATOR = "integrator"  # Adicionado para IntegrationAgent
-    PREDICTOR = "predictor"  # Adicionado para PredictionAgent
-    AUTOMATOR = "automator"  # Adicionado para AutomationAgent
+    EVOLVER = "evolver"
+    INTEGRATOR = "integrator"
+    PREDICTOR = "predictor"
+    AUTOMATOR = "automator"
 
 class MessageType(Enum):
     """Tipos de mensagens entre agentes"""
@@ -54,11 +54,11 @@ class MessageType(Enum):
     HEARTBEAT = "heartbeat"
     TASK_ASSIGNMENT = "task_assignment"
     RESULT_SHARING = "result_sharing"
-    COORDINATION = "coordination"  # Novo tipo
+    COORDINATION = "coordination"
     EMERGENCY = "emergency"
-    COMPLIANCE_CHECK = "compliance_check"  # Novo tipo
-    USER_FEEDBACK = "user_feedback"  # Novo tipo
-    PREDICTION_REQUEST = "prediction_request"  # Novo tipo
+    COMPLIANCE_CHECK = "compliance_check"
+    USER_FEEDBACK = "user_feedback"
+    PREDICTION_REQUEST = "prediction_request"
 
 class Priority(Enum):
     """Níveis de prioridade das mensagens"""
@@ -72,7 +72,7 @@ class AgentMessage:
     """Estrutura de mensagem entre agentes"""
     id: str
     sender_id: str
-    receiver_id: str  # ou "broadcast" para todos
+    receiver_id: str
     message_type: MessageType
     priority: Priority
     content: Dict[str, Any]
@@ -340,7 +340,7 @@ class BaseNetworkAgent:
 
     def _process_tasks(self):
         """Processa tarefas na fila"""
-        max_tasks = 5  # Limite de tarefas simultâneas
+        max_tasks = 5
         while self.task_queue and len(self.active_tasks) < max_tasks:
             task = self.task_queue.popleft()
             self.active_tasks[task["id"]] = task
@@ -408,7 +408,6 @@ class NetworkCoordinator(BaseNetworkAgent):
             logger.warning("⚠️ Nenhum agente disponível para tarefa")
             return None
 
-        # Load balancing: selecionar agente com menor carga
         best_agent = min(available_agents, key=lambda x: x[1]["load"], default=available_agents[0])
         selected_agent_id = best_agent[0]
         task_id = str(uuid.uuid4())
@@ -422,14 +421,14 @@ class NetworkCoordinator(BaseNetworkAgent):
             },
             Priority.NORMAL
         )
-        self.registered_agents[selected_agent_id]["load"] += 0.1  # Simular aumento de carga
+        self.registered_agents[selected_agent_id]["load"] += 0.1
         logger.info(f"📋 Tarefa {task_id} atribuída ao agente {selected_agent_id}")
         return task_id
 
     def _agent_specific_logic(self):
         """Lógica específica do coordenador com escalabilidade e fault tolerance"""
         now = time.time()
-        if now - self.last_metric_update > 10:  # Atualizar métricas a cada 10 segundos
+        if now - self.last_metric_update > 10:
             self._update_network_metrics()
             self._check_fault_tolerance()
             self.last_metric_update = now
@@ -444,11 +443,11 @@ class NetworkCoordinator(BaseNetworkAgent):
             total_agents=total_agents,
             active_agents=active_agents,
             messages_per_second=messages_per_second,
-            average_response_time_ms=100.0,  # Simulado
+            average_response_time_ms=100.0,
             network_efficiency=min(1.0, active_agents / total_agents) if total_agents > 0 else 0.0,
             load_distribution=load_distribution,
-            fault_tolerance_score=0.9 if active_agents > 0 else 0.0,  # Simulado
-            coordination_success_rate=0.95,  # Simulado
+            fault_tolerance_score=0.9 if active_agents > 0 else 0.0,
+            coordination_success_rate=0.95,
             timestamp=datetime.now()
         )
         logger.info(f"📊 Métricas da rede atualizadas: {active_agents} agentes ativos")
@@ -463,15 +462,12 @@ class NetworkCoordinator(BaseNetworkAgent):
         for agent_id in inactive_agents:
             del self.registered_agents[agent_id]
             logger.warning(f"⚠️ Agente {agent_id} removido por inatividade")
-            # Simular recuperação ou escalabilidade (em produção, adicionar novos agentes)
-            if len(self.registered_agents) < 3:  # Limite mínimo
+            if len(self.registered_agents) < 3:
                 self._trigger_scaling()
 
     def _trigger_scaling(self):
         """Dispara escalabilidade automática"""
         logger.info("🔧 Disparando escalabilidade automática")
-        # Em produção, criar novos agentes com base em carga
-        pass
 
 class MultiAgentNetwork:
     """Sistema principal da rede multi-agente"""
@@ -482,6 +478,13 @@ class MultiAgentNetwork:
         self.agents: Dict[str, BaseNetworkAgent] = {}
         self.executor = ThreadPoolExecutor(max_workers=10)
         self._running = False
+
+    async def initialize(self):
+        """Inicializa a rede multi-agente de forma assíncrona"""
+        logger.info("🚀 Inicializando MultiAgentNetwork...")
+        self.start()
+        logger.info("✅ MultiAgentNetwork inicializada com sucesso")
+        return True
 
     def start(self):
         """Inicia a rede multi-agente"""
@@ -521,7 +524,6 @@ class MultiAgentNetwork:
 
     def get_network_status(self) -> Dict[str, Any]:
         """Retorna status completo da rede"""
-        now = datetime.now()
         active_agents = sum(1 for agent in self.agents.values() if agent.status == "running")
         return {
             "coordinator_id": self.coordinator.agent_id,
@@ -535,7 +537,6 @@ class MultiAgentNetwork:
         """Atribui uma tarefa à rede"""
         return self.coordinator.assign_task_to_best_agent(task_type, task_data)
 
-# Exemplo de agente especializado
 class AnalyticsAgent(BaseNetworkAgent):
     """Agente especializado em analytics"""
 
