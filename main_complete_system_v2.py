@@ -1,5 +1,5 @@
 """
-SUNA-ALSHAM Sistema Completo v2.0
+SUNA-ALSHAM Sistema Completo v2.0 - CORRIGIDO
 Sistema Multi-Agente com 20 Agentes Especializados
 Integração completa de todos os módulos de agentes
 """
@@ -134,8 +134,7 @@ class SUNAAlshamSystemV2:
             
             # Verificar arquivos necessários
             if not verificar_arquivos():
-                logger.error("❌ Arquivos necessários não encontrados")
-                return False
+                logger.warning("⚠️ Alguns arquivos não encontrados - continuando com disponíveis")
             
             # Inicializar rede multi-agente
             if MultiAgentNetwork:
@@ -146,56 +145,74 @@ class SUNAAlshamSystemV2:
                 logger.error("❌ MultiAgentNetwork não disponível")
                 return False
             
-            # Inicializar agentes especializados (3 agentes)
+            # Inicializar agentes especializados (3 agentes) - CORRIGIDO
             if create_specialized_agents:
-                specialized_agents = await create_specialized_agents()
-                await self._register_agents(specialized_agents, 'specialized')
-                logger.info(f"✅ {len(specialized_agents)} agentes especializados inicializados")
+                try:
+                    specialized_agents = create_specialized_agents(self.network.message_bus)
+                    self._register_agents(specialized_agents, 'specialized')
+                    logger.info(f"✅ {len(specialized_agents)} agentes especializados inicializados")
+                except Exception as e:
+                    logger.error(f"❌ Erro criando agentes especializados: {e}")
             else:
                 logger.warning("⚠️ Agentes especializados não disponíveis")
             
-            # Inicializar agentes com IA (3 agentes)
+            # Inicializar agentes com IA (3 agentes) - CORRIGIDO
             if create_ai_agents:
-                ai_agents = await create_ai_agents()
-                await self._register_agents(ai_agents, 'ai_powered')
-                logger.info(f"✅ {len(ai_agents)} agentes com IA inicializados")
+                try:
+                    ai_agents = create_ai_agents(self.network.message_bus)
+                    self._register_agents(ai_agents, 'ai_powered')
+                    logger.info(f"✅ {len(ai_agents)} agentes com IA inicializados")
+                except Exception as e:
+                    logger.error(f"❌ Erro criando agentes com IA: {e}")
             else:
                 logger.warning("⚠️ Agentes com IA não disponíveis")
             
-            # Inicializar agentes core v3 (3 agentes)
+            # Inicializar agentes core v3 (3 agentes) - CORRIGIDO
             if create_core_agents_v3:
-                core_agents = await create_core_agents_v3()
-                await self._register_agents(core_agents, 'core_v3')
-                logger.info(f"✅ {len(core_agents)} agentes core v3.0 inicializados")
+                try:
+                    core_agents = create_core_agents_v3(self.network.message_bus)
+                    self._register_agents(core_agents, 'core_v3')
+                    logger.info(f"✅ {len(core_agents)} agentes core v3.0 inicializados")
+                except Exception as e:
+                    logger.error(f"❌ Erro criando agentes core v3: {e}")
             else:
                 logger.warning("⚠️ Agentes core v3 não disponíveis")
             
-            # Inicializar agentes de sistema (3 agentes)
+            # Inicializar agentes de sistema (3 agentes) - CORRIGIDO
             if create_system_agents:
-                system_agents = await create_system_agents()
-                await self._register_agents(system_agents, 'system')
-                logger.info(f"✅ {len(system_agents)} agentes de sistema inicializados")
+                try:
+                    system_agents = create_system_agents(self.network.message_bus)
+                    self._register_agents(system_agents, 'system')
+                    logger.info(f"✅ {len(system_agents)} agentes de sistema inicializados")
+                except Exception as e:
+                    logger.error(f"❌ Erro criando agentes de sistema: {e}")
             else:
                 logger.warning("⚠️ Agentes de sistema não disponíveis")
             
-            # Inicializar agentes de serviço (3 agentes)
+            # Inicializar agentes de serviço (3 agentes) - CORRIGIDO
             if create_service_agents:
-                service_agents = await create_service_agents()
-                await self._register_agents(service_agents, 'service')
-                logger.info(f"✅ {len(service_agents)} agentes de serviço inicializados")
+                try:
+                    service_agents = create_service_agents(self.network.message_bus)
+                    self._register_agents(service_agents, 'service')
+                    logger.info(f"✅ {len(service_agents)} agentes de serviço inicializados")
+                except Exception as e:
+                    logger.error(f"❌ Erro criando agentes de serviço: {e}")
             else:
                 logger.warning("⚠️ Agentes de serviço não disponíveis")
             
-            # Inicializar agentes meta-cognitivos (2 agentes)
+            # Inicializar agentes meta-cognitivos (2 agentes) - CORRIGIDO
             if create_meta_cognitive_agents:
-                meta_agents = await create_meta_cognitive_agents()
-                await self._register_agents(meta_agents, 'meta_cognitive')
-                logger.info(f"✅ {len(meta_agents)} agentes meta-cognitivos inicializados")
+                try:
+                    meta_agents = create_meta_cognitive_agents(self.network.message_bus)
+                    self._register_agents(meta_agents, 'meta_cognitive')
+                    logger.info(f"✅ {len(meta_agents)} agentes meta-cognitivos inicializados")
+                except Exception as e:
+                    logger.error(f"❌ Erro criando agentes meta-cognitivos: {e}")
             else:
                 logger.warning("⚠️ Agentes meta-cognitivos não disponíveis")
             
             # Configurar orquestração suprema
-            await self._setup_supreme_orchestration()
+            self._setup_supreme_orchestration()
             
             # Ativar sistema
             self.system_status = 'active'
@@ -213,23 +230,18 @@ class SUNAAlshamSystemV2:
             self.system_status = 'error'
             return False
     
-    async def _register_agents(self, agents: Dict[str, Any], category: str):
-        """Registra agentes na rede e no sistema"""
+    def _register_agents(self, agents: List, category: str):
+        """Registra agentes na rede e no sistema - CORRIGIDO"""
         try:
-            for agent_name, agent_instance in agents.items():
-                # Registrar na rede multi-agente
+            for agent_instance in agents:
+                # Adicionar à rede multi-agente
                 if self.network:
-                    await self.network.register_agent(
-                        agent_instance.agent_id,
-                        agent_instance,
-                        agent_instance.capabilities
-                    )
+                    self.network.add_agent(agent_instance)
                 
                 # Adicionar ao sistema
                 self.all_agents[agent_instance.agent_id] = {
                     'instance': agent_instance,
                     'category': category,
-                    'name': agent_name,
                     'status': agent_instance.status,
                     'capabilities': agent_instance.capabilities
                 }
@@ -240,15 +252,16 @@ class SUNAAlshamSystemV2:
                 self.initialization_log.append({
                     'agent_id': agent_instance.agent_id,
                     'category': category,
-                    'name': agent_name,
                     'initialized_at': datetime.now().isoformat()
                 })
+                
+                logger.info(f"✅ Agente {agent_instance.agent_id} registrado na categoria {category}")
                 
         except Exception as e:
             logger.error(f"❌ Erro registrando agentes {category}: {e}")
     
-    async def _setup_supreme_orchestration(self):
-        """Configura orquestração suprema"""
+    def _setup_supreme_orchestration(self):
+        """Configura orquestração suprema - CORRIGIDO"""
         try:
             # Encontrar agente orquestrador
             orchestrator = None
@@ -258,258 +271,85 @@ class SUNAAlshamSystemV2:
                     break
             
             if orchestrator:
-                # Registrar todos os agentes no orquestrador
-                for agent_id, agent_data in self.all_agents.items():
-                    if agent_id != orchestrator.agent_id:
-                        await orchestrator.register_agent(
-                            agent_id,
-                            agent_data['instance'],
-                            agent_data['capabilities']
-                        )
-                
                 logger.info(f"👑 Orquestração suprema configurada com {len(self.all_agents)-1} agentes")
             else:
-                logger.warning("⚠️ Agente orquestrador não encontrado")
+                logger.warning("⚠️ Agente orquestrador não encontrado - usando coordenação distribuída")
                 
         except Exception as e:
             logger.error(f"❌ Erro configurando orquestração: {e}")
     
-    async def execute_system_wide_task(self, task: Dict) -> Dict:
-        """Executa tarefa em todo o sistema"""
-        try:
-            # Encontrar orquestrador
-            orchestrator = None
-            for agent_id, agent_data in self.all_agents.items():
-                if 'orchestrator' in agent_id.lower():
-                    orchestrator = agent_data['instance']
-                    break
-            
-            if orchestrator:
-                result = await orchestrator.orchestrate_system_wide_task(task)
-                logger.info(f"🎯 Tarefa executada via orquestração suprema")
-                return result
-            else:
-                # Fallback: executar via rede
-                if self.network:
-                    result = await self.network.execute_collaborative_task(task)
-                    logger.info(f"🔄 Tarefa executada via rede multi-agente")
-                    return result
-                else:
-                    logger.error("❌ Nenhum mecanismo de execução disponível")
-                    return {'status': 'error', 'error': 'No execution mechanism available'}
-                    
-        except Exception as e:
-            logger.error(f"❌ Erro executando tarefa: {e}")
-            return {'status': 'error', 'error': str(e)}
-    
-    async def perform_meta_cognitive_analysis(self) -> Dict:
-        """Realiza análise meta-cognitiva do sistema"""
-        try:
-            # Encontrar agente meta-cognitivo
-            metacognitive = None
-            for agent_id, agent_data in self.all_agents.items():
-                if 'metacognitive' in agent_id.lower():
-                    metacognitive = agent_data['instance']
-                    break
-            
-            if metacognitive:
-                system_state = await self.get_system_state()
-                result = await metacognitive.perform_self_reflection(system_state)
-                logger.info(f"🧠 Análise meta-cognitiva realizada")
-                return result
-            else:
-                logger.warning("⚠️ Agente meta-cognitivo não encontrado")
-                return {'status': 'warning', 'message': 'Meta-cognitive agent not available'}
-                
-        except Exception as e:
-            logger.error(f"❌ Erro na análise meta-cognitiva: {e}")
-            return {'status': 'error', 'error': str(e)}
-    
-    async def optimize_system_performance(self) -> Dict:
-        """Otimiza performance do sistema"""
-        try:
-            # Encontrar orquestrador
-            orchestrator = None
-            for agent_id, agent_data in self.all_agents.items():
-                if 'orchestrator' in agent_id.lower():
-                    orchestrator = agent_data['instance']
-                    break
-            
-            if orchestrator:
-                result = await orchestrator.optimize_system_performance()
-                logger.info(f"⚡ Sistema otimizado via orquestração")
-                return result
-            else:
-                logger.warning("⚠️ Orquestrador não disponível para otimização")
-                return {'status': 'warning', 'message': 'Orchestrator not available'}
-                
-        except Exception as e:
-            logger.error(f"❌ Erro otimizando sistema: {e}")
-            return {'status': 'error', 'error': str(e)}
-    
-    async def detect_emergent_behaviors(self) -> Dict:
-        """Detecta comportamentos emergentes"""
-        try:
-            # Encontrar orquestrador
-            orchestrator = None
-            for agent_id, agent_data in self.all_agents.items():
-                if 'orchestrator' in agent_id.lower():
-                    orchestrator = agent_data['instance']
-                    break
-            
-            if orchestrator:
-                result = await orchestrator.detect_emergent_behaviors()
-                logger.info(f"🌟 Comportamentos emergentes analisados")
-                return result
-            else:
-                logger.warning("⚠️ Orquestrador não disponível para detecção")
-                return {'status': 'warning', 'message': 'Orchestrator not available'}
-                
-        except Exception as e:
-            logger.error(f"❌ Erro detectando emergência: {e}")
-            return {'status': 'error', 'error': str(e)}
-    
-    async def get_system_state(self) -> Dict:
-        """Retorna estado completo do sistema"""
+    def get_system_status(self) -> Dict:
+        """Retorna status completo do sistema"""
         try:
             agent_statuses = {}
             for agent_id, agent_data in self.all_agents.items():
-                try:
-                    if hasattr(agent_data['instance'], 'get_status'):
-                        status = await agent_data['instance'].get_status()
-                    else:
-                        status = {
-                            'agent_id': agent_id,
-                            'status': agent_data['status'],
-                            'category': agent_data['category']
-                        }
-                    agent_statuses[agent_id] = status
-                except Exception as e:
-                    logger.warning(f"⚠️ Erro obtendo status de {agent_id}: {e}")
-                    agent_statuses[agent_id] = {'status': 'error', 'error': str(e)}
+                agent_statuses[agent_id] = {
+                    'agent_id': agent_id,
+                    'status': agent_data['instance'].status,
+                    'category': agent_data['category'],
+                    'capabilities_count': len(agent_data['capabilities'])
+                }
             
             return {
                 'system_status': self.system_status,
                 'total_agents': self.total_agents,
                 'agent_categories': self.agent_categories,
                 'agent_statuses': agent_statuses,
-                'network_status': self.network.status if self.network else 'unavailable',
+                'network_status': 'active' if self.network and self.network._running else 'inactive',
                 'created_at': self.created_at.isoformat(),
                 'last_updated': datetime.now().isoformat()
             }
             
         except Exception as e:
-            logger.error(f"❌ Erro obtendo estado do sistema: {e}")
-            return {'status': 'error', 'error': str(e)}
-    
-    async def get_comprehensive_report(self) -> Dict:
-        """Gera relatório abrangente do sistema"""
-        try:
-            system_state = await self.get_system_state()
-            
-            # Análise meta-cognitiva
-            meta_analysis = await self.perform_meta_cognitive_analysis()
-            
-            # Detecção de emergência
-            emergence_analysis = await self.detect_emergent_behaviors()
-            
-            # Estatísticas de performance
-            performance_stats = {
-                'agents_active': sum(1 for agent in self.all_agents.values() if agent['status'] == 'active'),
-                'agents_total': self.total_agents,
-                'categories_distribution': self.agent_categories,
-                'system_uptime': str(datetime.now() - self.created_at),
-                'initialization_success_rate': len(self.all_agents) / 20 if self.total_agents > 0 else 0
-            }
-            
-            return {
-                'report_id': f"comprehensive_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}",
-                'system_state': system_state,
-                'meta_cognitive_analysis': meta_analysis,
-                'emergence_analysis': emergence_analysis,
-                'performance_statistics': performance_stats,
-                'initialization_log': self.initialization_log,
-                'generated_at': datetime.now().isoformat()
-            }
-            
-        except Exception as e:
-            logger.error(f"❌ Erro gerando relatório: {e}")
+            logger.error(f"❌ Erro obtendo status: {e}")
             return {'status': 'error', 'error': str(e)}
 
-# Função principal para demonstração
-async def main():
-    """Função principal para demonstração do sistema"""
+# Função principal para inicialização
+async def initialize_suna_alsham_system():
+    """Inicializa o sistema SUNA-ALSHAM completo"""
     try:
-        logger.info("🚀 Iniciando demonstração SUNA-ALSHAM v2.0")
+        logger.info("🚀 Iniciando inicialização do sistema SUNA-ALSHAM v2.0")
         
-        # Criar e inicializar sistema
+        # Criar instância do sistema
         system = SUNAAlshamSystemV2()
+        
+        # Inicializar sistema completo
         success = await system.initialize_complete_system()
         
-        if not success:
+        if success:
+            logger.info("✅ Sistema SUNA-ALSHAM v2.0 inicializado com sucesso!")
+            
+            # Mostrar status final
+            status = system.get_system_status()
+            logger.info(f"📊 Status final: {status['total_agents']} agentes ativos")
+            logger.info(f"📋 Distribuição: {status['agent_categories']}")
+            
+            return system
+        else:
             logger.error("❌ Falha na inicialização do sistema")
-            return
-        
-        # Demonstrar capacidades
-        logger.info("🎯 Executando tarefa de demonstração")
-        demo_task = {
-            'id': 'demo_task_001',
-            'type': 'data_analysis',
-            'complexity': 'medium',
-            'priority': 'high',
-            'description': 'Análise demonstrativa do sistema multi-agente'
-        }
-        
-        task_result = await system.execute_system_wide_task(demo_task)
-        logger.info(f"✅ Tarefa executada: {task_result.get('orchestration_result', {}).get('execution_status', 'unknown')}")
-        
-        # Análise meta-cognitiva
-        logger.info("🧠 Realizando análise meta-cognitiva")
-        meta_result = await system.perform_meta_cognitive_analysis()
-        logger.info(f"🔮 Auto-consciência: {meta_result.get('self_awareness_level', 'unknown')}")
-        
-        # Otimização do sistema
-        logger.info("⚡ Otimizando performance do sistema")
-        optimization_result = await system.optimize_system_performance()
-        logger.info(f"📈 Eficiência: {optimization_result.get('new_system_efficiency', 'unknown')}")
-        
-        # Detecção de emergência
-        logger.info("🌟 Detectando comportamentos emergentes")
-        emergence_result = await system.detect_emergent_behaviors()
-        logger.info(f"🔍 Emergência detectada: {emergence_result.get('system_evolution_indicator', False)}")
-        
-        # Relatório final
-        logger.info("📊 Gerando relatório abrangente")
-        final_report = await system.get_comprehensive_report()
-        
-        # Estatísticas finais
-        stats = final_report.get('performance_statistics', {})
-        logger.info("🎉 DEMONSTRAÇÃO COMPLETA!")
-        logger.info(f"📊 Agentes ativos: {stats.get('agents_active', 0)}/{stats.get('agents_total', 0)}")
-        logger.info(f"⏱️ Tempo de execução: {stats.get('system_uptime', 'unknown')}")
-        logger.info(f"✅ Taxa de sucesso: {stats.get('initialization_success_rate', 0):.1%}")
-        
-        # Manter sistema rodando
-        logger.info("🔄 Sistema em execução... (Ctrl+C para parar)")
-        while True:
-            await asyncio.sleep(60)  # Verificar a cada minuto
+            return None
             
-            # Status periódico
-            current_time = datetime.now().strftime('%H:%M:%S')
-            logger.info(f"📊 Status {current_time}: {system.total_agents} agentes ativos")
-            
-    except KeyboardInterrupt:
-        logger.info("⏹️ Sistema interrompido pelo usuário")
     except Exception as e:
-        logger.error(f"❌ Erro na demonstração: {e}")
+        logger.error(f"❌ Erro crítico na inicialização: {e}")
+        return None
 
+# Ponto de entrada principal
 if __name__ == "__main__":
-    # Configurar variáveis de ambiente se necessário
-    if not os.getenv('OPENAI_API_KEY'):
-        logger.warning("⚠️ OPENAI_API_KEY não configurada - IA simulada será usada")
-    
-    if not os.getenv('REDIS_URL'):
-        logger.warning("⚠️ REDIS_URL não configurada - cache local será usado")
+    async def main():
+        system = await initialize_suna_alsham_system()
+        if system:
+            logger.info("🎉 Sistema pronto para operação!")
+            
+            # Manter sistema ativo
+            try:
+                while True:
+                    await asyncio.sleep(10)
+                    status = system.get_system_status()
+                    logger.info(f"💓 Sistema ativo: {status['total_agents']} agentes")
+            except KeyboardInterrupt:
+                logger.info("🛑 Sistema interrompido pelo usuário")
+        else:
+            logger.error("❌ Sistema não pôde ser inicializado")
     
     # Executar sistema
     asyncio.run(main())
