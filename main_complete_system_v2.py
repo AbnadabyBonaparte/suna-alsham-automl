@@ -30,6 +30,10 @@ try:
     from meta_cognitive_agents import create_meta_cognitive_agents
 except ImportError:
     create_meta_cognitive_agents = None
+try:
+    from code_analyzer_agent import create_code_analyzer_agent
+except ImportError:
+    create_code_analyzer_agent = None
 
 logger = logging.getLogger(__name__)
 
@@ -37,7 +41,8 @@ def verificar_arquivos():
     """Verifica se todos os módulos de agentes estão disponíveis"""
     modules = [
         create_specialized_agents, create_ai_agents, create_core_agents_v3,
-        create_system_agents, create_service_agents, create_meta_cognitive_agents
+        create_system_agents, create_service_agents, create_meta_cognitive_agents,
+        create_code_analyzer_agent
     ]
     return all(modules)
 
@@ -45,8 +50,8 @@ class SUNAAlshamSystemV2:
     """
     Sistema Multi-Agente SUNA-ALSHAM v2.0
     
-    Coordena 20 agentes distribuídos em 6 categorias:
-    - specialized: 5 agentes
+    Coordena 21 agentes distribuídos em 6 categorias:
+    - specialized: 6 agentes (incluindo CodeAnalyzer)
     - ai_powered: 3 agentes  
     - core_v3: 5 agentes
     - system: 3 agentes
@@ -263,13 +268,14 @@ class SUNAAlshamSystemV2:
             log_agent_creation(create_system_agents, 'system', num_instances=1)
             log_agent_creation(create_service_agents, 'service', num_instances=1)
             log_agent_creation(create_meta_cognitive_agents, 'meta_cognitive')
+            log_agent_creation(create_code_analyzer_agent, 'specialized')  # 1 agente adicional
             
             # Validar contagem total de agentes
             total_agents = sum(self.agent_categories.values())
             logger.info(f"🧮 Contagem total de agentes: {total_agents}")
             
-            if total_agents != 20:
-                logger.error(f"❌ Total de agentes inválido: {total_agents} (esperado: 20)")
+            if total_agents != 21:
+                logger.error(f"❌ Total de agentes inválido: {total_agents} (esperado: 21)")
                 logger.error(f"📊 Distribuição atual: {self.agent_categories}")
                 self.system_status = 'error'
                 return False
