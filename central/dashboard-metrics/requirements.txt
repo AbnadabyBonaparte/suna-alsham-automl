@@ -1,0 +1,76 @@
+# ALSHAM QUANTUM v11.0 - Dashboard Metrics Dependencies
+# Flask Web Framework & Extensions
+Flask==2.3.3
+Flask-CORS==4.0.0
+Flask-SocketIO==5.3.6
+
+# HTTP Requests & API Integration
+requests==2.31.0
+urllib3==2.0.4
+httpx==0.24.1
+
+# Environment & Configuration
+python-dotenv==1.0.0
+pyyaml==6.0.1
+configparser==6.0.0
+
+# Production Server
+gunicorn==21.2.0
+eventlet==0.33.3
+gevent==23.7.0
+
+# Data Processing & Analytics
+numpy==1.24.3
+pandas==2.0.3
+scipy==1.11.1
+
+# Caching & Performance
+redis==4.6.0
+memcached==1.59
+python-memcached==1.59
+
+# Monitoring & Metrics
+psutil==5.9.5
+prometheus-client==0.17.1
+statsd==4.0.1
+
+# Scheduling & Background Tasks
+schedule==1.2.0
+celery==5.3.1
+apscheduler==3.10.4
+
+# Database Connectivity (Optional)
+SQLAlchemy==2.0.19
+pymongo==4.4.1
+psycopg2-binary==2.9.7
+
+# Security & Authentication
+cryptography==41.0.3
+PyJWT==2.8.0
+bcrypt==4.0.1
+
+# JSON & Data Serialization
+ujson==5.8.0
+orjson==3.9.4
+marshmallow==3.20.1
+
+# Logging & Debugging
+loguru==0.7.0
+colorama==0.4.6
+rich==13.4.2
+
+# HTTP Client Enhancements
+aiohttp==3.8.5
+websockets==11.0.3
+socketio-client==0.7.2
+
+# Utilities
+python-dateutil==2.8.2
+pytz==2023.3
+validators==0.20.0
+
+# Development & Testing (Optional)
+pytest==7.4.0
+pytest-flask==1.2.0
+black==23.7.0
+flake8==6.0.0
