@@ -54,25 +54,28 @@ class SUNAAlshamSystemV2:
 
     def _register_agents(self, agents: List, category: str):
         try:
+            seen_ids = set()
             for agent_instance in agents:
                 if not hasattr(agent_instance, 'agent_id') or not hasattr(agent_instance, 'status'):
                     logger.error(f"❌ Agente inválido em {category}: {agent_instance}")
                     continue
-                if self.network:
-                    self.network.add_agent(agent_instance)
-                self.all_agents[agent_instance.agent_id] = {
-                    'instance': agent_instance,
-                    'category': category,
-                    'status': agent_instance.status,
-                    'capabilities': getattr(agent_instance, 'capabilities', [])
-                }
-                self.agent_categories[category] += 1
-                self.initialization_log.append({
-                    'agent_id': agent_instance.agent_id,
-                    'category': category,
-                    'initialized_at': datetime.now().isoformat()
-                })
-                logger.info(f"✅ Agente {agent_instance.agent_id} registrado na categoria {category}")
+                if agent_instance.agent_id not in seen_ids:
+                    if self.network:
+                        self.network.add_agent(agent_instance)
+                    self.all_agents[agent_instance.agent_id] = {
+                        'instance': agent_instance,
+                        'category': category,
+                        'status': agent_instance.status,
+                        'capabilities': getattr(agent_instance, 'capabilities', [])
+                    }
+                    self.agent_categories[category] += 1
+                    self.initialization_log.append({
+                        'agent_id': agent_instance.agent_id,
+                        'category': category,
+                        'initialized_at': datetime.now().isoformat()
+                    })
+                    logger.info(f"✅ Agente {agent_instance.agent_id} registrado na categoria {category}")
+                    seen_ids.add(agent_instance.agent_id)
         except Exception as e:
             logger.error(f"❌ Erro registrando agentes {category}: {e}", exc_info=True)
 
