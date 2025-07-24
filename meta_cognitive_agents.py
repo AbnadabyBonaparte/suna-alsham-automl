@@ -1049,18 +1049,91 @@ class MetaCognitiveAgent:
             'created_at': self.created_at.isoformat()
         }
 
-# Função para criar agentes meta-cognitivos
-async def create_meta_cognitive_agents() -> Dict[str, Any]:
-    """Cria e inicializa agentes meta-cognitivos"""
-    agents = {
-        'orchestrator': OrchestratorAgent(),
-        'metacognitive': MetaCognitiveAgent()
-    }
+# Função para criar agentes meta-cognitivos - CORRIGIDO
+def create_meta_cognitive_agents(message_bus) -> List:
+    """Cria e inicializa agentes meta-cognitivos com MessageBus"""
+    from multi_agent_network import BaseNetworkAgent, AgentType
     
-    # Inicializar todos os agentes
-    for agent_name, agent in agents.items():
-        await agent.initialize()
+    # Criar agentes compatíveis com a rede
+    agents = [
+        OrchestratorAgentNetworkAdapter("orchestrator_001", AgentType.COORDINATOR, message_bus),
+        MetaCognitiveAgentNetworkAdapter("metacognitive_001", AgentType.SPECIALIST, message_bus)
+    ]
     
-    logger.info(f"✅ {len(agents)} agentes meta-cognitivos criados")
+    logger.info(f"✅ {len(agents)} agentes meta-cognitivos criados com MessageBus")
     return agents
+
+
+# Adaptadores para compatibilidade com rede multi-agente
+class OrchestratorAgentNetworkAdapter:
+    """Adaptador para OrchestratorAgent na rede multi-agente"""
+    
+    def __init__(self, agent_id: str, agent_type, message_bus):
+        from multi_agent_network import BaseNetworkAgent, AgentCapability
+        
+        self.agent_id = agent_id
+        self.agent_type = agent_type
+        self.message_bus = message_bus
+        self.status = 'active'
+        self.capabilities = [
+            AgentCapability(
+                name="supreme_orchestration",
+                description="Orquestração suprema do sistema",
+                input_types=["orchestration_request", "system_state"],
+                output_types=["orchestration_plan", "coordination_commands"],
+                processing_time_ms=1000.0,
+                accuracy_score=0.96,
+                resource_cost=0.5
+            ),
+            AgentCapability(
+                name="emergent_behavior_detection",
+                description="Detecção de comportamentos emergentes",
+                input_types=["system_behavior", "interaction_patterns"],
+                output_types=["emergent_behaviors", "adaptation_strategies"],
+                processing_time_ms=1500.0,
+                accuracy_score=0.90,
+                resource_cost=0.7
+            )
+        ]
+        
+        self.orchestrator_agent = OrchestratorAgent(agent_id)
+        
+        if message_bus:
+            message_bus.register_agent(self)
+
+class MetaCognitiveAgentNetworkAdapter:
+    """Adaptador para MetaCognitiveAgent na rede multi-agente"""
+    
+    def __init__(self, agent_id: str, agent_type, message_bus):
+        from multi_agent_network import BaseNetworkAgent, AgentCapability
+        
+        self.agent_id = agent_id
+        self.agent_type = agent_type
+        self.message_bus = message_bus
+        self.status = 'active'
+        self.capabilities = [
+            AgentCapability(
+                name="meta_cognition",
+                description="Cognição sobre cognição do sistema",
+                input_types=["cognitive_state", "reflection_request"],
+                output_types=["meta_insights", "cognitive_improvements"],
+                processing_time_ms=2000.0,
+                accuracy_score=0.88,
+                resource_cost=0.8
+            ),
+            AgentCapability(
+                name="self_reflection",
+                description="Auto-reflexão do sistema",
+                input_types=["system_performance", "behavioral_patterns"],
+                output_types=["self_assessment", "improvement_recommendations"],
+                processing_time_ms=1800.0,
+                accuracy_score=0.85,
+                resource_cost=0.6
+            )
+        ]
+        
+        self.metacognitive_agent = MetaCognitiveAgent(agent_id)
+        
+        if message_bus:
+            message_bus.register_agent(self)
 
