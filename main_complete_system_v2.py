@@ -34,18 +34,6 @@ try:
     from code_analyzer_agent import create_code_analyzer_agent
 except ImportError:
     create_code_analyzer_agent = None
-try:
-    from web_search_agent import create_web_search_agent
-except ImportError:
-    create_web_search_agent = None
-try:
-    from code_corrector_agent import create_code_corrector_agent
-except ImportError:
-    create_code_corrector_agent = None
-try:
-    from performance_monitor_agent import create_performance_monitor_agent
-except ImportError:
-    create_performance_monitor_agent = None
 
 logger = logging.getLogger(__name__)
 
@@ -54,28 +42,31 @@ def verificar_arquivos():
     modules = [
         create_specialized_agents, create_ai_agents, create_core_agents_v3,
         create_system_agents, create_service_agents, create_meta_cognitive_agents,
-        create_code_analyzer_agent, create_web_search_agent, 
-        create_code_corrector_agent, create_performance_monitor_agent
+        create_code_analyzer_agent
     ]
+    missing_modules = [i for i, module in enumerate(modules) if module is None]
+    
+    if missing_modules:
+        module_names = [
+            'specialized_agents', 'ai_powered_agents', 'core_agents_v3',
+            'system_agents', 'service_agents', 'meta_cognitive_agents',
+            'code_analyzer_agent'
+        ]
+        logger.error(f"❌ Módulos ausentes: {[module_names[i] for i in missing_modules]}")
+    
     return all(modules)
 
 class SUNAAlshamSystemV2:
     """
-    Sistema Multi-Agente SUNA-ALSHAM v2.0 - AUTOEVOLUÇÃO COMPLETA
+    Sistema Multi-Agente SUNA-ALSHAM v2.0
     
-    Coordena 24 agentes distribuídos em 6 categorias:
-    - specialized: 9 agentes (incluindo agentes de autoevolução)
+    Coordena 21 agentes distribuídos em 6 categorias:
+    - specialized: 6 agentes (incluindo CodeAnalyzer)
     - ai_powered: 3 agentes  
     - core_v3: 5 agentes
     - system: 3 agentes
     - service: 2 agentes
     - meta_cognitive: 2 agentes
-    
-    AGENTES DE AUTOEVOLUÇÃO:
-    - CodeAnalyzerAgent: Análise automática de código
-    - WebSearchAgent: Busca melhorias na internet
-    - CodeCorrectorAgent: Aplicação automática de correções
-    - PerformanceMonitorAgent: Monitoramento de performance
     """
     
     def __init__(self):
@@ -94,7 +85,6 @@ class SUNAAlshamSystemV2:
         self.initialization_log = []
         self.total_agents = 0
         self.metrics_task = None
-        self.autoevolution_enabled = False
 
     def _register_agents(self, agents: List, category: str):
         """Registra agentes no sistema evitando duplicações"""
@@ -164,35 +154,6 @@ class SUNAAlshamSystemV2:
             logger.error(f"❌ Erro configurando orquestração: {e}", exc_info=True)
             raise
 
-    def _setup_autoevolution_system(self):
-        """Configura sistema de autoevolução"""
-        try:
-            # Identificar agentes de autoevolução
-            autoevolution_agents = {}
-            
-            for agent_id, agent_data in self.all_agents.items():
-                if 'code_analyzer' in agent_id.lower():
-                    autoevolution_agents['analyzer'] = agent_data['instance']
-                elif 'web_search' in agent_id.lower():
-                    autoevolution_agents['searcher'] = agent_data['instance']
-                elif 'code_corrector' in agent_id.lower():
-                    autoevolution_agents['corrector'] = agent_data['instance']
-                elif 'performance_monitor' in agent_id.lower():
-                    autoevolution_agents['monitor'] = agent_data['instance']
-            
-            if len(autoevolution_agents) == 4:
-                self.autoevolution_enabled = True
-                logger.info("🚀 Sistema de autoevolução configurado e ATIVO!")
-                logger.info(f"   ├── Analyzer: {autoevolution_agents['analyzer'].agent_id}")
-                logger.info(f"   ├── Searcher: {autoevolution_agents['searcher'].agent_id}")
-                logger.info(f"   ├── Corrector: {autoevolution_agents['corrector'].agent_id}")
-                logger.info(f"   └── Monitor: {autoevolution_agents['monitor'].agent_id}")
-            else:
-                logger.warning(f"⚠️ Sistema de autoevolução incompleto: {len(autoevolution_agents)}/4 agentes")
-                
-        except Exception as e:
-            logger.error(f"❌ Erro configurando autoevolução: {e}")
-
     async def start_metrics_display(self):
         """Exibe métricas automaticamente a cada 30 segundos"""
         logger.info("📊 Sistema de métricas automáticas iniciado")
@@ -206,11 +167,10 @@ class SUNAAlshamSystemV2:
                 
                 # Exibir métricas formatadas
                 logger.info("=" * 60)
-                logger.info("📊 MÉTRICAS DO SISTEMA SUNA-ALSHAM v2.0")
+                logger.info("📊 MÉTRICAS DO SISTEMA SUNA-ALSHAM")
                 logger.info("=" * 60)
                 logger.info(f"🚀 Status: {self.system_status}")
                 logger.info(f"🤖 Total de Agentes: {self.total_agents}")
-                logger.info(f"🔄 Autoevolução: {'ATIVA' if self.autoevolution_enabled else 'INATIVA'}")
                 logger.info(f"🌐 Rede: {status.get('network', {}).get('status', 'unknown')}")
                 logger.info(f"⏰ Uptime: {self._get_uptime()}")
                 
@@ -218,14 +178,6 @@ class SUNAAlshamSystemV2:
                 logger.info("📋 AGENTES POR CATEGORIA:")
                 for category, count in self.agent_categories.items():
                     logger.info(f"   ├── {category}: {count} agentes")
-                
-                # Métricas de autoevolução
-                if self.autoevolution_enabled:
-                    logger.info("🔄 SISTEMA DE AUTOEVOLUÇÃO:")
-                    logger.info("   ├── CodeAnalyzer: Monitorando qualidade")
-                    logger.info("   ├── WebSearcher: Buscando melhorias")
-                    logger.info("   ├── CodeCorrector: Aplicando otimizações")
-                    logger.info("   └── PerformanceMonitor: Medindo resultados")
                 
                 # Métricas da rede se disponível
                 if self.network:
@@ -263,7 +215,7 @@ class SUNAAlshamSystemV2:
     async def initialize_complete_system(self):
         """Inicializa o sistema completo com todos os agentes"""
         try:
-            logger.info("🚀 Iniciando SUNA-ALSHAM Sistema Completo v2.0 - AUTOEVOLUÇÃO")
+            logger.info("🚀 Iniciando SUNA-ALSHAM Sistema Completo v2.0")
             logger.info(f"⏰ Inicialização em: {self.created_at.strftime('%Y-%m-%d %H:%M:%S')}")
             
             # Verificar módulos necessários
@@ -320,27 +272,20 @@ class SUNAAlshamSystemV2:
             # Criar todos os agentes por categoria
             logger.info("🎯 Iniciando criação de agentes por categoria...")
             
-            # Agentes originais
             log_agent_creation(create_specialized_agents, 'specialized', num_instances=2)
             log_agent_creation(create_ai_agents, 'ai_powered', num_instances=1)
             log_agent_creation(create_core_agents_v3, 'core_v3', num_instances=2)
             log_agent_creation(create_system_agents, 'system', num_instances=1)
             log_agent_creation(create_service_agents, 'service', num_instances=1)
             log_agent_creation(create_meta_cognitive_agents, 'meta_cognitive')
-            
-            # AGENTES DE AUTOEVOLUÇÃO (NOVOS)
-            logger.info("🔄 Criando sistema de autoevolução...")
-            log_agent_creation(create_code_analyzer_agent, 'specialized')        # +1 agente
-            log_agent_creation(create_web_search_agent, 'specialized')           # +1 agente  
-            log_agent_creation(create_code_corrector_agent, 'specialized')       # +1 agente
-            log_agent_creation(create_performance_monitor_agent, 'specialized')  # +1 agente
+            log_agent_creation(create_code_analyzer_agent, 'specialized')  # 1 agente adicional
             
             # Validar contagem total de agentes
             total_agents = sum(self.agent_categories.values())
             logger.info(f"🧮 Contagem total de agentes: {total_agents}")
             
-            if total_agents != 24:
-                logger.error(f"❌ Total de agentes inválido: {total_agents} (esperado: 24)")
+            if total_agents != 21:
+                logger.error(f"❌ Total de agentes inválido: {total_agents} (esperado: 21)")
                 logger.error(f"📊 Distribuição atual: {self.agent_categories}")
                 self.system_status = 'error'
                 return False
@@ -349,19 +294,14 @@ class SUNAAlshamSystemV2:
             logger.info("👑 Configurando sistema de orquestração...")
             self._setup_supreme_orchestration()
             
-            # Configurar autoevolução
-            logger.info("🔄 Configurando sistema de autoevolução...")
-            self._setup_autoevolution_system()
-            
             # Finalizar inicialização
             self.system_status = 'active'
             self.total_agents = len(self.all_agents)
             
             # Logs de sucesso
-            logger.info("🎉 SISTEMA SUNA-ALSHAM V2.0 - AUTOEVOLUÇÃO COMPLETAMENTE INICIALIZADO!")
+            logger.info("🎉 SISTEMA SUNA-ALSHAM V2.0 COMPLETAMENTE INICIALIZADO!")
             logger.info(f"📊 Total de agentes: {self.total_agents}")
             logger.info(f"📋 Categorias: {self.agent_categories}")
-            logger.info(f"🔄 Autoevolução: {'ATIVA' if self.autoevolution_enabled else 'INATIVA'}")
             logger.info(f"🌐 Rede ativa: {self.network._running}")
             logger.info(f"⏰ Tempo de inicialização: {self._get_uptime()}")
             
@@ -377,65 +317,6 @@ class SUNAAlshamSystemV2:
         except Exception as e:
             logger.error(f"❌ Erro crítico inicializando sistema completo: {e}", exc_info=True)
             self.system_status = 'error'
-            return False
-
-    async def execute_autoevolution_cycle(self):
-        """Executa um ciclo completo de autoevolução"""
-        try:
-            if not self.autoevolution_enabled:
-                logger.warning("⚠️ Sistema de autoevolução não está ativo")
-                return False
-            
-            logger.info("🔄 Iniciando ciclo de autoevolução...")
-            
-            # 1. Análise de código
-            analyzer = None
-            for agent_id, agent_data in self.all_agents.items():
-                if 'code_analyzer' in agent_id.lower():
-                    analyzer = agent_data['instance']
-                    break
-            
-            if analyzer:
-                # Analisar arquivo principal
-                analysis_result = analyzer.analyze_code_quality(__file__)
-                logger.info(f"📊 Análise concluída: {len(analysis_result.get('issues', []))} problemas encontrados")
-            
-            # 2. Busca por melhorias
-            searcher = None
-            for agent_id, agent_data in self.all_agents.items():
-                if 'web_search' in agent_id.lower():
-                    searcher = agent_data['instance']
-                    break
-            
-            if searcher:
-                with open(__file__, 'r') as f:
-                    current_code = f.read()
-                search_result = searcher.search_better_code_patterns(current_code)
-                logger.info(f"🔍 Busca concluída: {len(search_result.get('improvement_suggestions', []))} sugestões encontradas")
-            
-            # 3. Aplicar correções (se houver)
-            corrector = None
-            for agent_id, agent_data in self.all_agents.items():
-                if 'code_corrector' in agent_id.lower():
-                    corrector = agent_data['instance']
-                    break
-            
-            # 4. Monitorar performance
-            monitor = None
-            for agent_id, agent_data in self.all_agents.items():
-                if 'performance_monitor' in agent_id.lower():
-                    monitor = agent_data['instance']
-                    break
-            
-            if monitor:
-                system_status = monitor.monitor_system_resources()
-                logger.info(f"📈 Monitoramento concluído: Sistema {system_status.get('system_health', 'unknown')}")
-            
-            logger.info("✅ Ciclo de autoevolução completado")
-            return True
-            
-        except Exception as e:
-            logger.error(f"❌ Erro no ciclo de autoevolução: {e}")
             return False
 
     async def execute_system_wide_task(self, task: Any):
@@ -501,10 +382,9 @@ class SUNAAlshamSystemV2:
             # Compilar status completo
             status = {
                 'system_info': {
-                    'name': 'SUNA-ALSHAM Multi-Agent System - AUTOEVOLUTION',
+                    'name': 'SUNA-ALSHAM Multi-Agent System',
                     'version': '2.0',
                     'status': self.system_status,
-                    'autoevolution_enabled': self.autoevolution_enabled,
                     'created_at': self.created_at.isoformat(),
                     'uptime': self._get_uptime(),
                     'last_updated': datetime.now().isoformat()
@@ -517,10 +397,6 @@ class SUNAAlshamSystemV2:
                 'network': {
                     'status': network_status,
                     'metrics': network_metrics
-                },
-                'autoevolution': {
-                    'enabled': self.autoevolution_enabled,
-                    'agents_count': 4 if self.autoevolution_enabled else 0
                 },
                 'initialization_log': self.initialization_log[-10:]  # Últimos 10 logs
             }
@@ -554,10 +430,6 @@ class SUNAAlshamSystemV2:
             # Alterar status
             self.system_status = 'shutting_down'
             
-            # Desativar autoevolução
-            self.autoevolution_enabled = False
-            logger.info("🔄 Sistema de autoevolução desativado")
-            
             # Parar rede
             if self.network:
                 self.network.stop()
@@ -572,10 +444,10 @@ class SUNAAlshamSystemV2:
             self.system_status = 'error'
 
     def __repr__(self):
-        return f"SUNAAlshamSystemV2(agents={self.total_agents}, autoevolution={self.autoevolution_enabled}, status='{self.system_status}')"
+        return f"SUNAAlshamSystemV2(agents={self.total_agents}, status='{self.system_status}')"
 
     def __str__(self):
-        return f"SUNA-ALSHAM Multi-Agent System v2.0 - {self.total_agents} agents - Autoevolution: {'ON' if self.autoevolution_enabled else 'OFF'} - Status: {self.system_status}"
+        return f"SUNA-ALSHAM Multi-Agent System v2.0 - {self.total_agents} agents - Status: {self.system_status}"
 
 
 # Função utilitária para criar instância do sistema
@@ -595,11 +467,6 @@ if __name__ == "__main__":
         
         if success:
             logger.info("✅ Sistema inicializado com sucesso no teste")
-            
-            # Testar autoevolução
-            if system.autoevolution_enabled:
-                logger.info("🔄 Testando ciclo de autoevolução...")
-                await system.execute_autoevolution_cycle()
             
             # Aguardar alguns segundos para ver métricas
             await asyncio.sleep(60)
