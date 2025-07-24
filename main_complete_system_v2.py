@@ -145,7 +145,7 @@ class SUNAAlshamSystemV2:
             if total_agents != 20:
                 logger.error(f"❌ Total de agentes inválido: {total_agents} (esperado: 20)")
                 self.system_status = 'error'
-                return False
+                return False  # Não continuar com fallback
             
             self._setup_supreme_orchestration()
             self.system_status = 'active'
