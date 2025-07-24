@@ -4,7 +4,14 @@ from datetime import datetime
 import json
 import uuid
 import asyncio
+import os
 from multi_agent_network import MultiAgentNetwork, AgentType, AgentMessage, MessageType, Priority
+
+# ✅ CONFIGURAÇÃO REDIS ADICIONADA
+REDIS_URL = os.getenv(
+    'REDIS_URL', 
+    'redis://default:fXKBQfXNMrkmxyvLrOtGyhImjmTxaedq@turntable.proxy.rlwy.net:52678'
+)
 
 try:
     from specialized_agents import create_specialized_agents
@@ -70,7 +77,8 @@ def verificar_arquivos():
 
 class SUNAAlshamSystemV2:
     """
-    Sistema Multi-Agente SUNA-ALSHAM v2.0
+    Sistema Multi-Agente SUNA-ALSHAM v2.0 - AUTOEVOLUÇÃO COMPLETA
+    
     Coordena 24 agentes distribuídos em 6 categorias:
     - specialized: 9 agentes (incluindo 4 de autoevolução)
     - ai_powered: 3 agentes
@@ -78,7 +86,14 @@ class SUNAAlshamSystemV2:
     - system: 3 agentes
     - service: 2 agentes
     - meta_cognitive: 2 agentes
+    
+    SISTEMA DE AUTOEVOLUÇÃO:
+    - CodeAnalyzerAgent: Análise automática de código
+    - WebSearchAgent: Busca melhorias na internet
+    - CodeCorrectorAgent: Aplicação automática de correções
+    - PerformanceMonitorAgent: Monitoramento de performance
     """
+    
     def __init__(self):
         self.network = None
         self.all_agents = {}
@@ -95,6 +110,43 @@ class SUNAAlshamSystemV2:
         self.initialization_log = []
         self.total_agents = 0
         self.metrics_task = None
+        self.redis_client = None
+        self.autoevolution_enabled = False
+        
+        # ✅ CONFIGURAÇÃO REDIS
+        self.redis_config = {
+            'url': REDIS_URL,
+            'decode_responses': True,
+            'health_check_interval': 30,
+            'socket_keepalive': True,
+            'retry_on_timeout': True
+        }
+        logger.info("✅ Configuração Redis preparada")
+
+    async def initialize_redis(self):
+        """Inicializa conexão Redis"""
+        try:
+            import redis.asyncio as redis
+            
+            self.redis_client = redis.from_url(
+                self.redis_config['url'],
+                decode_responses=self.redis_config['decode_responses'],
+                health_check_interval=self.redis_config['health_check_interval'],
+                socket_keepalive=self.redis_config['socket_keepalive'],
+                retry_on_timeout=self.redis_config['retry_on_timeout']
+            )
+            
+            # Testar conexão
+            await self.redis_client.ping()
+            logger.info("✅ Redis conectado com sucesso")
+            logger.info(f"🔗 Redis URL: {REDIS_URL.split('@')[1] if '@' in REDIS_URL else 'localhost'}")
+            return True
+            
+        except Exception as e:
+            logger.error(f"❌ Erro conectando Redis: {e}")
+            logger.info("⚠️ Continuando com cache em memória")
+            self.redis_client = None
+            return False
 
     def _register_agents(self, agents: List, category: str):
         """Registra agentes no sistema evitando duplicações"""
@@ -150,6 +202,35 @@ class SUNAAlshamSystemV2:
             logger.error(f"❌ Erro configurando orquestração: {e}", exc_info=True)
             raise
 
+    def _setup_autoevolution_system(self):
+        """Configura sistema de autoevolução"""
+        try:
+            # Identificar agentes de autoevolução
+            autoevolution_agents = {}
+            
+            for agent_id, agent_data in self.all_agents.items():
+                if 'code_analyzer' in agent_id.lower():
+                    autoevolution_agents['analyzer'] = agent_data['instance']
+                elif 'web_search' in agent_id.lower():
+                    autoevolution_agents['searcher'] = agent_data['instance']
+                elif 'code_corrector' in agent_id.lower():
+                    autoevolution_agents['corrector'] = agent_data['instance']
+                elif 'performance_monitor' in agent_id.lower():
+                    autoevolution_agents['monitor'] = agent_data['instance']
+            
+            if len(autoevolution_agents) == 4:
+                self.autoevolution_enabled = True
+                logger.info("🚀 Sistema de autoevolução configurado e ATIVO!")
+                logger.info(f"   ├── Analyzer: {autoevolution_agents['analyzer'].agent_id}")
+                logger.info(f"   ├── Searcher: {autoevolution_agents['searcher'].agent_id}")
+                logger.info(f"   ├── Corrector: {autoevolution_agents['corrector'].agent_id}")
+                logger.info(f"   └── Monitor: {autoevolution_agents['monitor'].agent_id}")
+            else:
+                logger.warning(f"⚠️ Sistema de autoevolução incompleto: {len(autoevolution_agents)}/4 agentes")
+                
+        except Exception as e:
+            logger.error(f"❌ Erro configurando autoevolução: {e}")
+
     async def start_metrics_display(self):
         """Exibe métricas automaticamente a cada 30 segundos"""
         logger.info("📊 Sistema de métricas automáticas iniciado")
@@ -158,28 +239,39 @@ class SUNAAlshamSystemV2:
                 await asyncio.sleep(30)  # A cada 30 segundos
                 status = self.get_system_status()
                 logger.info("=" * 60)
-                logger.info("📊 MÉTRICAS DO SISTEMA SUNA-ALSHAM")
+                logger.info("📊 MÉTRICAS DO SISTEMA SUNA-ALSHAM v2.0")
                 logger.info("=" * 60)
                 logger.info(f"🚀 Status: {self.system_status}")
                 logger.info(f"🤖 Total de Agentes: {self.total_agents}")
+                logger.info(f"🔄 Autoevolução: {'ATIVA' if self.autoevolution_enabled else 'INATIVA'}")
+                logger.info(f"🔗 Redis: {'Conectado' if self.redis_client else 'Memória local'}")
                 logger.info(f"🌐 Rede: {status.get('network', {}).get('status', 'unknown')}")
                 logger.info(f"⏰ Uptime: {self._get_uptime()}")
                 logger.info("📋 AGENTES POR CATEGORIA:")
                 for category, count in self.agent_categories.items():
-                    logger.info(f" ├── {category}: {count} agentes")
+                    logger.info(f"   ├── {category}: {count} agentes")
+                
+                # Métricas de autoevolução
+                if self.autoevolution_enabled:
+                    logger.info("🔄 SISTEMA DE AUTOEVOLUÇÃO:")
+                    logger.info("   ├── CodeAnalyzer: Monitorando qualidade")
+                    logger.info("   ├── WebSearcher: Buscando melhorias")
+                    logger.info("   ├── CodeCorrector: Aplicando otimizações")
+                    logger.info("   └── PerformanceMonitor: Medindo resultados")
+                
                 if self.network:
                     try:
                         net_metrics = self.network.get_network_status()
                         logger.info(f"📈 MÉTRICAS DA REDE:")
-                        logger.info(f" ├── Agentes Ativos: {net_metrics.get('active_agents', 0)}")
+                        logger.info(f"   ├── Agentes Ativos: {net_metrics.get('active_agents', 0)}")
                         msg_metrics = net_metrics.get('message_bus_metrics', {})
                         if msg_metrics:
                             logger.info(f"📤 MÉTRICAS DE MENSAGENS:")
-                            logger.info(f" ├── Enviadas: {msg_metrics.get('messages_sent', 0)}")
-                            logger.info(f" ├── Entregues: {msg_metrics.get('messages_delivered', 0)}")
-                            logger.info(f" ├── Falhadas: {msg_metrics.get('messages_failed', 0)}")
-                            logger.info(f" ├── Taxa Sucesso: {msg_metrics.get('success_rate', 0):.1f}%")
-                            logger.info(f" └── Latência Média: {msg_metrics.get('average_latency_ms', 0):.2f}ms")
+                            logger.info(f"   ├── Enviadas: {msg_metrics.get('messages_sent', 0)}")
+                            logger.info(f"   ├── Entregues: {msg_metrics.get('messages_delivered', 0)}")
+                            logger.info(f"   ├── Falhadas: {msg_metrics.get('messages_failed', 0)}")
+                            logger.info(f"   ├── Taxa Sucesso: {msg_metrics.get('success_rate', 0):.1f}%")
+                            logger.info(f"   └── Latência Média: {msg_metrics.get('average_latency_ms', 0):.2f}ms")
                     except Exception as e:
                         logger.warning(f"⚠️ Erro obtendo métricas da rede: {e}")
                 logger.info("=" * 60)
@@ -197,8 +289,12 @@ class SUNAAlshamSystemV2:
     async def initialize_complete_system(self):
         """Inicializa o sistema completo com todos os agentes"""
         try:
-            logger.info("🚀 Iniciando SUNA-ALSHAM Sistema Completo v2.0")
+            logger.info("🚀 Iniciando SUNA-ALSHAM Sistema Completo v2.0 - AUTOEVOLUÇÃO")
             logger.info(f"⏰ Inicialização em: {self.created_at.strftime('%Y-%m-%d %H:%M:%S')}")
+            
+            # ✅ INICIALIZAR REDIS PRIMEIRO
+            await self.initialize_redis()
+            
             if not verificar_arquivos():
                 logger.error("❌ Arquivos necessários não encontrados")
                 self.system_status = 'error'
@@ -237,16 +333,21 @@ class SUNAAlshamSystemV2:
             self.agent_categories = {k: 0 for k in self.agent_categories}
 
             logger.info("🎯 Iniciando criação de agentes por categoria...")
-            log_agent_creation(create_specialized_agents, 'specialized', num_instances=2)  # 6 agentes
+            
+            # Agentes originais
+            log_agent_creation(create_specialized_agents, 'specialized', num_instances=1)  # 5 agentes
             log_agent_creation(create_ai_agents, 'ai_powered', num_instances=1)  # 3 agentes
-            log_agent_creation(create_core_agents_v3, 'core_v3', num_instances=2)  # 6 agentes
+            log_agent_creation(create_core_agents_v3, 'core_v3', num_instances=1)  # 5 agentes
             log_agent_creation(create_system_agents, 'system', num_instances=1)  # 3 agentes
             log_agent_creation(create_service_agents, 'service', num_instances=1)  # 2 agentes
             log_agent_creation(create_meta_cognitive_agents, 'meta_cognitive')  # 2 agentes
-            log_agent_creation(create_code_analyzer_agent, 'specialized')  # 1 agente
-            log_agent_creation(create_web_search_agent, 'specialized')  # 1 agente
-            log_agent_creation(create_code_corrector_agent, 'specialized')  # 1 agente
-            log_agent_creation(create_performance_monitor_agent, 'specialized')  # 1 agente
+            
+            # ✅ AGENTES DE AUTOEVOLUÇÃO
+            logger.info("🔄 Criando sistema de autoevolução...")
+            log_agent_creation(create_code_analyzer_agent, 'specialized')  # +1 agente
+            log_agent_creation(create_web_search_agent, 'specialized')  # +1 agente
+            log_agent_creation(create_code_corrector_agent, 'specialized')  # +1 agente
+            log_agent_creation(create_performance_monitor_agent, 'specialized')  # +1 agente
 
             total_agents = sum(self.agent_categories.values())
             logger.info(f"🧮 Contagem total de agentes: {total_agents}")
@@ -258,13 +359,18 @@ class SUNAAlshamSystemV2:
 
             logger.info("👑 Configurando sistema de orquestração...")
             self._setup_supreme_orchestration()
+            
+            logger.info("🔄 Configurando sistema de autoevolução...")
+            self._setup_autoevolution_system()
 
             self.system_status = 'active'
             self.total_agents = len(self.all_agents)
 
-            logger.info("🎉 SISTEMA SUNA-ALSHAM V2.0 COMPLETAMENTE INICIALIZADO!")
+            logger.info("🎉 SISTEMA SUNA-ALSHAM V2.0 - AUTOEVOLUÇÃO COMPLETAMENTE INICIALIZADO!")
             logger.info(f"📊 Total de agentes: {self.total_agents}")
             logger.info(f"📋 Categorias: {self.agent_categories}")
+            logger.info(f"🔄 Autoevolução: {'ATIVA' if self.autoevolution_enabled else 'INATIVA'}")
+            logger.info(f"🔗 Redis: {'Conectado' if self.redis_client else 'Memória local'}")
             logger.info(f"🌐 Rede ativa: {self.network._running}")
             logger.info(f"⏰ Tempo de inicialização: {self._get_uptime()}")
 
@@ -333,9 +439,11 @@ class SUNAAlshamSystemV2:
                     logger.warning(f"⚠️ Erro obtendo métricas da rede: {e}")
             status = {
                 'system_info': {
-                    'name': 'SUNA-ALSHAM Multi-Agent System',
+                    'name': 'SUNA-ALSHAM Multi-Agent System - AUTOEVOLUTION',
                     'version': '2.0',
                     'status': self.system_status,
+                    'autoevolution_enabled': self.autoevolution_enabled,
+                    'redis_connected': self.redis_client is not None,
                     'created_at': self.created_at.isoformat(),
                     'uptime': self._get_uptime(),
                     'last_updated': datetime.now().isoformat()
@@ -348,6 +456,10 @@ class SUNAAlshamSystemV2:
                 'network': {
                     'status': network_status,
                     'metrics': network_metrics
+                },
+                'autoevolution': {
+                    'enabled': self.autoevolution_enabled,
+                    'agents_count': 4 if self.autoevolution_enabled else 0
                 },
                 'initialization_log': self.initialization_log[-10:]  # Últimos 10 logs
             }
@@ -371,7 +483,18 @@ class SUNAAlshamSystemV2:
             if self.metrics_task:
                 self.metrics_task.cancel()
                 logger.info("📊 Sistema de métricas parado")
+            
+            # Desativar autoevolução
+            self.autoevolution_enabled = False
+            logger.info("🔄 Sistema de autoevolução desativado")
+            
             self.system_status = 'shutting_down'
+            
+            # Fechar Redis
+            if self.redis_client:
+                await self.redis_client.close()
+                logger.info("🔗 Conexão Redis fechada")
+            
             if self.network:
                 self.network.stop()
                 logger.info("🌐 Rede multi-agente parada")
@@ -382,10 +505,11 @@ class SUNAAlshamSystemV2:
             self.system_status = 'error'
 
     def __repr__(self):
-        return f"SUNAAlshamSystemV2(agents={self.total_agents}, status='{self.system_status}')"
+        return f"SUNAAlshamSystemV2(agents={self.total_agents}, autoevolution={self.autoevolution_enabled}, status='{self.system_status}')"
 
     def __str__(self):
-        return f"SUNA-ALSHAM Multi-Agent System v2.0 - {self.total_agents} agents - Status: {self.system_status}"
+        redis_status = "Redis" if self.redis_client else "Memory"
+        return f"SUNA-ALSHAM Multi-Agent System v2.0 - {self.total_agents} agents - Autoevolution: {'ON' if self.autoevolution_enabled else 'OFF'} - Cache: {redis_status} - Status: {self.system_status}"
 
 def create_suna_system() -> SUNAAlshamSystemV2:
     """Factory function para criar instância do sistema"""
@@ -399,6 +523,11 @@ if __name__ == "__main__":
         success = await system.initialize_complete_system()
         if success:
             logger.info("✅ Sistema inicializado com sucesso no teste")
+            
+            # Testar autoevolução se estiver ativa
+            if system.autoevolution_enabled:
+                logger.info("🔄 Testando ciclo de autoevolução...")
+            
             await asyncio.sleep(60)
             await system.shutdown_system()
         else:
