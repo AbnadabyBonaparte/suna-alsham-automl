@@ -414,19 +414,113 @@ class LearnAgentV3:
             'created_at': self.created_at.isoformat()
         }
 
-# Função para criar agentes core v3.0
-async def create_core_agents_v3() -> Dict[str, Any]:
-    """Cria e inicializa agentes core v3.0"""
-    agents = {
-        'core_v3': CoreAgentV3(),
-        'guard_v3': GuardAgentV3(),
-        'learn_v3': LearnAgentV3()
-    }
+# Função para criar agentes core v3.0 - CORRIGIDO
+def create_core_agents_v3(message_bus) -> List:
+    """Cria e inicializa agentes core v3.0 com MessageBus"""
+    from multi_agent_network import BaseNetworkAgent, AgentType
     
-    # Inicializar todos os agentes
-    for agent_name, agent in agents.items():
-        await agent.initialize()
+    # Criar agentes compatíveis com a rede
+    agents = [
+        CoreAgentV3NetworkAdapter("core_v3_001", AgentType.CORE, message_bus),
+        GuardAgentV3NetworkAdapter("guard_v3_001", AgentType.GUARD, message_bus),
+        LearnAgentV3NetworkAdapter("learn_v3_001", AgentType.LEARN, message_bus)
+    ]
     
-    logger.info(f"✅ {len(agents)} agentes core v3.0 criados")
+    logger.info(f"✅ {len(agents)} agentes core v3.0 criados com MessageBus")
     return agents
+
+
+# Adaptadores para compatibilidade com rede multi-agente
+class CoreAgentV3NetworkAdapter:
+    """Adaptador para CoreAgentV3 na rede multi-agente"""
+    
+    def __init__(self, agent_id: str, agent_type, message_bus):
+        from multi_agent_network import BaseNetworkAgent, AgentCapability
+        
+        # Herdar de BaseNetworkAgent
+        self.agent_id = agent_id
+        self.agent_type = agent_type
+        self.message_bus = message_bus
+        self.status = 'active'
+        self.capabilities = [
+            AgentCapability(
+                name="central_processing",
+                description="Processamento central evolutivo",
+                input_types=["task", "data"],
+                output_types=["result", "optimization"],
+                processing_time_ms=500.0,
+                accuracy_score=0.95,
+                resource_cost=0.3
+            ),
+            AgentCapability(
+                name="auto_evolution",
+                description="Evolução automática de capacidades",
+                input_types=["performance_data"],
+                output_types=["evolved_capabilities"],
+                processing_time_ms=1000.0,
+                accuracy_score=0.90,
+                resource_cost=0.5
+            )
+        ]
+        
+        # Instância do agente original
+        self.core_agent = CoreAgentV3(agent_id)
+        
+        # Registrar na rede
+        if message_bus:
+            message_bus.register_agent(self)
+
+class GuardAgentV3NetworkAdapter:
+    """Adaptador para GuardAgentV3 na rede multi-agente"""
+    
+    def __init__(self, agent_id: str, agent_type, message_bus):
+        from multi_agent_network import BaseNetworkAgent, AgentCapability
+        
+        self.agent_id = agent_id
+        self.agent_type = agent_type
+        self.message_bus = message_bus
+        self.status = 'active'
+        self.capabilities = [
+            AgentCapability(
+                name="advanced_security",
+                description="Segurança avançada v3.0",
+                input_types=["security_event", "threat_data"],
+                output_types=["security_response", "threat_mitigation"],
+                processing_time_ms=300.0,
+                accuracy_score=0.98,
+                resource_cost=0.2
+            )
+        ]
+        
+        self.guard_agent = GuardAgentV3(agent_id)
+        
+        if message_bus:
+            message_bus.register_agent(self)
+
+class LearnAgentV3NetworkAdapter:
+    """Adaptador para LearnAgentV3 na rede multi-agente"""
+    
+    def __init__(self, agent_id: str, agent_type, message_bus):
+        from multi_agent_network import BaseNetworkAgent, AgentCapability
+        
+        self.agent_id = agent_id
+        self.agent_type = agent_type
+        self.message_bus = message_bus
+        self.status = 'active'
+        self.capabilities = [
+            AgentCapability(
+                name="adaptive_learning",
+                description="Aprendizado adaptativo v3.0",
+                input_types=["training_data", "feedback"],
+                output_types=["learned_patterns", "adaptations"],
+                processing_time_ms=800.0,
+                accuracy_score=0.93,
+                resource_cost=0.4
+            )
+        ]
+        
+        self.learn_agent = LearnAgentV3(agent_id)
+        
+        if message_bus:
+            message_bus.register_agent(self)
 
