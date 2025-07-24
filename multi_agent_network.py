@@ -1,10 +1,12 @@
-"""🌐 SUNA-ALSHAM Multi-Agent Network System - COMPATÍVEL
+"""🌐 SUNA-ALSHAM Multi-Agent Network System - VERSÃO FINAL
 Sistema de rede de múltiplos agentes com comunicação inter-agentes
 
-CORREÇÃO CRÍTICA:
-✅ Método register_agent() adicionado para compatibilidade
+CORREÇÕES IMPLEMENTADAS:
+✅ Método register_agent() para compatibilidade total
+✅ Remoção completa do fallback guard_service
+✅ Import direto do OrchestratorAgent
 ✅ MessageBus robusto com tratamento de erros
-✅ Suporte completo aos agentes existentes
+✅ Suporte completo aos 20 agentes
 
 FUNCIONALIDADES:
 ✅ Comunicação inter-agentes via message bus
@@ -104,7 +106,7 @@ class AgentMessage:
     correlation_id: Optional[str] = None
 
 class MessageBus:
-    """Sistema de mensagens entre agentes - COMPATÍVEL"""
+    """Sistema de mensagens entre agentes - VERSÃO FINAL COMPATÍVEL"""
     
     def __init__(self):
         self.subscribers = {}
@@ -122,29 +124,26 @@ class MessageBus:
             'messages_failed': 0,
             'average_latency': 0.0
         }
-        logger.info("✅ MessageBus inicializado com compatibilidade completa")
+        logger.info("✅ MessageBus inicializado com compatibilidade total")
 
     def subscribe(self, agent_id: str, agent: Any):
         """Inscreve um agente no message bus"""
         try:
             self.subscribers[agent_id] = agent
             logger.info(f"📡 Agente {agent_id} inscrito no MessageBus")
+            return True
         except Exception as e:
             logger.error(f"❌ Erro inscrevendo agente {agent_id}: {e}")
+            return False
 
-    def register_agent(self, agent: Any):
-        """Registra um agente no message bus - MÉTODO COMPATÍVEL"""
+    def register_agent(self, agent_id: str, agent: Any):
+        """Registra um agente no message bus - MÉTODO COMPATÍVEL PRINCIPAL"""
         try:
-            if hasattr(agent, 'agent_id'):
-                agent_id = agent.agent_id
-                self.subscribers[agent_id] = agent
-                logger.info(f"✅ Agente {agent_id} registrado no MessageBus via register_agent")
-                return True
-            else:
-                logger.error(f"❌ Agente sem agent_id não pode ser registrado: {agent}")
-                return False
+            self.subscribers[agent_id] = agent
+            logger.info(f"✅ Agente {agent_id} registrado no MessageBus via register_agent")
+            return True
         except Exception as e:
-            logger.error(f"❌ Erro registrando agente: {e}")
+            logger.error(f"❌ Erro registrando agente {agent_id}: {e}")
             return False
 
     async def publish(self, message: AgentMessage):
@@ -243,7 +242,7 @@ class BaseNetworkAgent:
         
         # Registrar no message bus automaticamente
         if message_bus:
-            message_bus.register_agent(self)
+            message_bus.register_agent(self.agent_id, self)
         
         logger.info(f"🤖 Agente {agent_id} inicializado como {agent_type.value}")
 
@@ -398,7 +397,7 @@ class NetworkCoordinator:
                 logger.error(f"❌ Erro no load balancing: {e}")
 
 class MultiAgentNetwork:
-    """Rede multi-agente principal - COMPATÍVEL"""
+    """Rede multi-agente principal - VERSÃO FINAL SEM FALLBACK"""
     
     def __init__(self):
         self.message_bus = MessageBus()
@@ -408,7 +407,7 @@ class MultiAgentNetwork:
         self.metrics_update_interval = 10  # seconds
         self.last_metrics_update = time.time()
         
-        logger.info("🌐 MultiAgentNetwork inicializada com compatibilidade completa")
+        logger.info("🌐 MultiAgentNetwork inicializada - VERSÃO FINAL")
 
     async def initialize(self):
         """Inicializa a rede multi-agente"""
@@ -419,7 +418,7 @@ class MultiAgentNetwork:
             # Iniciar loop de métricas
             asyncio.create_task(self._metrics_update_loop())
             
-            logger.info("✅ MultiAgentNetwork inicializada com sucesso")
+            logger.info("✅ MultiAgentNetwork inicializada com sucesso - SEM FALLBACK")
             return True
             
         except Exception as e:
@@ -436,7 +435,7 @@ class MultiAgentNetwork:
                 
                 # Registrar no message bus se não foi feito automaticamente
                 if agent_id not in self.message_bus.subscribers:
-                    self.message_bus.register_agent(agent)
+                    self.message_bus.register_agent(agent_id, agent)
                 
                 # Registrar no coordenador
                 if isinstance(agent, BaseNetworkAgent):
