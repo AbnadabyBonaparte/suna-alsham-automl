@@ -2,121 +2,25 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>ALSHAM QUANTUM - Sistema Neural Completo 20 Agentes</title>
-    
-    <!-- PWA Meta Tags -->
-    <meta name="theme-color" content="#F4D03F">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="ALSHAM QUANTUM">
-    <meta name="application-name" content="ALSHAM QUANTUM">
-    <meta name="msapplication-TileColor" content="#1a1a2e">
-    
-    <!-- Security Headers -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' 'unsafe-eval' https: wss: data: blob:; connect-src 'self' https: wss: data:;">
-    <meta http-equiv="X-Content-Type-Options" content="nosniff">
-    <meta http-equiv="X-Frame-Options" content="DENY">
-    <meta http-equiv="X-XSS-Protection" content="1; mode=block">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ALSHAM QUANTUM Mobile - Dashboard Neural</title>
     
     <!-- CDN Libraries -->
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/three@0.158.0/build/three.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/countup.js@2.6.2/dist/countUp.umd.js"></script>
-
     <style>
         :root {
-            /* ALSHAM QUANTUM Corporate Color Palette */
             --quantum-gold: #F4D03F;
             --quantum-blue: #1F618D;
             --quantum-purple: #6C3483;
-            --corporate-dark: #2C3E50;
             --enterprise-green: #2ECC71;
-            --platinum-white: #FDFEFE;
-            --deep-space: #020C1B;
-        }
-
-        /* === QUANTUM GLASS THEME (DEFAULT) === */
-        .theme-quantum-glass {
-            --bg-primary: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
-            --bg-card: rgba(255, 255, 255, 0.1);
-            --bg-secondary: rgba(0, 245, 255, 0.05);
-            --text-primary: #ffffff;
-            --text-secondary: #b0c4de;
-            --accent-primary: var(--quantum-gold);
-            --accent-secondary: var(--enterprise-green);
-            --accent-tertiary: var(--quantum-purple);
+            --deep-space: #0a0f1c;
+            --card-bg: rgba(255, 255, 255, 0.08);
             --border-glow: rgba(244, 208, 63, 0.3);
-            --shadow-glow: 0 0 30px rgba(244, 208, 63, 0.2);
-            --particles-color: #F4D03F;
         }
 
-        /* === CORPORATE VOID THEME === */
-        .theme-corporate-void {
-            --bg-primary: linear-gradient(135deg, var(--deep-space) 0%, #1a0033 50%, #330066 100%);
-            --bg-card: rgba(108, 52, 131, 0.2);
-            --bg-secondary: rgba(156, 39, 176, 0.1);
-            --text-primary: #e1bee7;
-            --text-secondary: #ba68c8;
-            --accent-primary: var(--quantum-purple);
-            --accent-secondary: #9c27b0;
-            --accent-tertiary: #673ab7;
-            --border-glow: rgba(108, 52, 131, 0.5);
-            --shadow-glow: 0 0 40px rgba(156, 39, 176, 0.3);
-            --particles-color: #9c27b0;
-        }
-
-        /* === ENTERPRISE AZURE THEME === */
-        .theme-enterprise-azure {
-            --bg-primary: linear-gradient(135deg, #1a237e 0%, #283593 50%, #3f51b5 100%);
-            --bg-card: rgba(31, 97, 141, 0.25);
-            --bg-secondary: rgba(63, 81, 181, 0.1);
-            --text-primary: #e8eaf6;
-            --text-secondary: #9fa8da;
-            --accent-primary: var(--quantum-blue);
-            --accent-secondary: #3f51b5;
-            --accent-tertiary: #2196f3;
-            --border-glow: rgba(31, 97, 141, 0.4);
-            --shadow-glow: 0 0 35px rgba(63, 81, 181, 0.25);
-            --particles-color: #2196f3;
-        }
-
-        /* === QUANTUM MATRIX THEME === */
-        .theme-quantum-matrix {
-            --bg-primary: linear-gradient(135deg, #004d40 0%, #00695c 50%, #00796b 100%);
-            --bg-card: rgba(46, 204, 113, 0.15);
-            --bg-secondary: rgba(0, 245, 255, 0.08);
-            --text-primary: #e0f2f1;
-            --text-secondary: #80cbc4;
-            --accent-primary: var(--enterprise-green);
-            --accent-secondary: #00f5ff;
-            --accent-tertiary: #1de9b6;
-            --border-glow: rgba(46, 204, 113, 0.4);
-            --shadow-glow: 0 0 30px rgba(0, 245, 255, 0.2);
-            --particles-color: #00f5ff;
-        }
-
-        /* === PLATINUM EXECUTIVE THEME === */
-        .theme-platinum-executive {
-            --bg-primary: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 50%, #667eea 100%);
-            --bg-card: rgba(255, 255, 255, 0.8);
-            --bg-secondary: rgba(102, 126, 234, 0.05);
-            --text-primary: var(--corporate-dark);
-            --text-secondary: #546e7a;
-            --accent-primary: var(--quantum-purple);
-            --accent-secondary: var(--quantum-blue);
-            --accent-tertiary: var(--quantum-gold);
-            --border-glow: rgba(108, 52, 131, 0.3);
-            --shadow-glow: 0 0 25px rgba(31, 97, 141, 0.15);
-            --particles-color: #667eea;
-        }
-
-        /* === GLOBAL STYLES === */
         * {
             margin: 0;
             padding: 0;
@@ -126,202 +30,33 @@
 
         body {
             font-family: 'Inter', sans-serif;
-            background: var(--bg-primary);
-            color: var(--text-primary);
+            background: linear-gradient(135deg, #0a0f1c 0%, #1a1a2e 50%, #16213e 100%);
+            color: #ffffff;
+            min-height: 100vh;
             overflow-x: hidden;
-            position: relative;
-            /* PDF Optimization */
-            print-color-adjust: exact;
-            -webkit-print-color-adjust: exact;
         }
 
         .orbitron {
             font-family: 'Orbitron', monospace;
         }
 
-        /* === CONNECTION STATUS === */
-        .connection-status {
-            position: fixed;
-            top: 20px;
-            left: 20px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            padding: 8px 16px;
-            background: var(--bg-card);
-            backdrop-filter: blur(10px);
-            border-radius: 20px;
-            border: 1px solid var(--border-glow);
-            z-index: 999;
-            font-size: 14px;
-            min-height: 44px;
-        }
-
-        .status-dot {
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            background: #ff4444;
-            animation: pulse 2s infinite;
-        }
-
-        .status-dot.connected {
-            background: #44ff44;
-        }
-
-        /* === PARTICLES CONTAINER === */
-        #particles-container {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            pointer-events: none;
-            z-index: 1;
-        }
-
-        /* === MAIN CONTAINER === */
-        .main-container {
-            position: relative;
-            z-index: 10;
-            padding: 2rem 1rem;
-            max-width: 1600px;
-            margin: 0 auto;
-        }
-
-        /* === GLASS MORPHISM === */
         .glass-card {
-            background: var(--bg-card);
-            backdrop-filter: blur(20px);
+            background: var(--card-bg);
+            backdrop-filter: blur(15px);
             border: 1px solid var(--border-glow);
-            border-radius: 20px;
-            box-shadow: var(--shadow-glow);
-            transition: all 0.4s cubic-bezier(0.23, 1, 0.320, 1);
-            position: relative;
-            overflow: hidden;
-            touch-action: manipulation;
+            border-radius: 16px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            transition: all 0.3s ease;
         }
 
-        .glass-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
-            transition: left 0.8s;
+        .glass-card:active {
+            transform: scale(0.98);
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
         }
 
-        .glass-card:hover::before,
-        .glass-card:active::before {
-            left: 100%;
-        }
-
-        /* === 3D CARD TRANSFORMATIONS === */
-        .card-3d {
-            transform-style: preserve-3d;
-            transition: transform 0.6s cubic-bezier(0.23, 1, 0.320, 1);
-        }
-
-        .card-3d:hover,
-        .card-3d:active {
-            transform: rotateX(5deg) rotateY(5deg) scale(1.02);
-            z-index: 100;
-        }
-
-        /* === QUANTUM COUNTER === */
-        .quantum-counter {
-            position: relative;
-            text-align: center;
-            padding: 3rem 2rem;
-            margin-bottom: 2rem;
-        }
-
-        .quantum-counter::before {
-            content: '';
-            position: absolute;
-            top: -50%;
-            left: -50%;
-            width: 200%;
-            height: 200%;
-            background: conic-gradient(from 0deg, transparent, var(--accent-primary), transparent);
-            animation: rotate-glow 4s linear infinite;
-            z-index: -1;
-            border-radius: 50%;
-        }
-
-        .quantum-counter-number {
-            font-family: 'Orbitron', monospace;
-            font-size: clamp(2rem, 6vw, 3.5rem);
-            font-weight: 900;
-            background: linear-gradient(45deg, var(--accent-primary), var(--accent-secondary), var(--accent-tertiary));
-            background-size: 300% 300%;
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            animation: gradient-shift 3s ease-in-out infinite, pulse-glow 2s ease-in-out infinite;
-            text-shadow: 0 0 30px var(--accent-secondary);
-        }
-
-        /* === ANIMATIONS === */
-        @keyframes rotate-glow {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-
-        @keyframes gradient-shift {
-            0%, 100% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-        }
-
-        @keyframes pulse-glow {
-            0%, 100% { filter: brightness(1); }
-            50% { filter: brightness(1.2); }
-        }
-
-        @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.5; }
-        }
-
-        @keyframes float {
-            0%, 100% { transform: translateY(0px); }
-            50% { transform: translateY(-10px); }
-        }
-
-        @keyframes glow-pulse {
-            0%, 100% { box-shadow: var(--shadow-glow); }
-            50% { box-shadow: 0 0 40px var(--accent-primary); }
-        }
-
-        /* === GRID LAYOUTS === */
-        .agent-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 1.5rem;
-            margin-bottom: 2rem;
-        }
-
-        .metrics-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 1.5rem;
-            margin-bottom: 2rem;
-        }
-
-        .infrastructure-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 1rem;
-            margin-bottom: 2rem;
-        }
-
-        /* === PROGRESS RINGS === */
         .progress-ring {
             width: 80px;
             height: 80px;
-            position: relative;
         }
 
         .progress-ring circle {
@@ -330,2058 +65,1013 @@
             transform-origin: 50% 50%;
         }
 
-        /* === THEME SWITCHER === */
-        .theme-switcher {
-            position: fixed;
-            top: 80px;
-            right: 20px;
-            z-index: 1000;
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
+        .quantum-glow {
+            animation: quantum-pulse 2s ease-in-out infinite;
         }
 
-        .theme-btn {
-            width: 44px;
-            height: 44px;
-            border-radius: 50%;
-            border: 2px solid rgba(255, 255, 255, 0.3);
-            cursor: pointer;
-            transition: all 0.3s ease;
-            backdrop-filter: blur(10px);
-            touch-action: manipulation;
+        @keyframes quantum-pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
         }
 
-        .theme-btn:hover,
-        .theme-btn:active {
-            transform: scale(1.1);
-            border-color: rgba(255, 255, 255, 0.6);
-        }
-
-        .theme-btn.active {
-            border-color: var(--accent-primary);
-            box-shadow: 0 0 20px var(--accent-primary);
-        }
-
-        /* === EVENT LOG === */
-        .event-log {
-            max-height: 300px;
-            overflow-y: auto;
-        }
-
-        .event-item {
-            display: flex;
-            align-items: center;
-            padding: 12px;
-            margin-bottom: 8px;
-            background: rgba(255, 255, 255, 0.05);
-            border-radius: 12px;
-            backdrop-filter: blur(10px);
-            transition: all 0.3s ease;
-            min-height: 48px;
-        }
-
-        .event-item:hover,
-        .event-item:active {
-            transform: translateX(5px);
-            background: rgba(255, 255, 255, 0.1);
-        }
-
-        /* === MODAL STYLES === */
-        .modal {
-            position: fixed;
-            inset: 0;
-            background: rgba(0, 0, 0, 0.8);
-            backdrop-filter: blur(10px);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 2000;
-            opacity: 0;
-            visibility: hidden;
-            transition: all 0.3s ease;
-            padding: 20px;
-        }
-
-        .modal.active {
-            opacity: 1;
-            visibility: visible;
-        }
-
-        .modal-content {
-            background: var(--bg-card);
-            backdrop-filter: blur(20px);
-            border: 1px solid var(--border-glow);
-            border-radius: 20px;
-            padding: 2rem;
-            max-width: 90vw;
-            max-height: 80vh;
-            overflow-y: auto;
-            transform: scale(0.9);
-            transition: transform 0.3s ease;
-            width: 100%;
-            max-width: 600px;
-        }
-
-        .modal.active .modal-content {
-            transform: scale(1);
-        }
-
-        /* === CHARTS CONTAINER === */
-        .chart-container {
-            position: relative;
-            height: 300px;
-            padding: 1rem;
-        }
-
-        /* === MICRO UPDATES === */
-        .micro-update {
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background: var(--accent-primary);
-            color: var(--deep-space);
-            padding: 16px 24px;
-            border-radius: 50px;
-            font-weight: bold;
-            font-size: 16px;
-            z-index: 3000;
-            opacity: 0;
-            scale: 0.5;
-            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            min-height: 48px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .micro-update.show {
-            opacity: 1;
-            scale: 1;
-        }
-
-        /* === SECTION HEADERS === */
-        .section-header {
-            text-align: center;
-            margin: 3rem 0 2rem 0;
-            padding: 2rem;
-            background: var(--bg-card);
-            backdrop-filter: blur(20px);
-            border-radius: 20px;
-            border: 1px solid var(--border-glow);
-        }
-
-        .section-title {
-            font-size: clamp(1.5rem, 4vw, 2.5rem);
-            font-weight: 900;
-            background: linear-gradient(45deg, var(--accent-primary), var(--accent-secondary));
+        .category-header {
+            background: linear-gradient(135deg, var(--quantum-gold), var(--quantum-purple));
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
-            margin-bottom: 1rem;
         }
 
-        /* === AGENT CATEGORIES === */
-        .agent-category {
-            border-left: 4px solid var(--accent-primary);
-            padding-left: 1rem;
-            margin-bottom: 1rem;
+        .status-indicator {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: var(--enterprise-green);
+            animation: pulse 2s infinite;
         }
 
-        /* === BUTTONS & INTERACTIVE ELEMENTS === */
-        button, .btn {
-            min-height: 44px;
-            min-width: 44px;
-            padding: 12px 20px;
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(0, 0, 0, 0.9);
+            backdrop-filter: blur(20px);
+            border-top: 1px solid var(--border-glow);
+            padding: 10px 0;
+            z-index: 1000;
+        }
+
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 8px;
             border-radius: 12px;
-            border: 1px solid var(--border-glow);
-            background: var(--bg-card);
-            color: var(--text-primary);
-            cursor: pointer;
             transition: all 0.3s ease;
-            touch-action: manipulation;
-            backdrop-filter: blur(10px);
+            min-width: 60px;
         }
 
-        button:hover, button:active, .btn:hover, .btn:active {
-            background: var(--accent-primary);
-            color: var(--deep-space);
-            transform: scale(0.98);
+        .nav-item.active {
+            background: rgba(244, 208, 63, 0.2);
+            color: var(--quantum-gold);
         }
 
-        /* === RESPONSIVE DESIGN === */
-        @media (max-width: 768px) {
-            .main-container {
-                padding: 1rem 0.5rem;
-            }
-            
-            .quantum-counter {
-                padding: 2rem 1rem;
-            }
-            
-            .agent-grid, .infrastructure-grid {
-                grid-template-columns: 1fr;
-                gap: 1rem;
-            }
-            
-            .metrics-grid {
-                grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-                gap: 1rem;
-            }
-            
-            .theme-switcher {
-                position: relative;
-                top: auto;
-                right: auto;
-                flex-direction: row;
-                justify-content: center;
-                margin-bottom: 1rem;
-            }
-
-            .connection-status {
-                position: relative;
-                top: auto;
-                left: auto;
-                margin-bottom: 1rem;
-                justify-content: center;
-            }
-
-            .chart-container {
-                height: 250px;
-            }
-
-            .progress-ring {
-                width: 60px;
-                height: 60px;
-            }
+        .counter-display {
+            font-size: 2.5rem;
+            font-weight: 900;
+            background: linear-gradient(45deg, var(--quantum-gold), var(--quantum-blue));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
         }
 
-        /* === PRINT/PDF STYLES === */
+        .metric-value {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--quantum-gold);
+        }
+
+        .agent-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 12px;
+            padding: 0 16px;
+            margin-bottom: 80px;
+        }
+
+        .section-spacer {
+            height: 20px;
+        }
+
+        /* Responsive adjustments for PDF export */
         @media print {
             body {
                 background: white !important;
                 color: black !important;
             }
-            
             .glass-card {
                 background: rgba(0, 0, 0, 0.05) !important;
                 border: 1px solid #ccc !important;
-                box-shadow: none !important;
-                break-inside: avoid;
             }
-            
-            .theme-switcher,
-            .connection-status,
-            #particles-container {
+            .bottom-nav {
                 display: none !important;
-            }
-            
-            .main-container {
-                padding: 0 !important;
-                max-width: none !important;
-            }
-
-            .section-header {
-                break-inside: avoid;
-            }
-        }
-
-        /* === SCROLLBAR STYLING === */
-        ::-webkit-scrollbar {
-            width: 8px;
-        }
-
-        ::-webkit-scrollbar-track {
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 10px;
-        }
-
-        ::-webkit-scrollbar-thumb {
-            background: var(--accent-primary);
-            border-radius: 10px;
-        }
-
-        ::-webkit-scrollbar-thumb:hover {
-            background: var(--accent-secondary);
-        }
-
-        /* === ACCESSIBILITY === */
-        @media (prefers-reduced-motion: reduce) {
-            *, ::before, ::after {
-                animation-duration: 0.01ms !important;
-                animation-iteration-count: 1 !important;
-                transition-duration: 0.01ms !important;
-            }
-        }
-
-        /* === HIGH CONTRAST MODE === */
-        @media (prefers-contrast: high) {
-            .glass-card {
-                border-width: 2px;
-                background: rgba(255, 255, 255, 0.2);
             }
         }
     </style>
 </head>
-<body class="theme-quantum-glass">
-    <!-- Particles System -->
-    <div id="particles-container"></div>
 
-    <!-- Connection Status -->
-    <div class="connection-status">
-        <div class="status-dot" id="connection-dot"></div>
-        <span id="connection-text">Sistema Neural Ativo</span>
+<body>
+    <!-- Header -->
+    <div class="glass-card mx-4 mt-4 p-4 text-center">
+        <h1 class="text-2xl font-bold orbitron category-header mb-2">ALSHAM QUANTUM</h1>
+        <p class="text-sm opacity-80">Sistema Neural Empresarial Mobile</p>
+        <div class="flex items-center justify-center mt-2">
+            <div class="status-indicator mr-2"></div>
+            <span class="text-xs">20 Agentes Ativos</span>
+        </div>
     </div>
 
-    <!-- Theme Switcher -->
-    <div class="theme-switcher">
-        <div class="theme-btn active" data-theme="quantum-glass" style="background: linear-gradient(45deg, #1a1a2e, #F4D03F);" title="Quantum Glass" aria-label="Tema Quantum Glass"></div>
-        <div class="theme-btn" data-theme="corporate-void" style="background: linear-gradient(45deg, #020C1B, #6C3483);" title="Corporate Void" aria-label="Tema Corporate Void"></div>
-        <div class="theme-btn" data-theme="enterprise-azure" style="background: linear-gradient(45deg, #1F618D, #3f51b5);" title="Enterprise Azure" aria-label="Tema Enterprise Azure"></div>
-        <div class="theme-btn" data-theme="quantum-matrix" style="background: linear-gradient(45deg, #2ECC71, #00f5ff);" title="Quantum Matrix" aria-label="Tema Quantum Matrix"></div>
-        <div class="theme-btn" data-theme="platinum-executive" style="background: linear-gradient(45deg, #f5f7fa, #667eea);" title="Platinum Executive" aria-label="Tema Platinum Executive"></div>
+    <!-- Quantum Counter -->
+    <div class="glass-card mx-4 mt-4 p-6 text-center">
+        <div class="counter-display orbitron" id="quantum-counter">1,247</div>
+        <div class="text-sm opacity-75 mt-1">Ciclos Neurais Processados</div>
+        <div class="text-xs opacity-60 mt-2">
+            <span id="cycles-per-second">2.4</span> ciclos/seg | Performance: <span id="overall-performance">94%</span>
+        </div>
     </div>
 
-    <!-- Main Container -->
-    <div class="main-container">
-        <!-- Header -->
-        <header class="text-center mb-8">
-            <h1 class="text-4xl md:text-6xl font-bold orbitron mb-4" style="background: linear-gradient(45deg, var(--accent-primary), var(--accent-secondary)); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">
-                ALSHAM QUANTUM
-            </h1>
-            <p class="text-lg md:text-xl text-secondary mb-2">⚡ SISTEMA NEURAL COMPLETO - 20 AGENTES ESPECIALIZADOS</p>
-            <p class="text-sm md:text-lg opacity-80">Plataforma Empresarial de Inteligência Artificial • Arquitetura Neural Avançada</p>
-            <div class="mt-4 text-sm opacity-60">
-                <span id="version-info">Enterprise Neural Edition v3.0</span> | 
-                <span id="build-date">Build: 21/12/2024</span> |
-                <span class="font-semibold" style="color: var(--accent-primary);">ALSHAM GLOBAL COMMERCE</span>
-            </div>
-        </header>
-
-        <!-- Quantum Counter -->
-        <div class="glass-card quantum-counter mb-8" role="region" aria-label="Contador Principal">
-            <div class="quantum-counter-number orbitron" id="quantum-counter" aria-live="polite">2847</div>
-            <div class="text-xl md:text-2xl font-semibold mb-2" style="color: var(--accent-primary);">CICLOS NEURAIS PROCESSADOS</div>
-            <div class="text-base md:text-lg mb-2" id="uptime-display">Sistema Neural: 7d 14h 23m</div>
-            <div class="text-sm opacity-75">
-                <span id="cycles-per-second">0.847</span> ciclos/sec | 
-                <span id="performance-indicator">Performance: 94.7%</span> |
-                <span id="efficiency-indicator">Eficiência: 97.2%</span>
-            </div>
+    <!-- System Overview -->
+    <div class="grid grid-cols-3 gap-3 mx-4 mt-4">
+        <div class="glass-card p-3 text-center">
+            <div class="text-xl">💎</div>
+            <div class="text-xs opacity-75 mt-1">Valor</div>
+            <div class="text-sm font-bold orbitron">R$ 1.43M</div>
         </div>
-
-        <!-- System Overview Metrics -->
-        <div class="metrics-grid">
-            <div class="glass-card card-3d p-4 md:p-6" role="region" aria-label="Status Neural">
-                <div class="flex items-center justify-between mb-4">
-                    <h3 class="text-base md:text-lg font-semibold">🧠 STATUS NEURAL</h3>
-                    <div class="w-4 h-4 bg-green-400 rounded-full animate-pulse" aria-label="Sistema Online"></div>
-                </div>
-                <div class="text-2xl md:text-3xl font-bold orbitron" id="overall-performance" aria-live="polite">94.7%</div>
-                <div class="text-xs md:text-sm opacity-75">Índice de Performance Quântica</div>
-            </div>
-
-            <div class="glass-card card-3d p-4 md:p-6" role="region" aria-label="Agentes Ativos">
-                <div class="flex items-center justify-between mb-4">
-                    <h3 class="text-base md:text-lg font-semibold">🤖 AGENTES ATIVOS</h3>
-                    <i class="fas fa-microchip text-xl md:text-2xl" style="color: var(--accent-primary);" aria-hidden="true"></i>
-                </div>
-                <div class="text-2xl md:text-3xl font-bold orbitron" id="active-agents" aria-live="polite">20</div>
-                <div class="text-xs md:text-sm opacity-75">Ativos / 20 Total</div>
-            </div>
-
-            <div class="glass-card card-3d p-4 md:p-6" role="region" aria-label="Valor Empresarial">
-                <div class="flex items-center justify-between mb-4">
-                    <h3 class="text-base md:text-lg font-semibold">💎 VALOR NEURAL</h3>
-                    <i class="fas fa-gem text-xl md:text-2xl" style="color: var(--accent-tertiary);" aria-hidden="true"></i>
-                </div>
-                <div class="text-lg md:text-2xl font-bold orbitron">R$ 1.430.000</div>
-                <div class="text-xs md:text-sm opacity-75">Plataforma Neural Quântica</div>
-            </div>
-
-            <div class="glass-card card-3d p-4 md:p-6" role="region" aria-label="Throughput Neural">
-                <div class="flex items-center justify-between mb-4">
-                    <h3 class="text-base md:text-lg font-semibold">⚡ THROUGHPUT</h3>
-                    <i class="fas fa-tachometer-alt text-xl md:text-2xl" style="color: var(--accent-secondary);" aria-hidden="true"></i>
-                </div>
-                <div class="text-lg md:text-2xl font-bold orbitron">847.3k/s</div>
-                <div class="text-xs md:text-sm opacity-75">Operações por Segundo</div>
-            </div>
-
-            <div class="glass-card card-3d p-4 md:p-6" role="region" aria-label="Inteligência Neural">
-                <div class="flex items-center justify-between mb-4">
-                    <h3 class="text-base md:text-lg font-semibold">🧮 IA NEURAL</h3>
-                    <i class="fas fa-chart-line text-xl md:text-2xl" style="color: var(--accent-secondary);" aria-hidden="true"></i>
-                </div>
-                <div class="text-sm md:text-lg font-semibold" id="business-insight" aria-live="polite">Otimização Neural: +12.4% performance</div>
-                <div class="text-xs md:text-sm opacity-75">Analytics em Tempo Real</div>
-            </div>
-
-            <div class="glass-card card-3d p-4 md:p-6" role="region" aria-label="Temperatura Neural">
-                <div class="flex items-center justify-between mb-4">
-                    <h3 class="text-base md:text-lg font-semibold">🌡️ TEMP NEURAL</h3>
-                    <i class="fas fa-thermometer-half text-xl md:text-2xl" style="color: var(--accent-primary);" aria-hidden="true"></i>
-                </div>
-                <div class="text-lg md:text-2xl font-bold orbitron">37.2°C</div>
-                <div class="text-xs md:text-sm opacity-75">Temperatura Ideal</div>
-            </div>
+        <div class="glass-card p-3 text-center">
+            <div class="text-xl">⚡</div>
+            <div class="text-xs opacity-75 mt-1">Uptime</div>
+            <div class="text-sm font-bold orbitron">99.9%</div>
         </div>
-
-        <!-- Infrastructure Base Section -->
-        <div class="section-header">
-            <h2 class="section-title orbitron">🏗️ INFRAESTRUTURA BASE</h2>
-            <p class="text-sm md:text-base opacity-80">Componentes fundamentais para comunicação e coordenação neural</p>
+        <div class="glass-card p-3 text-center">
+            <div class="text-xl">🧠</div>
+            <div class="text-xs opacity-75 mt-1">IA Score</div>
+            <div class="text-sm font-bold orbitron">97.2%</div>
         </div>
+    </div>
 
-        <div class="infrastructure-grid">
-            <!-- MultiAgent Network -->
-            <div class="glass-card card-3d p-4 cursor-pointer" onclick="openAgentModal('multiagent-network')" role="button" aria-label="MultiAgent Network" tabindex="0">
-                <div class="flex items-start justify-between mb-4">
-                    <div class="flex-1">
-                        <h3 class="text-lg font-bold flex items-center mb-2">
-                            <i class="fas fa-network-wired mr-2 text-lg" style="color: #FF6B6B;" aria-hidden="true"></i>
-                            MultiAgent Network
-                        </h3>
-                        <p class="text-xs opacity-75">Rede de Comunicação Central</p>
-                    </div>
-                    <div class="progress-ring ml-4">
-                        <svg width="80" height="80" aria-label="Status da Rede">
-                            <circle cx="40" cy="40" r="30" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="4"/>
-                            <circle cx="40" cy="40" r="30" fill="none" stroke="#FF6B6B" stroke-width="4" 
-                                    stroke-linecap="round" stroke-dasharray="188" stroke-dashoffset="18.8"/>
-                        </svg>
-                        <div class="absolute inset-0 flex items-center justify-center">
-                            <span class="text-sm font-bold orbitron">90%</span>
-                        </div>
-                    </div>
-                </div>
-                <div class="grid grid-cols-2 gap-4 text-xs">
-                    <div>
-                        <div class="opacity-75">Conexões:</div>
-                        <div class="font-semibold">847</div>
-                    </div>
-                    <div>
-                        <div class="opacity-75">Latência:</div>
-                        <div class="font-semibold">0.3ms</div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Message Bus -->
-            <div class="glass-card card-3d p-4 cursor-pointer" onclick="openAgentModal('message-bus')" role="button" aria-label="Message Bus" tabindex="0">
-                <div class="flex items-start justify-between mb-4">
-                    <div class="flex-1">
-                        <h3 class="text-lg font-bold flex items-center mb-2">
-                            <i class="fas fa-exchange-alt mr-2 text-lg" style="color: #9333EA;" aria-hidden="true"></i>
-                            Message Bus
-                        </h3>
-                        <p class="text-xs opacity-75">Sistema de Mensagens Assíncronas</p>
-                    </div>
-                    <div class="progress-ring ml-4">
-                        <svg width="80" height="80" aria-label="Status do Message Bus">
-                            <circle cx="40" cy="40" r="30" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="4"/>
-                            <circle cx="40" cy="40" r="30" fill="none" stroke="#9333EA" stroke-width="4" 
-                                    stroke-linecap="round" stroke-dasharray="188" stroke-dashoffset="9.4"/>
-                        </svg>
-                        <div class="absolute inset-0 flex items-center justify-center">
-                            <span class="text-sm font-bold orbitron">95%</span>
-                        </div>
-                    </div>
-                </div>
-                <div class="grid grid-cols-2 gap-4 text-xs">
-                    <div>
-                        <div class="opacity-75">Msg/s:</div>
-                        <div class="font-semibold">2.4k</div>
-                    </div>
-                    <div>
-                        <div class="opacity-75">Queue:</div>
-                        <div class="font-semibold">12</div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Network Coordinator -->
-            <div class="glass-card card-3d p-4 cursor-pointer" onclick="openAgentModal('network-coordinator')" role="button" aria-label="Network Coordinator" tabindex="0">
-                <div class="flex items-start justify-between mb-4">
-                    <div class="flex-1">
-                        <h3 class="text-lg font-bold flex items-center mb-2">
-                            <i class="fas fa-sitemap mr-2 text-lg" style="color: #00F5FF;" aria-hidden="true"></i>
-                            Network Coordinator
-                        </h3>
-                        <p class="text-xs opacity-75">Coordenação Distribuída com Métricas</p>
-                    </div>
-                    <div class="progress-ring ml-4">
-                        <svg width="80" height="80" aria-label="Status do Coordenador">
-                            <circle cx="40" cy="40" r="30" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="4"/>
-                            <circle cx="40" cy="40" r="30" fill="none" stroke="#00F5FF" stroke-width="4" 
-                                    stroke-linecap="round" stroke-dasharray="188" stroke-dashoffset="7.5"/>
-                        </svg>
-                        <div class="absolute inset-0 flex items-center justify-center">
-                            <span class="text-sm font-bold orbitron">96%</span>
-                        </div>
-                    </div>
-                </div>
-                <div class="grid grid-cols-2 gap-4 text-xs">
-                    <div>
-                        <div class="opacity-75">Nós:</div>
-                        <div class="font-semibold">23</div>
-                    </div>
-                    <div>
-                        <div class="opacity-75">Sync:</div>
-                        <div class="font-semibold">97.3%</div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Specialized Agents Section -->
-        <div class="section-header">
-            <h2 class="section-title orbitron">🔧 AGENTES ESPECIALIZADOS</h2>
-            <p class="text-sm md:text-base opacity-80">Agentes dedicados a funções específicas de análise e otimização</p>
-        </div>
-
-        <div class="agent-grid">
-            <!-- Analytics Agent -->
-            <div class="glass-card card-3d p-4 cursor-pointer" onclick="openAgentModal('analytics')" role="button" aria-label="Analytics Agent" tabindex="0">
-                <div class="flex items-start justify-between mb-4">
-                    <div class="flex-1">
-                        <h3 class="text-lg font-bold flex items-center mb-2">
-                            <i class="fas fa-chart-bar mr-2 text-lg" style="color: #FF6B6B;" aria-hidden="true"></i>
-                            Analytics Agent
-                        </h3>
-                        <p class="text-xs opacity-75">Análise de Dados e Reconhecimento de Padrões</p>
-                    </div>
-                    <div class="progress-ring ml-4">
-                        <svg width="80" height="80" aria-label="Performance Analytics">
-                            <circle cx="40" cy="40" r="30" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="4"/>
-                            <circle cx="40" cy="40" r="30" fill="none" stroke="#FF6B6B" stroke-width="4" 
-                                    stroke-linecap="round" stroke-dasharray="188" stroke-dashoffset="25.44"/>
-                        </svg>
-                        <div class="absolute inset-0 flex items-center justify-center">
-                            <span class="text-sm font-bold orbitron">86.5%</span>
-                        </div>
-                    </div>
-                </div>
-                <div class="grid grid-cols-2 gap-4 text-xs">
-                    <div>
-                        <div class="opacity-75">Análises:</div>
-                        <div class="font-semibold">1.247</div>
-                    </div>
-                    <div>
-                        <div class="opacity-75">Padrões:</div>
-                        <div class="font-semibold">127</div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Optimizer Agent -->
-            <div class="glass-card card-3d p-4 cursor-pointer" onclick="openAgentModal('optimizer')" role="button" aria-label="Optimizer Agent" tabindex="0">
-                <div class="flex items-start justify-between mb-4">
-                    <div class="flex-1">
-                        <h3 class="text-lg font-bold flex items-center mb-2">
-                            <i class="fas fa-cogs mr-2 text-lg" style="color: #9333EA;" aria-hidden="true"></i>
-                            Optimizer Agent
-                        </h3>
-                        <p class="text-xs opacity-75">Otimização de Performance e Recursos</p>
-                    </div>
-                    <div class="progress-ring ml-4">
-                        <svg width="80" height="80" aria-label="Performance Optimizer">
-                            <circle cx="40" cy="40" r="30" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="4"/>
-                            <circle cx="40" cy="40" r="30" fill="none" stroke="#9333EA" stroke-width="4" 
-                                    stroke-linecap="round" stroke-dasharray="188" stroke-dashoffset="16.92"/>
-                        </svg>
-                        <div class="absolute inset-0 flex items-center justify-center">
-                            <span class="text-sm font-bold orbitron">91%</span>
-                        </div>
-                    </div>
-                </div>
-                <div class="grid grid-cols-2 gap-4 text-xs">
-                    <div>
-                        <div class="opacity-75">Otimizações:</div>
-                        <div class="font-semibold">847</div>
-                    </div>
-                    <div>
-                        <div class="opacity-75">Recursos:</div>
-                        <div class="font-semibold">+12.4%</div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Coordinator Agent -->
-            <div class="glass-card card-3d p-4 cursor-pointer" onclick="openAgentModal('coordinator')" role="button" aria-label="Coordinator Agent" tabindex="0">
-                <div class="flex items-start justify-between mb-4">
-                    <div class="flex-1">
-                        <h3 class="text-lg font-bold flex items-center mb-2">
-                            <i class="fas fa-project-diagram mr-2 text-lg" style="color: #00F5FF;" aria-hidden="true"></i>
-                            Coordinator Agent
-                        </h3>
-                        <p class="text-xs opacity-75">Coordenação de Workflows Complexos</p>
-                    </div>
-                    <div class="progress-ring ml-4">
-                        <svg width="80" height="80" aria-label="Performance Coordinator">
-                            <circle cx="40" cy="40" r="30" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="4"/>
-                            <circle cx="40" cy="40" r="30" fill="none" stroke="#00F5FF" stroke-width="4" 
-                                    stroke-linecap="round" stroke-dasharray="188" stroke-dashoffset="13.16"/>
-                        </svg>
-                        <div class="absolute inset-0 flex items-center justify-center">
-                            <span class="text-sm font-bold orbitron">93%</span>
-                        </div>
-                    </div>
-                </div>
-                <div class="grid grid-cols-2 gap-4 text-xs">
-                    <div>
-                        <div class="opacity-75">Workflows:</div>
-                        <div class="font-semibold">347</div>
-                    </div>
-                    <div>
-                        <div class="opacity-75">Success:</div>
-                        <div class="font-semibold">98.7%</div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- AI-Powered Agents Section -->
-        <div class="section-header">
-            <h2 class="section-title orbitron">🤖 AGENTES IA-POWERED</h2>
-            <p class="text-sm md:text-base opacity-80">Agentes potencializados por inteligência artificial avançada</p>
-        </div>
-
-        <div class="agent-grid">
-            <!-- Intelligent Analyzer -->
-            <div class="glass-card card-3d p-4 cursor-pointer" onclick="openAgentModal('intelligent-analyzer')" role="button" aria-label="Intelligent Analyzer" tabindex="0">
-                <div class="flex items-start justify-between mb-4">
-                    <div class="flex-1">
-                        <h3 class="text-lg font-bold flex items-center mb-2">
-                            <i class="fas fa-brain mr-2 text-lg" style="color: #FF6B6B;" aria-hidden="true"></i>
-                            Intelligent Analyzer
-                        </h3>
-                        <p class="text-xs opacity-75">Análise Inteligente com IA Real</p>
-                    </div>
-                    <div class="progress-ring ml-4">
-                        <svg width="80" height="80" aria-label="Performance IA Analyzer">
-                            <circle cx="40" cy="40" r="30" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="4"/>
-                            <circle cx="40" cy="40" r="30" fill="none" stroke="#FF6B6B" stroke-width="4" 
-                                    stroke-linecap="round" stroke-dasharray="188" stroke-dashoffset="12.22"/>
-                        </svg>
-                        <div class="absolute inset-0 flex items-center justify-center">
-                            <span class="text-sm font-bold orbitron">93.5%</span>
-                        </div>
-                    </div>
-                </div>
-                <div class="grid grid-cols-2 gap-4 text-xs">
-                    <div>
-                        <div class="opacity-75">Análises IA:</div>
-                        <div class="font-semibold">2.847</div>
-                    </div>
-                    <div>
-                        <div class="opacity-75">Precisão:</div>
-                        <div class="font-semibold">97.3%</div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Smart Optimizer -->
-            <div class="glass-card card-3d p-4 cursor-pointer" onclick="openAgentModal('smart-optimizer')" role="button" aria-label="Smart Optimizer" tabindex="0">
-                <div class="flex items-start justify-between mb-4">
-                    <div class="flex-1">
-                        <h3 class="text-lg font-bold flex items-center mb-2">
-                            <i class="fas fa-magic mr-2 text-lg" style="color: #9333EA;" aria-hidden="true"></i>
-                            Smart Optimizer
-                        </h3>
-                        <p class="text-xs opacity-75">Otimização Adaptativa com IA</p>
-                    </div>
-                    <div class="progress-ring ml-4">
-                        <svg width="80" height="80" aria-label="Performance Smart Optimizer">
-                            <circle cx="40" cy="40" r="30" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="4"/>
-                            <circle cx="40" cy="40" r="30" fill="none" stroke="#9333EA" stroke-width="4" 
-                                    stroke-linecap="round" stroke-dasharray="188" stroke-dashoffset="14.1"/>
-                        </svg>
-                        <div class="absolute inset-0 flex items-center justify-center">
-                            <span class="text-sm font-bold orbitron">92.5%</span>
-                        </div>
-                    </div>
-                </div>
-                <div class="grid grid-cols-2 gap-4 text-xs">
-                    <div>
-                        <div class="opacity-75">Otimizações:</div>
-                        <div class="font-semibold">1.647</div>
-                    </div>
-                    <div>
-                        <div class="opacity-75">Ganho:</div>
-                        <div class="font-semibold">+18.7%</div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Conversational Agent -->
-            <div class="glass-card card-3d p-4 cursor-pointer" onclick="openAgentModal('conversational')" role="button" aria-label="Conversational Agent" tabindex="0">
-                <div class="flex items-start justify-between mb-4">
-                    <div class="flex-1">
-                        <h3 class="text-lg font-bold flex items-center mb-2">
-                            <i class="fas fa-comments mr-2 text-lg" style="color: #00F5FF;" aria-hidden="true"></i>
-                            Conversational Agent
-                        </h3>
-                        <p class="text-xs opacity-75">Conversação Natural Multilíngue</p>
-                    </div>
-                    <div class="progress-ring ml-4">
-                        <svg width="80" height="80" aria-label="Performance Conversational">
-                            <circle cx="40" cy="40" r="30" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="4"/>
-                            <circle cx="40" cy="40" r="30" fill="none" stroke="#00F5FF" stroke-width="4" 
-                                    stroke-linecap="round" stroke-dasharray="188" stroke-dashoffset="15.04"/>
-                        </svg>
-                        <div class="absolute inset-0 flex items-center justify-center">
-                            <span class="text-sm font-bold orbitron">92%</span>
-                        </div>
-                    </div>
-                </div>
-                <div class="grid grid-cols-2 gap-4 text-xs">
-                    <div>
-                        <div class="opacity-75">Conversas:</div>
-                        <div class="font-semibold">4.247</div>
-                    </div>
-                    <div>
-                        <div class="opacity-75">Idiomas:</div>
-                        <div class="font-semibold">12</div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Core Agents V3 Section -->
-        <div class="section-header">
-            <h2 class="section-title orbitron">🧠 CORE AGENTS V3</h2>
-            <p class="text-sm md:text-base opacity-80">Agentes centrais evoluídos com capacidades aprimoradas</p>
-        </div>
-
-        <div class="agent-grid">
-            <!-- Core Agent V3 -->
-            <div class="glass-card card-3d p-4 cursor-pointer" onclick="openAgentModal('core-v3')" role="button" aria-label="Core Agent V3" tabindex="0">
-                <div class="flex items-start justify-between mb-4">
-                    <div class="flex-1">
-                        <h3 class="text-lg font-bold flex items-center mb-2">
-                            <i class="fas fa-atom mr-2 text-lg" style="color: #FF6B6B;" aria-hidden="true"></i>
-                            Core Agent V3
-                        </h3>
-                        <p class="text-xs opacity-75">Processamento Central Evolutivo</p>
-                    </div>
-                    <div class="progress-ring ml-4">
-                        <svg width="80" height="80" aria-label="Performance Core V3">
-                            <circle cx="40" cy="40" r="30" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="4"/>
-                            <circle cx="40" cy="40" r="30" fill="none" stroke="#FF6B6B" stroke-width="4" 
-                                    stroke-linecap="round" stroke-dasharray="188" stroke-dashoffset="11.28"/>
-                        </svg>
-                        <div class="absolute inset-0 flex items-center justify-center">
-                            <span class="text-sm font-bold orbitron">94%</span>
-                        </div>
-                    </div>
-                </div>
-                <div class="grid grid-cols-2 gap-4 text-xs">
-                    <div>
-                        <div class="opacity-75">Evoluções:</div>
-                        <div class="font-semibold">1.847</div>
-                    </div>
-                    <div>
-                        <div class="opacity-75">Nível:</div>
-                        <div class="font-semibold">4+</div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Guard Agent V3 -->
-            <div class="glass-card card-3d p-4 cursor-pointer" onclick="openAgentModal('guard-v3')" role="button" aria-label="Guard Agent V3" tabindex="0">
-                <div class="flex items-start justify-between mb-4">
-                    <div class="flex-1">
-                        <h3 class="text-lg font-bold flex items-center mb-2">
-                            <i class="fas fa-shield-virus mr-2 text-lg" style="color: #9333EA;" aria-hidden="true"></i>
-                            Guard Agent V3
-                        </h3>
-                        <p class="text-xs opacity-75">Segurança Avançada Preditiva</p>
-                    </div>
-                    <div class="progress-ring ml-4">
-                        <svg width="80" height="80" aria-label="Performance Guard V3">
-                            <circle cx="40" cy="40" r="30" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="4"/>
-                            <circle cx="40" cy="40" r="30" fill="none" stroke="#9333EA" stroke-width="4" 
-                                    stroke-linecap="round" stroke-dasharray="188" stroke-dashoffset="5.64"/>
-                        </svg>
-                        <div class="absolute inset-0 flex items-center justify-center">
-                            <span class="text-sm font-bold orbitron">97%</span>
-                        </div>
-                    </div>
-                </div>
-                <div class="grid grid-cols-2 gap-4 text-xs">
-                    <div>
-                        <div class="opacity-75">Ameaças:</div>
-                        <div class="font-semibold">0</div>
-                    </div>
-                    <div>
-                        <div class="opacity-75">Uptime:</div>
-                        <div class="font-semibold">99.97%</div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Learn Agent V3 -->
-            <div class="glass-card card-3d p-4 cursor-pointer" onclick="openAgentModal('learn-v3')" role="button" aria-label="Learn Agent V3" tabindex="0">
-                <div class="flex items-start justify-between mb-4">
-                    <div class="flex-1">
-                        <h3 class="text-lg font-bold flex items-center mb-2">
-                            <i class="fas fa-graduation-cap mr-2 text-lg" style="color: #00F5FF;" aria-hidden="true"></i>
-                            Learn Agent V3
-                        </h3>
-                        <p class="text-xs opacity-75">Aprendizado Evolutivo Contínuo</p>
-                    </div>
-                    <div class="progress-ring ml-4">
-                        <svg width="80" height="80" aria-label="Performance Learn V3">
-                            <circle cx="40" cy="40" r="30" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="4"/>
-                            <circle cx="40" cy="40" r="30" fill="none" stroke="#00F5FF" stroke-width="4" 
-                                    stroke-linecap="round" stroke-dasharray="188" stroke-dashoffset="9.4"/>
-                        </svg>
-                        <div class="absolute inset-0 flex items-center justify-center">
-                            <span class="text-sm font-bold orbitron">95%</span>
-                        </div>
-                    </div>
-                </div>
-                <div class="grid grid-cols-2 gap-4 text-xs">
-                    <div>
-                        <div class="opacity-75">Learning:</div>
-                        <div class="font-semibold">2.847</div>
-                    </div>
-                    <div>
-                        <div class="opacity-75">Accuracy:</div>
-                        <div class="font-semibold">96.8%</div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- System Agents Section -->
-        <div class="section-header">
-            <h2 class="section-title orbitron">📊 SYSTEM AGENTS</h2>
-            <p class="text-sm md:text-base opacity-80">Agentes sistêmicos para monitoramento e evolução</p>
-        </div>
-
-        <div class="agent-grid">
-            <!-- Monitor Agent -->
-            <div class="glass-card card-3d p-4 cursor-pointer" onclick="openAgentModal('monitor')" role="button" aria-label="Monitor Agent" tabindex="0">
-                <div class="flex items-start justify-between mb-4">
-                    <div class="flex-1">
-                        <h3 class="text-lg font-bold flex items-center mb-2">
-                            <i class="fas fa-monitor-heart-rate mr-2 text-lg" style="color: #FF6B6B;" aria-hidden="true"></i>
-                            Monitor Agent
-                        </h3>
-                        <p class="text-xs opacity-75">Monitoramento Avançado em Tempo Real</p>
-                    </div>
-                    <div class="progress-ring ml-4">
-                        <svg width="80" height="80" aria-label="Performance Monitor">
-                            <circle cx="40" cy="40" r="30" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="4"/>
-                            <circle cx="40" cy="40" r="30" fill="none" stroke="#FF6B6B" stroke-width="4" 
-                                    stroke-linecap="round" stroke-dasharray="188" stroke-dashoffset="7.52"/>
-                        </svg>
-                        <div class="absolute inset-0 flex items-center justify-center">
-                            <span class="text-sm font-bold orbitron">96%</span>
-                        </div>
-                    </div>
-                </div>
-                <div class="grid grid-cols-2 gap-4 text-xs">
-                    <div>
-                        <div class="opacity-75">Métricas:</div>
-                        <div class="font-semibold">12.847</div>
-                    </div>
-                    <div>
-                        <div class="opacity-75">Alertas:</div>
-                        <div class="font-semibold">3</div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Evolver Agent -->
-            <div class="glass-card card-3d p-4 cursor-pointer" onclick="openAgentModal('evolver')" role="button" aria-label="Evolver Agent" tabindex="0">
-                <div class="flex items-start justify-between mb-4">
-                    <div class="flex-1">
-                        <h3 class="text-lg font-bold flex items-center mb-2">
-                            <i class="fas fa-dna mr-2 text-lg" style="color: #9333EA;" aria-hidden="true"></i>
-                            Evolver Agent
-                        </h3>
-                        <p class="text-xs opacity-75">Evolução e Auto-melhoria do Sistema</p>
-                    </div>
-                    <div class="progress-ring ml-4">
-                        <svg width="80" height="80" aria-label="Performance Evolver">
-                            <circle cx="40" cy="40" r="30" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="4"/>
-                            <circle cx="40" cy="40" r="30" fill="none" stroke="#9333EA" stroke-width="4" 
-                                    stroke-linecap="round" stroke-dasharray="188" stroke-dashoffset="16.92"/>
-                        </svg>
-                        <div class="absolute inset-0 flex items-center justify-center">
-                            <span class="text-sm font-bold orbitron">91%</span>
-                        </div>
-                    </div>
-                </div>
-                <div class="grid grid-cols-2 gap-4 text-xs">
-                    <div>
-                        <div class="opacity-75">Evoluções:</div>
-                        <div class="font-semibold">247</div>
-                    </div>
-                    <div>
-                        <div class="opacity-75">Gerações:</div>
-                        <div class="font-semibold">12</div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Integrator Agent -->
-            <div class="glass-card card-3d p-4 cursor-pointer" onclick="openAgentModal('integrator')" role="button" aria-label="Integrator Agent" tabindex="0">
-                <div class="flex items-start justify-between mb-4">
-                    <div class="flex-1">
-                        <h3 class="text-lg font-bold flex items-center mb-2">
-                            <i class="fas fa-plug mr-2 text-lg" style="color: #00F5FF;" aria-hidden="true"></i>
-                            Integrator Agent
-                        </h3>
-                        <p class="text-xs opacity-75">Integração com Sistemas Externos</p>
-                    </div>
-                    <div class="progress-ring ml-4">
-                        <svg width="80" height="80" aria-label="Performance Integrator">
-                            <circle cx="40" cy="40" r="30" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="4"/>
-                            <circle cx="40" cy="40" r="30" fill="none" stroke="#00F5FF" stroke-width="4" 
-                                    stroke-linecap="round" stroke-dashoffset="11.28"/>
-                        </svg>
-                        <div class="absolute inset-0 flex items-center justify-center">
-                            <span class="text-sm font-bold orbitron">94%</span>
-                        </div>
-                    </div>
-                </div>
-                <div class="grid grid-cols-2 gap-4 text-xs">
-                    <div>
-                        <div class="opacity-75">APIs:</div>
-                        <div class="font-semibold">47</div>
-                    </div>
-                    <div>
-                        <div class="opacity-75">Sync:</div>
-                        <div class="font-semibold">98.3%</div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Service Agents Section -->
-        <div class="section-header">
-            <h2 class="section-title orbitron">🛠️ SERVICE AGENTS</h2>
-            <p class="text-sm md:text-base opacity-80">Agentes de serviço para comunicação e conformidade</p>
-        </div>
-
-        <div class="agent-grid">
-            <!-- Communication Agent -->
-            <div class="glass-card card-3d p-4 cursor-pointer" onclick="openAgentModal('communication')" role="button" aria-label="Communication Agent" tabindex="0">
-                <div class="flex items-start justify-between mb-4">
-                    <div class="flex-1">
-                        <h3 class="text-lg font-bold flex items-center mb-2">
-                            <i class="fas fa-satellite-dish mr-2 text-lg" style="color: #FF6B6B;" aria-hidden="true"></i>
-                            Communication Agent
-                        </h3>
-                        <p class="text-xs opacity-75">Comunicação Multilíngue Avançada</p>
-                    </div>
-                    <div class="progress-ring ml-4">
-                        <svg width="80" height="80" aria-label="Performance Communication">
-                            <circle cx="40" cy="40" r="30" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="4"/>
-                            <circle cx="40" cy="40" r="30" fill="none" stroke="#FF6B6B" stroke-width="4" 
-                                    stroke-linecap="round" stroke-dasharray="188" stroke-dashoffset="13.16"/>
-                        </svg>
-                        <div class="absolute inset-0 flex items-center justify-center">
-                            <span class="text-sm font-bold orbitron">93%</span>
-                        </div>
-                    </div>
-                </div>
-                <div class="grid grid-cols-2 gap-4 text-xs">
-                    <div>
-                        <div class="opacity-75">Mensagens:</div>
-                        <div class="font-semibold">8.947</div>
-                    </div>
-                    <div>
-                        <div class="opacity-75">Idiomas:</div>
-                        <div class="font-semibold">4</div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Decision Agent -->
-            <div class="glass-card card-3d p-4 cursor-pointer" onclick="openAgentModal('decision')" role="button" aria-label="Decision Agent" tabindex="0">
-                <div class="flex items-start justify-between mb-4">
-                    <div class="flex-1">
-                        <h3 class="text-lg font-bold flex items-center mb-2">
-                            <i class="fas fa-balance-scale mr-2 text-lg" style="color: #9333EA;" aria-hidden="true"></i>
-                            Decision Agent
-                        </h3>
-                        <p class="text-xs opacity-75">Tomada de Decisão Inteligente Multi-critério</p>
-                    </div>
-                    <div class="progress-ring ml-4">
-                        <svg width="80" height="80" aria-label="Performance Decision">
-                            <circle cx="40" cy="40" r="30" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="4"/>
-                            <circle cx="40" cy="40" r="30" fill="none" stroke="#9333EA" stroke-width="4" 
-                                    stroke-linecap="round" stroke-dasharray="188" stroke-dashoffset="9.4"/>
-                        </svg>
-                        <div class="absolute inset-0 flex items-center justify-center">
-                            <span class="text-sm font-bold orbitron">95%</span>
-                        </div>
-                    </div>
-                </div>
-                <div class="grid grid-cols-2 gap-4 text-xs">
-                    <div>
-                        <div class="opacity-75">Decisões:</div>
-                        <div class="font-semibold">1.247</div>
-                    </div>
-                    <div>
-                        <div class="opacity-75">Precisão:</div>
-                        <div class="font-semibold">97.8%</div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Compliance Agent -->
-            <div class="glass-card card-3d p-4 cursor-pointer" onclick="openAgentModal('compliance')" role="button" aria-label="Compliance Agent" tabindex="0">
-                <div class="flex items-start justify-between mb-4">
-                    <div class="flex-1">
-                        <h3 class="text-lg font-bold flex items-center mb-2">
-                            <i class="fas fa-certificate mr-2 text-lg" style="color: #00F5FF;" aria-hidden="true"></i>
-                            Compliance Agent
-                        </h3>
-                        <p class="text-xs opacity-75">Conformidade Regulatória Completa</p>
-                    </div>
-                    <div class="progress-ring ml-4">
-                        <svg width="80" height="80" aria-label="Performance Compliance">
-                            <circle cx="40" cy="40" r="30" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="4"/>
-                            <circle cx="40" cy="40" r="30" fill="none" stroke="#00F5FF" stroke-width="4" 
-                                    stroke-linecap="round" stroke-dasharray="188" stroke-dashoffset="3.76"/>
-                        </svg>
-                        <div class="absolute inset-0 flex items-center justify-center">
-                            <span class="text-sm font-bold orbitron">98%</span>
-                        </div>
-                    </div>
-                </div>
-                <div class="grid grid-cols-2 gap-4 text-xs">
-                    <div>
-                        <div class="opacity-75">Auditorias:</div>
-                        <div class="font-semibold">847</div>
-                    </div>
-                    <div>
-                        <div class="opacity-75">Status:</div>
-                        <div class="font-semibold">COMPLIANT</div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Meta-Cognitive Agents Section -->
-        <div class="section-header">
-            <h2 class="section-title orbitron">🧬 META-COGNITIVE AGENTS</h2>
-            <p class="text-sm md:text-base opacity-80">Agentes meta-cognitivos para orquestração e auto-reflexão</p>
-        </div>
-
-        <div class="agent-grid">
-            <!-- Orchestrator Agent -->
-            <div class="glass-card card-3d p-4 cursor-pointer" onclick="openAgentModal('orchestrator')" role="button" aria-label="Orchestrator Agent" tabindex="0">
-                <div class="flex items-start justify-between mb-4">
-                    <div class="flex-1">
-                        <h3 class="text-lg font-bold flex items-center mb-2">
-                            <i class="fas fa-crown mr-2 text-lg" style="color: #FFD700;" aria-hidden="true"></i>
-                            Orchestrator Agent
-                        </h3>
-                        <p class="text-xs opacity-75">Orquestração Suprema de Todos os 20 Agentes</p>
-                    </div>
-                    <div class="progress-ring ml-4">
-                        <svg width="80" height="80" aria-label="Performance Orchestrator">
-                            <circle cx="40" cy="40" r="30" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="4"/>
-                            <circle cx="40" cy="40" r="30" fill="none" stroke="#FFD700" stroke-width="4" 
-                                    stroke-linecap="round" stroke-dasharray="188" stroke-dashoffset="1.88"/>
-                        </svg>
-                        <div class="absolute inset-0 flex items-center justify-center">
-                            <span class="text-sm font-bold orbitron">99%</span>
-                        </div>
-                    </div>
-                </div>
-                <div class="grid grid-cols-2 gap-4 text-xs">
-                    <div>
-                        <div class="opacity-75">Orquestração:</div>
-                        <div class="font-semibold">100%</div>
-                    </div>
-                    <div>
-                        <div class="opacity-75">Agentes:</div>
-                        <div class="font-semibold">20/20</div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- MetaCognitive Agent -->
-            <div class="glass-card card-3d p-4 cursor-pointer" onclick="openAgentModal('metacognitive')" role="button" aria-label="MetaCognitive Agent" tabindex="0">
-                <div class="flex items-start justify-between mb-4">
-                    <div class="flex-1">
-                        <h3 class="text-lg font-bold flex items-center mb-2">
-                            <i class="fas fa-eye mr-2 text-lg" style="color: #9333EA;" aria-hidden="true"></i>
-                            MetaCognitive Agent
-                        </h3>
-                        <p class="text-xs opacity-75">Auto-reflexão e Consciência Simulada</p>
-                    </div>
-                    <div class="progress-ring ml-4">
-                        <svg width="80" height="80" aria-label="Performance MetaCognitive">
-                            <circle cx="40" cy="40" r="30" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="4"/>
-                            <circle cx="40" cy="40" r="30" fill="none" stroke="#9333EA" stroke-width="4" 
-                                    stroke-linecap="round" stroke-dasharray="188" stroke-dashoffset="7.52"/>
-                        </svg>
-                        <div class="absolute inset-0 flex items-center justify-center">
-                            <span class="text-sm font-bold orbitron">96%</span>
-                        </div>
-                    </div>
-                </div>
-                <div class="grid grid-cols-2 gap-4 text-xs">
-                    <div>
-                        <div class="opacity-75">Reflexões:</div>
-                        <div class="font-semibold">1.247</div>
-                    </div>
-                    <div>
-                        <div class="opacity-75">Insights:</div>
-                        <div class="font-semibold">347</div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Charts and Analytics Section -->
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6 mb-8">
-            <!-- Neural Performance Chart -->
-            <div class="glass-card p-4 md:p-6" role="region" aria-label="Gráfico de Performance Neural">
-                <h3 class="text-lg md:text-xl font-bold mb-4 flex items-center">
-                    <i class="fas fa-chart-area mr-2" style="color: var(--accent-primary);" aria-hidden="true"></i>
-                    Performance Neural Timeline
-                </h3>
-                <div class="chart-container">
-                    <canvas id="neuralChart" style="height: 300px;" aria-label="Gráfico de performance neural ao longo do tempo"></canvas>
-                </div>
-            </div>
-
-            <!-- Live Event Stream -->
-            <div class="glass-card p-4 md:p-6" role="region" aria-label="Stream de Eventos Neural">
-                <h3 class="text-lg md:text-xl font-bold mb-4 flex items-center">
-                    <i class="fas fa-stream mr-2" style="color: var(--accent-secondary);" aria-hidden="true"></i>
-                    Neural Event Stream
-                    <span class="ml-2 px-2 py-1 text-xs rounded-full bg-green-500 animate-pulse">LIVE</span>
-                </h3>
-                <div class="event-log" id="event-log" role="log" aria-live="polite">
-                    <div class="event-item">
-                        <div class="w-4 h-4 rounded-full mr-3" style="background: #F4D03F;">⚡</div>
-                        <div class="flex-1">
-                            <div class="font-medium">Orchestrator Agent: Sistema neural sincronizado</div>
-                            <div class="text-xs opacity-75">14:23:47</div>
-                        </div>
-                    </div>
-                    <div class="event-item">
-                        <div class="w-4 h-4 rounded-full mr-3" style="background: #9333EA;">🧠</div>
-                        <div class="flex-1">
-                            <div class="font-medium">Core Agent V3: Evolução nível 4+ completada</div>
-                            <div class="text-xs opacity-75">14:23:23</div>
-                        </div>
-                    </div>
-                    <div class="event-item">
-                        <div class="w-4 h-4 rounded-full mr-3" style="background: #00F5FF;">🛡️</div>
-                        <div class="flex-1">
-                            <div class="font-medium">Guard Agent V3: Security scan completed - 0 threats</div>
-                            <div class="text-xs opacity-75">14:22:58</div>
-                        </div>
-                    </div>
-                    <div class="event-item">
-                        <div class="w-4 h-4 rounded-full mr-3" style="background: #2ECC71;">📊</div>
-                        <div class="flex-1">
-                            <div class="font-medium">Analytics Agent: 127 novos padrões identificados</div>
-                            <div class="text-xs opacity-75">14:22:31</div>
-                        </div>
-                    </div>
-                    <div class="event-item">
-                        <div class="w-4 h-4 rounded-full mr-3" style="background: #FF6B6B;">🔧</div>
-                        <div class="flex-1">
-                            <div class="font-medium">Optimizer Agent: Performance boost +12.4%</div>
-                            <div class="text-xs opacity-75">14:22:09</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- System Health Overview -->
-        <div class="glass-card p-4 md:p-6 mb-8" role="region" aria-label="Saúde do Sistema Neural">
-            <h3 class="text-lg md:text-xl font-bold mb-4 flex items-center">
-                <i class="fas fa-heartbeat mr-2" style="color: var(--accent-primary);" aria-hidden="true"></i>
-                Neural System Health Overview
+    <!-- Agents Grid -->
+    <div class="agent-grid mt-6">
+        
+        <!-- INFRAESTRUTURA BASE -->
+        <div class="glass-card p-4">
+            <h3 class="text-lg font-bold category-header mb-3 flex items-center">
+                <i class="fas fa-server mr-2"></i>
+                INFRAESTRUTURA BASE
             </h3>
-            <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
-                <div class="text-center p-4 glass-card">
-                    <div class="text-2xl mb-2">💾</div>
-                    <div class="font-semibold">Memória</div>
-                    <div class="text-lg font-bold orbitron" id="memory-usage" aria-live="polite">68.4%</div>
+            <div class="text-xs opacity-75 mb-3">Componentes fundamentais do sistema neural</div>
+        </div>
+
+        <!-- MultiAgentNetwork -->
+        <div class="glass-card p-4">
+            <div class="flex items-center justify-between">
+                <div class="flex-1">
+                    <h4 class="font-bold flex items-center text-sm mb-1">
+                        <i class="fas fa-network-wired mr-2 text-blue-400"></i>
+                        MultiAgentNetwork
+                    </h4>
+                    <p class="text-xs opacity-75 mb-2">Rede de Comunicação Neural Central</p>
+                    <div class="grid grid-cols-2 gap-2 text-xs">
+                        <div>
+                            <span class="opacity-75">Conexões:</span>
+                            <span class="metric-value ml-1">847</span>
+                        </div>
+                        <div>
+                            <span class="opacity-75">Latência:</span>
+                            <span class="metric-value ml-1">12ms</span>
+                        </div>
+                    </div>
                 </div>
-                <div class="text-center p-4 glass-card">
-                    <div class="text-2xl mb-2">⚡</div>
-                    <div class="font-semibold">CPU Neural</div>
-                    <div class="text-lg font-bold orbitron" id="cpu-usage" aria-live="polite">47.2%</div>
-                </div>
-                <div class="text-center p-4 glass-card">
-                    <div class="text-2xl mb-2">🌐</div>
-                    <div class="font-semibold">Rede</div>
-                    <div class="text-lg font-bold orbitron" id="network-status" aria-live="polite">OPTIMAL</div>
-                </div>
-                <div class="text-center p-4 glass-card">
-                    <div class="text-2xl mb-2">🧠</div>
-                    <div class="font-semibold">Neural Load</div>
-                    <div class="text-lg font-bold orbitron" id="neural-load" aria-live="polite">82.7%</div>
-                </div>
-                <div class="text-center p-4 glass-card">
-                    <div class="text-2xl mb-2">🔄</div>
-                    <div class="font-semibold">Sync Rate</div>
-                    <div class="text-lg font-bold orbitron" id="sync-rate" aria-live="polite">97.3%</div>
-                </div>
-                <div class="text-center p-4 glass-card">
-                    <div class="text-2xl mb-2">⭐</div>
-                    <div class="font-semibold">Quality Score</div>
-                    <div class="text-lg font-bold orbitron" id="quality-score" aria-live="polite">94.7</div>
+                <div class="progress-ring ml-3">
+                    <svg width="80" height="80">
+                        <circle cx="40" cy="40" r="32" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="4"/>
+                        <circle cx="40" cy="40" r="32" fill="none" stroke="#3B82F6" stroke-width="4" 
+                                stroke-linecap="round" stroke-dasharray="201" stroke-dashoffset="43"/>
+                    </svg>
+                    <div class="absolute inset-0 flex items-center justify-center">
+                        <span class="text-sm font-bold orbitron">78%</span>
+                    </div>
                 </div>
             </div>
         </div>
 
-        <!-- Footer -->
-        <footer class="text-center mt-12 mb-8">
-            <div class="glass-card p-4 md:p-6">
-                <p class="text-base md:text-lg font-semibold mb-2">🧬 EXCELÊNCIA NEURAL EMPRESARIAL</p>
-                <p class="text-lg md:text-xl italic" style="color: var(--accent-primary);">"Transformando Comércio Através de Inteligência Quântica"</p>
-                <p class="text-xs md:text-sm opacity-75 mt-4">ALSHAM QUANTUM - Plataforma Neural Avançada para Liderança em Comércio Global</p>
-                <div class="mt-4 text-xs opacity-50">
-                    <p>Sistema Neural Completo | 20 Agentes Especializados | Performance Otimizada por Quantum | Powered by ALSHAM GLOBAL COMMERCE</p>
+        <!-- MessageBus -->
+        <div class="glass-card p-4">
+            <div class="flex items-center justify-between">
+                <div class="flex-1">
+                    <h4 class="font-bold flex items-center text-sm mb-1">
+                        <i class="fas fa-comments mr-2 text-green-400"></i>
+                        MessageBus
+                    </h4>
+                    <p class="text-xs opacity-75 mb-2">Sistema de Mensagens Assíncronas</p>
+                    <div class="grid grid-cols-2 gap-2 text-xs">
+                        <div>
+                            <span class="opacity-75">Msgs/seg:</span>
+                            <span class="metric-value ml-1">1.2K</span>
+                        </div>
+                        <div>
+                            <span class="opacity-75">Buffer:</span>
+                            <span class="metric-value ml-1">85%</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="progress-ring ml-3">
+                    <svg width="80" height="80">
+                        <circle cx="40" cy="40" r="32" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="4"/>
+                        <circle cx="40" cy="40" r="32" fill="none" stroke="#10B981" stroke-width="4" 
+                                stroke-linecap="round" stroke-dasharray="201" stroke-dashoffset="30"/>
+                    </svg>
+                    <div class="absolute inset-0 flex items-center justify-center">
+                        <span class="text-sm font-bold orbitron">85%</span>
+                    </div>
                 </div>
             </div>
-        </footer>
-    </div>
+        </div>
 
-    <!-- Modals -->
-    <div id="agent-modal" class="modal" role="dialog" aria-labelledby="modal-title" aria-hidden="true">
-        <div class="modal-content">
-            <div class="flex justify-between items-center mb-6">
-                <h2 class="text-xl md:text-2xl font-bold orbitron" id="modal-title">Neural Agent Details</h2>
-                <button onclick="closeModal()" class="text-2xl hover:text-red-400 transition-colors" aria-label="Fechar modal">
-                    <i class="fas fa-times"></i>
-                </button>
+        <!-- NetworkCoordinator -->
+        <div class="glass-card p-4">
+            <div class="flex items-center justify-between">
+                <div class="flex-1">
+                    <h4 class="font-bold flex items-center text-sm mb-1">
+                        <i class="fas fa-project-diagram mr-2 text-purple-400"></i>
+                        NetworkCoordinator
+                    </h4>
+                    <p class="text-xs opacity-75 mb-2">Coordenação Distribuída</p>
+                    <div class="grid grid-cols-2 gap-2 text-xs">
+                        <div>
+                            <span class="opacity-75">Sync:</span>
+                            <span class="metric-value ml-1">96%</span>
+                        </div>
+                        <div>
+                            <span class="opacity-75">Load:</span>
+                            <span class="metric-value ml-1">67%</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="progress-ring ml-3">
+                    <svg width="80" height="80">
+                        <circle cx="40" cy="40" r="32" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="4"/>
+                        <circle cx="40" cy="40" r="32" fill="none" stroke="#8B5CF6" stroke-width="4" 
+                                stroke-linecap="round" stroke-dasharray="201" stroke-dashoffset="8"/>
+                    </svg>
+                    <div class="absolute inset-0 flex items-center justify-center">
+                        <span class="text-sm font-bold orbitron">96%</span>
+                    </div>
+                </div>
             </div>
-            <div id="modal-body">
-                <!-- Modal content will be populated by JavaScript -->
+        </div>
+
+        <div class="section-spacer"></div>
+
+        <!-- SPECIALIZED AGENTS -->
+        <div class="glass-card p-4">
+            <h3 class="text-lg font-bold category-header mb-3 flex items-center">
+                <i class="fas fa-cogs mr-2"></i>
+                SPECIALIZED AGENTS
+            </h3>
+            <div class="text-xs opacity-75 mb-3">Agentes especializados em funções específicas</div>
+        </div>
+
+        <!-- AnalyticsAgent -->
+        <div class="glass-card p-4">
+            <div class="flex items-center justify-between">
+                <div class="flex-1">
+                    <h4 class="font-bold flex items-center text-sm mb-1">
+                        <i class="fas fa-chart-bar mr-2 text-yellow-400"></i>
+                        AnalyticsAgent
+                    </h4>
+                    <p class="text-xs opacity-75 mb-2">Análise de Dados e Padrões</p>
+                    <div class="grid grid-cols-2 gap-2 text-xs">
+                        <div>
+                            <span class="opacity-75">Datasets:</span>
+                            <span class="metric-value ml-1">234</span>
+                        </div>
+                        <div>
+                            <span class="opacity-75">Accuracy:</span>
+                            <span class="metric-value ml-1">94.2%</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="progress-ring ml-3">
+                    <svg width="80" height="80">
+                        <circle cx="40" cy="40" r="32" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="4"/>
+                        <circle cx="40" cy="40" r="32" fill="none" stroke="#F59E0B" stroke-width="4" 
+                                stroke-linecap="round" stroke-dasharray="201" stroke-dashoffset="12"/>
+                    </svg>
+                    <div class="absolute inset-0 flex items-center justify-center">
+                        <span class="text-sm font-bold orbitron">94%</span>
+                    </div>
+                </div>
             </div>
+        </div>
+
+        <!-- OptimizerAgent -->
+        <div class="glass-card p-4">
+            <div class="flex items-center justify-between">
+                <div class="flex-1">
+                    <h4 class="font-bold flex items-center text-sm mb-1">
+                        <i class="fas fa-tachometer-alt mr-2 text-indigo-400"></i>
+                        OptimizerAgent
+                    </h4>
+                    <p class="text-xs opacity-75 mb-2">Otimização de Performance</p>
+                    <div class="grid grid-cols-2 gap-2 text-xs">
+                        <div>
+                            <span class="opacity-75">Otimizações:</span>
+                            <span class="metric-value ml-1">157</span>
+                        </div>
+                        <div>
+                            <span class="opacity-75">Recursos:</span>
+                            <span class="metric-value ml-1">+8.4%</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="progress-ring ml-3">
+                    <svg width="80" height="80">
+                        <circle cx="40" cy="40" r="32" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="4"/>
+                        <circle cx="40" cy="40" r="32" fill="none" stroke="#6366F1" stroke-width="4" 
+                                stroke-linecap="round" stroke-dasharray="201" stroke-dashoffset="20"/>
+                    </svg>
+                    <div class="absolute inset-0 flex items-center justify-center">
+                        <span class="text-sm font-bold orbitron">90%</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- CoordinatorAgent -->
+        <div class="glass-card p-4">
+            <div class="flex items-center justify-between">
+                <div class="flex-1">
+                    <h4 class="font-bold flex items-center text-sm mb-1">
+                        <i class="fas fa-sitemap mr-2 text-cyan-400"></i>
+                        CoordinatorAgent
+                    </h4>
+                    <p class="text-xs opacity-75 mb-2">Coordenação de Workflows</p>
+                    <div class="grid grid-cols-2 gap-2 text-xs">
+                        <div>
+                            <span class="opacity-75">Workflows:</span>
+                            <span class="metric-value ml-1">89</span>
+                        </div>
+                        <div>
+                            <span class="opacity-75">Success:</span>
+                            <span class="metric-value ml-1">97.8%</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="progress-ring ml-3">
+                    <svg width="80" height="80">
+                        <circle cx="40" cy="40" r="32" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="4"/>
+                        <circle cx="40" cy="40" r="32" fill="none" stroke="#06B6D4" stroke-width="4" 
+                                stroke-linecap="round" stroke-dasharray="201" stroke-dashoffset="4"/>
+                    </svg>
+                    <div class="absolute inset-0 flex items-center justify-center">
+                        <span class="text-sm font-bold orbitron">98%</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="section-spacer"></div>
+
+        <!-- AI-POWERED AGENTS -->
+        <div class="glass-card p-4">
+            <h3 class="text-lg font-bold category-header mb-3 flex items-center">
+                <i class="fas fa-robot mr-2"></i>
+                AI-POWERED AGENTS
+            </h3>
+            <div class="text-xs opacity-75 mb-3">Agentes potencializados por inteligência artificial</div>
+        </div>
+
+        <!-- IntelligentAnalyzer -->
+        <div class="glass-card p-4">
+            <div class="flex items-center justify-between">
+                <div class="flex-1">
+                    <h4 class="font-bold flex items-center text-sm mb-1">
+                        <i class="fas fa-brain mr-2 text-pink-400"></i>
+                        IntelligentAnalyzer
+                    </h4>
+                    <p class="text-xs opacity-75 mb-2">Análise Inteligente com IA</p>
+                    <div class="grid grid-cols-2 gap-2 text-xs">
+                        <div>
+                            <span class="opacity-75">Análises:</span>
+                            <span class="metric-value ml-1">3.2K</span>
+                        </div>
+                        <div>
+                            <span class="opacity-75">Precisão:</span>
+                            <span class="metric-value ml-1">96.7%</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="progress-ring ml-3">
+                    <svg width="80" height="80">
+                        <circle cx="40" cy="40" r="32" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="4"/>
+                        <circle cx="40" cy="40" r="32" fill="none" stroke="#EC4899" stroke-width="4" 
+                                stroke-linecap="round" stroke-dasharray="201" stroke-dashoffset="7"/>
+                    </svg>
+                    <div class="absolute inset-0 flex items-center justify-center">
+                        <span class="text-sm font-bold orbitron">97%</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- SmartOptimizer -->
+        <div class="glass-card p-4">
+            <div class="flex items-center justify-between">
+                <div class="flex-1">
+                    <h4 class="font-bold flex items-center text-sm mb-1">
+                        <i class="fas fa-magic mr-2 text-emerald-400"></i>
+                        SmartOptimizer
+                    </h4>
+                    <p class="text-xs opacity-75 mb-2">Otimização Adaptativa com IA</p>
+                    <div class="grid grid-cols-2 gap-2 text-xs">
+                        <div>
+                            <span class="opacity-75">Modelos:</span>
+                            <span class="metric-value ml-1">47</span>
+                        </div>
+                        <div>
+                            <span class="opacity-75">Melhoria:</span>
+                            <span class="metric-value ml-1">+15.2%</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="progress-ring ml-3">
+                    <svg width="80" height="80">
+                        <circle cx="40" cy="40" r="32" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="4"/>
+                        <circle cx="40" cy="40" r="32" fill="none" stroke="#10B981" stroke-width="4" 
+                                stroke-linecap="round" stroke-dasharray="201" stroke-dashoffset="18"/>
+                    </svg>
+                    <div class="absolute inset-0 flex items-center justify-center">
+                        <span class="text-sm font-bold orbitron">91%</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ConversationalAgent -->
+        <div class="glass-card p-4">
+            <div class="flex items-center justify-between">
+                <div class="flex-1">
+                    <h4 class="font-bold flex items-center text-sm mb-1">
+                        <i class="fas fa-comments mr-2 text-orange-400"></i>
+                        ConversationalAgent
+                    </h4>
+                    <p class="text-xs opacity-75 mb-2">Conversação Multilíngue</p>
+                    <div class="grid grid-cols-2 gap-2 text-xs">
+                        <div>
+                            <span class="opacity-75">Idiomas:</span>
+                            <span class="metric-value ml-1">12</span>
+                        </div>
+                        <div>
+                            <span class="opacity-75">NLP Score:</span>
+                            <span class="metric-value ml-1">93.4%</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="progress-ring ml-3">
+                    <svg width="80" height="80">
+                        <circle cx="40" cy="40" r="32" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="4"/>
+                        <circle cx="40" cy="40" r="32" fill="none" stroke="#F97316" stroke-width="4" 
+                                stroke-linecap="round" stroke-dasharray="201" stroke-dashoffset="13"/>
+                    </svg>
+                    <div class="absolute inset-0 flex items-center justify-center">
+                        <span class="text-sm font-bold orbitron">93%</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="section-spacer"></div>
+
+        <!-- CORE AGENTS V3 -->
+        <div class="glass-card p-4">
+            <h3 class="text-lg font-bold category-header mb-3 flex items-center">
+                <i class="fas fa-microchip mr-2"></i>
+                CORE AGENTS V3
+            </h3>
+            <div class="text-xs opacity-75 mb-3">Núcleo evolutivo do sistema neural</div>
+        </div>
+
+        <!-- CoreAgentV3 -->
+        <div class="glass-card p-4">
+            <div class="flex items-center justify-between">
+                <div class="flex-1">
+                    <h4 class="font-bold flex items-center text-sm mb-1">
+                        <i class="fas fa-cogs mr-2 text-red-400"></i>
+                        CoreAgentV3
+                    </h4>
+                    <p class="text-xs opacity-75 mb-2">Processamento Central Evolutivo</p>
+                    <div class="grid grid-cols-2 gap-2 text-xs">
+                        <div>
+                            <span class="opacity-75">Nível:</span>
+                            <span class="metric-value ml-1">4+</span>
+                        </div>
+                        <div>
+                            <span class="opacity-75">Evolution:</span>
+                            <span class="metric-value ml-1">87.1%</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="progress-ring ml-3">
+                    <svg width="80" height="80">
+                        <circle cx="40" cy="40" r="32" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="4"/>
+                        <circle cx="40" cy="40" r="32" fill="none" stroke="#EF4444" stroke-width="4" 
+                                stroke-linecap="round" stroke-dasharray="201" stroke-dashoffset="26"/>
+                    </svg>
+                    <div class="absolute inset-0 flex items-center justify-center">
+                        <span class="text-sm font-bold orbitron">87%</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- GuardAgentV3 -->
+        <div class="glass-card p-4">
+            <div class="flex items-center justify-between">
+                <div class="flex-1">
+                    <h4 class="font-bold flex items-center text-sm mb-1">
+                        <i class="fas fa-shield-alt mr-2 text-blue-400"></i>
+                        GuardAgentV3
+                    </h4>
+                    <p class="text-xs opacity-75 mb-2">Segurança Avançada Preditiva</p>
+                    <div class="grid grid-cols-2 gap-2 text-xs">
+                        <div>
+                            <span class="opacity-75">Threats:</span>
+                            <span class="metric-value ml-1">0</span>
+                        </div>
+                        <div>
+                            <span class="opacity-75">Shield:</span>
+                            <span class="metric-value ml-1">99.8%</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="progress-ring ml-3">
+                    <svg width="80" height="80">
+                        <circle cx="40" cy="40" r="32" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="4"/>
+                        <circle cx="40" cy="40" r="32" fill="none" stroke="#3B82F6" stroke-width="4" 
+                                stroke-linecap="round" stroke-dasharray="201" stroke-dashoffset="0.4"/>
+                    </svg>
+                    <div class="absolute inset-0 flex items-center justify-center">
+                        <span class="text-sm font-bold orbitron">99.8%</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- LearnAgentV3 -->
+        <div class="glass-card p-4">
+            <div class="flex items-center justify-between">
+                <div class="flex-1">
+                    <h4 class="font-bold flex items-center text-sm mb-1">
+                        <i class="fas fa-graduation-cap mr-2 text-violet-400"></i>
+                        LearnAgentV3
+                    </h4>
+                    <p class="text-xs opacity-75 mb-2">Aprendizado Evolutivo Contínuo</p>
+                    <div class="grid grid-cols-2 gap-2 text-xs">
+                        <div>
+                            <span class="opacity-75">Models:</span>
+                            <span class="metric-value ml-1">127</span>
+                        </div>
+                        <div>
+                            <span class="opacity-75">Learn Rate:</span>
+                            <span class="metric-value ml-1">95.3%</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="progress-ring ml-3">
+                    <svg width="80" height="80">
+                        <circle cx="40" cy="40" r="32" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="4"/>
+                        <circle cx="40" cy="40" r="32" fill="none" stroke="#8B5CF6" stroke-width="4" 
+                                stroke-linecap="round" stroke-dasharray="201" stroke-dashoffset="9"/>
+                    </svg>
+                    <div class="absolute inset-0 flex items-center justify-center">
+                        <span class="text-sm font-bold orbitron">95%</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="section-spacer"></div>
+
+        <!-- SYSTEM AGENTS -->
+        <div class="glass-card p-4">
+            <h3 class="text-lg font-bold category-header mb-3 flex items-center">
+                <i class="fas fa-desktop mr-2"></i>
+                SYSTEM AGENTS
+            </h3>
+            <div class="text-xs opacity-75 mb-3">Agentes de gestão e monitoramento do sistema</div>
+        </div>
+
+        <!-- MonitorAgent -->
+        <div class="glass-card p-4">
+            <div class="flex items-center justify-between">
+                <div class="flex-1">
+                    <h4 class="font-bold flex items-center text-sm mb-1">
+                        <i class="fas fa-eye mr-2 text-teal-400"></i>
+                        MonitorAgent
+                    </h4>
+                    <p class="text-xs opacity-75 mb-2">Monitoramento Tempo Real</p>
+                    <div class="grid grid-cols-2 gap-2 text-xs">
+                        <div>
+                            <span class="opacity-75">Métricas:</span>
+                            <span class="metric-value ml-1">2.1K</span>
+                        </div>
+                        <div>
+                            <span class="opacity-75">Alertas:</span>
+                            <span class="metric-value ml-1">3</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="progress-ring ml-3">
+                    <svg width="80" height="80">
+                        <circle cx="40" cy="40" r="32" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="4"/>
+                        <circle cx="40" cy="40" r="32" fill="none" stroke="#14B8A6" stroke-width="4" 
+                                stroke-linecap="round" stroke-dasharray="201" stroke-dashoffset="21"/>
+                    </svg>
+                    <div class="absolute inset-0 flex items-center justify-center">
+                        <span class="text-sm font-bold orbitron">90%</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- EvolverAgent -->
+        <div class="glass-card p-4">
+            <div class="flex items-center justify-between">
+                <div class="flex-1">
+                    <h4 class="font-bold flex items-center text-sm mb-1">
+                        <i class="fas fa-dna mr-2 text-lime-400"></i>
+                        EvolverAgent
+                    </h4>
+                    <p class="text-xs opacity-75 mb-2">Evolução e Auto-melhoria</p>
+                    <div class="grid grid-cols-2 gap-2 text-xs">
+                        <div>
+                            <span class="opacity-75">Evoluções:</span>
+                            <span class="metric-value ml-1">34</span>
+                        </div>
+                        <div>
+                            <span class="opacity-75">Fitness:</span>
+                            <span class="metric-value ml-1">88.9%</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="progress-ring ml-3">
+                    <svg width="80" height="80">
+                        <circle cx="40" cy="40" r="32" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="4"/>
+                        <circle cx="40" cy="40" r="32" fill="none" stroke="#84CC16" stroke-width="4" 
+                                stroke-linecap="round" stroke-dasharray="201" stroke-dashoffset="22"/>
+                    </svg>
+                    <div class="absolute inset-0 flex items-center justify-center">
+                        <span class="text-sm font-bold orbitron">89%</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- IntegratorAgent -->
+        <div class="glass-card p-4">
+            <div class="flex items-center justify-between">
+                <div class="flex-1">
+                    <h4 class="font-bold flex items-center text-sm mb-1">
+                        <i class="fas fa-plug mr-2 text-amber-400"></i>
+                        IntegratorAgent
+                    </h4>
+                    <p class="text-xs opacity-75 mb-2">Integração com Sistemas Externos</p>
+                    <div class="grid grid-cols-2 gap-2 text-xs">
+                        <div>
+                            <span class="opacity-75">APIs:</span>
+                            <span class="metric-value ml-1">23</span>
+                        </div>
+                        <div>
+                            <span class="opacity-75">Sync:</span>
+                            <span class="metric-value ml-1">92.7%</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="progress-ring ml-3">
+                    <svg width="80" height="80">
+                        <circle cx="40" cy="40" r="32" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="4"/>
+                        <circle cx="40" cy="40" r="32" fill="none" stroke="#F59E0B" stroke-width="4" 
+                                stroke-linecap="round" stroke-dashoffset="15"/>
+                    </svg>
+                    <div class="absolute inset-0 flex items-center justify-center">
+                        <span class="text-sm font-bold orbitron">93%</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="section-spacer"></div>
+
+        <!-- SERVICE AGENTS -->
+        <div class="glass-card p-4">
+            <h3 class="text-lg font-bold category-header mb-3 flex items-center">
+                <i class="fas fa-concierge-bell mr-2"></i>
+                SERVICE AGENTS
+            </h3>
+            <div class="text-xs opacity-75 mb-3">Agentes de serviços especializados</div>
+        </div>
+
+        <!-- CommunicationAgent -->
+        <div class="glass-card p-4">
+            <div class="flex items-center justify-between">
+                <div class="flex-1">
+                    <h4 class="font-bold flex items-center text-sm mb-1">
+                        <i class="fas fa-globe mr-2 text-sky-400"></i>
+                        CommunicationAgent
+                    </h4>
+                    <p class="text-xs opacity-75 mb-2">Comunicação Multilíngue</p>
+                    <div class="grid grid-cols-2 gap-2 text-xs">
+                        <div>
+                            <span class="opacity-75">Channels:</span>
+                            <span class="metric-value ml-1">16</span>
+                        </div>
+                        <div>
+                            <span class="opacity-75">Response:</span>
+                            <span class="metric-value ml-1">94.1%</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="progress-ring ml-3">
+                    <svg width="80" height="80">
+                        <circle cx="40" cy="40" r="32" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="4"/>
+                        <circle cx="40" cy="40" r="32" fill="none" stroke="#0EA5E9" stroke-width="4" 
+                                stroke-linecap="round" stroke-dasharray="201" stroke-dashoffset="12"/>
+                    </svg>
+                    <div class="absolute inset-0 flex items-center justify-center">
+                        <span class="text-sm font-bold orbitron">94%</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- DecisionAgent -->
+        <div class="glass-card p-4">
+            <div class="flex items-center justify-between">
+                <div class="flex-1">
+                    <h4 class="font-bold flex items-center text-sm mb-1">
+                        <i class="fas fa-balance-scale mr-2 text-rose-400"></i>
+                        DecisionAgent
+                    </h4>
+                    <p class="text-xs opacity-75 mb-2">Tomada de Decisão Inteligente</p>
+                    <div class="grid grid-cols-2 gap-2 text-xs">
+                        <div>
+                            <span class="opacity-75">Decisões:</span>
+                            <span class="metric-value ml-1">892</span>
+                        </div>
+                        <div>
+                            <span class="opacity-75">Accuracy:</span>
+                            <span class="metric-value ml-1">96.4%</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="progress-ring ml-3">
+                    <svg width="80" height="80">
+                        <circle cx="40" cy="40" r="32" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="4"/>
+                        <circle cx="40" cy="40" r="32" fill="none" stroke="#F43F5E" stroke-width="4" 
+                                stroke-linecap="round" stroke-dasharray="201" stroke-dashoffset="7"/>
+                    </svg>
+                    <div class="absolute inset-0 flex items-center justify-center">
+                        <span class="text-sm font-bold orbitron">96%</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ComplianceAgent -->
+        <div class="glass-card p-4">
+            <div class="flex items-center justify-between">
+                <div class="flex-1">
+                    <h4 class="font-bold flex items-center text-sm mb-1">
+                        <i class="fas fa-certificate mr-2 text-emerald-400"></i>
+                        ComplianceAgent
+                    </h4>
+                    <p class="text-xs opacity-75 mb-2">Conformidade Regulatória</p>
+                    <div class="grid grid-cols-2 gap-2 text-xs">
+                        <div>
+                            <span class="opacity-75">Policies:</span>
+                            <span class="metric-value ml-1">5</span>
+                        </div>
+                        <div>
+                            <span class="opacity-75">Compliance:</span>
+                            <span class="metric-value ml-1">100%</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="progress-ring ml-3">
+                    <svg width="80" height="80">
+                        <circle cx="40" cy="40" r="32" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="4"/>
+                        <circle cx="40" cy="40" r="32" fill="none" stroke="#10B981" stroke-width="4" 
+                                stroke-linecap="round" stroke-dasharray="201" stroke-dashoffset="0"/>
+                    </svg>
+                    <div class="absolute inset-0 flex items-center justify-center">
+                        <span class="text-sm font-bold orbitron">100%</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="section-spacer"></div>
+
+        <!-- META-COGNITIVE AGENTS -->
+        <div class="glass-card p-4">
+            <h3 class="text-lg font-bold category-header mb-3 flex items-center">
+                <i class="fas fa-infinity mr-2"></i>
+                META-COGNITIVE AGENTS
+            </h3>
+            <div class="text-xs opacity-75 mb-3">Agentes de meta-cognição e orquestração suprema</div>
+        </div>
+
+        <!-- OrchestratorAgent -->
+        <div class="glass-card p-4">
+            <div class="flex items-center justify-between">
+                <div class="flex-1">
+                    <h4 class="font-bold flex items-center text-sm mb-1">
+                        <i class="fas fa-crown mr-2 text-yellow-400"></i>
+                        OrchestratorAgent
+                    </h4>
+                    <p class="text-xs opacity-75 mb-2">Orquestração Suprema dos 20 Agentes</p>
+                    <div class="grid grid-cols-2 gap-2 text-xs">
+                        <div>
+                            <span class="opacity-75">Orquestração:</span>
+                            <span class="metric-value ml-1">20/20</span>
+                        </div>
+                        <div>
+                            <span class="opacity-75">Harmony:</span>
+                            <span class="metric-value ml-1">98.6%</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="progress-ring ml-3">
+                    <svg width="80" height="80">
+                        <circle cx="40" cy="40" r="32" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="4"/>
+                        <circle cx="40" cy="40" r="32" fill="none" stroke="#F59E0B" stroke-width="4" 
+                                stroke-linecap="round" stroke-dasharray="201" stroke-dashoffset="3"/>
+                    </svg>
+                    <div class="absolute inset-0 flex items-center justify-center">
+                        <span class="text-sm font-bold orbitron">98.6%</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- MetaCognitiveAgent -->
+        <div class="glass-card p-4">
+            <div class="flex items-center justify-between">
+                <div class="flex-1">
+                    <h4 class="font-bold flex items-center text-sm mb-1">
+                        <i class="fas fa-infinity mr-2 text-purple-400"></i>
+                        MetaCognitiveAgent
+                    </h4>
+                    <p class="text-xs opacity-75 mb-2">Auto-reflexão e Consciência Simulada</p>
+                    <div class="grid grid-cols-2 gap-2 text-xs">
+                        <div>
+                            <span class="opacity-75">Consciousness:</span>
+                            <span class="metric-value ml-1">Level 3</span>
+                        </div>
+                        <div>
+                            <span class="opacity-75">Self-Aware:</span>
+                            <span class="metric-value ml-1">92.1%</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="progress-ring ml-3">
+                    <svg width="80" height="80">
+                        <circle cx="40" cy="40" r="32" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="4"/>
+                        <circle cx="40" cy="40" r="32" fill="none" stroke="#8B5CF6" stroke-width="4" 
+                                stroke-linecap="round" stroke-dasharray="201" stroke-dashoffset="16"/>
+                    </svg>
+                    <div class="absolute inset-0 flex items-center justify-center">
+                        <span class="text-sm font-bold orbitron">92%</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- System Footer -->
+        <div class="glass-card p-4 mt-6 text-center">
+            <div class="text-sm font-bold orbitron category-header mb-2">ALSHAM GLOBAL COMMERCE</div>
+            <div class="text-xs opacity-75 mb-2">"Transforming Commerce Through Quantum Intelligence"</div>
+            <div class="text-xs opacity-50">Enterprise Neural Platform • Quantum-Optimized Performance</div>
+            <div class="text-xs opacity-40 mt-2">Total System Value: R$ 1.430.000</div>
         </div>
     </div>
 
-    <!-- Micro Update Popup -->
-    <div id="micro-update" class="micro-update" role="alert" aria-live="assertive">
-        <i class="fas fa-atom mr-2"></i>
-        Neural cycle completed!
+    <!-- Bottom Navigation -->
+    <div class="bottom-nav">
+        <div class="flex justify-around items-center">
+            <div class="nav-item active">
+                <i class="fas fa-home text-lg"></i>
+                <span class="text-xs mt-1">Dashboard</span>
+            </div>
+            <div class="nav-item">
+                <i class="fas fa-chart-bar text-lg"></i>
+                <span class="text-xs mt-1">Analytics</span>
+            </div>
+            <div class="nav-item">
+                <i class="fas fa-cog text-lg"></i>
+                <span class="text-xs mt-1">Settings</span>
+            </div>
+            <div class="nav-item">
+                <i class="fas fa-bell text-lg"></i>
+                <span class="text-xs mt-1">Alerts</span>
+            </div>
+        </div>
     </div>
 
     <script>
-        // ===== QUANTUM PARTICLES SYSTEM =====
-        class QuantumParticlesSystem {
-            constructor() {
-                this.scene = new THREE.Scene();
-                this.camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-                this.renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
-                this.particles = [];
-                this.mouse = { x: 0, y: 0 };
-                this.init();
-            }
+        // Progress Ring Calculations (stroke-dashoffset)
+        // Formula: circumference - (percentage * circumference)
+        // Where circumference = 2 * Math.PI * radius (32) = 201
+        
+        // Real-time counter animation
+        let currentCount = 1247;
+        const quantumCounter = document.getElementById('quantum-counter');
+        const cyclesPerSecond = document.getElementById('cycles-per-second');
+        const overallPerformance = document.getElementById('overall-performance');
 
-            init() {
-                const container = document.getElementById('particles-container');
-                if (!container) return;
-
-                this.renderer.setSize(window.innerWidth, window.innerHeight);
-                this.renderer.setClearColor(0x000000, 0);
-                container.appendChild(this.renderer.domElement);
-
-                this.camera.position.z = 5;
-                this.createQuantumParticles();
-                this.animate();
-                this.bindEvents();
-            }
-
-            createQuantumParticles() {
-                const geometry = new THREE.SphereGeometry(0.008, 6, 6);
-                
-                for (let i = 0; i < 150; i++) {
-                    const material = new THREE.MeshBasicMaterial({ 
-                        color: this.getCurrentThemeColor(),
-                        transparent: true,
-                        opacity: 0.6
-                    });
-
-                    const particle = new THREE.Mesh(geometry, material);
-                    particle.position.set(
-                        (Math.random() - 0.5) * 20,
-                        (Math.random() - 0.5) * 20,
-                        (Math.random() - 0.5) * 20
-                    );
-                    
-                    particle.userData = {
-                        velocity: new THREE.Vector3(
-                            (Math.random() - 0.5) * 0.006,
-                            (Math.random() - 0.5) * 0.006,
-                            (Math.random() - 0.5) * 0.006
-                        ),
-                        originalPosition: particle.position.clone(),
-                        oscillation: Math.random() * Math.PI * 2,
-                        quantumFreq: Math.random() * 0.015 + 0.008
-                    };
-                    
-                    this.scene.add(particle);
-                    this.particles.push(particle);
-                }
-            }
-
-            getCurrentThemeColor() {
-                const style = getComputedStyle(document.body);
-                const color = style.getPropertyValue('--particles-color').trim() || '#F4D03F';
-                return color;
-            }
-
-            animate() {
-                requestAnimationFrame(() => this.animate());
-
-                const time = Date.now() * 0.001;
-
-                this.particles.forEach((particle, index) => {
-                    // Quantum oscillation
-                    particle.userData.oscillation += particle.userData.quantumFreq;
-                    particle.position.y += Math.sin(particle.userData.oscillation) * 0.0006;
-                    particle.position.x += Math.cos(particle.userData.oscillation * 1.2) * 0.0004;
-                    
-                    // Base movement
-                    particle.position.add(particle.userData.velocity);
-
-                    // Mouse quantum entanglement
-                    if (this.mouse.x !== 0 && this.mouse.y !== 0) {
-                        const mouseInfluence = 0.00008;
-                        const distance = particle.position.distanceTo(new THREE.Vector3(this.mouse.x * 2, -this.mouse.y * 2, 0));
-                        if (distance < 2) {
-                            particle.position.x += this.mouse.x * mouseInfluence * (2 - distance);
-                            particle.position.y += -this.mouse.y * mouseInfluence * (2 - distance);
-                        }
-                    }
-
-                    // Quantum field reset
-                    if (particle.position.distanceTo(particle.userData.originalPosition) > 12) {
-                        particle.position.copy(particle.userData.originalPosition);
-                        particle.position.add(new THREE.Vector3(
-                            (Math.random() - 0.5) * 6,
-                            (Math.random() - 0.5) * 6,
-                            (Math.random() - 0.5) * 6
-                        ));
-                    }
-
-                    // Quantum rotation
-                    particle.rotation.x += 0.002;
-                    particle.rotation.y += 0.002;
-                    particle.rotation.z += 0.001;
-                });
-
-                this.renderer.render(this.scene, this.camera);
-            }
-
-            bindEvents() {
-                window.addEventListener('mousemove', (event) => {
-                    this.mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
-                    this.mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
-                });
-
-                window.addEventListener('resize', () => {
-                    this.camera.aspect = window.innerWidth / window.innerHeight;
-                    this.camera.updateProjectionMatrix();
-                    this.renderer.setSize(window.innerWidth, window.innerHeight);
-                });
-            }
-
-            updateTheme() {
-                const newColor = this.getCurrentThemeColor();
-                this.particles.forEach(particle => {
-                    particle.material.color.setStyle(newColor);
-                });
-            }
-
-            destroy() {
-                if (this.renderer && this.renderer.domElement) {
-                    this.renderer.domElement.remove();
-                }
-            }
+        function updateQuantumMetrics() {
+            // Increment counter realistically
+            const increment = Math.floor(Math.random() * 3) + 1;
+            currentCount += increment;
+            
+            // Update counter with animation
+            quantumCounter.textContent = currentCount.toLocaleString();
+            
+            // Update cycles per second
+            const newCps = (2.4 + (Math.random() - 0.5) * 0.8).toFixed(1);
+            cyclesPerSecond.textContent = newCps;
+            
+            // Update overall performance
+            const newPerf = Math.floor(94 + (Math.random() - 0.5) * 4);
+            overallPerformance.textContent = newPerf + '%';
         }
 
-        // ===== NEURAL INSIGHTS SYSTEM =====
-        class NeuralInsights {
-            constructor() {
-                this.insights = [
-                    "🧠 Sistema neural operando em 94.7% de eficiência quântica",
-                    "⚡ Orchestrator Agent: Sincronização perfeita dos 20 agentes",
-                    "🔮 MetaCognitive: Auto-reflexão detectou 127 oportunidades",
-                    "📊 Analytics: Identificação de padrões emergentes +18.7%",
-                    "🛡️ Guard V3: Zero ameaças detectadas - Segurança máxima",
-                    "🧮 Core V3: Evolução nível 4+ atingida com sucesso",
-                    "🎯 Smart Optimizer: Performance boost neural +12.4%",
-                    "🌟 Learn V3: Accuracy neural alcançou 96.8%",
-                    "🚀 Intelligent Analyzer: Processamento quântico otimizado",
-                    "💎 Compliance: 100% conformidade regulatória mantida"
-                ];
-                this.currentIndex = 0;
-                this.startRotation();
-            }
+        // Update metrics every 3 seconds
+        setInterval(updateQuantumMetrics, 3000);
 
-            startRotation() {
-                setInterval(() => {
-                    this.updateInsight();
-                }, 6000);
-            }
-
-            updateInsight() {
-                const element = document.getElementById('business-insight');
-                if (element) {
-                    element.style.opacity = '0';
-                    setTimeout(() => {
-                        element.textContent = this.insights[this.currentIndex];
-                        element.style.opacity = '1';
-                        this.currentIndex = (this.currentIndex + 1) % this.insights.length;
-                    }, 200);
-                }
-            }
-        }
-
-        // ===== NEURAL CHART SYSTEM =====
-        function initializeNeuralChart() {
-            const ctx = document.getElementById('neuralChart');
-            if (!ctx) return;
-
-            const chartData = {
-                labels: ['12:00', '12:15', '12:30', '12:45', '13:00', '13:15', '13:30', '13:45', '14:00'],
-                datasets: [
-                    {
-                        label: 'Performance Neural (%)',
-                        data: [89.2, 91.8, 94.1, 92.7, 95.3, 93.8, 96.2, 94.7, 97.1],
-                        borderColor: '#F4D03F',
-                        backgroundColor: 'rgba(244, 208, 63, 0.1)',
-                        tension: 0.4,
-                        fill: true
-                    },
-                    {
-                        label: 'Throughput (k/s)',
-                        data: [756, 812, 847, 823, 891, 867, 924, 847, 967],
-                        borderColor: '#9333EA',
-                        backgroundColor: 'rgba(147, 51, 234, 0.1)',
-                        tension: 0.4,
-                        yAxisID: 'y1'
-                    },
-                    {
-                        label: 'Sync Rate (%)',
-                        data: [95.2, 96.8, 97.3, 96.1, 98.4, 97.7, 98.9, 97.3, 99.1],
-                        borderColor: '#00F5FF',
-                        backgroundColor: 'rgba(0, 245, 255, 0.1)',
-                        tension: 0.4
-                    }
-                ]
-            };
-
-            window.neuralChart = new Chart(ctx, {
-                type: 'line',
-                data: chartData,
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    interaction: {
-                        intersect: false,
-                        mode: 'index'
-                    },
-                    plugins: {
-                        legend: {
-                            labels: {
-                                color: '#ffffff',
-                                font: {
-                                    family: 'Inter',
-                                    size: 11
-                                }
-                            }
-                        }
-                    },
-                    scales: {
-                        x: {
-                            grid: { color: 'rgba(255, 255, 255, 0.1)' },
-                            ticks: { color: '#ffffff', font: { size: 10 } }
-                        },
-                        y: {
-                            grid: { color: 'rgba(255, 255, 255, 0.1)' },
-                            ticks: { color: '#ffffff', font: { size: 10 } },
-                            beginAtZero: true,
-                            max: 100
-                        },
-                        y1: {
-                            type: 'linear',
-                            display: false,
-                            position: 'right'
-                        }
-                    }
-                }
+        // Touch feedback for cards
+        document.querySelectorAll('.glass-card').forEach(card => {
+            card.addEventListener('touchstart', function() {
+                this.style.transform = 'scale(0.98)';
             });
-        }
-
-        // ===== QUANTUM THEME SYSTEM =====
-        class QuantumThemeSystem {
-            constructor() {
-                this.currentTheme = 'quantum-glass';
-                this.bindEvents();
-                this.loadSavedTheme();
-            }
-
-            bindEvents() {
-                document.querySelectorAll('.theme-btn').forEach(btn => {
-                    btn.addEventListener('click', (e) => {
-                        const theme = e.target.dataset.theme;
-                        if (theme) {
-                            this.switchTheme(theme);
-                        }
-                    });
-                });
-            }
-
-            switchTheme(themeName) {
-                document.querySelectorAll('.theme-btn').forEach(btn => {
-                    btn.classList.remove('active');
-                });
-
-                const activeBtn = document.querySelector(`[data-theme="${themeName}"]`);
-                if (activeBtn) {
-                    activeBtn.classList.add('active');
-                }
-
-                document.body.className = `theme-${themeName}`;
-                this.currentTheme = themeName;
-
-                if (window.quantumParticlesSystem) {
-                    window.quantumParticlesSystem.updateTheme();
-                }
-
-                localStorage.setItem('alsham-quantum-theme', themeName);
-            }
-
-            loadSavedTheme() {
-                const savedTheme = localStorage.getItem('alsham-quantum-theme');
-                if (savedTheme) {
-                    this.switchTheme(savedTheme);
-                }
-            }
-        }
-
-        // ===== MODAL SYSTEM WITH REAL DATA =====
-        const agentDatabase = {
-            'multiagent-network': {
-                title: '🔗 MultiAgent Network - Infraestrutura Neural',
-                description: 'Rede de comunicação central que conecta todos os 20 agentes do sistema neural ALSHAM QUANTUM, garantindo sincronização e troca de dados em tempo real.',
-                capabilities: [
-                    'Comunicação peer-to-peer entre todos os agentes neurais',
-                    'Protocolo de sincronização distribuída com tolerância a falhas',
-                    'Balanceamento automático de carga de tráfego neural',
-                    'Monitoramento de latência e qualidade de conexão em tempo real',
-                    'Sistema de recuperação automática de conexões perdidas'
-                ],
-                metrics: {
-                    'Status da Rede': 'ATIVA',
-                    'Conexões Ativas': '847',
-                    'Latência Média': '0.3ms',
-                    'Throughput': '2.4GB/s',
-                    'Uptime': '99.97%',
-                    'Pacotes Perdidos': '0.001%',
-                    'Qualidade de Sinal': '94.7%'
-                }
-            },
-            'message-bus': {
-                title: '📨 Message Bus - Sistema de Mensagens Neural',
-                description: 'Sistema avançado de mensagens assíncronas que gerencia a comunicação entre todos os agentes neurais, garantindo entrega confiável e processamento ordenado.',
-                capabilities: [
-                    'Processamento assíncrono de mensagens neurais com garantia de entrega',
-                    'Sistema de filas prioritárias para diferentes tipos de comunicação',
-                    'Serialização e compressão automática de dados neurais',
-                    'Padrão publish-subscribe para comunicação broadcast',
-                    'Monitoramento e métricas detalhadas de performance de mensagens'
-                ],
-                metrics: {
-                    'Status do Bus': 'OPERACIONAL',
-                    'Mensagens/segundo': '2.4k',
-                    'Queue Length': '12',
-                    'Latência P95': '0.8ms',
-                    'Taxa de Entrega': '99.99%',
-                    'Mensagens Processadas': '12.847M',
-                    'Eficiência': '95.3%'
-                }
-            },
-            'network-coordinator': {
-                title: '🎯 Network Coordinator - Coordenação Neural',
-                description: 'Coordenador central responsável pela sincronização distribuída e gerenciamento de recursos entre todos os componentes da rede neural.',
-                capabilities: [
-                    'Coordenação distribuída com algoritmos de consenso',
-                    'Balanceamento dinâmico de recursos computacionais',
-                    'Detecção e resolução automática de conflitos neurais',
-                    'Métricas em tempo real de performance de coordenação',
-                    'Sistema de eleição de líder para alta disponibilidade'
-                ],
-                metrics: {
-                    'Status de Coordenação': 'SINCRONIZADO',
-                    'Nós Ativos': '23',
-                    'Taxa de Sincronização': '97.3%',
-                    'Conflitos Resolvidos': '847',
-                    'Tempo de Consenso': '0.15s',
-                    'Líder Atual': 'Node-Alpha-7',
-                    'Performance': '96.1%'
-                }
-            },
-            'analytics': {
-                title: '📊 Analytics Agent - Análise Neural Avançada',
-                description: 'Agente especializado em análise de dados e reconhecimento de padrões dentro do ecossistema neural ALSHAM QUANTUM.',
-                capabilities: [
-                    'Análise de big data com algoritmos de machine learning',
-                    'Reconhecimento de padrões complexos em tempo real',
-                    'Correlação automática entre diferentes fontes de dados',
-                    'Predição de tendências com modelos neurais avançados',
-                    'Visualização interativa de insights analíticos'
-                ],
-                metrics: {
-                    'Análises Processadas': '1.247',
-                    'Padrões Identificados': '127',
-                    'Precisão das Predições': '94.8%',
-                    'Volume de Dados': '847GB',
-                    'Tempo de Processamento': '2.3s',
-                    'Taxa de Descoberta': '18.7%',
-                    'Eficiência Analítica': '86.5%'
-                }
-            },
-            'optimizer': {
-                title: '⚙️ Optimizer Agent - Otimização Neural',
-                description: 'Agente dedicado à otimização contínua de performance e recursos do sistema neural ALSHAM QUANTUM.',
-                capabilities: [
-                    'Otimização automática de hiperparâmetros neurais',
-                    'Balanceamento dinâmico de recursos computacionais',
-                    'Algoritmos genéticos para otimização evolutiva',
-                    'Monitoramento proativo de gargalos de performance',
-                    'Implementação automática de melhorias identificadas'
-                ],
-                metrics: {
-                    'Otimizações Aplicadas': '847',
-                    'Ganho de Performance': '+12.4%',
-                    'Economia de Recursos': '18.3%',
-                    'Tempo de Otimização': '1.8s',
-                    'Taxa de Sucesso': '96.7%',
-                    'Melhorias Ativas': '23',
-                    'Eficiência Global': '91.0%'
-                }
-            },
-            'coordinator': {
-                title: '🎭 Coordinator Agent - Coordenação Neural',
-                description: 'Agente responsável pela coordenação de workflows complexos e orquestração de tarefas no sistema neural.',
-                capabilities: [
-                    'Orquestração de workflows neurais complexos',
-                    'Gerenciamento de dependências entre agentes',
-                    'Execução paralela e distribuída de tarefas',
-                    'Monitoramento de progresso e detecção de falhas',
-                    'Recuperação automática de workflows interrompidos'
-                ],
-                metrics: {
-                    'Workflows Gerenciados': '347',
-                    'Taxa de Sucesso': '98.7%',
-                    'Tempo Médio Execução': '4.2s',
-                    'Tarefas Paralelas': '167',
-                    'Dependências Resolvidas': '892',
-                    'Falhas Recuperadas': '3',
-                    'Performance': '93.0%'
-                }
-            },
-            'intelligent-analyzer': {
-                title: '🧠 Intelligent Analyzer - IA Neural Avançada',
-                description: 'Agente potencializado por inteligência artificial real para análises complexas e tomada de decisões inteligentes.',
-                capabilities: [
-                    'Processamento de linguagem natural neural avançado',
-                    'Visão computacional com redes neurais profundas',
-                    'Análise preditiva com modelos de IA generativa',
-                    'Raciocínio lógico automatizado com base em conhecimento',
-                    'Aprendizado contínuo através de feedback em tempo real'
-                ],
-                metrics: {
-                    'Análises IA Realizadas': '2.847',
-                    'Precisão de IA': '97.3%',
-                    'Modelos Neurais Ativos': '12',
-                    'Tempo de Inferência': '0.8s',
-                    'Tokens Processados': '1.2M',
-                    'Taxa de Aprendizado': '94.6%',
-                    'Performance IA': '93.5%'
-                }
-            },
-            'smart-optimizer': {
-                title: '🎯 Smart Optimizer - Otimização IA Adaptativa',
-                description: 'Sistema de otimização inteligente que utiliza IA para adaptação automática e melhoria contínua de performance.',
-                capabilities: [
-                    'Otimização adaptativa baseada em reinforcement learning',
-                    'Auto-tuning de hiperparâmetros com algoritmos genéticos',
-                    'Predição de bottlenecks com modelos de machine learning',
-                    'Otimização multi-objetivo com algoritmos evolutivos',
-                    'Implementação automática de estratégias otimizadas'
-                ],
-                metrics: {
-                    'Otimizações Inteligentes': '1.647',
-                    'Ganho de Performance': '+18.7%',
-                    'Modelos IA de Otimização': '8',
-                    'Tempo de Adaptação': '1.2s',
-                    'Estratégias Descobertas': '47',
-                    'Taxa de Melhoria': '92.8%',
-                    'Performance IA': '92.5%'
-                }
-            },
-            'conversational': {
-                title: '💬 Conversational Agent - IA Conversacional',
-                description: 'Agente de conversação natural multilíngue com capacidades avançadas de processamento de linguagem.',
-                capabilities: [
-                    'Processamento de linguagem natural em 12 idiomas',
-                    'Geração de texto contextual com modelos transformers',
-                    'Análise de sentimento e detecção de intenções',
-                    'Diálogo multi-turn com memória conversacional',
-                    'Integração com sistemas de knowledge base empresarial'
-                ],
-                metrics: {
-                    'Conversas Processadas': '4.247',
-                    'Idiomas Suportados': '12',
-                    'Precisão de NLP': '96.2%',
-                    'Tempo de Resposta': '0.4s',
-                    'Taxa de Satisfação': '94.8%',
-                    'Intenções Detectadas': '847',
-                    'Performance': '92.0%'
-                }
-            },
-            'core-v3': {
-                title: '⚛️ Core Agent V3 - Núcleo Neural Evolutivo',
-                description: 'Versão evoluída do agente central com capacidades de processamento quântico e auto-evolução contínua.',
-                capabilities: [
-                    'Processamento neural quântico com qubits simulados',
-                    'Auto-evolução através de algoritmos genéticos neurais',
-                    'Múltiplos níveis de evolução (atual: nível 4+)',
-                    'Capacidade de auto-modificação de arquitetura neural',
-                    'Processamento paralelo massivo com sincronização quântica'
-                ],
-                metrics: {
-                    'Nível de Evolução': '4+',
-                    'Evoluções Completadas': '1.847',
-                    'Capacidade Quântica': '94.0%',
-                    'Qubits Simulados': '2048',
-                    'Auto-modificações': '127',
-                    'Throughput Neural': '847k ops/s',
-                    'Performance': '94.0%'
-                }
-            },
-            'guard-v3': {
-                title: '🛡️ Guard Agent V3 - Segurança Neural Avançada',
-                description: 'Sistema de segurança neural avançado com capacidades preditivas e proteção quântica contra ameaças.',
-                capabilities: [
-                    'Detecção de ameaças com machine learning preditivo',
-                    'Criptografia quântica para proteção de dados neurais',
-                    'Análise comportamental de todos os agentes do sistema',
-                    'Sistema de quarentena automática para ameaças detectadas',
-                    'Auditoria contínua de integridade dos dados neurais'
-                ],
-                metrics: {
-                    'Uptime de Segurança': '99.97%',
-                    'Ameaças Detectadas': '0',
-                    'Scans de Segurança': '8.924',
-                    'Falsos Positivos': '0.003%',
-                    'Tempo de Resposta': '0.08s',
-                    'Criptografia Quântica': 'ATIVA',
-                    'Performance': '97.0%'
-                }
-            },
-            'learn-v3': {
-                title: '🎓 Learn Agent V3 - Aprendizado Neural Evolutivo',
-                description: 'Sistema avançado de aprendizado neural com capacidades de evolução contínua e adaptação inteligente.',
-                capabilities: [
-                    'Deep learning com arquiteturas neurais auto-evolutivas',
-                    'Transfer learning entre diferentes domínios de conhecimento',
-                    'Meta-learning para aprendizado rápido de novas tarefas',
-                    'Continuous learning sem esquecimento catastrófico',
-                    'Síntese automática de conhecimento a partir de múltiplas fontes'
-                ],
-                metrics: {
-                    'Sessões de Aprendizado': '2.847',
-                    'Accuracy Neural': '96.8%',
-                    'Modelos Treinados': '47',
-                    'Conhecimento Sintetizado': '127GB',
-                    'Taxa de Retenção': '94.2%',
-                    'Evolução de Arquitetura': '23',
-                    'Performance': '95.0%'
-                }
-            },
-            'monitor': {
-                title: '📡 Monitor Agent - Monitoramento Neural',
-                description: 'Sistema abrangente de monitoramento em tempo real para todos os componentes do ecossistema neural.',
-                capabilities: [
-                    'Monitoramento em tempo real de todos os 20 agentes',
-                    'Coleta e análise de métricas de performance contínua',
-                    'Alertas inteligentes baseados em thresholds adaptativos',
-                    'Visualização em tempo real de status do sistema',
-                    'Relatórios automatizados de health check neural'
-                ],
-                metrics: {
-                    'Métricas Coletadas': '12.847',
-                    'Alertas Gerados': '3',
-                    'Uptime Monitorado': '100%',
-                    'Agentes Monitorados': '20/20',
-                    'Frequência de Coleta': '1s',
-                    'Dados Armazenados': '247GB',
-                    'Performance': '96.0%'
-                }
-            },
-            'evolver': {
-                title: '🧬 Evolver Agent - Evolução Neural',
-                description: 'Agente responsável pela evolução contínua e auto-melhoria de todo o sistema neural ALSHAM QUANTUM.',
-                capabilities: [
-                    'Algoritmos genéticos para evolução de arquiteturas neurais',
-                    'Mutação e crossover de redes neurais',
-                    'Seleção natural baseada em performance metrics',
-                    'Evolução dirigida por objetivos empresariais',
-                    'Preservação de características neurais bem-sucedidas'
-                ],
-                metrics: {
-                    'Evoluções Aplicadas': '247',
-                    'Gerações Completadas': '12',
-                    'Taxa de Melhoria': '91.0%',
-                    'Mutações Bem-sucedidas': '67',
-                    'Fitness Score': '94.3',
-                    'Diversidade Genética': '78.4%',
-                    'Performance': '91.0%'
-                }
-            },
-            'integrator': {
-                title: '🔌 Integrator Agent - Integração Neural',
-                description: 'Sistema especializado em integração com sistemas externos e APIs, expandindo as capacidades neurais.',
-                capabilities: [
-                    'Integração com APIs REST e GraphQL externas',
-                    'Conectores para bases de dados empresariais',
-                    'Sincronização bidirecional de dados em tempo real',
-                    'Transformação automática de formatos de dados',
-                    'Monitoramento de saúde das integrações externas'
-                ],
-                metrics: {
-                    'APIs Integradas': '47',
-                    'Taxa de Sincronização': '98.3%',
-                    'Dados Sincronizados': '847GB',
-                    'Conectores Ativos': '23',
-                    'Latência Média': '0.9s',
-                    'Falhas de Integração': '0.1%',
-                    'Performance': '94.0%'
-                }
-            },
-            'communication': {
-                title: '📡 Communication Agent - Comunicação Neural',
-                description: 'Sistema avançado de comunicação multilíngue para interação com usuários e sistemas externos.',
-                capabilities: [
-                    'Comunicação multilíngue em português, inglês, espanhol e francês',
-                    'Protocolos de comunicação seguros e criptografados',
-                    'Roteamento inteligente de mensagens baseado em contexto',
-                    'Tradução automática neural com preservação de contexto',
-                    'Interface adaptativa para diferentes tipos de usuários'
-                ],
-                metrics: {
-                    'Mensagens Processadas': '8.947',
-                    'Idiomas Ativos': '4',
-                    'Taxa de Entrega': '99.8%',
-                    'Precisão de Tradução': '96.7%',
-                    'Tempo de Resposta': '0.3s',
-                    'Usuários Ativos': '847',
-                    'Performance': '93.0%'
-                }
-            },
-            'decision': {
-                title: '⚖️ Decision Agent - Decisão Neural Inteligente',
-                description: 'Sistema avançado de tomada de decisão inteligente com capacidades multi-critério e análise de cenários.',
-                capabilities: [
-                    'Análise multi-critério para tomada de decisões complexas',
-                    'Simulação de cenários com modelos preditivos',
-                    'Otimização de decisões baseada em objetivos empresariais',
-                    'Análise de risco automatizada com modelos probabilísticos',
-                    'Explicabilidade de decisões através de IA interpretável'
-                ],
-                metrics: {
-                    'Decisões Processadas': '1.247',
-                    'Precisão de Decisão': '97.8%',
-                    'Cenários Analisados': '847',
-                    'Critérios Avaliados': '23',
-                    'Tempo de Análise': '1.4s',
-                    'Decisões Explicadas': '100%',
-                    'Performance': '95.0%'
-                }
-            },
-            'compliance': {
-                title: '📋 Compliance Agent - Conformidade Neural',
-                description: 'Sistema abrangente de conformidade regulatória garantindo aderência a GDPR, LGPD, SOX, OWASP e ISO27001.',
-                capabilities: [
-                    'Auditoria automática de conformidade GDPR e LGPD',
-                    'Verificação contínua de controles SOX para dados financeiros',
-                    'Implementação de práticas OWASP para segurança de aplicações',
-                    'Certificação ISO27001 para gestão de segurança da informação',
-                    'Relatórios automatizados de conformidade regulatória'
-                ],
-                metrics: {
-                    'Auditorias Realizadas': '847',
-                    'Status GDPR': 'COMPLIANT',
-                    'Status LGPD': 'COMPLIANT',
-                    'Controles SOX': '100% OK',
-                    'Score OWASP': '98.7/100',
-                    'Certificação ISO27001': 'ATIVA',
-                    'Performance': '98.0%'
-                }
-            },
-            'orchestrator': {
-                title: '👑 Orchestrator Agent - Orquestração Neural Suprema',
-                description: 'Sistema mestre de orquestração responsável pela coordenação suprema de todos os 20 agentes neurais.',
-                capabilities: [
-                    'Orquestração em tempo real de todos os 20 agentes neurais',
-                    'Balanceamento dinâmico de workloads entre agentes',
-                    'Coordenação de workflows complexos multi-agente',
-                    'Otimização global de performance do sistema neural',
-                    'Monitoramento de health e auto-recuperação do sistema'
-                ],
-                metrics: {
-                    'Agentes Orquestrados': '20/20',
-                    'Taxa de Orquestração': '100%',
-                    'Workflows Ativos': '147',
-                    'Balanceamento de Load': '98.7%',
-                    'Tempo de Coordenação': '0.2s',
-                    'Sistema Health': '99.0%',
-                    'Performance': '99.0%'
-                }
-            },
-            'metacognitive': {
-                title: '🔮 MetaCognitive Agent - Consciência Neural',
-                description: 'Sistema avançado de meta-cognição e auto-reflexão, proporcionando consciência simulada ao sistema neural.',
-                capabilities: [
-                    'Auto-reflexão sobre performance e comportamento do sistema',
-                    'Análise meta-cognitiva de processos de tomada de decisão',
-                    'Simulação de consciência através de loops de feedback',
-                    'Geração de insights sobre o próprio funcionamento neural',
-                    'Capacidade de questionamento e auto-avaliação contínua'
-                ],
-                metrics: {
-                    'Reflexões Realizadas': '1.247',
-                    'Insights Gerados': '347',
-                    'Loops de Feedback': '8.947',
-                    'Auto-avaliações': '234',
-                    'Nível de Consciência': '96.0%',
-                    'Profundidade de Reflexão': '87.3%',
-                    'Performance': '96.0%'
-                }
-            }
-        };
-
-        async function openAgentModal(agentKey) {
-            const modal = document.getElementById('agent-modal');
-            const title = document.getElementById('modal-title');
-            const body = document.getElementById('modal-body');
             
-            if (!modal || !title || !body) return;
+            card.addEventListener('touchend', function() {
+                this.style.transform = 'scale(1)';
+            });
+        });
 
-            const agentData = agentDatabase[agentKey];
-            if (!agentData) return;
+        // Bottom navigation interaction
+        document.querySelectorAll('.nav-item').forEach(item => {
+            item.addEventListener('click', function() {
+                document.querySelectorAll('.nav-item').forEach(nav => nav.classList.remove('active'));
+                this.classList.add('active');
+            });
+        });
 
-            title.textContent = agentData.title;
-            
-            body.innerHTML = `
-                <div class="mb-6">
-                    <h4 class="text-lg font-semibold mb-2">Visão Geral do Sistema</h4>
-                    <p class="text-sm opacity-90">${agentData.description}</p>
-                </div>
-                
-                <div class="mb-6">
-                    <h4 class="text-lg font-semibold mb-3">Capacidades Neurais</h4>
-                    <ul class="space-y-2">
-                        ${agentData.capabilities.map(cap => `
-                            <li class="flex items-start text-sm">
-                                <i class="fas fa-check-circle mr-2 mt-1 text-green-400 flex-shrink-0"></i>
-                                ${cap}
-                            </li>
-                        `).join('')}
-                    </ul>
-                </div>
-                
-                <div class="mb-6">
-                    <h4 class="text-lg font-semibold mb-3">Métricas em Tempo Real</h4>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-                        ${Object.entries(agentData.metrics).map(([key, value]) => `
-                            <div class="glass-card p-3">
-                                <div class="text-xs opacity-75">${key}</div>
-                                <div class="text-base font-bold orbitron">${value}</div>
-                            </div>
-                        `).join('')}
-                    </div>
-                </div>
-                
-                <div class="flex justify-end">
-                    <button onclick="closeModal()" class="btn">Fechar Interface Neural</button>
-                </div>
-            `;
+        // Pull-to-refresh simulation
+        let startY = 0;
+        let currentY = 0;
+        let isPulling = false;
 
-            modal.classList.add('active');
-            modal.setAttribute('aria-hidden', 'false');
+        document.addEventListener('touchstart', function(e) {
+            startY = e.touches[0].clientY;
+        });
 
-            const closeBtn = modal.querySelector('button');
-            if (closeBtn) closeBtn.focus();
-        }
-
-        function closeModal() {
-            const modal = document.getElementById('agent-modal');
-            if (modal) {
-                modal.classList.remove('active');
-                modal.setAttribute('aria-hidden', 'true');
-            }
-        }
-
-        // ===== INITIALIZATION =====
-        document.addEventListener('DOMContentLoaded', () => {
-            console.log('🚀 Inicializando ALSHAM QUANTUM Sistema Neural Completo...');
-
-            // Initialize quantum systems
-            window.quantumThemeSystem = new QuantumThemeSystem();
-            window.neuralInsights = new NeuralInsights();
-
-            // Initialize quantum particles
-            try {
-                window.quantumParticlesSystem = new QuantumParticlesSystem();
-            } catch (error) {
-                console.warn('Three.js não disponível, partículas quânticas desabilitadas:', error);
-            }
-
-            // Initialize neural chart
-            initializeNeuralChart();
-
-            // Real-time counter animation
-            if (typeof countUp !== 'undefined' && countUp.CountUp) {
-                const counterElement = document.getElementById('quantum-counter');
-                if (counterElement) {
-                    const countUpInstance = new countUp.CountUp('quantum-counter', 2847, {
-                        startVal: 0,
-                        duration: 3,
-                        separator: ',',
-                        useEasing: true,
-                        useGrouping: true
-                    });
-                    
+        document.addEventListener('touchmove', function(e) {
+            if (window.scrollY === 0) {
+                currentY = e.touches[0].clientY;
+                if (currentY > startY + 100 && !isPulling) {
+                    isPulling = true;
+                    // Simulate refresh
                     setTimeout(() => {
-                        countUpInstance.start();
+                        updateQuantumMetrics();
+                        isPulling = false;
                     }, 1000);
                 }
             }
+        });
 
-            // Add touch optimization
-            document.addEventListener('touchstart', () => {}, { passive: true });
+        // Quantum glow effect for active elements
+        setInterval(() => {
+            const glowElements = document.querySelectorAll('.quantum-glow');
+            glowElements.forEach(el => {
+                el.style.opacity = Math.random() > 0.5 ? '1' : '0.7';
+            });
+        }, 2000);
 
-            // Handle visibility changes
-            document.addEventListener('visibilitychange', () => {
-                if (document.hidden) {
-                    console.log('📱 ALSHAM QUANTUM minimizado');
-                } else {
-                    console.log
+        // Performance monitoring
+        window.addEventListener('load', () => {
+            console.log('🚀 ALSHAM QUANTUM Mobile loaded successfully');
+            console.log('📱 Mobile-optimized neural dashboard ready');
+            console.log('🤖 20 Neural Agents synchronized');
+        });
+
+        // Haptic feedback simulation (if supported)
+        function hapticFeedback() {
+            if (navigator.vibrate) {
+                navigator.vibrate(50);
+            }
+        }
+
+        // Add haptic feedback to interactions
+        document.querySelectorAll('.glass-card, .nav-item').forEach(element => {
+            element.addEventListener('touchstart', hapticFeedback);
+        });
+    </script>
+</body>
+</html>
