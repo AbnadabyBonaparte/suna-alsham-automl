@@ -934,19 +934,101 @@ class ComplianceAgent:
             'created_at': self.created_at.isoformat()
         }
 
-# Função para criar agentes de serviço
-async def create_service_agents() -> Dict[str, Any]:
-    """Cria e inicializa agentes de serviço"""
-    agents = {
-        'communication': CommunicationAgent(),
-        'decision': DecisionAgent(),
-        'compliance': ComplianceAgent()
-    }
+# Função para criar agentes de serviço - CORRIGIDO
+def create_service_agents(message_bus) -> List:
+    """Cria e inicializa agentes de serviço com MessageBus"""
+    from multi_agent_network import BaseNetworkAgent, AgentType
     
-    # Inicializar todos os agentes
-    for agent_name, agent in agents.items():
-        await agent.initialize()
+    # Criar agentes compatíveis com a rede
+    agents = [
+        CommunicationAgentNetworkAdapter("communication_001", AgentType.SPECIALIST, message_bus),
+        DecisionAgentNetworkAdapter("decision_001", AgentType.SPECIALIST, message_bus),
+        ComplianceAgentNetworkAdapter("compliance_001", AgentType.SPECIALIST, message_bus)
+    ]
     
-    logger.info(f"✅ {len(agents)} agentes de serviço criados")
+    logger.info(f"✅ {len(agents)} agentes de serviço criados com MessageBus")
     return agents
+
+
+# Adaptadores para compatibilidade com rede multi-agente
+class CommunicationAgentNetworkAdapter:
+    """Adaptador para CommunicationAgent na rede multi-agente"""
+    
+    def __init__(self, agent_id: str, agent_type, message_bus):
+        from multi_agent_network import BaseNetworkAgent, AgentCapability
+        
+        self.agent_id = agent_id
+        self.agent_type = agent_type
+        self.message_bus = message_bus
+        self.status = 'active'
+        self.capabilities = [
+            AgentCapability(
+                name="advanced_communication",
+                description="Comunicação avançada entre sistemas",
+                input_types=["message", "communication_request"],
+                output_types=["formatted_message", "communication_report"],
+                processing_time_ms=150.0,
+                accuracy_score=0.97,
+                resource_cost=0.1
+            )
+        ]
+        
+        self.communication_agent = CommunicationAgent(agent_id)
+        
+        if message_bus:
+            message_bus.register_agent(self)
+
+class DecisionAgentNetworkAdapter:
+    """Adaptador para DecisionAgent na rede multi-agente"""
+    
+    def __init__(self, agent_id: str, agent_type, message_bus):
+        from multi_agent_network import BaseNetworkAgent, AgentCapability
+        
+        self.agent_id = agent_id
+        self.agent_type = agent_type
+        self.message_bus = message_bus
+        self.status = 'active'
+        self.capabilities = [
+            AgentCapability(
+                name="intelligent_decision",
+                description="Tomada de decisão inteligente",
+                input_types=["decision_request", "analysis_data"],
+                output_types=["decision", "decision_rationale"],
+                processing_time_ms=600.0,
+                accuracy_score=0.94,
+                resource_cost=0.3
+            )
+        ]
+        
+        self.decision_agent = DecisionAgent(agent_id)
+        
+        if message_bus:
+            message_bus.register_agent(self)
+
+class ComplianceAgentNetworkAdapter:
+    """Adaptador para ComplianceAgent na rede multi-agente"""
+    
+    def __init__(self, agent_id: str, agent_type, message_bus):
+        from multi_agent_network import BaseNetworkAgent, AgentCapability
+        
+        self.agent_id = agent_id
+        self.agent_type = agent_type
+        self.message_bus = message_bus
+        self.status = 'active'
+        self.capabilities = [
+            AgentCapability(
+                name="compliance_monitoring",
+                description="Monitoramento de conformidade",
+                input_types=["compliance_request", "regulation_data"],
+                output_types=["compliance_report", "violation_alerts"],
+                processing_time_ms=400.0,
+                accuracy_score=0.98,
+                resource_cost=0.2
+            )
+        ]
+        
+        self.compliance_agent = ComplianceAgent(agent_id)
+        
+        if message_bus:
+            message_bus.register_agent(self)
 
