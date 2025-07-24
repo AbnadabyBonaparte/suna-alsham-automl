@@ -31,10 +31,19 @@ def create_service_agents(message_bus, num_instances=1) -> List:
                 DecisionAgent(f"decision_{(i*3+1):03d}", AgentType.SERVICE, message_bus),
                 ComplianceAgent(f"compliance_{(i*3+1):03d}", AgentType.SERVICE, message_bus)
             ])
+        # Registrar apenas uma vez fora do loop e limitar a 2 se num_instances == 1
+        unique_agents = []
+        seen_ids = set()
         for agent in agents:
-            message_bus.register_agent(agent.agent_id, agent)
-        logger.info(f"✅ {len(agents)} agentes de serviço criados")
-        return agents[:2] if num_instances == 1 else agents
+            if agent.agent_id not in seen_ids:
+                if num_instances == 1 and len(unique_agents) >= 2:
+                    break
+                if agent.agent_id not in message_bus.subscribers:
+                    message_bus.register_agent(agent.agent_id, agent)
+                unique_agents.append(agent)
+                seen_ids.add(agent.agent_id)
+        logger.info(f"✅ {len(unique_agents)} agentes de serviço criados")
+        return unique_agents
     except Exception as e:
         logger.error(f"❌ Erro criando agentes de serviço: {e}")
         return []
