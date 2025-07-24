@@ -1,0 +1,30 @@
+# ALSHAM QUANTUM v11.0 - Cliente Portal Dependencies
+# Core Framework
+Flask==2.3.3
+Flask-CORS==4.0.0
+Flask-Mail==0.9.1
+Flask-WTF==1.1.1
+
+# Web Server
+gunicorn==21.2.0
+Werkzeug==2.3.7
+
+# Data Processing & Analysis
+pandas==2.1.0
+numpy==1.24.3
+requests==2.31.0
+urllib3==2.0.4
+
+# Email & Communication
+smtplib2==0.2.1
+email-validator==2.0.0
+python-decouple==3.8
+
+# API Integration
+httpx==0.24.1
+aiohttp==3.8.5
+
+# Utilities
+python-dotenv==1.0.0
+Jinja2==3.1.2
+MarkupSafe==2.1.3
