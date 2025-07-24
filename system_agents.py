@@ -586,19 +586,101 @@ class IntegratorAgent:
             'created_at': self.created_at.isoformat()
         }
 
-# Função para criar agentes de sistema
-async def create_system_agents() -> Dict[str, Any]:
-    """Cria e inicializa agentes de sistema"""
-    agents = {
-        'monitor': MonitorAgent(),
-        'evolver': EvolverAgent(),
-        'integrator': IntegratorAgent()
-    }
+# Função para criar agentes de sistema - CORRIGIDO
+def create_system_agents(message_bus) -> List:
+    """Cria e inicializa agentes de sistema com MessageBus"""
+    from multi_agent_network import BaseNetworkAgent, AgentType
     
-    # Inicializar todos os agentes
-    for agent_name, agent in agents.items():
-        await agent.initialize()
+    # Criar agentes compatíveis com a rede
+    agents = [
+        MonitorAgentNetworkAdapter("monitor_001", AgentType.MONITOR, message_bus),
+        EvolverAgentNetworkAdapter("evolver_001", AgentType.EVOLVER, message_bus),
+        IntegratorAgentNetworkAdapter("integrator_001", AgentType.INTEGRATOR, message_bus)
+    ]
     
-    logger.info(f"✅ {len(agents)} agentes de sistema criados")
+    logger.info(f"✅ {len(agents)} agentes de sistema criados com MessageBus")
     return agents
+
+
+# Adaptadores para compatibilidade com rede multi-agente
+class MonitorAgentNetworkAdapter:
+    """Adaptador para MonitorAgent na rede multi-agente"""
+    
+    def __init__(self, agent_id: str, agent_type, message_bus):
+        from multi_agent_network import BaseNetworkAgent, AgentCapability
+        
+        self.agent_id = agent_id
+        self.agent_type = agent_type
+        self.message_bus = message_bus
+        self.status = 'active'
+        self.capabilities = [
+            AgentCapability(
+                name="system_monitoring",
+                description="Monitoramento avançado do sistema",
+                input_types=["system_metrics", "performance_data"],
+                output_types=["monitoring_report", "alerts"],
+                processing_time_ms=200.0,
+                accuracy_score=0.96,
+                resource_cost=0.1
+            )
+        ]
+        
+        self.monitor_agent = MonitorAgent(agent_id)
+        
+        if message_bus:
+            message_bus.register_agent(self)
+
+class EvolverAgentNetworkAdapter:
+    """Adaptador para EvolverAgent na rede multi-agente"""
+    
+    def __init__(self, agent_id: str, agent_type, message_bus):
+        from multi_agent_network import BaseNetworkAgent, AgentCapability
+        
+        self.agent_id = agent_id
+        self.agent_type = agent_type
+        self.message_bus = message_bus
+        self.status = 'active'
+        self.capabilities = [
+            AgentCapability(
+                name="system_evolution",
+                description="Evolução contínua do sistema",
+                input_types=["evolution_data", "adaptation_signals"],
+                output_types=["evolved_system", "improvements"],
+                processing_time_ms=1500.0,
+                accuracy_score=0.88,
+                resource_cost=0.6
+            )
+        ]
+        
+        self.evolver_agent = EvolverAgent(agent_id)
+        
+        if message_bus:
+            message_bus.register_agent(self)
+
+class IntegratorAgentNetworkAdapter:
+    """Adaptador para IntegratorAgent na rede multi-agente"""
+    
+    def __init__(self, agent_id: str, agent_type, message_bus):
+        from multi_agent_network import BaseNetworkAgent, AgentCapability
+        
+        self.agent_id = agent_id
+        self.agent_type = agent_type
+        self.message_bus = message_bus
+        self.status = 'active'
+        self.capabilities = [
+            AgentCapability(
+                name="system_integration",
+                description="Integração de componentes do sistema",
+                input_types=["integration_request", "component_data"],
+                output_types=["integrated_system", "integration_report"],
+                processing_time_ms=800.0,
+                accuracy_score=0.92,
+                resource_cost=0.4
+            )
+        ]
+        
+        self.integrator_agent = IntegratorAgent(agent_id)
+        
+        if message_bus:
+            message_bus.register_agent(self)
 
