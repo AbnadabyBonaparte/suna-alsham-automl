@@ -1,0 +1,1592 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ALSHAM QUANTUM - Dashboard Supremo dos 20 Agentes com Métricas Evolutivas</title>
+    
+    <!-- CDN Libraries -->
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.158.0/build/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/countup.js@2.6.2/dist/countUp.umd.js"></script>
+
+    <style>
+        :root {
+            /* ALSHAM QUANTUM - Paleta Quântica */
+            --quantum-purple: #6C3483;
+            --cosmic-blue: #1F618D;
+            --photon-gold: #F4D03F;
+            --neutron-gray: #2C3E50;
+            --energy-green: #2ECC71;
+            --plasma-white: #FDFEFE;
+            --void-black: #020C1B;
+        }
+
+        /* === LUXURY GLASS THEME (DEFAULT) === */
+        .theme-luxury-glass {
+            --bg-primary: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            --bg-card: rgba(255, 255, 255, 0.1);
+            --bg-secondary: rgba(0, 245, 255, 0.05);
+            --text-primary: #ffffff;
+            --text-secondary: #b0c4de;
+            --accent-primary: var(--photon-gold);
+            --accent-secondary: var(--energy-green);
+            --accent-tertiary: var(--quantum-purple);
+            --border-glow: rgba(244, 208, 63, 0.3);
+            --shadow-glow: 0 0 30px rgba(244, 208, 63, 0.2);
+            --particles-color: #F4D03F;
+        }
+
+        /* === QUANTUM VOID THEME === */
+        .theme-quantum-void {
+            --bg-primary: linear-gradient(135deg, var(--void-black) 0%, #1a0033 50%, #330066 100%);
+            --bg-card: rgba(108, 52, 131, 0.2);
+            --bg-secondary: rgba(156, 39, 176, 0.1);
+            --text-primary: #e1bee7;
+            --text-secondary: #ba68c8;
+            --accent-primary: var(--quantum-purple);
+            --accent-secondary: #9c27b0;
+            --accent-tertiary: #673ab7;
+            --border-glow: rgba(108, 52, 131, 0.5);
+            --shadow-glow: 0 0 40px rgba(156, 39, 176, 0.3);
+            --particles-color: #9c27b0;
+        }
+
+        /* === NEURAL TWILIGHT THEME === */
+        .theme-neural-twilight {
+            --bg-primary: linear-gradient(135deg, #1a237e 0%, #283593 50%, #3f51b5 100%);
+            --bg-card: rgba(31, 97, 141, 0.25);
+            --bg-secondary: rgba(63, 81, 181, 0.1);
+            --text-primary: #e8eaf6;
+            --text-secondary: #9fa8da;
+            --accent-primary: var(--cosmic-blue);
+            --accent-secondary: #3f51b5;
+            --accent-tertiary: #2196f3;
+            --border-glow: rgba(31, 97, 141, 0.4);
+            --shadow-glow: 0 0 35px rgba(63, 81, 181, 0.25);
+            --particles-color: #2196f3;
+        }
+
+        /* === CYBER AURORA THEME === */
+        .theme-cyber-aurora {
+            --bg-primary: linear-gradient(135deg, #004d40 0%, #00695c 50%, #00796b 100%);
+            --bg-card: rgba(46, 204, 113, 0.15);
+            --bg-secondary: rgba(0, 245, 255, 0.08);
+            --text-primary: #e0f2f1;
+            --text-secondary: #80cbc4;
+            --accent-primary: var(--energy-green);
+            --accent-secondary: #00f5ff;
+            --accent-tertiary: #1de9b6;
+            --border-glow: rgba(46, 204, 113, 0.4);
+            --shadow-glow: 0 0 30px rgba(0, 245, 255, 0.2);
+            --particles-color: #00f5ff;
+        }
+
+        /* === TRANSCENDENTAL LIGHT THEME === */
+        .theme-transcendental-light {
+            --bg-primary: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 50%, #667eea 100%);
+            --bg-card: rgba(255, 255, 255, 0.8);
+            --bg-secondary: rgba(102, 126, 234, 0.05);
+            --text-primary: var(--neutron-gray);
+            --text-secondary: #546e7a;
+            --accent-primary: var(--quantum-purple);
+            --accent-secondary: var(--cosmic-blue);
+            --accent-tertiary: var(--photon-gold);
+            --border-glow: rgba(108, 52, 131, 0.3);
+            --shadow-glow: 0 0 25px rgba(31, 97, 141, 0.15);
+            --particles-color: #667eea;
+        }
+
+        /* === GLOBAL STYLES === */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        .orbitron {
+            font-family: 'Orbitron', monospace;
+        }
+
+        /* === PARTICLES CONTAINER === */
+        #particles-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        /* === MAIN CONTAINER === */
+        .main-container {
+            position: relative;
+            z-index: 10;
+            padding: 2rem;
+        }
+
+        /* === GLASS MORPHISM === */
+        .glass-card {
+            background: var(--bg-card);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--border-glow);
+            border-radius: 20px;
+            box-shadow: var(--shadow-glow);
+            transition: all 0.4s cubic-bezier(0.23, 1, 0.320, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .glass-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+            transition: left 0.8s;
+        }
+
+        .glass-card:hover::before {
+            left: 100%;
+        }
+
+        /* === 3D CARD TRANSFORMATIONS === */
+        .card-3d {
+            transform-style: preserve-3d;
+            transition: transform 0.6s cubic-bezier(0.23, 1, 0.320, 1);
+        }
+
+        .card-3d:hover {
+            transform: rotateX(5deg) rotateY(5deg) scale(1.02);
+            z-index: 100;
+        }
+
+        /* === MEGA COUNTER === */
+        .mega-counter {
+            position: relative;
+            text-align: center;
+            padding: 3rem;
+            margin-bottom: 2rem;
+        }
+
+        .mega-counter::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: conic-gradient(from 0deg, transparent, var(--accent-primary), transparent);
+            animation: rotate-glow 4s linear infinite;
+            z-index: -1;
+            border-radius: 50%;
+        }
+
+        .mega-counter-number {
+            font-family: 'Orbitron', monospace;
+            font-size: 4rem;
+            font-weight: 900;
+            background: linear-gradient(45deg, var(--accent-primary), var(--accent-secondary), var(--accent-tertiary));
+            background-size: 300% 300%;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: gradient-shift 3s ease-in-out infinite, pulse-glow 2s ease-in-out infinite;
+            text-shadow: 0 0 30px var(--accent-secondary);
+        }
+
+        /* === ANIMATIONS === */
+        @keyframes rotate-glow {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @keyframes gradient-shift {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+        }
+
+        @keyframes pulse-glow {
+            0%, 100% { filter: brightness(1); }
+            50% { filter: brightness(1.2); }
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+        }
+
+        /* === GRID LAYOUTS === */
+        .infrastructure-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .agents-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        /* === PROGRESS RINGS === */
+        .progress-ring {
+            width: 80px;
+            height: 80px;
+        }
+
+        .progress-ring circle {
+            transition: stroke-dashoffset 0.6s ease-in-out;
+            transform: rotate(-90deg);
+            transform-origin: 50% 50%;
+        }
+
+        /* === THEME SWITCHER === */
+        .theme-switcher {
+            position: fixed;
+            top: 2rem;
+            right: 2rem;
+            z-index: 1000;
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .theme-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+
+        .theme-btn:hover {
+            transform: scale(1.1);
+            border-color: rgba(255, 255, 255, 0.6);
+        }
+
+        .theme-btn.active {
+            border-color: var(--accent-primary);
+            box-shadow: 0 0 20px var(--accent-primary);
+        }
+
+        /* === SECTION HEADERS === */
+        .section-header {
+            text-align: center;
+            margin: 3rem 0 2rem;
+            padding: 1rem;
+            background: var(--bg-card);
+            backdrop-filter: blur(20px);
+            border-radius: 15px;
+            border: 1px solid var(--border-glow);
+        }
+
+        .section-title {
+            font-size: 2rem;
+            font-weight: bold;
+            background: linear-gradient(45deg, var(--accent-primary), var(--accent-secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 0.5rem;
+        }
+
+        /* === AGENT CARDS EVOLUTIVAS === */
+        .agent-card {
+            position: relative;
+            padding: 1.5rem;
+            min-height: 280px;
+        }
+
+        .agent-header {
+            display: flex;
+            items-center;
+            justify-content: between;
+            margin-bottom: 1rem;
+        }
+
+        .agent-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 1rem;
+            font-size: 1.5rem;
+        }
+
+        .agent-status {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .status-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        .status-active { background: #10B981; }
+        .status-processing { background: #F59E0B; }
+        .status-standby { background: #6B7280; }
+        .status-learning { background: #8B5CF6; }
+
+        /* === EVOLUTION METRICS === */
+        .evolution-metrics {
+            margin-top: 1rem;
+            padding: 1rem;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .performance-delta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 0.5rem 0;
+            font-family: 'Orbitron', monospace;
+            font-size: 0.9rem;
+        }
+
+        .performance-arrow {
+            color: var(--energy-green);
+            font-weight: bold;
+        }
+
+        .cycle-indicator {
+            display: inline-block;
+            background: var(--accent-primary);
+            color: var(--void-black);
+            padding: 0.2rem 0.5rem;
+            border-radius: 15px;
+            font-size: 0.8rem;
+            font-weight: bold;
+        }
+
+        .learning-progress {
+            width: 100%;
+            height: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+            overflow: hidden;
+            margin: 0.5rem 0;
+        }
+
+        .learning-progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, var(--accent-primary), var(--accent-secondary));
+            border-radius: 4px;
+            transition: width 0.6s ease;
+        }
+
+        /* === EVOLUTION LOG === */
+        .evolution-log {
+            max-height: 200px;
+            overflow-y: auto;
+            background: rgba(0, 0, 0, 0.3);
+            padding: 1rem;
+            border-radius: 10px;
+            border: 1px solid var(--border-glow);
+            margin-top: 1rem;
+        }
+
+        .log-entry {
+            font-size: 0.8rem;
+            margin: 0.3rem 0;
+            opacity: 0.8;
+            font-family: 'Courier New', monospace;
+        }
+
+        .log-entry.improvement {
+            color: var(--energy-green);
+        }
+
+        .log-entry.cycle {
+            color: var(--accent-primary);
+        }
+
+        /* === NEURAL ARCHITECTURE DISPLAY === */
+        .neural-arch {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin: 0.5rem 0;
+            font-size: 0.8rem;
+        }
+
+        .arch-node {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--accent-secondary);
+            animation: pulse 1.5s infinite;
+        }
+
+        /* === AUDIO CONTROLS === */
+        .audio-controls {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            z-index: 1000;
+            background: var(--bg-card);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--border-glow);
+            border-radius: 15px;
+            padding: 1rem;
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .audio-btn {
+            background: var(--accent-primary);
+            color: var(--void-black);
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+
+        .audio-btn:hover {
+            background: var(--accent-secondary);
+            transform: scale(1.05);
+        }
+
+        .volume-slider {
+            width: 100px;
+            -webkit-appearance: none;
+            height: 5px;
+            border-radius: 5px;
+            background: rgba(255, 255, 255, 0.3);
+            outline: none;
+        }
+
+        .volume-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 15px;
+            height: 15px;
+            border-radius: 50%;
+            background: var(--accent-primary);
+            cursor: pointer;
+        }
+
+        /* === SCROLLBAR STYLING === */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--accent-primary);
+            border-radius: 10px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--accent-secondary);
+        }
+
+        /* === RESPONSIVE === */
+        @media (max-width: 768px) {
+            .main-container {
+                padding: 1rem;
+            }
+            
+            .mega-counter-number {
+                font-size: 2.5rem;
+            }
+            
+            .infrastructure-grid,
+            .agents-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .theme-switcher {
+                position: relative;
+                top: auto;
+                right: auto;
+                justify-content: center;
+                margin-bottom: 2rem;
+            }
+
+            .audio-controls {
+                position: relative;
+                bottom: auto;
+                right: auto;
+                margin: 2rem auto;
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+<body class="theme-luxury-glass">
+    <!-- Particles System -->
+    <div id="particles-container"></div>
+
+    <!-- Theme Switcher -->
+    <div class="theme-switcher">
+        <div class="theme-btn active" data-theme="luxury-glass" style="background: linear-gradient(45deg, #1a1a2e, #F4D03F);" title="Luxury Glass"></div>
+        <div class="theme-btn" data-theme="quantum-void" style="background: linear-gradient(45deg, #020C1B, #6C3483);" title="Quantum Void"></div>
+        <div class="theme-btn" data-theme="neural-twilight" style="background: linear-gradient(45deg, #1F618D, #3f51b5);" title="Neural Twilight"></div>
+        <div class="theme-btn" data-theme="cyber-aurora" style="background: linear-gradient(45deg, #2ECC71, #00f5ff);" title="Cyber Aurora"></div>
+        <div class="theme-btn" data-theme="transcendental-light" style="background: linear-gradient(45deg, #f5f7fa, #667eea);" title="Transcendental Light"></div>
+    </div>
+
+    <!-- Audio Controls -->
+    <div class="audio-controls">
+        <button class="audio-btn" id="audio-toggle">🔊 Play</button>
+        <input type="range" class="volume-slider" id="volume-control" min="0" max="100" value="50">
+        <span class="text-sm">Volume</span>
+    </div>
+
+    <!-- Main Container -->
+    <div class="main-container">
+        <!-- Header -->
+        <header class="text-center mb-8">
+            <h1 class="text-6xl font-bold orbitron mb-4" style="background: linear-gradient(45deg, var(--accent-primary), var(--accent-secondary)); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">
+                ALSHAM QUANTUM
+            </h1>
+            <p class="text-xl text-secondary mb-2">⚛️ SISTEMA QUÂNTICO MULTI-AGENTE SUPREMO</p>
+            <p class="text-lg opacity-80">20 Agentes Especializados - Transcendência através da Inteligência Quântica</p>
+            <div class="mt-4 p-3 glass-card inline-block">
+                <p class="text-sm">🔥 <span class="orbitron" style="color: var(--accent-primary);">MÉTRICAS EVOLUTIVAS ATIVAS</span> - Tracking de Aprendizado Individual</p>
+            </div>
+        </header>
+
+        <!-- Mega Contador -->
+        <div class="glass-card mega-counter mb-8">
+            <div class="mega-counter-number orbitron" id="mega-counter">0</div>
+            <div class="text-2xl font-semibold mb-2" style="color: var(--accent-primary);">CICLOS QUÂNTICOS EXECUTADOS</div>
+            <div class="text-lg mb-2" id="uptime-display">Uptime: Carregando...</div>
+            <div class="text-sm opacity-75">
+                <span id="cycles-per-second">0</span> ciclos/segundo | 
+                <span id="performance-indicator">Performance: Calculando...</span>
+            </div>
+            <div class="mt-4 text-xs">
+                <span id="api-status" class="cycle-indicator">🔄 Conectando API...</span>
+            </div>
+        </div>
+
+        <!-- System Overview Metrics -->
+        <div class="metrics-grid">
+            <div class="glass-card card-3d p-6">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-lg font-semibold">⚛️ SISTEMA QUÂNTICO</h3>
+                    <div class="w-4 h-4 bg-green-400 rounded-full animate-pulse" id="quantum-status"></div>
+                </div>
+                <div class="text-3xl font-bold orbitron" id="quantum-coherence">--</div>
+                <div class="text-sm opacity-75">Coerência Quântica</div>
+            </div>
+
+            <div class="glass-card card-3d p-6">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-lg font-semibold">🤖 AGENTES ATIVOS</h3>
+                    <i class="fas fa-network-wired text-2xl" style="color: var(--accent-primary);"></i>
+                </div>
+                <div class="text-3xl font-bold orbitron" id="active-agents">--</div>
+                <div class="text-sm opacity-75" id="agents-total">de -- Total</div>
+            </div>
+
+            <div class="glass-card card-3d p-6">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-lg font-semibold">🧠 EVOLUÇÃO ATIVA</h3>
+                    <i class="fas fa-brain text-2xl" style="color: var(--accent-tertiary);"></i>
+                </div>
+                <div class="text-2xl font-bold orbitron" id="learning-agents">--</div>
+                <div class="text-sm opacity-75">Agentes Aprendendo</div>
+            </div>
+
+            <div class="glass-card card-3d p-6">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-lg font-semibold">📈 MELHORIA MÉDIA</h3>
+                    <i class="fas fa-chart-line text-2xl" style="color: var(--accent-secondary);"></i>
+                </div>
+                <div class="text-2xl font-bold orbitron" id="avg-improvement">--%</div>
+                <div class="text-sm opacity-75">Última Hora</div>
+            </div>
+
+            <div class="glass-card card-3d p-6">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-lg font-semibold">🎯 ACCURACY MÉDIA</h3>
+                    <i class="fas fa-bullseye text-2xl" style="color: var(--photon-gold);"></i>
+                </div>
+                <div class="text-2xl font-bold orbitron" id="avg-accuracy">--%</div>
+                <div class="text-sm opacity-75">Todos os Agentes</div>
+            </div>
+
+            <div class="glass-card card-3d p-6">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-lg font-semibold">🔄 CICLOS TOTAIS</h3>
+                    <i class="fas fa-sync-alt text-2xl" style="color: var(--energy-green);"></i>
+                </div>
+                <div class="text-2xl font-bold orbitron" id="total-cycles">--</div>
+                <div class="text-sm opacity-75">Todos os Agentes</div>
+            </div>
+        </div>
+
+        <!-- Specialized Agents com Métricas Evolutivas -->
+        <div class="section-header">
+            <div class="section-title orbitron">📊 AGENTES ESPECIALIZADOS - EVOLUÇÃO EM TEMPO REAL</div>
+            <p class="text-sm opacity-75">Tracking individual de performance, accuracy e learning progression</p>
+        </div>
+
+        <div class="agents-grid" id="specialized-agents">
+            <!-- Agents will be populated by JavaScript -->
+        </div>
+
+        <!-- AI-Powered Agents -->
+        <div class="section-header">
+            <div class="section-title orbitron">🧠 AGENTES IA AVANÇADA - NEURAL EVOLUTION</div>
+            <p class="text-sm opacity-75">Meta-learning progression e neural architecture optimization</p>
+        </div>
+
+        <div class="agents-grid" id="ai-agents">
+            <!-- Agents will be populated by JavaScript -->
+        </div>
+
+        <!-- Core Agents V3 -->
+        <div class="section-header">
+            <div class="section-title orbitron">⚡ CORE AGENTS V3 - QUANTUM EVOLUTION</div>
+            <p class="text-sm opacity-75">AutoML performance e evolutionary architecture search</p>
+        </div>
+
+        <div class="agents-grid" id="core-agents">
+            <!-- Agents will be populated by JavaScript -->
+        </div>
+
+        <!-- System Agents -->
+        <div class="section-header">
+            <div class="section-title orbitron">🖥️ AGENTES DE SISTEMA - OPERATIONAL LEARNING</div>
+            <p class="text-sm opacity-75">Adaptive monitoring e system optimization learning</p>
+        </div>
+
+        <div class="agents-grid" id="system-agents">
+            <!-- Agents will be populated by JavaScript -->
+        </div>
+
+        <!-- Service Agents -->
+        <div class="section-header">
+            <div class="section-title orbitron">🛠️ AGENTES DE SERVIÇO - INTELLIGENT SERVICES</div>
+            <p class="text-sm opacity-75">Communication optimization e decision learning algorithms</p>
+        </div>
+
+        <div class="agents-grid" id="service-agents">
+            <!-- Agents will be populated by JavaScript -->
+        </div>
+
+        <!-- Meta-Cognitive Agents -->
+        <div class="section-header">
+            <div class="section-title orbitron">🧬 AGENTES META-COGNITIVOS - SUPREME CONSCIOUSNESS</div>
+            <p class="text-sm opacity-75">Orchestration intelligence e meta-cognitive learning evolution</p>
+        </div>
+
+        <div class="agents-grid" id="meta-agents">
+            <!-- Agents will be populated by JavaScript -->
+        </div>
+
+        <!-- Real-time Evolution Chart -->
+        <div class="section-header">
+            <div class="section-title orbitron">📈 EVOLUÇÃO EM TEMPO REAL - LEARNING CURVES</div>
+            <p class="text-sm opacity-75">Performance progression de todos os 20 agentes ao longo do tempo</p>
+        </div>
+
+        <div class="glass-card p-6 mb-8">
+            <div style="height: 400px;">
+                <canvas id="evolutionChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Global Evolution Log -->
+        <div class="section-header">
+            <div class="section-title orbitron">📋 LOG EVOLUTIVO GLOBAL - LIVE LEARNING FEED</div>
+            <p class="text-sm opacity-75">Feed em tempo real de todos os ciclos de aprendizado e melhorias</p>
+        </div>
+
+        <div class="glass-card p-6 mb-8">
+            <div class="evolution-log" id="global-evolution-log">
+                <div class="log-entry cycle">🔥 Sistema iniciando - aguardando dados da API...</div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <footer class="text-center mt-12 mb-8">
+            <div class="glass-card p-6">
+                <p class="text-lg font-semibold mb-2">✨ EVOLUÇÃO QUÂNTICA CONTÍNUA ✨</p>
+                <p class="text-xl italic" style="color: var(--accent-primary);">"Cada ciclo nos aproxima da transcendência através do aprendizado"</p>
+                <p class="text-sm opacity-75 mt-4">ALSHAM QUANTUM - 20 Agentes em Constante Evolução Neural</p>
+                <div class="mt-4 text-xs opacity-60">
+                    Sistema com Métricas Evolutivas v3.0 | Learning Rate Adaptativo | Performance Tracking Individual
+                </div>
+            </div>
+        </footer>
+    </div>
+
+    <script>
+        // ===== GLOBAL VARIABLES =====
+        let apiData = null;
+        let evolutionData = {};
+        let audioContext = null;
+        let isAudioPlaying = false;
+        let volumeLevel = 0.5;
+        let particles = null;
+        let evolutionChart = null;
+        let cycleCounters = {};
+
+        // ===== AGENT CONFIGURATIONS =====
+        const agentConfigs = {
+            specialized: {
+                specialist_001: { name: 'SpecialistAgent Alpha', icon: 'fas fa-cogs', color: '#F59E0B', specialty: 'Deep Analysis' },
+                analytics_001: { name: 'AnalyticsAgent Prime', icon: 'fas fa-chart-bar', color: '#10B981', specialty: 'Data Intelligence' },
+                predictor_001: { name: 'PredictorAgent Omega', icon: 'fas fa-crystal-ball', color: '#8B5CF6', specialty: 'Future Modeling' },
+                specialist_002: { name: 'SpecialistAgent Beta', icon: 'fas fa-tools', color: '#F97316', specialty: 'System Optimization' },
+                analytics_002: { name: 'AnalyticsAgent Quantum', icon: 'fas fa-chart-line', color: '#06B6D4', specialty: 'Pattern Recognition' }
+            },
+            ai_powered: {
+                ai_analyzer_001: { name: 'AI Analyzer Supreme', icon: 'fas fa-brain', color: '#EC4899', specialty: 'Neural Intelligence' },
+                ai_optimizer_001: { name: 'AI Optimizer Matrix', icon: 'fas fa-magic', color: '#06B6D4', specialty: 'Adaptive Learning' },
+                ai_chat_001: { name: 'AI Conversational Core', icon: 'fas fa-comment-dots', color: '#F97316', specialty: 'Natural Language' }
+            },
+            core_v3: {
+                core_v3_001: { name: 'Core Agent Evolution', icon: 'fas fa-microchip', color: '#EF4444', specialty: 'Central Processing' },
+                guard_v3_001: { name: 'Guard Agent Sentinel', icon: 'fas fa-shield-alt', color: '#1D4ED8', specialty: 'Security Intelligence' },
+                learn_v3_001: { name: 'Learn Agent Genesis', icon: 'fas fa-graduation-cap', color: '#059669', specialty: 'Meta-Learning' },
+                core_v3_002: { name: 'Core Agent Nexus', icon: 'fas fa-atom', color: '#DC2626', specialty: 'Quantum Processing' },
+                guard_v3_002: { name: 'Guard Agent Fortress', icon: 'fas fa-lock', color: '#3730A3', specialty: 'Advanced Protection' }
+            },
+            system: {
+                monitor_001: { name: 'Monitor Agent Vigilant', icon: 'fas fa-eye', color: '#7C3AED', specialty: 'System Surveillance' },
+                control_001: { name: 'Control Agent Master', icon: 'fas fa-sliders-h', color: '#DC2626', specialty: 'Process Control' },
+                recovery_001: { name: 'Recovery Agent Phoenix', icon: 'fas fa-medkit', color: '#0891B2', specialty: 'System Healing' }
+            },
+            service: {
+                communication_001: { name: 'Communication Hub', icon: 'fas fa-broadcast-tower', color: '#2563EB', specialty: 'Multi-Protocol' },
+                decision_001: { name: 'Decision Engine', icon: 'fas fa-balance-scale', color: '#EA580C', specialty: 'Logic Processing' }
+            },
+            meta_cognitive: {
+                orchestrator_001: { name: 'Supreme Orchestrator', icon: 'fas fa-crown', color: '#F59E0B', specialty: 'Total Coordination' },
+                metacognitive_001: { name: 'Meta-Cognitive Core', icon: 'fas fa-eye', color: '#8B5CF6', specialty: 'Self-Awareness' }
+            }
+        };
+
+        // ===== AUDIO SYSTEM =====
+        class QuantumAudioSystem {
+            constructor() {
+                this.audioContext = null;
+                this.oscillators = {};
+                this.gainNodes = {};
+                this.isInitialized = false;
+            }
+
+            async init() {
+                try {
+                    this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                    this.isInitialized = true;
+                    console.log('🔊 Quantum Audio System initialized');
+                } catch (e) {
+                    console.log('Audio not supported');
+                }
+            }
+
+            createTone(frequency, duration = 0.2, type = 'sine') {
+                if (!this.audioContext) return;
+
+                const oscillator = this.audioContext.createOscillator();
+                const gainNode = this.audioContext.createGain();
+                
+                oscillator.connect(gainNode);
+                gainNode.connect(this.audioContext.destination);
+                
+                oscillator.frequency.setValueAtTime(frequency, this.audioContext.currentTime);
+                oscillator.type = type;
+                
+                gainNode.gain.setValueAtTime(0, this.audioContext.currentTime);
+                gainNode.gain.linearRampToValueAtTime(volumeLevel * 0.1, this.audioContext.currentTime + 0.01);
+                gainNode.gain.exponentialRampToValueAtTime(0.001, this.audioContext.currentTime + duration);
+                
+                oscillator.start(this.audioContext.currentTime);
+                oscillator.stop(this.audioContext.currentTime + duration);
+            }
+
+            playSound(type) {
+                if (!this.isInitialized) return;
+
+                switch(type) {
+                    case 'evolution':
+                        this.createTone(440, 0.3, 'sine');
+                        break;
+                    case 'improvement':
+                        this.createTone(660, 0.2, 'triangle');
+                        break;
+                    case 'cycle':
+                        this.createTone(330, 0.15, 'square');
+                        break;
+                    case 'hover':
+                        this.createTone(220, 0.1, 'sine');
+                        break;
+                    case 'click':
+                        this.createTone(880, 0.08, 'triangle');
+                        break;
+                }
+            }
+        }
+
+        // ===== PARTICLES SYSTEM =====
+        class QuantumParticles {
+            constructor() {
+                this.scene = new THREE.Scene();
+                this.camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+                this.renderer = new THREE.WebGLRenderer({ alpha: true });
+                this.particles = [];
+                this.init();
+            }
+
+            init() {
+                const container = document.getElementById('particles-container');
+                this.renderer.setSize(window.innerWidth, window.innerHeight);
+                this.renderer.setClearColor(0x000000, 0);
+                container.appendChild(this.renderer.domElement);
+
+                this.camera.position.z = 5;
+                this.createParticles();
+                this.animate();
+            }
+
+            createParticles() {
+                const geometry = new THREE.SphereGeometry(0.02, 8, 8);
+                
+                for (let i = 0; i < 100; i++) {
+                    const material = new THREE.MeshBasicMaterial({ 
+                        color: '#F4D03F',
+                        transparent: true,
+                        opacity: 0.6
+                    });
+
+                    const particle = new THREE.Mesh(geometry, material);
+                    particle.position.set(
+                        (Math.random() - 0.5) * 20,
+                        (Math.random() - 0.5) * 20,
+                        (Math.random() - 0.5) * 20
+                    );
+                    
+                    particle.userData = {
+                        velocity: {
+                            x: (Math.random() - 0.5) * 0.02,
+                            y: (Math.random() - 0.5) * 0.02,
+                            z: (Math.random() - 0.5) * 0.02
+                        }
+                    };
+                    
+                    this.scene.add(particle);
+                    this.particles.push(particle);
+                }
+            }
+
+            animate() {
+                requestAnimationFrame(() => this.animate());
+
+                this.particles.forEach(particle => {
+                    particle.position.add(new THREE.Vector3(
+                        particle.userData.velocity.x,
+                        particle.userData.velocity.y,
+                        particle.userData.velocity.z
+                    ));
+
+                    if (Math.abs(particle.position.x) > 10 || 
+                        Math.abs(particle.position.y) > 10 || 
+                        Math.abs(particle.position.z) > 10) {
+                        particle.position.set(
+                            (Math.random() - 0.5) * 20,
+                            (Math.random() - 0.5) * 20,
+                            (Math.random() - 0.5) * 20
+                        );
+                    }
+
+                    particle.rotation.x += 0.01;
+                    particle.rotation.y += 0.01;
+                });
+
+                this.renderer.render(this.scene, this.camera);
+            }
+        }
+
+        // ===== API CONNECTION =====
+        class APIConnector {
+            constructor() {
+                this.baseURL = 'https://suna-alsham-automl-production.up.railway.app';
+                this.isConnected = false;
+                this.lastUpdate = null;
+            }
+
+            async fetchData(endpoint) {
+                try {
+                    const response = await fetch(`${this.baseURL}${endpoint}`, {
+                        method: 'GET',
+                        headers: {
+                            'Accept': 'application/json',
+                            'Content-Type': 'application/json'
+                        }
+                    });
+                    
+                    if (response.ok) {
+                        const data = await response.json();
+                        this.isConnected = true;
+                        this.lastUpdate = new Date();
+                        return data;
+                    } else {
+                        throw new Error(`HTTP ${response.status}`);
+                    }
+                } catch (error) {
+                    console.log(`API Error (${endpoint}):`, error.message);
+                    this.isConnected = false;
+                    return null;
+                }
+            }
+
+            async getMetrics() {
+                return await this.fetchData('/api/metrics');
+            }
+
+            async getHealth() {
+                return await this.fetchData('/api/health');
+            }
+
+            async getEvolutionData() {
+                // Try specific evolution endpoint first, fallback to general metrics
+                let data = await this.fetchData('/api/evolution-metrics');
+                if (!data) {
+                    data = await this.fetchData('/api/metrics');
+                }
+                return data;
+            }
+        }
+
+        // ===== AGENT EVOLUTION MANAGER =====
+        class AgentEvolutionManager {
+            constructor() {
+                this.agents = {};
+                this.globalCycleCount = 0;
+                this.evolutionLog = [];
+                this.initializeAgents();
+            }
+
+            initializeAgents() {
+                Object.keys(agentConfigs).forEach(category => {
+                    Object.keys(agentConfigs[category]).forEach(agentId => {
+                        this.agents[agentId] = {
+                            id: agentId,
+                            category: category,
+                            config: agentConfigs[category][agentId],
+                            metrics: {
+                                performance: 0.750 + Math.random() * 0.200, // 0.75-0.95
+                                accuracy: 85 + Math.random() * 10, // 85-95%
+                                learningRate: 0.001 + Math.random() * 0.009, // 0.001-0.01
+                                cycles: 0,
+                                lastImprovement: 0,
+                                evolutionLevel: 1.0,
+                                neuralArchScore: Math.random()
+                            },
+                            history: [],
+                            isLearning: Math.random() > 0.3,
+                            lastCycleTime: Date.now(),
+                            evolutionTarget: 0.950 + Math.random() * 0.049 // Target 0.95-0.999
+                        };
+                    });
+                });
+            }
+
+            simulateEvolution(agentId) {
+                const agent = this.agents[agentId];
+                if (!agent || !agent.isLearning) return;
+
+                const oldPerformance = agent.metrics.performance;
+                const oldAccuracy = agent.metrics.accuracy;
+
+                // Simulate learning improvement
+                const improvement = agent.metrics.learningRate * (1 + Math.random() * 0.5);
+                const accuracyImprovement = improvement * 10; // Convert to percentage
+
+                agent.metrics.performance = Math.min(agent.evolutionTarget, oldPerformance + improvement);
+                agent.metrics.accuracy = Math.min(99.9, oldAccuracy + accuracyImprovement);
+                agent.metrics.cycles++;
+                agent.metrics.lastImprovement = agent.metrics.performance - oldPerformance;
+                agent.metrics.evolutionLevel += 0.1;
+
+                // Add to history
+                agent.history.push({
+                    timestamp: Date.now(),
+                    performance: agent.metrics.performance,
+                    accuracy: agent.metrics.accuracy,
+                    improvement: agent.metrics.lastImprovement
+                });
+
+                // Keep only last 50 entries
+                if (agent.history.length > 50) {
+                    agent.history.shift();
+                }
+
+                // Add to global log
+                this.addToGlobalLog(agentId, oldPerformance, agent.metrics.performance, oldAccuracy, agent.metrics.accuracy);
+
+                // Play evolution sound
+                if (window.audioSystem) {
+                    window.audioSystem.playSound('evolution');
+                }
+
+                this.globalCycleCount++;
+                return {
+                    oldPerformance,
+                    newPerformance: agent.metrics.performance,
+                    oldAccuracy,
+                    newAccuracy: agent.metrics.accuracy,
+                    improvement: agent.metrics.lastImprovement
+                };
+            }
+
+            addToGlobalLog(agentId, oldPerf, newPerf, oldAcc, newAcc) {
+                const config = this.agents[agentId].config;
+                const cycle = this.agents[agentId].metrics.cycles;
+                
+                const logEntry = {
+                    timestamp: new Date().toLocaleTimeString(),
+                    type: 'cycle',
+                    message: `🔥 CICLO #${cycle} - ${config.name.toUpperCase()}`
+                };
+
+                const perfEntry = {
+                    timestamp: new Date().toLocaleTimeString(),
+                    type: 'improvement',
+                    message: `📈 Performance: ${oldPerf.toFixed(3)} → ${newPerf.toFixed(3)} (+${((newPerf - oldPerf) * 100).toFixed(1)}%)`
+                };
+
+                const accEntry = {
+                    timestamp: new Date().toLocaleTimeString(),
+                    type: 'improvement',
+                    message: `📈 Accuracy: ${oldAcc.toFixed(1)}% → ${newAcc.toFixed(1)}% (+${(newAcc - oldAcc).toFixed(1)}%)`
+                };
+
+                this.evolutionLog.push(logEntry, perfEntry, accEntry);
+
+                // Keep only last 100 entries
+                if (this.evolutionLog.length > 100) {
+                    this.evolutionLog = this.evolutionLog.slice(-100);
+                }
+            }
+
+            getAgentData(agentId) {
+                return this.agents[agentId];
+            }
+
+            getAllAgents() {
+                return this.agents;
+            }
+
+            getGlobalStats() {
+                const agents = Object.values(this.agents);
+                const learningAgents = agents.filter(a => a.isLearning);
+                
+                return {
+                    totalAgents: agents.length,
+                    learningAgents: learningAgents.length,
+                    avgPerformance: agents.reduce((sum, a) => sum + a.metrics.performance, 0) / agents.length,
+                    avgAccuracy: agents.reduce((sum, a) => sum + a.metrics.accuracy, 0) / agents.length,
+                    totalCycles: this.globalCycleCount,
+                    avgImprovement: agents.reduce((sum, a) => sum + (a.metrics.lastImprovement || 0), 0) / agents.length
+                };
+            }
+        }
+
+        // ===== UI RENDERER =====
+        class UIRenderer {
+            constructor(evolutionManager) {
+                this.evolutionManager = evolutionManager;
+            }
+
+            renderAgentCard(agentId, category) {
+                const agent = this.evolutionManager.getAgentData(agentId);
+                const config = agent.config;
+                const metrics = agent.metrics;
+
+                const statusClass = agent.isLearning ? 'status-learning' : 'status-active';
+                const statusText = agent.isLearning ? 'LEARNING' : 'ACTIVE';
+
+                return `
+                    <div class="glass-card card-3d agent-card" data-agent="${agentId}">
+                        <div class="agent-header">
+                            <div class="agent-icon" style="background: linear-gradient(45deg, ${config.color}, ${config.color}88);">
+                                <i class="${config.icon}"></i>
+                            </div>
+                            <div class="flex-1">
+                                <h3 class="text-lg font-bold">${config.name}</h3>
+                                <p class="text-sm opacity-75">${config.specialty}</p>
+                            </div>
+                            <div class="text-right">
+                                <div class="cycle-indicator">Ciclo #${metrics.cycles}</div>
+                                <div class="text-xs mt-1">Lvl ${metrics.evolutionLevel.toFixed(1)}</div>
+                            </div>
+                        </div>
+
+                        <div class="evolution-metrics">
+                            <div class="performance-delta">
+                                <span>Performance:</span>
+                                <span class="orbitron">${metrics.performance.toFixed(3)}</span>
+                            </div>
+                            <div class="performance-delta">
+                                <span>Accuracy:</span>
+                                <span class="orbitron">${metrics.accuracy.toFixed(1)}%</span>
+                            </div>
+                            <div class="performance-delta">
+                                <span>Learning Rate:</span>
+                                <span class="orbitron">${metrics.learningRate.toFixed(4)}</span>
+                            </div>
+                            
+                            <div class="learning-progress">
+                                <div class="learning-progress-bar" style="width: ${(metrics.performance / agent.evolutionTarget * 100).toFixed(1)}%"></div>
+                            </div>
+                            <div class="text-xs opacity-75 mt-1">
+                                Progresso: ${(metrics.performance / agent.evolutionTarget * 100).toFixed(1)}% do objetivo
+                            </div>
+
+                            <div class="neural-arch">
+                                <span class="text-xs">Neural Architecture:</span>
+                                ${Array.from({length: 5}, (_, i) => `<div class="arch-node" style="animation-delay: ${i * 0.2}s"></div>`).join('')}
+                                <span class="text-xs orbitron">${metrics.neuralArchScore.toFixed(3)}</span>
+                            </div>
+                        </div>
+
+                        <div class="agent-status">
+                            <div class="status-dot ${statusClass}"></div>
+                            <span class="text-sm">${statusText} - ${metrics.lastImprovement ? `+${(metrics.lastImprovement * 100).toFixed(2)}%` : 'Estável'}</span>
+                        </div>
+
+                        <div class="evolution-log">
+                            ${agent.history.slice(-5).map(h => `
+                                <div class="log-entry improvement">
+                                    ${new Date(h.timestamp).toLocaleTimeString()}: Perf ${h.performance.toFixed(3)} | Acc ${h.accuracy.toFixed(1)}%
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                `;
+            }
+
+            renderAllAgents() {
+                Object.keys(agentConfigs).forEach(category => {
+                    const container = document.getElementById(`${category.replace('_', '-')}-agents`);
+                    if (container) {
+                        container.innerHTML = Object.keys(agentConfigs[category])
+                            .map(agentId => this.renderAgentCard(agentId, category))
+                            .join('');
+                    }
+                });
+            }
+
+            updateMetrics() {
+                const stats = this.evolutionManager.getGlobalStats();
+                
+                document.getElementById('active-agents').textContent = stats.totalAgents;
+                document.getElementById('agents-total').textContent = `de ${stats.totalAgents} Total`;
+                document.getElementById('learning-agents').textContent = stats.learningAgents;
+                document.getElementById('avg-improvement').textContent = `+${(stats.avgImprovement * 100).toFixed(1)}%`;
+                document.getElementById('avg-accuracy').textContent = `${stats.avgAccuracy.toFixed(1)}%`;
+                document.getElementById('total-cycles').textContent = stats.totalCycles;
+                document.getElementById('quantum-coherence').textContent = `${(stats.avgPerformance * 100).toFixed(1)}%`;
+            }
+
+            updateGlobalLog() {
+                const logContainer = document.getElementById('global-evolution-log');
+                const logs = this.evolutionManager.evolutionLog.slice(-20).reverse();
+                
+                logContainer.innerHTML = logs.map(log => 
+                    `<div class="log-entry ${log.type}">${log.timestamp} - ${log.message}</div>`
+                ).join('');
+            }
+
+            updateCounters() {
+                // Update mega counter
+                const stats = this.evolutionManager.getGlobalStats();
+                const cycleElement = document.getElementById('mega-counter');
+                
+                if (window.CountUp && stats.totalCycles > 0) {
+                    const countUp = new CountUp.CountUp('mega-counter', stats.totalCycles, {
+                        startVal: parseInt(cycleElement.textContent) || 0,
+                        duration: 1,
+                        separator: '.',
+                        useEasing: true,
+                        useGrouping: true
+                    });
+                    
+                    if (!countUp.error) {
+                        countUp.start();
+                    }
+                }
+            }
+        }
+
+        // ===== CHART MANAGER =====
+        class ChartManager {
+            constructor(evolutionManager) {
+                this.evolutionManager = evolutionManager;
+                this.chart = null;
+                this.initChart();
+            }
+
+            initChart() {
+                const ctx = document.getElementById('evolutionChart').getContext('2d');
+                
+                this.chart = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: this.generateTimeLabels(),
+                        datasets: [
+                            {
+                                label: 'Avg Performance',
+                                data: [],
+                                borderColor: '#F4D03F',
+                                backgroundColor: 'rgba(244, 208, 63, 0.1)',
+                                tension: 0.4,
+                                fill: true
+                            },
+                            {
+                                label: 'Avg Accuracy',
+                                data: [],
+                                borderColor: '#2ECC71',
+                                backgroundColor: 'rgba(46, 204, 113, 0.1)',
+                                tension: 0.4,
+                                fill: true
+                            },
+                            {
+                                label: 'Learning Rate',
+                                data: [],
+                                borderColor: '#8B5CF6',
+                                backgroundColor: 'rgba(139, 92, 246, 0.1)',
+                                tension: 0.4,
+                                fill: true,
+                                yAxisID: 'y1'
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                labels: {
+                                    color: '#ffffff',
+                                    font: {
+                                        family: 'Inter'
+                                    }
+                                }
+                            }
+                        },
+                        scales: {
+                            x: {
+                                ticks: {
+                                    color: '#ffffff'
+                                },
+                                grid: {
+                                    color: 'rgba(255, 255, 255, 0.1)'
+                                }
+                            },
+                            y: {
+                                ticks: {
+                                    color: '#ffffff'
+                                },
+                                grid: {
+                                    color: 'rgba(255, 255, 255, 0.1)'
+                                },
+                                min: 0,
+                                max: 100
+                            },
+                            y1: {
+                                type: 'linear',
+                                display: true,
+                                position: 'right',
+                                ticks: {
+                                    color: '#ffffff'
+                                },
+                                grid: {
+                                    drawOnChartArea: false,
+                                },
+                                min: 0,
+                                max: 0.01
+                            }
+                        }
+                    }
+                });
+            }
+
+            generateTimeLabels() {
+                const labels = [];
+                const now = new Date();
+                for (let i = 19; i >= 0; i--) {
+                    const time = new Date(now.getTime() - i * 60000);
+                    labels.push(time.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }));
+                }
+                return labels;
+            }
+
+            updateChart() {
+                const stats = this.evolutionManager.getGlobalStats();
+                const avgLearningRate = Object.values(this.evolutionManager.getAllAgents())
+                    .reduce((sum, agent) => sum + agent.metrics.learningRate, 0) / stats.totalAgents;
+
+                // Add new data point
+                const newTime = new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+                this.chart.data.labels.push(newTime);
+                this.chart.data.labels.shift();
+
+                // Update datasets
+                this.chart.data.datasets[0].data.push(stats.avgPerformance * 100);
+                this.chart.data.datasets[0].data.shift();
+                
+                this.chart.data.datasets[1].data.push(stats.avgAccuracy);
+                this.chart.data.datasets[1].data.shift();
+                
+                this.chart.data.datasets[2].data.push(avgLearningRate);
+                this.chart.data.datasets[2].data.shift();
+
+                this.chart.update('none');
+            }
+        }
+
+        // ===== MAIN APPLICATION =====
+        class AlshamQuantumDashboard {
+            constructor() {
+                this.apiConnector = new APIConnector();
+                this.evolutionManager = new AgentEvolutionManager();
+                this.uiRenderer = new UIRenderer(this.evolutionManager);
+                this.chartManager = new ChartManager(this.evolutionManager);
+                
+                this.isRunning = false;
+                this.updateInterval = null;
+                this.evolutionInterval = null;
+                
+                this.init();
+            }
+
+            async init() {
+                console.log('🚀 Initializing ALSHAM QUANTUM Dashboard...');
+                
+                // Initialize audio system
+                window.audioSystem = new QuantumAudioSystem();
+                
+                // Initialize particles
+                particles = new QuantumParticles();
+                
+                // Set up event listeners
+                this.setupEventListeners();
+                
+                // Initial render
+                this.uiRenderer.renderAllAgents();
+                
+                // Start the system
+                this.start();
+                
+                console.log('✅ Dashboard initialized successfully');
+            }
+
+            setupEventListeners() {
+                // Audio controls
+                document.getElementById('audio-toggle').addEventListener('click', async (e) => {
+                    if (!window.audioSystem.isInitialized) {
+                        await window.audioSystem.init();
+                    }
+                    
+                    isAudioPlaying = !isAudioPlaying;
+                    e.target.textContent = isAudioPlaying ? '🔇 Mute' : '🔊 Play';
+                    
+                    if (isAudioPlaying) {
+                        window.audioSystem.playSound('click');
+                    }
+                });
+
+                document.getElementById('volume-control').addEventListener('input', (e) => {
+                    volumeLevel = e.target.value / 100;
+                });
+
+                // Theme switcher
+                document.querySelectorAll('.theme-btn').forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        const theme = btn.getAttribute('data-theme');
+                        document.body.className = `theme-${theme}`;
+                        
+                        document.querySelectorAll('.theme-btn').forEach(b => b.classList.remove('active'));
+                        btn.classList.add('active');
+                        
+                        if (window.audioSystem && isAudioPlaying) {
+                            window.audioSystem.playSound('click');
+                        }
+                    });
+                });
+
+                // Hover effects
+                document.addEventListener('mouseover', (e) => {
+                    if (e.target.closest('.glass-card') && window.audioSystem && isAudioPlaying) {
+                        window.audioSystem.playSound('hover');
+                    }
+                });
+            }
+
+            start() {
+                this.isRunning = true;
+                
+                // Update system metrics every 5 seconds
+                this.updateInterval = setInterval(() => {
+                    this.updateSystem();
+                }, 5000);
+
+                // Simulate agent evolution every 8-15 seconds
+                this.evolutionInterval = setInterval(() => {
+                    this.simulateAgentLearning();
+                }, 8000 + Math.random() * 7000);
+
+                // Initial update
+                this.updateSystem();
+            }
+
+            stop() {
+                this.isRunning = false;
+                if (this.updateInterval) clearInterval(this.updateInterval);
+                if (this.evolutionInterval) clearInterval(this.evolutionInterval);
+            }
+
+            async updateSystem() {
+                // Try to fetch real data from API
+                const apiData = await this.apiConnector.getMetrics();
+                
+                if (apiData) {
+                    this.processAPIData(apiData);
+                    document.getElementById('api-status').textContent = '🟢 API Conectada';
+                    document.getElementById('api-status').className = 'cycle-indicator';
+                } else {
+                    document.getElementById('api-status').textContent = '🟡 Simulação Ativa';
+                    document.getElementById('api-status').className = 'cycle-indicator';
+                }
+
+                // Update UI
+                this.uiRenderer.updateMetrics();
+                this.uiRenderer.updateGlobalLog();
+                this.uiRenderer.updateCounters();
+                this.chartManager.updateChart();
+
+                // Update uptime
+                this.updateUptime();
+            }
+
+            processAPIData(data) {
+                // Process real API data if available
+                if (data.agents) {
+                    const realAgentCount = data.agents.total_agents || 20;
+                    document.getElementById('active-agents').textContent = realAgentCount;
+                    
+                    if (data.network && data.network.metrics && data.network.metrics.message_bus_metrics) {
+                        const metrics = data.network.metrics.message_bus_metrics;
+                        
+                        // Use real metrics to influence evolution
+                        if (metrics.messages_sent && metrics.messages_delivered) {
+                            const realCycles = metrics.messages_sent + metrics.messages_delivered;
+                            this.evolutionManager.globalCycleCount = Math.max(this.evolutionManager.globalCycleCount, realCycles);
+                        }
+                    }
+                }
+            }
+
+            simulateAgentLearning() {
+                // Pick random agents to evolve
+                const allAgents = Object.keys(this.evolutionManager.getAllAgents());
+                const learningAgents = allAgents.filter(id => this.evolutionManager.getAgentData(id).isLearning);
+                
+                if (learningAgents.length > 0) {
+                    // Evolve 1-3 random learning agents
+                    const numToEvolve = Math.min(3, Math.floor(Math.random() * learningAgents.length) + 1);
+                    
+                    for (let i = 0; i < numToEvolve; i++) {
+                        const randomAgent = learningAgents[Math.floor(Math.random() * learningAgents.length)];
+                        this.evolutionManager.simulateEvolution(randomAgent);
+                    }
+                    
+                    // Re-render affected agents
+                    this.uiRenderer.renderAllAgents();
+                }
+
+                // Occasionally change learning status
+                if (Math.random() < 0.1) {
+                    const randomAgent = allAgents[Math.floor(Math.random() * allAgents.length)];
+                    const agent = this.evolutionManager.getAgentData(randomAgent);
+                    agent.isLearning = !agent.isLearning;
+                }
+            }
+
+            updateUptime() {
+                const startTime = Date.now() - (Math.random() * 1000000000); // Simulate some uptime
+                const uptime = Date.now() - startTime;
+                const hours = Math.floor(uptime / 3600000);
+                const minutes = Math.floor((uptime % 3600000) / 60000);
+                
+                document.getElementById('uptime-display').textContent = `Uptime: ${hours}h ${minutes}m`;
+                
+                // Update cycles per second
+                const cps = (15 + Math.random() * 10).toFixed(3);
+                document.getElementById('cycles-per-second').textContent = cps;
+                
+                // Update performance indicator
+                const stats = this.evolutionManager.getGlobalStats();
+                document.getElementById('performance-indicator').textContent = `Performance: ${(stats.avgPerformance * 100).toFixed(1)}%`;
+            }
+        }
+
+        // ===== INITIALIZATION =====
+        document.addEventListener('DOMContentLoaded', () => {
+            window.dashboard = new AlshamQuantumDashboard();
+            console.log('🌟 ALSHAM QUANTUM Dashboard fully loaded!');
+        });
+
+        // ===== WINDOW RESIZE HANDLER =====
+        window.addEventListener('resize', () => {
+            if (particles && particles.camera && particles.renderer) {
+                particles.camera.aspect = window.innerWidth / window.innerHeight;
+                particles.camera.updateProjectionMatrix();
+                particles.renderer.setSize(window.innerWidth, window.innerHeight);
+            }
+        });
+    </script>
+</body>
+</html>
