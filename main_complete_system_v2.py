@@ -121,4 +121,93 @@ class SUNAAlshamSystemV2:
                         logger.error(f"❌ Nenhum agente criado para {category}")
                         return
                     if category == 'service' and num_instances == 1:
-                        agents = agents[:
+                        agents = agents[:2]  # Limitar a 2 agentes de serviço
+                    self._register_agents(agents, category)
+                    logger.info(f"✅ {len(agents)} agentes {category} inicializados")
+                except Exception as e:
+                    logger.error(f"❌ Erro criando agentes {category}: {e}", exc_info=True)
+            
+            # Limpar agentes existentes para evitar duplicações
+            self.all_agents.clear()
+            self.agent_categories = {k: 0 for k in self.agent_categories}
+            
+            log_agent_creation(create_specialized_agents, 'specialized', num_instances=2)  # 6 agentes
+            log_agent_creation(create_ai_agents, 'ai_powered', num_instances=1)  # 3 agentes
+            log_agent_creation(create_core_agents_v3, 'core_v3', num_instances=2)  # 6 agentes
+            log_agent_creation(create_system_agents, 'system', num_instances=1)  # 3 agentes
+            log_agent_creation(create_service_agents, 'service', num_instances=1)  # 2 agentes
+            log_agent_creation(create_meta_cognitive_agents, 'meta_cognitive')  # 2 agentes
+            
+            total_agents = sum(self.agent_categories.values())
+            if total_agents != 20:
+                logger.error(f"❌ Total de agentes inválido: {total_agents} (esperado: 20)")
+                self.system_status = 'error'
+                return False
+            
+            self._setup_supreme_orchestration()
+            self.system_status = 'active'
+            self.total_agents = len(self.all_agents)
+            
+            logger.info("🎉 SISTEMA SUNA-ALSHAM V2.0 COMPLETAMENTE INICIALIZADO!")
+            logger.info(f"📊 Total de agentes: {self.total_agents}")
+            logger.info(f"📋 Categorias: {self.agent_categories}")
+            return True
+        except Exception as e:
+            logger.error(f"❌ Erro inicializando sistema completo: {e}", exc_info=True)
+            self.system_status = 'error'
+            return False
+
+    async def execute_system_wide_task(self, task: Any):
+        try:
+            orchestrator = None
+            for agent_id, agent_data in self.all_agents.items():
+                if 'orchestrator' in agent_id.lower():
+                    orchestrator = agent_data['instance']
+                    logger.info(f"👑 Tarefa {task} delegada ao orquestrador {agent_id}")
+                    break
+            
+            if orchestrator:
+                await orchestrator.orchestrate_system_wide_task(task)
+                logger.info(f"✅ Tarefa {task} executada com sucesso")
+            else:
+                logger.warning("⚠️ Orquestrador não encontrado - distribuindo tarefa para todos os agentes")
+                for agent_id, agent_data in self.all_agents.items():
+                    if hasattr(agent_data['instance'], 'handle_message'):
+                        message = AgentMessage(
+                            id=str(uuid.uuid4()),
+                            sender_id='system',
+                            recipient_id=agent_id,
+                            message_type=MessageType.TASK_ASSIGNMENT,
+                            priority=Priority.MEDIUM,
+                            content=task,
+                            timestamp=datetime.now()
+                        )
+                        await agent_data['instance'].handle_message(message)
+                logger.info(f"✅ Tarefa {task} distribuída para agentes disponíveis")
+        except Exception as e:
+            logger.error(f"❌ Erro executando tarefa em todo o sistema: {e}", exc_info=True)
+
+    def get_system_status(self) -> Dict:
+        try:
+            agent_statuses = {}
+            for agent_id, agent_data in self.all_agents.items():
+                agent_statuses[agent_id] = {
+                    'agent_id': agent_id,
+                    'status': agent_data['instance'].status,
+                    'category': agent_data['category'],
+                    'capabilities_count': len(agent_data['capabilities'])
+                }
+            status = {
+                'system_status': self.system_status,
+                'total_agents': self.total_agents,
+                'agent_categories': self.agent_categories,
+                'agent_statuses': agent_statuses,
+                'network_status': 'active' if self.network and self.network._running else 'inactive',
+                'created_at': self.created_at.isoformat(),
+                'last_updated': datetime.now().isoformat()
+            }
+            logger.info(f"📊 Status detalhado:\n{json.dumps(status, indent=2)}")
+            return status
+        except Exception as e:
+            logger.error(f"❌ Erro obtendo status: {e}", exc_info=True)
+            return {'status': 'error', 'error': str(e)}
