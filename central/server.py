@@ -5,13 +5,16 @@ app = Flask(__name__, static_folder='.', template_folder='.')
 
 @app.route('/')
 def hub():
-    return send_from_directory('.', 'index.html')
+    try:
+        return send_from_directory('.', 'index.html')
+    except:
+        return "ALSHAM QUANTUM v11.0 - Sistema AI Online!", 200
 
 @app.route('/dashboard-metrics/')
 def dashboard():
     return send_from_directory('dashboard-metrics', 'index.html')
 
-@app.route('/pwa-mobile/')
+@app.route('/pwa-mobile/')  
 def mobile():
     return send_from_directory('pwa-mobile', 'index.html')
 
