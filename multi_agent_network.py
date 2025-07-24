@@ -210,7 +210,6 @@ class BaseNetworkAgent:
                  (self.performance_metrics['messages_processed'] - 1) + response_time) 
                 / self.performance_metrics['messages_processed']
             )
-            # CORREÇÃO 3: Cálculo correto do success_rate
             self.performance_metrics['success_rate'] = (
                 self.performance_metrics['tasks_completed'] / 
                 max(self.performance_metrics['messages_processed'], 1)
@@ -332,7 +331,6 @@ class MultiAgentNetwork:
             self._running = True
             await self.coordinator.start_coordination()
             asyncio.create_task(self._metrics_update_loop())
-            # CORREÇÃO 1: Removida criação automática do orquestrador para evitar duplicação
             logger.info("✅ MultiAgentNetwork inicializada com sucesso - SEM FALLBACK")
             return True
         except Exception as e:
@@ -407,4 +405,3 @@ if __name__ == "__main__":
         logger.info(f"Status da rede: {json.dumps(status, indent=2)}")
         network.stop()
     asyncio.run(test_network())
-
