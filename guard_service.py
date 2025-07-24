@@ -38,3 +38,11 @@ def create_guard_agent(message_bus) -> GuardAgent:
     except Exception as e:
         logger.error(f"❌ Erro criando Guard Agent: {e}", exc_info=True)
         return None
+
+# Adicionar app como ponto de entrada (se necessário para o servidor)
+from flask import Flask
+app = Flask(__name__)
+
+@app.route('/')
+def health_check():
+    return "Guard Service is running", 200
