@@ -1,5 +1,5 @@
 import logging
-from typing import Dict
+from typing import List, Dict
 from multi_agent_network import BaseNetworkAgent, AgentType
 from uuid import uuid4
 
