@@ -3,6 +3,7 @@ from typing import List, Dict, Any
 from datetime import datetime
 import json
 import uuid
+import asyncio
 from multi_agent_network import MultiAgentNetwork, AgentType, AgentMessage, MessageType, Priority
 
 try:
@@ -33,10 +34,26 @@ except ImportError:
 logger = logging.getLogger(__name__)
 
 def verificar_arquivos():
-    return all([create_specialized_agents, create_ai_agents, create_core_agents_v3,
-                create_system_agents, create_service_agents, create_meta_cognitive_agents])
+    """Verifica se todos os módulos de agentes estão disponíveis"""
+    modules = [
+        create_specialized_agents, create_ai_agents, create_core_agents_v3,
+        create_system_agents, create_service_agents, create_meta_cognitive_agents
+    ]
+    return all(modules)
 
 class SUNAAlshamSystemV2:
+    """
+    Sistema Multi-Agente SUNA-ALSHAM v2.0
+    
+    Coordena 20 agentes distribuídos em 6 categorias:
+    - specialized: 5 agentes
+    - ai_powered: 3 agentes  
+    - core_v3: 5 agentes
+    - system: 3 agentes
+    - service: 2 agentes
+    - meta_cognitive: 2 agentes
+    """
+    
     def __init__(self):
         self.network = None
         self.all_agents = {}
@@ -51,61 +68,148 @@ class SUNAAlshamSystemV2:
         self.system_status = 'initializing'
         self.created_at = datetime.now()
         self.initialization_log = []
+        self.total_agents = 0
+        self.metrics_task = None
 
     def _register_agents(self, agents: List, category: str):
+        """Registra agentes no sistema evitando duplicações"""
         try:
             seen_ids = set()
+            registered_count = 0
+            
             for agent_instance in agents:
                 if not hasattr(agent_instance, 'agent_id') or not hasattr(agent_instance, 'status'):
                     logger.error(f"❌ Agente inválido em {category}: {agent_instance}")
                     continue
+                    
                 if agent_instance.agent_id not in seen_ids:
+                    # Registrar na rede
                     if self.network:
                         self.network.add_agent(agent_instance)
+                    
+                    # Registrar no sistema
                     self.all_agents[agent_instance.agent_id] = {
                         'instance': agent_instance,
                         'category': category,
                         'status': agent_instance.status,
-                        'capabilities': getattr(agent_instance, 'capabilities', [])
+                        'capabilities': getattr(agent_instance, 'capabilities', []),
+                        'registered_at': datetime.now()
                     }
+                    
                     self.agent_categories[category] += 1
+                    registered_count += 1
+                    
                     self.initialization_log.append({
                         'agent_id': agent_instance.agent_id,
                         'category': category,
                         'initialized_at': datetime.now().isoformat()
                     })
+                    
                     logger.info(f"✅ Agente {agent_instance.agent_id} registrado na categoria {category}")
                     seen_ids.add(agent_instance.agent_id)
+                else:
+                    logger.warning(f"⚠️ Agente {agent_instance.agent_id} já registrado - ignorando duplicação")
+            
+            logger.info(f"📊 {registered_count} agentes registrados na categoria {category}")
+            
         except Exception as e:
             logger.error(f"❌ Erro registrando agentes {category}: {e}", exc_info=True)
 
     def _setup_supreme_orchestration(self):
+        """Configura o sistema de orquestração suprema"""
         try:
             logger.info(f"🔍 Verificando {len(self.all_agents)} agentes para encontrar orquestrador")
             orchestrator = None
+            
             for agent_id, agent_data in self.all_agents.items():
                 logger.info(f"🔎 Agente encontrado: {agent_id} (categoria: {agent_data['category']})")
                 if 'orchestrator' in agent_id.lower() and agent_data['category'] == 'meta_cognitive':
                     orchestrator = agent_data['instance']
                     logger.info(f"👑 Orquestrador encontrado: {agent_id}")
                     break
+            
             if not orchestrator:
                 logger.error("❌ Agente orquestrador não encontrado")
                 raise ValueError("Orquestrador não disponível")
-            logger.info(f"👑 Orquestração suprema configurada com {len(self.all_agents)-1} agentes")
+            
+            logger.info(f"👑 Orquestração suprema configurada com {len(self.all_agents)-1} agentes subordinados")
             return orchestrator
+            
         except Exception as e:
             logger.error(f"❌ Erro configurando orquestração: {e}", exc_info=True)
             raise
 
+    async def start_metrics_display(self):
+        """Exibe métricas automaticamente a cada 30 segundos"""
+        logger.info("📊 Sistema de métricas automáticas iniciado")
+        
+        while self.system_status == 'active':
+            try:
+                await asyncio.sleep(30)  # A cada 30 segundos
+                
+                # Obter status completo
+                status = self.get_system_status()
+                
+                # Exibir métricas formatadas
+                logger.info("=" * 60)
+                logger.info("📊 MÉTRICAS DO SISTEMA SUNA-ALSHAM")
+                logger.info("=" * 60)
+                logger.info(f"🚀 Status: {status['system_status']}")
+                logger.info(f"🤖 Total de Agentes: {status['total_agents']}")
+                logger.info(f"🌐 Rede: {status['network_status']}")
+                logger.info(f"⏰ Uptime: {self._get_uptime()}")
+                
+                # Métricas por categoria
+                logger.info("📋 AGENTES POR CATEGORIA:")
+                for category, count in status['agent_categories'].items():
+                    logger.info(f"   ├── {category}: {count} agentes")
+                
+                # Métricas da rede se disponível
+                if self.network:
+                    try:
+                        net_metrics = self.network.get_network_status()
+                        logger.info(f"📈 MÉTRICAS DA REDE:")
+                        logger.info(f"   ├── Agentes Ativos: {net_metrics.get('active_agents', 0)}")
+                        
+                        # Métricas do MessageBus
+                        msg_metrics = net_metrics.get('message_bus_metrics', {})
+                        if msg_metrics:
+                            logger.info(f"📤 MÉTRICAS DE MENSAGENS:")
+                            logger.info(f"   ├── Enviadas: {msg_metrics.get('messages_sent', 0)}")
+                            logger.info(f"   ├── Entregues: {msg_metrics.get('messages_delivered', 0)}")
+                            logger.info(f"   ├── Falhadas: {msg_metrics.get('messages_failed', 0)}")
+                            logger.info(f"   ├── Taxa Sucesso: {msg_metrics.get('success_rate', 0):.1f}%")
+                            logger.info(f"   └── Latência Média: {msg_metrics.get('average_latency_ms', 0):.2f}ms")
+                    except Exception as e:
+                        logger.warning(f"⚠️ Erro obtendo métricas da rede: {e}")
+                
+                logger.info("=" * 60)
+                
+            except Exception as e:
+                logger.error(f"❌ Erro exibindo métricas: {e}")
+                
+        logger.info("📊 Sistema de métricas automáticas finalizado")
+
+    def _get_uptime(self) -> str:
+        """Calcula o tempo de atividade do sistema"""
+        uptime = datetime.now() - self.created_at
+        hours, remainder = divmod(uptime.total_seconds(), 3600)
+        minutes, seconds = divmod(remainder, 60)
+        return f"{int(hours):02d}:{int(minutes):02d}:{int(seconds):02d}"
+
     async def initialize_complete_system(self):
+        """Inicializa o sistema completo com todos os agentes"""
         try:
             logger.info("🚀 Iniciando SUNA-ALSHAM Sistema Completo v2.0")
+            logger.info(f"⏰ Inicialização em: {self.created_at.strftime('%Y-%m-%d %H:%M:%S')}")
+            
+            # Verificar módulos necessários
             if not verificar_arquivos():
                 logger.error("❌ Arquivos necessários não encontrados")
                 self.system_status = 'error'
                 return False
             
+            # Inicializar rede multi-agente
             if MultiAgentNetwork:
                 self.network = MultiAgentNetwork()
                 await self.network.initialize()
@@ -116,53 +220,95 @@ class SUNAAlshamSystemV2:
                 return False
             
             def log_agent_creation(func, category, num_instances=1):
+                """Helper para criar e logar agentes"""
                 try:
                     if func is None:
                         logger.error(f"❌ Função para {category} não disponível")
                         return
-                    agents = func(self.network.message_bus, num_instances=num_instances) if category != 'meta_cognitive' else func(self.network.message_bus)
+                    
+                    logger.info(f"🔧 Criando agentes {category}...")
+                    
+                    # Criar agentes
+                    if category != 'meta_cognitive':
+                        agents = func(self.network.message_bus, num_instances=num_instances)
+                    else:
+                        agents = func(self.network.message_bus)
+                    
                     if not agents:
                         logger.error(f"❌ Nenhum agente criado para {category}")
                         return
+                    
+                    # Limitar agentes de serviço
                     if category == 'service' and num_instances == 1:
                         agents = agents[:2]  # Limitar a 2 agentes de serviço
+                    
+                    # Registrar agentes
                     self._register_agents(agents, category)
-                    logger.info(f"✅ {len(agents)} agentes {category} inicializados")
+                    logger.info(f"✅ {len(agents)} agentes {category} inicializados com sucesso")
+                    
                 except Exception as e:
                     logger.error(f"❌ Erro criando agentes {category}: {e}", exc_info=True)
             
             # Limpar agentes existentes para evitar duplicações
+            logger.info("🧹 Limpando registros anteriores...")
             self.all_agents.clear()
             self.agent_categories = {k: 0 for k in self.agent_categories}
             
-            log_agent_creation(create_specialized_agents, 'specialized', num_instances=2)  # 6 agentes
-            log_agent_creation(create_ai_agents, 'ai_powered', num_instances=1)  # 3 agentes
-            log_agent_creation(create_core_agents_v3, 'core_v3', num_instances=2)  # 6 agentes
-            log_agent_creation(create_system_agents, 'system', num_instances=1)  # 3 agentes
-            log_agent_creation(create_service_agents, 'service', num_instances=1)  # 2 agentes
-            log_agent_creation(create_meta_cognitive_agents, 'meta_cognitive')  # 2 agentes
+            # Criar todos os agentes por categoria
+            logger.info("🎯 Iniciando criação de agentes por categoria...")
             
+            log_agent_creation(create_specialized_agents, 'specialized', num_instances=2)
+            log_agent_creation(create_ai_agents, 'ai_powered', num_instances=1)
+            log_agent_creation(create_core_agents_v3, 'core_v3', num_instances=2)
+            log_agent_creation(create_system_agents, 'system', num_instances=1)
+            log_agent_creation(create_service_agents, 'service', num_instances=1)
+            log_agent_creation(create_meta_cognitive_agents, 'meta_cognitive')
+            
+            # Validar contagem total de agentes
             total_agents = sum(self.agent_categories.values())
+            logger.info(f"🧮 Contagem total de agentes: {total_agents}")
+            
             if total_agents != 20:
                 logger.error(f"❌ Total de agentes inválido: {total_agents} (esperado: 20)")
+                logger.error(f"📊 Distribuição atual: {self.agent_categories}")
                 self.system_status = 'error'
-                return False  # Não continuar com fallback
+                return False
             
+            # Configurar orquestração
+            logger.info("👑 Configurando sistema de orquestração...")
             self._setup_supreme_orchestration()
+            
+            # Finalizar inicialização
             self.system_status = 'active'
             self.total_agents = len(self.all_agents)
             
+            # Logs de sucesso
             logger.info("🎉 SISTEMA SUNA-ALSHAM V2.0 COMPLETAMENTE INICIALIZADO!")
             logger.info(f"📊 Total de agentes: {self.total_agents}")
             logger.info(f"📋 Categorias: {self.agent_categories}")
+            logger.info(f"🌐 Rede ativa: {self.network._running}")
+            logger.info(f"⏰ Tempo de inicialização: {self._get_uptime()}")
+            
+            # Iniciar sistema de métricas automáticas
+            self.metrics_task = asyncio.create_task(self.start_metrics_display())
+            
+            # Exibir métricas iniciais
+            logger.info("📊 EXIBINDO STATUS INICIAL:")
+            initial_status = self.get_system_status()
+            
             return True
+            
         except Exception as e:
-            logger.error(f"❌ Erro inicializando sistema completo: {e}", exc_info=True)
+            logger.error(f"❌ Erro crítico inicializando sistema completo: {e}", exc_info=True)
             self.system_status = 'error'
             return False
 
     async def execute_system_wide_task(self, task: Any):
+        """Executa uma tarefa em todo o sistema via orquestrador"""
         try:
+            if self.system_status != 'active':
+                raise ValueError(f"Sistema não está ativo (status: {self.system_status})")
+            
             orchestrator = None
             for agent_id, agent_data in self.all_agents.items():
                 if 'orchestrator' in agent_id.lower() and agent_data['category'] == 'meta_cognitive':
@@ -173,33 +319,146 @@ class SUNAAlshamSystemV2:
             if orchestrator:
                 await orchestrator.orchestrate_system_wide_task(task)
                 logger.info(f"✅ Tarefa {task} executada com sucesso")
+                return True
             else:
                 logger.error("❌ Orquestrador não encontrado - falha na execução")
                 raise ValueError("Orquestrador não disponível")
+                
         except Exception as e:
             logger.error(f"❌ Erro executando tarefa em todo o sistema: {e}", exc_info=True)
+            return False
 
     def get_system_status(self) -> Dict:
+        """Retorna status detalhado do sistema com métricas"""
         try:
+            # Status dos agentes individuais
             agent_statuses = {}
             for agent_id, agent_data in self.all_agents.items():
-                agent_statuses[agent_id] = {
-                    'agent_id': agent_id,
-                    'status': agent_data['instance'].status,
-                    'category': agent_data['category'],
-                    'capabilities_count': len(agent_data['capabilities'])
-                }
+                try:
+                    agent_statuses[agent_id] = {
+                        'agent_id': agent_id,
+                        'status': agent_data['instance'].status,
+                        'category': agent_data['category'],
+                        'capabilities_count': len(agent_data['capabilities']),
+                        'capabilities': agent_data['capabilities'],
+                        'registered_at': agent_data.get('registered_at', self.created_at).isoformat()
+                    }
+                except Exception as e:
+                    logger.warning(f"⚠️ Erro obtendo status do agente {agent_id}: {e}")
+                    agent_statuses[agent_id] = {
+                        'agent_id': agent_id,
+                        'status': 'error',
+                        'category': agent_data.get('category', 'unknown'),
+                        'capabilities_count': 0,
+                        'error': str(e)
+                    }
+            
+            # Status da rede
+            network_status = 'inactive'
+            network_metrics = {}
+            if self.network:
+                network_status = 'active' if self.network._running else 'inactive'
+                try:
+                    network_metrics = self.network.get_network_status()
+                except Exception as e:
+                    logger.warning(f"⚠️ Erro obtendo métricas da rede: {e}")
+            
+            # Compilar status completo
             status = {
-                'system_status': self.system_status,
-                'total_agents': self.total_agents,
-                'agent_categories': self.agent_categories,
-                'agent_statuses': agent_statuses,
-                'network_status': 'active' if self.network and self.network._running else 'inactive',
-                'created_at': self.created_at.isoformat(),
-                'last_updated': datetime.now().isoformat()
+                'system_info': {
+                    'name': 'SUNA-ALSHAM Multi-Agent System',
+                    'version': '2.0',
+                    'status': self.system_status,
+                    'created_at': self.created_at.isoformat(),
+                    'uptime': self._get_uptime(),
+                    'last_updated': datetime.now().isoformat()
+                },
+                'agents': {
+                    'total_agents': self.total_agents,
+                    'agent_categories': self.agent_categories,
+                    'agent_statuses': agent_statuses
+                },
+                'network': {
+                    'status': network_status,
+                    'metrics': network_metrics
+                },
+                'initialization_log': self.initialization_log[-10:]  # Últimos 10 logs
             }
-            logger.info(f"📊 Status detalhado:\n{json.dumps(status, indent=2)}")
+            
+            # Log detalhado apenas em debug
+            if logger.isEnabledFor(logging.DEBUG):
+                logger.debug(f"📊 Status detalhado:\n{json.dumps(status, indent=2, default=str)}")
+            
             return status
+            
         except Exception as e:
-            logger.error(f"❌ Erro obtendo status: {e}", exc_info=True)
-            return {'status': 'error', 'error': str(e)}
+            logger.error(f"❌ Erro obtendo status do sistema: {e}", exc_info=True)
+            return {
+                'system_info': {
+                    'status': 'error',
+                    'error': str(e),
+                    'timestamp': datetime.now().isoformat()
+                }
+            }
+
+    async def shutdown_system(self):
+        """Desliga o sistema de forma organizada"""
+        try:
+            logger.info("🛑 Iniciando desligamento do sistema...")
+            
+            # Parar métricas automáticas
+            if self.metrics_task:
+                self.metrics_task.cancel()
+                logger.info("📊 Sistema de métricas parado")
+            
+            # Alterar status
+            self.system_status = 'shutting_down'
+            
+            # Parar rede
+            if self.network:
+                self.network.stop()
+                logger.info("🌐 Rede multi-agente parada")
+            
+            # Finalizar
+            self.system_status = 'stopped'
+            logger.info("✅ Sistema desligado com sucesso")
+            
+        except Exception as e:
+            logger.error(f"❌ Erro durante desligamento: {e}", exc_info=True)
+            self.system_status = 'error'
+
+    def __repr__(self):
+        return f"SUNAAlshamSystemV2(agents={self.total_agents}, status='{self.system_status}')"
+
+    def __str__(self):
+        return f"SUNA-ALSHAM Multi-Agent System v2.0 - {self.total_agents} agents - Status: {self.system_status}"
+
+
+# Função utilitária para criar instância do sistema
+def create_suna_system() -> SUNAAlshamSystemV2:
+    """Factory function para criar instância do sistema"""
+    return SUNAAlshamSystemV2()
+
+
+# Script de teste se executado diretamente
+if __name__ == "__main__":
+    async def test_system():
+        """Teste básico do sistema"""
+        system = SUNAAlshamSystemV2()
+        
+        logger.info("🧪 Iniciando teste do sistema...")
+        success = await system.initialize_complete_system()
+        
+        if success:
+            logger.info("✅ Sistema inicializado com sucesso no teste")
+            
+            # Aguardar alguns segundos para ver métricas
+            await asyncio.sleep(60)
+            
+            # Desligar sistema
+            await system.shutdown_system()
+        else:
+            logger.error("❌ Falha no teste de inicialização")
+    
+    # Executar teste
+    asyncio.run(test_system())
