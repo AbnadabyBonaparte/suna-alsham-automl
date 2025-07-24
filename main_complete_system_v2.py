@@ -1,5 +1,5 @@
 """
-SUNA-ALSHAM Sistema Completo v2.0 - CORRIGIDO
+SUNA-ALSHAM Sistema Completo v2.0 - CORRIGIDO PARA 20 AGENTES
 Sistema Multi-Agente com 20 Agentes Especializados
 Integração completa de todos os módulos de agentes
 """
@@ -145,71 +145,30 @@ class SUNAAlshamSystemV2:
                 logger.error("❌ MultiAgentNetwork não disponível")
                 return False
             
-            # Inicializar agentes especializados (3 agentes) - CORRIGIDO
-            if create_specialized_agents:
+            # CORREÇÃO 2: Função helper para criação de agentes com múltiplas instâncias
+            def log_agent_creation(func, category, num_instances=1):
                 try:
-                    specialized_agents = create_specialized_agents(self.network.message_bus)
-                    self._register_agents(specialized_agents, 'specialized')
-                    logger.info(f"✅ {len(specialized_agents)} agentes especializados inicializados")
+                    if func is None:
+                        logger.error(f"❌ Função para {category} não disponível")
+                        return
+                    agents = func(self.network.message_bus, num_instances=num_instances) if category != 'meta_cognitive' else func(self.network.message_bus)
+                    if not agents:
+                        logger.error(f"❌ Nenhum agente criado para {category}")
+                        return
+                    if category == 'service' and num_instances == 1:
+                        agents = agents[:2]  # Limitar a 2 agentes de serviço para total de 20
+                    self._register_agents(agents, category)
+                    logger.info(f"✅ {len(agents)} agentes {category} inicializados")
                 except Exception as e:
-                    logger.error(f"❌ Erro criando agentes especializados: {e}")
-            else:
-                logger.warning("⚠️ Agentes especializados não disponíveis")
+                    logger.error(f"❌ Erro criando agentes {category}: {e}")
             
-            # Inicializar agentes com IA (3 agentes) - CORRIGIDO
-            if create_ai_agents:
-                try:
-                    ai_agents = create_ai_agents(self.network.message_bus)
-                    self._register_agents(ai_agents, 'ai_powered')
-                    logger.info(f"✅ {len(ai_agents)} agentes com IA inicializados")
-                except Exception as e:
-                    logger.error(f"❌ Erro criando agentes com IA: {e}")
-            else:
-                logger.warning("⚠️ Agentes com IA não disponíveis")
-            
-            # Inicializar agentes core v3 (3 agentes) - CORRIGIDO
-            if create_core_agents_v3:
-                try:
-                    core_agents = create_core_agents_v3(self.network.message_bus)
-                    self._register_agents(core_agents, 'core_v3')
-                    logger.info(f"✅ {len(core_agents)} agentes core v3.0 inicializados")
-                except Exception as e:
-                    logger.error(f"❌ Erro criando agentes core v3: {e}")
-            else:
-                logger.warning("⚠️ Agentes core v3 não disponíveis")
-            
-            # Inicializar agentes de sistema (3 agentes) - CORRIGIDO
-            if create_system_agents:
-                try:
-                    system_agents = create_system_agents(self.network.message_bus)
-                    self._register_agents(system_agents, 'system')
-                    logger.info(f"✅ {len(system_agents)} agentes de sistema inicializados")
-                except Exception as e:
-                    logger.error(f"❌ Erro criando agentes de sistema: {e}")
-            else:
-                logger.warning("⚠️ Agentes de sistema não disponíveis")
-            
-            # Inicializar agentes de serviço (3 agentes) - CORRIGIDO
-            if create_service_agents:
-                try:
-                    service_agents = create_service_agents(self.network.message_bus)
-                    self._register_agents(service_agents, 'service')
-                    logger.info(f"✅ {len(service_agents)} agentes de serviço inicializados")
-                except Exception as e:
-                    logger.error(f"❌ Erro criando agentes de serviço: {e}")
-            else:
-                logger.warning("⚠️ Agentes de serviço não disponíveis")
-            
-            # Inicializar agentes meta-cognitivos (2 agentes) - CORRIGIDO
-            if create_meta_cognitive_agents:
-                try:
-                    meta_agents = create_meta_cognitive_agents(self.network.message_bus)
-                    self._register_agents(meta_agents, 'meta_cognitive')
-                    logger.info(f"✅ {len(meta_agents)} agentes meta-cognitivos inicializados")
-                except Exception as e:
-                    logger.error(f"❌ Erro criando agentes meta-cognitivos: {e}")
-            else:
-                logger.warning("⚠️ Agentes meta-cognitivos não disponíveis")
+            # Inicializar agentes com configuração para 20 agentes total
+            log_agent_creation(create_specialized_agents, 'specialized', num_instances=2)  # 6 agentes
+            log_agent_creation(create_ai_agents, 'ai_powered', num_instances=1)  # 3 agentes
+            log_agent_creation(create_core_agents_v3, 'core_v3', num_instances=2)  # 6 agentes
+            log_agent_creation(create_system_agents, 'system', num_instances=1)  # 3 agentes
+            log_agent_creation(create_service_agents, 'service', num_instances=1)  # 2 agentes (limitado)
+            log_agent_creation(create_meta_cognitive_agents, 'meta_cognitive')  # 2 agentes
             
             # Configurar orquestração suprema
             self._setup_supreme_orchestration()
@@ -277,6 +236,38 @@ class SUNAAlshamSystemV2:
                 
         except Exception as e:
             logger.error(f"❌ Erro configurando orquestração: {e}")
+    
+    # CORREÇÃO 1: Adicionar método execute_system_wide_task
+    async def execute_system_wide_task(self, task: Any):
+        """Executa uma tarefa em todo o sistema, delegando ao OrchestratorAgent"""
+        try:
+            orchestrator = None
+            for agent_id, agent_data in self.all_agents.items():
+                if 'orchestrator' in agent_id.lower():
+                    orchestrator = agent_data['instance']
+                    logger.info(f"👑 Tarefa {task} delegada ao orquestrador {agent_id}")
+                    break
+            
+            if orchestrator:
+                if hasattr(orchestrator, 'orchestrate_system_wide_task'):
+                    await orchestrator.orchestrate_system_wide_task(task)
+                    logger.info(f"✅ Tarefa {task} executada com sucesso")
+                else:
+                    logger.warning(f"⚠️ Orquestrador {orchestrator.agent_id} não tem método orchestrate_system_wide_task")
+                    # Fallback: distribuir tarefa para todos os agentes
+                    for agent_id, agent_data in self.all_agents.items():
+                        if agent_id != orchestrator.agent_id and hasattr(agent_data['instance'], 'handle_system_task'):
+                            await agent_data['instance'].handle_system_task(task)
+                    logger.info(f"✅ Tarefa {task} distribuída para todos os agentes")
+            else:
+                logger.warning("⚠️ Orquestrador não encontrado - distribuindo tarefa para todos os agentes")
+                for agent_id, agent_data in self.all_agents.items():
+                    if hasattr(agent_data['instance'], 'handle_system_task'):
+                        await agent_data['instance'].handle_system_task(task)
+                logger.info(f"✅ Tarefa {task} distribuída para agentes disponíveis")
+                
+        except Exception as e:
+            logger.error(f"❌ Erro executando tarefa em todo o sistema: {e}")
     
     def get_system_status(self) -> Dict:
         """Retorna status completo do sistema"""
