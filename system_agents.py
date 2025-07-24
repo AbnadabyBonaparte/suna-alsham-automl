@@ -31,8 +31,10 @@ def create_system_agents(message_bus, num_instances=1) -> List:
                 SystemControlAgent(f"control_{(i*3+1):03d}", AgentType.SYSTEM, message_bus),
                 SystemRecoveryAgent(f"recovery_{(i*3+1):03d}", AgentType.SYSTEM, message_bus)
             ])
+        # Registrar apenas uma vez fora do loop
         for agent in agents:
-            message_bus.register_agent(agent.agent_id, agent)
+            if agent.agent_id not in message_bus.subscribers:
+                message_bus.register_agent(agent.agent_id, agent)
         logger.info(f"✅ {len(agents)} agentes de sistema criados")
         return agents
     except Exception as e:
