@@ -9,7 +9,7 @@ logger = logging.getLogger(__name__)
 class CodeAnalyzerAgent(BaseNetworkAgent):
     def __init__(self, agent_id: str, agent_type: str, message_bus):
         super().__init__(agent_id, agent_type, message_bus)
-        self.capabilities = ['code_analysis', 'error_detection']
+        self.capabilities = ['code_analysis', 'error_detection', 'suggestion_generation']
         logger.info(f"✅ {self.agent_id} inicializado")
 
     def analyze_code_quality(self, file_path: str) -> Dict:
@@ -22,7 +22,7 @@ class CodeAnalyzerAgent(BaseNetworkAgent):
                 if isinstance(node, ast.Raise):
                     issues.append(f"Possível erro detectado em {file_path}: Linha {node.lineno}")
             logger.info(f"🔍 Análise de {file_path} concluída - {len(issues)} problemas encontrados")
-            return {"file": file_path, "issues": issues, "suggestions": ["Revisar linhas indicadas"]}
+            return {"file": file_path, "issues": issues, "suggestions": ["Revisar linhas indicadas", "Considerar refatoração"]}
         except Exception as e:
             logger.error(f"❌ Erro analisando {file_path}: {e}")
             return {"file": file_path, "issues": [str(e)], "suggestions": []}
