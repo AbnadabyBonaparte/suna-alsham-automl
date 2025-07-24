@@ -23,5 +23,8 @@ def client():
     return send_from_directory('cliente-portal', 'index.html')
 
 if __name__ == '__main__':
-    port = int(os.environ.get('PORT', 5000))
-    app.run(host='0.0.0.0', port=port)
+    # Configuração mais flexível da porta
+    port = int(os.environ.get('PORT', os.environ.get('port', 5000)))
+    debug = os.environ.get('ENVIRONMENT', 'development') != 'production'
+    
+    app.run(host='0.0.0.0', port=port, debug=debug)
