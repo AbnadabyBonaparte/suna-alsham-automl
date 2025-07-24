@@ -154,14 +154,14 @@ class SUNAAlshamSystemV2:
                 logger.info("=" * 60)
                 logger.info("📊 MÉTRICAS DO SISTEMA SUNA-ALSHAM")
                 logger.info("=" * 60)
-                logger.info(f"🚀 Status: {status['system_status']}")
-                logger.info(f"🤖 Total de Agentes: {status['total_agents']}")
-                logger.info(f"🌐 Rede: {status['network_status']}")
+                logger.info(f"🚀 Status: {self.system_status}")
+                logger.info(f"🤖 Total de Agentes: {self.total_agents}")
+                logger.info(f"🌐 Rede: {status.get('network', {}).get('status', 'unknown')}")
                 logger.info(f"⏰ Uptime: {self._get_uptime()}")
                 
                 # Métricas por categoria
                 logger.info("📋 AGENTES POR CATEGORIA:")
-                for category, count in status['agent_categories'].items():
+                for category, count in self.agent_categories.items():
                     logger.info(f"   ├── {category}: {count} agentes")
                 
                 # Métricas da rede se disponível
