@@ -85,7 +85,7 @@ class SUNAAlshamSystemV2:
             orchestrator = None
             for agent_id, agent_data in self.all_agents.items():
                 logger.info(f"🔎 Agente encontrado: {agent_id} (categoria: {agent_data['category']})")
-                if 'orchestrator' in agent_id.lower():
+                if 'orchestrator' in agent_id.lower() and agent_data['category'] == 'meta_cognitive':
                     orchestrator = agent_data['instance']
                     logger.info(f"👑 Orquestrador encontrado: {agent_id}")
                     break
@@ -165,7 +165,7 @@ class SUNAAlshamSystemV2:
         try:
             orchestrator = None
             for agent_id, agent_data in self.all_agents.items():
-                if 'orchestrator' in agent_id.lower():
+                if 'orchestrator' in agent_id.lower() and agent_data['category'] == 'meta_cognitive':
                     orchestrator = agent_data['instance']
                     logger.info(f"👑 Tarefa {task} delegada ao orquestrador {agent_id}")
                     break
