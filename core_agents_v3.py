@@ -47,11 +47,6 @@ def create_core_agents_v3(message_bus, num_instances=1) -> List:
             if agent_id not in seen_ids:
                 agent = agent_class(agent_id, agent_type, message_bus)
                 agents.append(agent)
-                
-                # Registrar no MessageBus apenas se não existir
-                if not hasattr(message_bus, 'subscribers') or agent_id not in message_bus.subscribers:
-                    message_bus.register_agent(agent_id, agent)
-                    
                 seen_ids.add(agent_id)
             else:
                 logger.warning(f"⚠️ Agente {agent_id} já existe - pulando para evitar duplicação")
