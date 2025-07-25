@@ -1,3 +1,22 @@
+# ✅ IMPORTS NECESSÁRIOS (devem estar no INÍCIO do arquivo)
+from flask import Flask, render_template_string, jsonify
+
+# ✅ CRIAÇÃO DO APP (deve vir ANTES das rotas)
+app = Flask(__name__)
+
+# ✅ CONFIGURAÇÕES DO APP (se houver)
+app.config['DEBUG'] = True
+
+# ✅ ROTA PRINCIPAL (/) - se não existir, adicione uma básica
+@app.route('/')
+def home():
+    """Dashboard principal"""
+    try:
+        with open('index.html', 'r', encoding='utf-8') as f:
+            return f.read()
+    except FileNotFoundError:
+        return "<h1>ALSHAM QUANTUM v12.0</h1><p><a href='/menu'>Ir para Menu</a></p>"
+
 # ✅ ROTAS PARA AS 4 APLICAÇÕES INTEGRADAS
 @app.route('/client-portal')
 def client_portal():
@@ -175,3 +194,7 @@ def service_worker():
         );
     });
     ''', 200, {'Content-Type': 'application/javascript'}
+
+# ✅ INICIALIZAÇÃO DO SERVIDOR
+if __name__ == '__main__':
+    app.run(host='0.0.0.0', port=5000, debug=True)
