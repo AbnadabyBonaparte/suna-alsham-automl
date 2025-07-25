@@ -21,7 +21,15 @@ app.config['JWT_ACCESS_TOKEN_EXPIRES'] = timedelta(hours=1)
 # Extensões
 jwt = JWTManager(app)
 socketio = SocketIO(app, cors_allowed_origins="*")
-CORS(app)
+
+# ✅ CORS CONFIGURADO PARA FRONTEND PÚBLICO
+CORS(app, origins=[
+    "https://suna-alsham-automl-production.up.railway.app",
+    "http://localhost:3000",
+    "http://127.0.0.1:3000"
+], 
+allow_headers=["Content-Type", "Authorization"],
+methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"])
 
 # Redis para cache
 try:
