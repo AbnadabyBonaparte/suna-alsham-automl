@@ -554,7 +554,7 @@ def service_worker():
 # ✅ WEBSOCKET EVENTS
 @socketio.on('connect')
 def handle_connect():
-    print(f'Client connected: {request.sid}')
+    print(f'Client connected')
     socketio.emit('agent_status', {
         'agents': 25,
         'active': 25,
@@ -563,9 +563,8 @@ def handle_connect():
 
 @socketio.on('disconnect')
 def handle_disconnect():
-    print(f'Client disconnected: {request.sid}')
+    print(f'Client disconnected')
 
-# ✅ INICIALIZAÇÃO CORRETA COM SOCKETIO
-    if __name__ == '__main__':
+# ✅ INICIALIZAÇÃO CORRIGIDA - SEM ERRO DE PRODUÇÃO
+if __name__ == '__main__':
     socketio.run(app, host='0.0.0.0', port=5000, debug=True, allow_unsafe_werkzeug=True)
-
