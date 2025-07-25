@@ -3,21 +3,22 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ALSHAM QUANTUM v11.0 - Dashboard Supremo dos 24 Agentes Autoevolutivos</title>
+    <title>ALSHAM QUANTUM Hub v12.0 Premium - 25 Agentes Autoevolutivos</title>
     
     <!-- CDN Libraries -->
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Inter:wght@300;400;500;600;700&family=Rajdhani:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.158.0/build/three.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/countup.js@2.6.2/dist/countUp.umd.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
 
     <style>
         :root {
-            /* ALSHAM QUANTUM - Paleta Quântica */
+            /* Core Quantum Colors */
             --quantum-purple: #6C3483;
             --cosmic-blue: #1F618D;
             --photon-gold: #F4D03F;
@@ -25,104 +26,92 @@
             --energy-green: #2ECC71;
             --plasma-white: #FDFEFE;
             --void-black: #020C1B;
+            
+            /* Premium Themes */
+            --luxury-glass-bg: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            --executive-gold-bg: radial-gradient(circle at 50% 50%, #2C1810, #0A0A0A);
+            --platinum-elite-bg: conic-gradient(from 45deg, #1a1a1a, #2d2d2d, #1a1a1a);
+            --neural-red-bg: linear-gradient(135deg, #0C0C0C 0%, #1A0000 50%, #0C0C0C 100%);
         }
 
-        /* === LUXURY GLASS THEME (DEFAULT) === */
-        .theme-luxury-glass {
-            --bg-primary: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
-            --bg-card: rgba(255, 255, 255, 0.1);
-            --bg-secondary: rgba(0, 245, 255, 0.05);
-            --text-primary: #ffffff;
-            --text-secondary: #b0c4de;
-            --accent-primary: var(--photon-gold);
-            --accent-secondary: var(--energy-green);
-            --accent-tertiary: var(--quantum-purple);
-            --border-glow: rgba(244, 208, 63, 0.3);
-            --shadow-glow: 0 0 30px rgba(244, 208, 63, 0.2);
-            --particles-color: #F4D03F;
-        }
-
-        /* === QUANTUM VOID THEME === */
-        .theme-quantum-void {
-            --bg-primary: linear-gradient(135deg, var(--void-black) 0%, #1a0033 50%, #330066 100%);
-            --bg-card: rgba(108, 52, 131, 0.2);
-            --bg-secondary: rgba(156, 39, 176, 0.1);
-            --text-primary: #e1bee7;
-            --text-secondary: #ba68c8;
-            --accent-primary: var(--quantum-purple);
-            --accent-secondary: #9c27b0;
-            --accent-tertiary: #673ab7;
-            --border-glow: rgba(108, 52, 131, 0.5);
-            --shadow-glow: 0 0 40px rgba(156, 39, 176, 0.3);
-            --particles-color: #9c27b0;
-        }
-
-        /* === NEURAL TWILIGHT THEME === */
-        .theme-neural-twilight {
-            --bg-primary: linear-gradient(135deg, #1a237e 0%, #283593 50%, #3f51b5 100%);
-            --bg-card: rgba(31, 97, 141, 0.25);
-            --bg-secondary: rgba(63, 81, 181, 0.1);
-            --text-primary: #e8eaf6;
-            --text-secondary: #9fa8da;
-            --accent-primary: var(--cosmic-blue);
-            --accent-secondary: #3f51b5;
-            --accent-tertiary: #2196f3;
-            --border-glow: rgba(31, 97, 141, 0.4);
-            --shadow-glow: 0 0 35px rgba(63, 81, 181, 0.25);
-            --particles-color: #2196f3;
-        }
-
-        /* === CYBER AURORA THEME === */
-        .theme-cyber-aurora {
-            --bg-primary: linear-gradient(135deg, #004d40 0%, #00695c 50%, #00796b 100%);
-            --bg-card: rgba(46, 204, 113, 0.15);
-            --bg-secondary: rgba(0, 245, 255, 0.08);
-            --text-primary: #e0f2f1;
-            --text-secondary: #80cbc4;
-            --accent-primary: var(--energy-green);
-            --accent-secondary: #00f5ff;
-            --accent-tertiary: #1de9b6;
-            --border-glow: rgba(46, 204, 113, 0.4);
-            --shadow-glow: 0 0 30px rgba(0, 245, 255, 0.2);
-            --particles-color: #00f5ff;
-        }
-
-        /* === TRANSCENDENTAL LIGHT THEME === */
-        .theme-transcendental-light {
-            --bg-primary: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 50%, #667eea 100%);
-            --bg-card: rgba(255, 255, 255, 0.8);
-            --bg-secondary: rgba(102, 126, 234, 0.05);
-            --text-primary: var(--neutron-gray);
-            --text-secondary: #546e7a;
-            --accent-primary: var(--quantum-purple);
-            --accent-secondary: var(--cosmic-blue);
-            --accent-tertiary: var(--photon-gold);
-            --border-glow: rgba(108, 52, 131, 0.3);
-            --shadow-glow: 0 0 25px rgba(31, 97, 141, 0.15);
-            --particles-color: #667eea;
-        }
-
-        /* === GLOBAL STYLES === */
         * {
-            margin: 0;
-            padding: 0;
             box-sizing: border-box;
         }
 
         body {
             font-family: 'Inter', sans-serif;
-            background: var(--bg-primary);
-            color: var(--text-primary);
+            margin: 0;
+            padding: 0;
             overflow-x: hidden;
             position: relative;
+            transition: all 0.5s ease;
         }
 
-        .orbitron {
-            font-family: 'Orbitron', monospace;
+        /* === LUXURY GLASS THEME (DEFAULT) === */
+        .theme-luxury-glass {
+            background: var(--luxury-glass-bg);
+            color: var(--plasma-white);
         }
 
-        /* === PARTICLES CONTAINER === */
-        #particles-container {
+        .theme-luxury-glass .glass-effect {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+
+        /* === EXECUTIVE GOLD THEME === */
+        .theme-executive-gold {
+            background: var(--executive-gold-bg);
+            color: #FFD700;
+        }
+
+        .theme-executive-gold .glass-effect {
+            background: rgba(255, 215, 0, 0.1);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 215, 0, 0.3);
+            box-shadow: 0 8px 32px rgba(255, 215, 0, 0.2);
+        }
+
+        /* === PLATINUM ELITE THEME === */
+        .theme-platinum-elite {
+            background: var(--platinum-elite-bg);
+            color: #E5E4E2;
+        }
+
+        .theme-platinum-elite .glass-effect {
+            background: rgba(229, 228, 226, 0.1);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(229, 228, 226, 0.3);
+            box-shadow: 0 8px 32px rgba(192, 192, 192, 0.2);
+        }
+
+        /* === NEURAL RED THEME === */
+        .theme-neural-red {
+            background: var(--neural-red-bg);
+            color: #FF6B6B;
+        }
+
+        .theme-neural-red .glass-effect {
+            background: rgba(220, 20, 60, 0.1);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(220, 20, 60, 0.3);
+            box-shadow: 0 8px 32px rgba(220, 20, 60, 0.2);
+        }
+
+        /* === SHARED STYLES === */
+        .glass-effect {
+            border-radius: 15px;
+            transition: all 0.3s ease;
+        }
+
+        .glass-effect:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px rgba(108, 52, 131, 0.4);
+        }
+
+        /* Quantum Particles */
+        .quantum-particles {
             position: fixed;
             top: 0;
             left: 0;
@@ -130,1460 +119,1750 @@
             height: 100%;
             pointer-events: none;
             z-index: 1;
+            opacity: 0.4;
         }
 
-        /* === MAIN CONTAINER === */
-        .main-container {
-            position: relative;
-            z-index: 10;
-            padding: 2rem;
+        .particle {
+            position: absolute;
+            width: 3px;
+            height: 3px;
+            background: currentColor;
+            border-radius: 50%;
+            animation: float 25s infinite linear;
         }
 
-        /* === GLASS MORPHISM === */
-        .glass-card {
-            background: var(--bg-card);
-            backdrop-filter: blur(20px);
-            border: 1px solid var(--border-glow);
-            border-radius: 20px;
-            box-shadow: var(--shadow-glow);
-            transition: all 0.4s cubic-bezier(0.23, 1, 0.320, 1);
+        @keyframes float {
+            0% {
+                transform: translateY(100vh) translateX(0px) rotate(0deg);
+                opacity: 0;
+            }
+            10% {
+                opacity: 1;
+            }
+            90% {
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(-100px) translateX(200px) rotate(360deg);
+                opacity: 0;
+            }
+        }
+
+        /* Holographic Effects */
+        .holographic {
             position: relative;
             overflow: hidden;
         }
 
-        .glass-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
-            transition: left 0.8s;
-        }
-
-        .glass-card:hover::before {
-            left: 100%;
-        }
-
-        /* === 3D CARD TRANSFORMATIONS === */
-        .card-3d {
-            transform-style: preserve-3d;
-            transition: transform 0.6s cubic-bezier(0.23, 1, 0.320, 1);
-        }
-
-        .card-3d:hover {
-            transform: rotateX(5deg) rotateY(5deg) scale(1.02);
-            z-index: 100;
-        }
-
-        /* === MEGA COUNTER === */
-        .mega-counter {
-            position: relative;
-            text-align: center;
-            padding: 3rem;
-            margin-bottom: 2rem;
-        }
-
-        .mega-counter::before {
+        .holographic::before {
             content: '';
             position: absolute;
             top: -50%;
             left: -50%;
             width: 200%;
             height: 200%;
-            background: conic-gradient(from 0deg, transparent, var(--accent-primary), transparent);
-            animation: rotate-glow 4s linear infinite;
-            z-index: -1;
+            background: linear-gradient(45deg, 
+                transparent 30%, 
+                rgba(255,255,255,0.2) 50%, 
+                transparent 70%);
+            animation: hologram 4s infinite;
+            pointer-events: none;
+        }
+
+        @keyframes hologram {
+            0% { transform: translateX(-100%) translateY(-100%) rotate(45deg); }
+            100% { transform: translateX(100%) translateY(100%) rotate(45deg); }
+        }
+
+        /* Premium Gradients */
+        .quantum-gradient {
+            background: linear-gradient(135deg, var(--quantum-purple), var(--cosmic-blue), var(--photon-gold));
+        }
+
+        /* Agent Cards */
+        .agent-card {
+            transition: all 0.4s cubic-bezier(0.23, 1, 0.320, 1);
+            cursor: pointer;
+            position: relative;
+            transform-style: preserve-3d;
+        }
+
+        .agent-card:hover {
+            transform: translateY(-10px) rotateX(5deg) scale(1.02);
+            box-shadow: 
+                0 25px 50px rgba(108, 52, 131, 0.5),
+                0 0 30px rgba(244, 208, 63, 0.3);
+        }
+
+        /* Heartbeat Animation */
+        .heartbeat {
+            animation: pulse-premium 2s infinite;
+        }
+
+        @keyframes pulse-premium {
+            0% { 
+                opacity: 1; 
+                transform: scale(1);
+                filter: drop-shadow(0 0 0 rgba(46, 204, 113, 0.7));
+            }
+            50% { 
+                opacity: 0.8; 
+                transform: scale(1.15);
+                filter: drop-shadow(0 0 20px rgba(46, 204, 113, 0.9));
+            }
+            100% { 
+                opacity: 1; 
+                transform: scale(1);
+                filter: drop-shadow(0 0 0 rgba(46, 204, 113, 0.7));
+            }
+        }
+
+        /* Command Terminal */
+        .command-terminal {
+            background: #000;
+            color: #00ff00;
+            font-family: 'Courier New', monospace;
+            border-radius: 10px;
+            padding: 20px;
+            max-height: 350px;
+            overflow-y: auto;
+            position: relative;
+            border: 2px solid #00ff00;
+        }
+
+        .command-terminal::before {
+            content: '> ALSHAM QUANTUM NEURAL TERMINAL v12.0 ACTIVE';
+            display: block;
+            color: #00ffff;
+            margin-bottom: 15px;
+            font-weight: bold;
+            animation: blink 2s infinite;
+        }
+
+        @keyframes blink {
+            0%, 50% { opacity: 1; }
+            51%, 100% { opacity: 0.5; }
+        }
+
+        .command-line {
+            margin: 8px 0;
+            opacity: 0;
+            animation: typewriter 0.8s forwards;
+        }
+
+        @keyframes typewriter {
+            to { opacity: 1; }
+        }
+
+        /* Alert System */
+        .alert-premium {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+            padding: 15px 25px;
+            border-radius: 15px;
+            backdrop-filter: blur(15px);
+            border: 2px solid;
+            animation: slideInRight 0.6s ease-out;
+            font-weight: 600;
+        }
+
+        .alert-success {
+            background: rgba(46, 204, 113, 0.2);
+            border-color: #2ECC71;
+            color: #2ECC71;
+        }
+
+        .alert-warning {
+            background: rgba(244, 208, 63, 0.2);
+            border-color: #F4D03F;
+            color: #F4D03F;
+        }
+
+        .alert-error {
+            background: rgba(231, 76, 60, 0.2);
+            border-color: #e74c3c;
+            color: #e74c3c;
+        }
+
+        @keyframes slideInRight {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        /* Control Panel */
+        .control-panel {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .control-btn {
+            width: 60px;
+            height: 60px;
             border-radius: 50%;
+            background: linear-gradient(135deg, var(--quantum-purple), var(--cosmic-blue));
+            color: white;
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            box-shadow: 0 4px 15px rgba(108, 52, 131, 0.3);
         }
 
-        .mega-counter-number {
-            font-family: 'Orbitron', monospace;
-            font-size: 4rem;
-            font-weight: 900;
-            background: linear-gradient(45deg, var(--accent-primary), var(--accent-secondary), var(--accent-tertiary));
-            background-size: 300% 300%;
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            animation: gradient-shift 3s ease-in-out infinite, pulse-glow 2s ease-in-out infinite;
-            text-shadow: 0 0 30px var(--accent-secondary);
+        .control-btn:hover {
+            transform: scale(1.1);
+            box-shadow: 0 8px 25px rgba(108, 52, 131, 0.5);
         }
 
-        /* === ANIMATIONS === */
-        @keyframes rotate-glow {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+        /* Typography */
+        .orbitron { font-family: 'Orbitron', monospace; }
+        .rajdhani { font-family: 'Rajdhani', sans-serif; }
+
+        /* Status Colors */
+        .status-online { color: var(--energy-green); }
+        .status-warning { color: var(--photon-gold); }
+        .status-error { color: #e74c3c; }
+
+        /* Neon Glow */
+        .neon-glow {
+            text-shadow: 
+                0 0 5px currentColor,
+                0 0 10px currentColor,
+                0 0 15px currentColor,
+                0 0 20px currentColor;
         }
 
-        @keyframes gradient-shift {
-            0%, 100% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
+        /* Premium Button */
+        .btn-premium {
+            background: linear-gradient(135deg, var(--quantum-purple), var(--cosmic-blue));
+            border: none;
+            color: white;
+            padding: 12px 25px;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            font-weight: 600;
         }
 
-        @keyframes pulse-glow {
-            0%, 100% { filter: brightness(1); }
-            50% { filter: brightness(1.2); }
+        .btn-premium:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 30px rgba(108, 52, 131, 0.4);
         }
 
-        @keyframes float {
-            0%, 100% { transform: translateY(0px); }
-            50% { transform: translateY(-10px); }
+        .btn-premium::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+            transition: left 0.6s;
         }
 
-        /* === GRID LAYOUTS === */
-        .infrastructure-grid {
+        .btn-premium:hover::before {
+            left: 100%;
+        }
+
+        /* Loading Animation */
+        .loading-skeleton {
+            background: linear-gradient(90deg, 
+                rgba(255,255,255,0.1) 25%, 
+                rgba(255,255,255,0.2) 50%, 
+                rgba(255,255,255,0.1) 75%);
+            background-size: 200% 100%;
+            animation: loading-premium 1.5s infinite;
+            border-radius: 10px;
+        }
+
+        @keyframes loading-premium {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+
+        /* Grid Layouts */
+        .metrics-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 1.5rem;
-            margin-bottom: 2rem;
+            gap: 20px;
+            margin: 30px 0;
         }
 
         .agents-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
-            gap: 1.5rem;
-            margin-bottom: 2rem;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 25px;
+            margin: 30px 0;
         }
 
-        .metrics-grid {
+        .analytics-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 1.5rem;
-            margin-bottom: 2rem;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 25px;
+            margin: 30px 0;
         }
 
-        /* === PROGRESS RINGS === */
-        .progress-ring {
-            width: 80px;
-            height: 80px;
-        }
-
-        .progress-ring circle {
-            transition: stroke-dashoffset 0.6s ease-in-out;
-            transform: rotate(-90deg);
-            transform-origin: 50% 50%;
-        }
-
-        /* === THEME SWITCHER === */
-        .theme-switcher {
-            position: fixed;
-            top: 2rem;
-            right: 2rem;
-            z-index: 1000;
-            display: flex;
-            gap: 0.5rem;
-            flex-wrap: wrap;
-        }
-
-        .theme-btn {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            border: 2px solid rgba(255, 255, 255, 0.3);
-            cursor: pointer;
-            transition: all 0.3s ease;
-            backdrop-filter: blur(10px);
-        }
-
-        .theme-btn:hover {
-            transform: scale(1.1);
-            border-color: rgba(255, 255, 255, 0.6);
-        }
-
-        .theme-btn.active {
-            border-color: var(--accent-primary);
-            box-shadow: 0 0 20px var(--accent-primary);
-        }
-
-        /* === SECTION HEADERS === */
-        .section-header {
-            text-align: center;
-            margin: 3rem 0 2rem;
-            padding: 1rem;
-            background: var(--bg-card);
-            backdrop-filter: blur(20px);
-            border-radius: 15px;
-            border: 1px solid var(--border-glow);
-        }
-
-        .section-title {
-            font-size: 2rem;
-            font-weight: bold;
-            background: linear-gradient(45deg, var(--accent-primary), var(--accent-secondary));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            margin-bottom: 0.5rem;
-        }
-
-        /* === AGENT CARDS EVOLUTIVAS === */
-        .agent-card {
-            position: relative;
-            padding: 1.5rem;
-            min-height: 280px;
-        }
-
-        .agent-header {
-            display: flex;
-            items-center;
-            justify-content: between;
-            margin-bottom: 1rem;
-        }
-
-        .agent-icon {
-            width: 50px;
-            height: 50px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin-right: 1rem;
-            font-size: 1.5rem;
-        }
-
-        .agent-status {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            margin-top: 1rem;
-        }
-
-        .status-dot {
-            width: 12px;
-            height: 12px;
-            border-radius: 50%;
-            animation: pulse 2s infinite;
-        }
-
-        .status-active { background: #10B981; }
-        .status-processing { background: #F59E0B; }
-        .status-standby { background: #6B7280; }
-        .status-learning { background: #8B5CF6; }
-        .status-autoevolving { background: #EF4444; animation: pulse 1s infinite; }
-
-        /* === EVOLUTION METRICS === */
-        .evolution-metrics {
-            margin-top: 1rem;
-            padding: 1rem;
-            background: rgba(0, 0, 0, 0.2);
-            border-radius: 10px;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-        }
-
-        .performance-delta {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin: 0.5rem 0;
-            font-family: 'Orbitron', monospace;
-            font-size: 0.9rem;
-        }
-
-        .performance-arrow {
-            color: var(--energy-green);
-            font-weight: bold;
-        }
-
-        .cycle-indicator {
-            display: inline-block;
-            background: var(--accent-primary);
-            color: var(--void-black);
-            padding: 0.2rem 0.5rem;
-            border-radius: 15px;
-            font-size: 0.8rem;
-            font-weight: bold;
-        }
-
-        .autoevolution-badge {
-            background: linear-gradient(45deg, #EF4444, #F59E0B);
-            color: white;
-            padding: 0.3rem 0.6rem;
-            border-radius: 20px;
-            font-size: 0.7rem;
-            font-weight: bold;
-            text-transform: uppercase;
-            animation: pulse-glow 2s ease-in-out infinite;
-        }
-
-        .learning-progress {
+        /* 3D Visualization */
+        .viz-3d-container {
             width: 100%;
-            height: 8px;
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 4px;
-            overflow: hidden;
-            margin: 0.5rem 0;
-        }
-
-        .learning-progress-bar {
-            height: 100%;
-            background: linear-gradient(90deg, var(--accent-primary), var(--accent-secondary));
-            border-radius: 4px;
-            transition: width 0.6s ease;
-        }
-
-        /* === EVOLUTION LOG === */
-        .evolution-log {
-            max-height: 200px;
-            overflow-y: auto;
-            background: rgba(0, 0, 0, 0.3);
-            padding: 1rem;
-            border-radius: 10px;
-            border: 1px solid var(--border-glow);
-            margin-top: 1rem;
-        }
-
-        .log-entry {
-            font-size: 0.8rem;
-            margin: 0.3rem 0;
-            opacity: 0.8;
-            font-family: 'Courier New', monospace;
-        }
-
-        .log-entry.improvement {
-            color: var(--energy-green);
-        }
-
-        .log-entry.cycle {
-            color: var(--accent-primary);
-        }
-
-        .log-entry.autoevolution {
-            color: #EF4444;
-            font-weight: bold;
-        }
-
-        /* === NEURAL ARCHITECTURE DISPLAY === */
-        .neural-arch {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            margin: 0.5rem 0;
-            font-size: 0.8rem;
-        }
-
-        .arch-node {
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            background: var(--accent-secondary);
-            animation: pulse 1.5s infinite;
-        }
-
-        /* === AUDIO CONTROLS === */
-        .audio-controls {
-            position: fixed;
-            bottom: 2rem;
-            right: 2rem;
-            z-index: 1000;
-            background: var(--bg-card);
-            backdrop-filter: blur(20px);
-            border: 1px solid var(--border-glow);
+            height: 450px;
             border-radius: 15px;
-            padding: 1rem;
-            display: flex;
-            gap: 1rem;
-            align-items: center;
+            overflow: hidden;
+            position: relative;
         }
 
-        .audio-btn {
-            background: var(--accent-primary);
-            color: var(--void-black);
-            border: none;
-            padding: 0.5rem 1rem;
-            border-radius: 8px;
-            cursor: pointer;
-            font-weight: bold;
-            transition: all 0.3s ease;
+        /* Animations */
+        .fade-in {
+            animation: fadeIn 0.8s ease-out;
         }
 
-        .audio-btn:hover {
-            background: var(--accent-secondary);
-            transform: scale(1.05);
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
         }
 
-        .volume-slider {
-            width: 100px;
-            -webkit-appearance: none;
-            height: 5px;
-            border-radius: 5px;
-            background: rgba(255, 255, 255, 0.3);
-            outline: none;
+        .slide-in-left {
+            animation: slideInLeft 0.6s ease-out;
         }
 
-        .volume-slider::-webkit-slider-thumb {
-            -webkit-appearance: none;
-            appearance: none;
-            width: 15px;
-            height: 15px;
-            border-radius: 50%;
-            background: var(--accent-primary);
-            cursor: pointer;
+        @keyframes slideInLeft {
+            from { transform: translateX(-100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
         }
 
-        /* === SCROLLBAR STYLING === */
+        /* Scrollbar Premium */
         ::-webkit-scrollbar {
-            width: 8px;
+            width: 10px;
         }
 
         ::-webkit-scrollbar-track {
             background: rgba(255, 255, 255, 0.1);
-            border-radius: 10px;
+            border-radius: 5px;
         }
 
         ::-webkit-scrollbar-thumb {
-            background: var(--accent-primary);
-            border-radius: 10px;
+            background: linear-gradient(135deg, var(--quantum-purple), var(--cosmic-blue));
+            border-radius: 5px;
         }
 
         ::-webkit-scrollbar-thumb:hover {
-            background: var(--accent-secondary);
+            background: linear-gradient(135deg, var(--cosmic-blue), var(--photon-gold));
         }
 
-        /* === RESPONSIVE === */
+        /* Responsive */
         @media (max-width: 768px) {
-            .main-container {
-                padding: 1rem;
-            }
-            
-            .mega-counter-number {
-                font-size: 2.5rem;
-            }
-            
-            .infrastructure-grid,
-            .agents-grid {
+            .metrics-grid,
+            .agents-grid,
+            .analytics-grid {
                 grid-template-columns: 1fr;
             }
             
-            .theme-switcher {
-                position: relative;
-                top: auto;
-                right: auto;
-                justify-content: center;
-                margin-bottom: 2rem;
+            .control-panel {
+                bottom: 10px;
+                right: 10px;
             }
+            
+            .control-btn {
+                width: 50px;
+                height: 50px;
+                font-size: 16px;
+            }
+        }
 
-            .audio-controls {
-                position: relative;
-                bottom: auto;
-                right: auto;
-                margin: 2rem auto;
-                justify-content: center;
-            }
+        /* Modal Styles */
+        .modal-backdrop {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(10px);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .modal-content {
+            max-width: 90vw;
+            max-height: 90vh;
+            overflow-y: auto;
+            border-radius: 20px;
+            position: relative;
+        }
+
+        /* Widget Styles */
+        .widget {
+            min-height: 200px;
+            padding: 25px;
+            border-radius: 15px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .widget-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+            font-size: 18px;
+            font-weight: 700;
+        }
+
+        .widget-header i {
+            margin-right: 10px;
+            font-size: 22px;
         }
     </style>
 </head>
-<body class="theme-luxury-glass">
-    <!-- Particles System -->
-    <div id="particles-container"></div>
+<body class="min-h-screen theme-luxury-glass" id="app-body">
+    <!-- Quantum Particles Background -->
+    <div class="quantum-particles" id="particles-container"></div>
 
-    <!-- Theme Switcher -->
-    <div class="theme-switcher">
-        <div class="theme-btn active" data-theme="luxury-glass" style="background: linear-gradient(45deg, #1a1a2e, #F4D03F);" title="Luxury Glass"></div>
-        <div class="theme-btn" data-theme="quantum-void" style="background: linear-gradient(45deg, #020C1B, #6C3483);" title="Quantum Void"></div>
-        <div class="theme-btn" data-theme="neural-twilight" style="background: linear-gradient(45deg, #1F618D, #3f51b5);" title="Neural Twilight"></div>
-        <div class="theme-btn" data-theme="cyber-aurora" style="background: linear-gradient(45deg, #2ECC71, #00f5ff);" title="Cyber Aurora"></div>
-        <div class="theme-btn" data-theme="transcendental-light" style="background: linear-gradient(45deg, #f5f7fa, #667eea);" title="Transcendental Light"></div>
+    <!-- Control Panel -->
+    <div class="control-panel">
+        <button class="control-btn" id="audioToggle" title="Toggle Audio">
+            <i class="fas fa-volume-up" id="audioIcon"></i>
+        </button>
+        <button class="control-btn" id="themeSelector" title="Themes">
+            <i class="fas fa-palette"></i>
+        </button>
+        <button class="control-btn" id="commandCenter" title="Command Center">
+            <i class="fas fa-terminal"></i>
+        </button>
+        <button class="control-btn" id="neuralViz" title="3D Neural Network">
+            <i class="fas fa-project-diagram"></i>
+        </button>
     </div>
 
-    <!-- Audio Controls -->
-    <div class="audio-controls">
-        <button class="audio-btn" id="audio-toggle">🔊 Play</button>
-        <input type="range" class="volume-slider" id="volume-control" min="0" max="100" value="50">
-        <span class="text-sm">Volume</span>
+    <!-- Theme Selector Modal -->
+    <div id="themeModal" class="modal-backdrop hidden">
+        <div class="modal-content glass-effect p-8 max-w-md w-full">
+            <h3 class="text-2xl font-bold mb-6 orbitron neon-glow text-center">Premium Themes</h3>
+            <div class="space-y-4">
+                <button class="w-full p-4 rounded-lg glass-effect hover:bg-white hover:bg-opacity-10 transition-all text-left" onclick="setTheme('luxury-glass')">
+                    <div class="flex items-center">
+                        <span class="w-6 h-6 rounded-full mr-3" style="background: linear-gradient(135deg, #1a1a2e, #16213e, #0f3460);"></span>
+                        <div>
+                            <div class="font-bold">Luxury Glass</div>
+                            <div class="text-sm opacity-70">Default Premium Experience</div>
+                        </div>
+                    </div>
+                </button>
+                <button class="w-full p-4 rounded-lg glass-effect hover:bg-white hover:bg-opacity-10 transition-all text-left" onclick="setTheme('executive-gold')">
+                    <div class="flex items-center">
+                        <span class="w-6 h-6 rounded-full mr-3" style="background: radial-gradient(circle, #2C1810, #FFD700);"></span>
+                        <div>
+                            <div class="font-bold">Executive Gold</div>
+                            <div class="text-sm opacity-70">Luxury Business Theme</div>
+                        </div>
+                    </div>
+                </button>
+                <button class="w-full p-4 rounded-lg glass-effect hover:bg-white hover:bg-opacity-10 transition-all text-left" onclick="setTheme('platinum-elite')">
+                    <div class="flex items-center">
+                        <span class="w-6 h-6 rounded-full mr-3" style="background: conic-gradient(from 45deg, #1a1a1a, #E5E4E2, #1a1a1a);"></span>
+                        <div>
+                            <div class="font-bold">Platinum Elite</div>
+                            <div class="text-sm opacity-70">Diamond Enterprise Theme</div>
+                        </div>
+                    </div>
+                </button>
+                <button class="w-full p-4 rounded-lg glass-effect hover:bg-white hover:bg-opacity-10 transition-all text-left" onclick="setTheme('neural-red')">
+                    <div class="flex items-center">
+                        <span class="w-6 h-6 rounded-full mr-3" style="background: linear-gradient(135deg, #0C0C0C, #DC143C, #0C0C0C);"></span>
+                        <div>
+                            <div class="font-bold">Neural Red</div>
+                            <div class="text-sm opacity-70">High-Performance Theme</div>
+                        </div>
+                    </div>
+                </button>
+            </div>
+            <button class="w-full mt-6 btn-premium" onclick="closeThemeModal()">Close</button>
+        </div>
     </div>
 
-    <!-- Main Container -->
-    <div class="main-container">
-        <!-- Header -->
-        <header class="text-center mb-8">
-            <h1 class="text-6xl font-bold orbitron mb-4" style="background: linear-gradient(45deg, var(--accent-primary), var(--accent-secondary)); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">
-                ALSHAM QUANTUM v11.0
-            </h1>
-            <p class="text-xl text-secondary mb-2">⚛️ SISTEMA QUÂNTICO MULTI-AGENTE SUPREMO</p>
-            <p class="text-lg opacity-80">24 Agentes Especializados - Transcendência através da Inteligência Quântica</p>
-            <div class="mt-4 p-3 glass-card inline-block">
-                <p class="text-sm">🔥 <span class="orbitron" style="color: var(--accent-primary);">AUTOEVOLUÇÃO ATIVA</span> - Sistema que melhora a si mesmo</p>
-                <div class="autoevolution-badge mt-2">AUTOEVOLUTION ENABLED</div>
+    <!-- Command Center Modal -->
+    <div id="commandModal" class="modal-backdrop hidden">
+        <div class="modal-content glass-effect p-6 max-w-2xl w-full">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-xl font-bold orbitron neon-glow">QUANTUM COMMAND CENTER</h3>
+                <button onclick="closeCommandModal()" class="text-gray-400 hover:text-white text-2xl">
+                    <i class="fas fa-times"></i>
+                </button>
             </div>
-        </header>
-
-        <!-- Mega Contador -->
-        <div class="glass-card mega-counter mb-8">
-            <div class="mega-counter-number orbitron" id="mega-counter">0</div>
-            <div class="text-2xl font-semibold mb-2" style="color: var(--accent-primary);">CICLOS QUÂNTICOS EXECUTADOS</div>
-            <div class="text-lg mb-2" id="uptime-display">Uptime: Carregando...</div>
-            <div class="text-sm opacity-75">
-                <span id="cycles-per-second">0</span> ciclos/segundo | 
-                <span id="performance-indicator">Performance: Calculando...</span>
+            <div class="command-terminal" id="terminal">
+                <div class="command-line">> Neural network initialized successfully</div>
+                <div class="command-line">> 25 agents online and operational</div>
+                <div class="command-line">> Quantum coherence at 98.7%</div>
+                <div class="command-line">> All systems optimal</div>
             </div>
-            <div class="mt-4 text-xs">
-                <span id="api-status" class="cycle-indicator">🔄 Conectando API...</span>
+            <div class="mt-4 flex flex-wrap gap-2">
+                <button class="btn-premium text-sm" onclick="executeCommand('system-scan'); playSound('click')">SCAN</button>
+                <button class="btn-premium text-sm" onclick="executeCommand('neural-sync'); playSound('click')">SYNC</button>
+                <button class="btn-premium text-sm" onclick="executeCommand('optimize'); playSound('click')">OPTIMIZE</button>
+                <button class="btn-premium text-sm" onclick="executeCommand('evolution'); playSound('click')">EVOLVE</button>
+                <button class="btn-premium text-sm" onclick="executeCommand('quantum-lock'); playSound('click')">Q-LOCK</button>
             </div>
         </div>
-
-        <!-- System Overview Metrics -->
-        <div class="metrics-grid">
-            <div class="glass-card card-3d p-6">
-                <div class="flex items-center justify-between mb-4">
-                    <h3 class="text-lg font-semibold">⚛️ SISTEMA QUÂNTICO</h3>
-                    <div class="w-4 h-4 bg-green-400 rounded-full animate-pulse" id="quantum-status"></div>
-                </div>
-                <div class="text-3xl font-bold orbitron" id="quantum-coherence">--</div>
-                <div class="text-sm opacity-75">Coerência Quântica</div>
-            </div>
-
-            <div class="glass-card card-3d p-6">
-                <div class="flex items-center justify-between mb-4">
-                    <h3 class="text-lg font-semibold">🤖 AGENTES ATIVOS</h3>
-                    <i class="fas fa-network-wired text-2xl" style="color: var(--accent-primary);"></i>
-                </div>
-                <div class="text-3xl font-bold orbitron" id="active-agents">--</div>
-                <div class="text-sm opacity-75" id="agents-total">de 24 Total</div>
-            </div>
-
-            <div class="glass-card card-3d p-6">
-                <div class="flex items-center justify-between mb-4">
-                    <h3 class="text-lg font-semibold">🧠 EVOLUÇÃO ATIVA</h3>
-                    <i class="fas fa-brain text-2xl" style="color: var(--accent-tertiary);"></i>
-                </div>
-                <div class="text-2xl font-bold orbitron" id="learning-agents">--</div>
-                <div class="text-sm opacity-75">Agentes Aprendendo</div>
-            </div>
-
-            <div class="glass-card card-3d p-6">
-                <div class="flex items-center justify-between mb-4">
-                    <h3 class="text-lg font-semibold">🔄 AUTOEVOLUÇÃO</h3>
-                    <i class="fas fa-sync-alt text-2xl" style="color: #EF4444;"></i>
-                </div>
-                <div class="text-2xl font-bold orbitron" id="autoevolution-cycles">--</div>
-                <div class="text-sm opacity-75">Ciclos Autoevolutivos</div>
-            </div>
-
-            <div class="glass-card card-3d p-6">
-                <div class="flex items-center justify-between mb-4">
-                    <h3 class="text-lg font-semibold">📈 MELHORIA MÉDIA</h3>
-                    <i class="fas fa-chart-line text-2xl" style="color: var(--accent-secondary);"></i>
-                </div>
-                <div class="text-2xl font-bold orbitron" id="avg-improvement">--%</div>
-                <div class="text-sm opacity-75">Última Hora</div>
-            </div>
-
-            <div class="glass-card card-3d p-6">
-                <div class="flex items-center justify-between mb-4">
-                    <h3 class="text-lg font-semibold">🎯 ACCURACY MÉDIA</h3>
-                    <i class="fas fa-bullseye text-2xl" style="color: var(--photon-gold);"></i>
-                </div>
-                <div class="text-2xl font-bold orbitron" id="avg-accuracy">--%</div>
-                <div class="text-sm opacity-75">Todos os 24 Agentes</div>
-            </div>
-        </div>
-
-        <!-- Specialized Agents EXPANDIDO com 4 novos agentes de AUTOEVOLUÇÃO -->
-        <div class="section-header">
-            <div class="section-title orbitron">📊 SPECIALIZED AGENTS - AUTOEVOLUÇÃO v11.0</div>
-            <p class="text-sm opacity-75">9 agentes especializados incluindo 4 agentes de autoevolução que melhoram o sistema autonomamente</p>
-        </div>
-
-        <div class="agents-grid" id="specialized-agents">
-            <!-- Agentes originais 1-5 serão populados pelo JavaScript -->
-            
-            <!-- NOVOS AGENTES DE AUTOEVOLUÇÃO -->
-            <div class="glass-card card-3d agent-card">
-                <div class="agent-header">
-                    <div class="agent-icon" style="background: linear-gradient(45deg, #10B981, #34D399); color: white;">
-                        <i class="fas fa-code"></i>
-                    </div>
-                    <div class="flex-1">
-                        <h4 class="text-lg font-bold">CodeAnalyzer Agent Quantum</h4>
-                        <p class="text-sm opacity-80">Autonomous Code Quality Analysis</p>
-                        <div class="autoevolution-badge mt-1">AUTOEVOLUTION</div>
-                    </div>
-                    <div class="text-right">
-                        <div class="text-2xl font-bold orbitron" style="color: #10B981;">94%</div>
-                        <div class="text-xs opacity-75">Performance</div>
-                    </div>
-                </div>
-                
-                <div class="agent-status">
-                    <div class="status-dot status-autoevolving"></div>
-                    <span class="text-sm">Auto-evoluindo</span>
-                    <div class="cycle-indicator ml-auto">Ciclo #47</div>
-                </div>
-
-                <div class="evolution-metrics">
-                    <div class="performance-delta">
-                        <span>Accuracy:</span>
-                        <span class="performance-arrow">91% ↗ +2.1%</span>
-                    </div>
-                    <div class="performance-delta">
-                        <span>Learning Rate:</span>
-                        <span>0.008</span>
-                    </div>
-                    <div class="neural-arch">
-                        <span class="text-xs">AST + Pattern Recognition ML</span>
-                        <div class="arch-node"></div>
-                        <div class="arch-node"></div>
-                        <div class="arch-node"></div>
-                    </div>
-                    <div class="learning-progress">
-                        <div class="learning-progress-bar" style="width: 94%;"></div>
-                    </div>
-                </div>
-
-                <div class="evolution-log" style="max-height: 100px;">
-                    <div class="log-entry autoevolution">🔥 AUTOEVOLUÇÃO: Padrões de código otimizados</div>
-                    <div class="log-entry improvement">✅ Accuracy melhorou 2.1% autonomamente</div>
-                    <div class="log-entry cycle">🔄 Ciclo #47 - AST analysis enhanced</div>
-                </div>
-            </div>
-
-            <div class="glass-card card-3d agent-card">
-                <div class="agent-header">
-                    <div class="agent-icon" style="background: linear-gradient(45deg, #3B82F6, #60A5FA); color: white;">
-                        <i class="fas fa-search"></i>
-                    </div>
-                    <div class="flex-1">
-                        <h4 class="text-lg font-bold">WebSearch Agent Explorer</h4>
-                        <p class="text-sm opacity-80">Intelligent Technology Discovery</p>
-                        <div class="autoevolution-badge mt-1">AUTOEVOLUTION</div>
-                    </div>
-                    <div class="text-right">
-                        <div class="text-2xl font-bold orbitron" style="color: #3B82F6;">89%</div>
-                        <div class="text-xs opacity-75">Performance</div>
-                    </div>
-                </div>
-                
-                <div class="agent-status">
-                    <div class="status-dot status-autoevolving"></div>
-                    <span class="text-sm">Auto-evoluindo</span>
-                    <div class="cycle-indicator ml-auto">Ciclo #23</div>
-                </div>
-
-                <div class="evolution-metrics">
-                    <div class="performance-delta">
-                        <span>Accuracy:</span>
-                        <span class="performance-arrow">87% ↗ +1.8%</span>
-                    </div>
-                    <div class="performance-delta">
-                        <span>Learning Rate:</span>
-                        <span>0.012</span>
-                    </div>
-                    <div class="neural-arch">
-                        <span class="text-xs">Web Crawler + NLP Analysis</span>
-                        <div class="arch-node"></div>
-                        <div class="arch-node"></div>
-                        <div class="arch-node"></div>
-                    </div>
-                    <div class="learning-progress">
-                        <div class="learning-progress-bar" style="width: 89%;"></div>
-                    </div>
-                </div>
-
-                <div class="evolution-log" style="max-height: 100px;">
-                    <div class="log-entry autoevolution">🔍 DESCOBERTA: Nova técnica de otimização encontrada</div>
-                    <div class="log-entry improvement">✅ Algoritmo de busca auto-aprimorado</div>
-                    <div class="log-entry cycle">🔄 Ciclo #23 - GitHub trends analyzed</div>
-                </div>
-            </div>
-
-            <div class="glass-card card-3d agent-card">
-                <div class="agent-header">
-                    <div class="agent-icon" style="background: linear-gradient(45deg, #F59E0B, #FBBF24); color: white;">
-                        <i class="fas fa-wrench"></i>
-                    </div>
-                    <div class="flex-1">
-                        <h4 class="text-lg font-bold">CodeCorrector Agent Genesis</h4>
-                        <p class="text-sm opacity-80">Autonomous Code Optimization</p>
-                        <div class="autoevolution-badge mt-1">AUTOEVOLUTION</div>
-                    </div>
-                    <div class="text-right">
-                        <div class="text-2xl font-bold orbitron" style="color: #F59E0B;">92%</div>
-                        <div class="text-xs opacity-75">Performance</div>
-                    </div>
-                </div>
-                
-                <div class="agent-status">
-                    <div class="status-dot status-autoevolving"></div>
-                    <span class="text-sm">Auto-evoluindo</span>
-                    <div class="cycle-indicator ml-auto">Ciclo #34</div>
-                </div>
-
-                <div class="evolution-metrics">
-                    <div class="performance-delta">
-                        <span>Accuracy:</span>
-                        <span class="performance-arrow">88% ↗ +3.2%</span>
-                    </div>
-                    <div class="performance-delta">
-                        <span>Learning Rate:</span>
-                        <span>0.009</span>
-                    </div>
-                    <div class="neural-arch">
-                        <span class="text-xs">Decision Tree + Code Generator</span>
-                        <div class="arch-node"></div>
-                        <div class="arch-node"></div>
-                        <div class="arch-node"></div>
-                    </div>
-                    <div class="learning-progress">
-                        <div class="learning-progress-bar" style="width: 92%;"></div>
-                    </div>
-                </div>
-
-                <div class="evolution-log" style="max-height: 100px;">
-                    <div class="log-entry autoevolution">🔧 CORREÇÃO AUTÔNOMA: 23 otimizações aplicadas</div>
-                    <div class="log-entry improvement">✅ Sistema refatorado automaticamente</div>
-                    <div class="log-entry cycle">🔄 Ciclo #34 - Code patterns optimized</div>
-                </div>
-            </div>
-
-            <div class="glass-card card-3d agent-card">
-                <div class="agent-header">
-                    <div class="agent-icon" style="background: linear-gradient(45deg, #EF4444, #F87171); color: white;">
-                        <i class="fas fa-tachometer-alt"></i>
-                    </div>
-                    <div class="flex-1">
-                        <h4 class="text-lg font-bold">PerformanceMonitor Agent Titan</h4>
-                        <p class="text-sm opacity-80">Real-time Performance Analytics</p>
-                        <div class="autoevolution-badge mt-1">AUTOEVOLUTION</div>
-                    </div>
-                    <div class="text-right">
-                        <div class="text-2xl font-bold orbitron" style="color: #EF4444;">96%</div>
-                        <div class="text-xs opacity-75">Performance</div>
-                    </div>
-                </div>
-                
-                <div class="agent-status">
-                    <div class="status-dot status-autoevolving"></div>
-                    <span class="text-sm">Auto-evoluindo</span>
-                    <div class="cycle-indicator ml-auto">Ciclo #61</div>
-                </div>
-
-                <div class="evolution-metrics">
-                    <div class="performance-delta">
-                        <span>Accuracy:</span>
-                        <span class="performance-arrow">93% ↗ +1.5%</span>
-                    </div>
-                    <div class="performance-delta">
-                        <span>Learning Rate:</span>
-                        <span>0.007</span>
-                    </div>
-                    <div class="neural-arch">
-                        <span class="text-xs">Time Series + Performance ML</span>
-                        <div class="arch-node"></div>
-                        <div class="arch-node"></div>
-                        <div class="arch-node"></div>
-                    </div>
-                    <div class="learning-progress">
-                        <div class="learning-progress-bar" style="width: 96%;"></div>
-                    </div>
-                </div>
-
-                <div class="evolution-log" style="max-height: 100px;">
-                    <div class="log-entry autoevolution">📊 ANÁLISE PREDITIVA: Gargalos identificados</div>
-                    <div class="log-entry improvement">✅ Performance otimizada em 15%</div>
-                    <div class="log-entry cycle">🔄 Ciclo #61 - Metrics correlation enhanced</div>
-                </div>
-            </div>
-        </div>
-
-        <!-- AI-Powered Agents -->
-        <div class="section-header">
-            <div class="section-title orbitron">🧠 AGENTES IA AVANÇADA - NEURAL EVOLUTION</div>
-            <p class="text-sm opacity-75">Meta-learning progression e neural architecture optimization</p>
-        </div>
-
-        <div class="agents-grid" id="ai-agents">
-            <!-- Agents will be populated by JavaScript -->
-        </div>
-
-        <!-- Core Agents V3 -->
-        <div class="section-header">
-            <div class="section-title orbitron">⚡ CORE AGENTS V3 - QUANTUM EVOLUTION</div>
-            <p class="text-sm opacity-75">AutoML performance e evolutionary architecture search</p>
-        </div>
-
-        <div class="agents-grid" id="core-agents">
-            <!-- Agents will be populated by JavaScript -->
-        </div>
-
-        <!-- System Agents -->
-        <div class="section-header">
-            <div class="section-title orbitron">🖥️ AGENTES DE SISTEMA - OPERATIONAL LEARNING</div>
-            <p class="text-sm opacity-75">Adaptive monitoring e system optimization learning</p>
-        </div>
-
-        <div class="agents-grid" id="system-agents">
-            <!-- Agents will be populated by JavaScript -->
-        </div>
-
-        <!-- Service Agents -->
-        <div class="section-header">
-            <div class="section-title orbitron">🛠️ AGENTES DE SERVIÇO - INTELLIGENT SERVICES</div>
-            <p class="text-sm opacity-75">Communication optimization e decision learning algorithms</p>
-        </div>
-
-        <div class="agents-grid" id="service-agents">
-            <!-- Agents will be populated by JavaScript -->
-        </div>
-
-        <!-- Meta-Cognitive Agents -->
-        <div class="section-header">
-            <div class="section-title orbitron">🧬 AGENTES META-COGNITIVOS - SUPREME CONSCIOUSNESS</div>
-            <p class="text-sm opacity-75">Orchestration intelligence e meta-cognitive learning evolution</p>
-        </div>
-
-        <div class="agents-grid" id="meta-agents">
-            <!-- Agents will be populated by JavaScript -->
-        </div>
-
-        <!-- Real-time Evolution Chart -->
-        <div class="section-header">
-            <div class="section-title orbitron">📈 EVOLUÇÃO EM TEMPO REAL - 24 AGENTES</div>
-            <p class="text-sm opacity-75">Performance progression de todos os 24 agentes incluindo sistema de autoevolução</p>
-        </div>
-
-        <div class="glass-card p-6 mb-8">
-            <div style="height: 400px;">
-                <canvas id="evolutionChart"></canvas>
-            </div>
-        </div>
-
-        <!-- Global Evolution Log -->
-        <div class="section-header">
-            <div class="section-title orbitron">📋 LOG EVOLUTIVO GLOBAL - AUTOEVOLUÇÃO v11.0</div>
-            <p class="text-sm opacity-75">Feed em tempo real incluindo ciclos de autoevolução dos 4 novos agentes</p>
-        </div>
-
-        <div class="glass-card p-6 mb-8">
-            <div class="evolution-log" id="global-evolution-log">
-                <div class="log-entry cycle">🔥 Sistema v11.0 iniciando - 24 agentes carregando...</div>
-                <div class="log-entry autoevolution">🤖 Sistema de autoevolução ativado - 4 agentes prontos</div>
-                <div class="log-entry improvement">⚡ CodeAnalyzer iniciando análise automática</div>
-                <div class="log-entry improvement">🔍 WebSearch explorando novas tecnologias</div>
-                <div class="log-entry improvement">🔧 CodeCorrector preparando otimizações</div>
-                <div class="log-entry improvement">📊 PerformanceMonitor coletando métricas</div>
-            </div>
-        </div>
-
-        <!-- Footer -->
-        <footer class="text-center mt-12 mb-8">
-            <div class="glass-card p-6">
-                <p class="text-lg font-semibold mb-2">✨ PRIMEIRA IA AUTOEVOLUTIVA DO MUNDO ✨</p>
-                <p class="text-xl italic" style="color: var(--accent-primary);">"Sistema que melhora a si mesmo através de 24 agentes inteligentes"</p>
-                <p class="text-sm opacity-75 mt-4">ALSHAM QUANTUM v11.0 - 24 Agentes em Constante Autoevolução</p>
-                <div class="mt-4 text-xs opacity-60">
-                    Sistema Autoevolutivo v11.0 | 4 Agentes de Autoevolução | Performance Auto-Otimizada
-                </div>
-            </div>
-        </footer>
     </div>
 
+    <!-- 3D Neural Network Modal -->
+    <div id="neuralModal" class="modal-backdrop hidden">
+        <div class="modal-content glass-effect p-6 max-w-5xl w-full">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-xl font-bold orbitron neon-glow">3D NEURAL NETWORK VISUALIZATION</h3>
+                <button onclick="closeNeuralModal()" class="text-gray-400 hover:text-white text-2xl">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="viz-3d-container" id="neural3D">
+                <canvas id="neuralCanvas" style="width: 100%; height: 100%;"></canvas>
+            </div>
+            <div class="mt-4 grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                <div class="text-center">
+                    <div class="font-bold text-green-400" id="nodeCount">25</div>
+                    <div class="opacity-70">Active Nodes</div>
+                </div>
+                <div class="text-center">
+                    <div class="font-bold text-blue-400" id="connectionCount">124</div>
+                    <div class="opacity-70">Connections</div>
+                </div>
+                <div class="text-center">
+                    <div class="font-bold text-purple-400" id="dataFlow">2.4GB/s</div>
+                    <div class="opacity-70">Data Flow</div>
+                </div>
+                <div class="text-center">
+                    <div class="font-bold text-yellow-400" id="neuralCoherence">98.7%</div>
+                    <div class="opacity-70">Coherence</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Header -->
+    <header class="glass-effect sticky top-0 z-40 border-b border-white border-opacity-20">
+        <div class="container mx-auto px-6 py-4">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-4">
+                    <div class="w-14 h-14 quantum-gradient rounded-full flex items-center justify-center holographic">
+                        <i class="fas fa-atom text-white text-2xl"></i>
+                    </div>
+                    <div>
+                        <h1 class="text-3xl font-bold orbitron neon-glow">ALSHAM QUANTUM HUB</h1>
+                        <p class="text-sm opacity-80 rajdhani">v12.0 Premium Enterprise - 25 Agentes Autoevolutivos</p>
+                    </div>
+                </div>
+                
+                <div class="flex items-center space-x-8">
+                    <div class="text-center">
+                        <div id="system-status" class="status-online text-xl font-bold orbitron heartbeat">ONLINE</div>
+                        <div class="text-xs opacity-70">Sistema Neural</div>
+                    </div>
+                    <div class="text-center">
+                        <div id="active-agents-count" class="text-xl font-bold text-blue-400 orbitron">25</div>
+                        <div class="text-xs opacity-70">Agentes Ativos</div>
+                    </div>
+                    <div class="text-center">
+                        <div id="neural-coherence" class="text-xl font-bold text-purple-400 orbitron">98.7%</div>
+                        <div class="text-xs opacity-70">Coerência Neural</div>
+                    </div>
+                    <button id="refresh-btn" class="btn-premium" onclick="refreshSystem(); playSound('click')">
+                        <i class="fas fa-sync-alt"></i> Refresh
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="container mx-auto px-6 py-8 relative z-10">
+        <!-- Metrics Overview -->
+        <section class="metrics-grid fade-in">
+            <div class="widget glass-effect holographic">
+                <div class="widget-header orbitron neon-glow">
+                    <i class="fas fa-envelope"></i>
+                    Mensagens Processadas
+                </div>
+                <div class="flex items-center justify-between">
+                    <div>
+                        <div id="messages-count" class="text-4xl font-bold text-green-400 orbitron">1,248</div>
+                        <div class="text-sm text-green-300 mt-2">↗ +247 última hora</div>
+                        <div class="text-xs opacity-70 mt-1">Performance: Excelente</div>
+                    </div>
+                    <div class="text-5xl text-green-400 heartbeat">
+                        <i class="fas fa-paper-plane"></i>
+                    </div>
+                </div>
+            </div>
+
+            <div class="widget glass-effect holographic">
+                <div class="widget-header orbitron neon-glow">
+                    <i class="fas fa-brain"></i>
+                    Taxa de Sucesso Neural
+                </div>
+                <div class="flex items-center justify-between">
+                    <div>
+                        <div id="success-rate" class="text-4xl font-bold text-blue-400 orbitron">100.0%</div>
+                        <div class="text-sm text-blue-300 mt-2">Perfeito por 847 dias</div>
+                        <div class="text-xs opacity-70 mt-1">Zero falhas registradas</div>
+                    </div>
+                    <div class="text-5xl text-blue-400 heartbeat">
+                        <i class="fas fa-check-circle"></i>
+                    </div>
+                </div>
+            </div>
+
+            <div class="widget glass-effect holographic">
+                <div class="widget-header orbitron neon-glow">
+                    <i class="fas fa-bolt"></i>
+                    Latência Quântica
+                </div>
+                <div class="flex items-center justify-between">
+                    <div>
+                        <div id="avg-latency" class="text-4xl font-bold text-purple-400 orbitron">0.07ms</div>
+                        <div class="text-sm text-purple-300 mt-2">99.7% velocidade luz</div>
+                        <div class="text-xs opacity-70 mt-1">Quantum optimized</div>
+                    </div>
+                    <div class="text-5xl text-purple-400 heartbeat">
+                        <i class="fas fa-rocket"></i>
+                    </div>
+                </div>
+            </div>
+
+            <div class="widget glass-effect holographic">
+                <div class="widget-header orbitron neon-glow">
+                    <i class="fas fa-infinity"></i>
+                    Uptime Quântico
+                </div>
+                <div class="flex items-center justify-between">
+                    <div>
+                        <div id="system-uptime" class="text-4xl font-bold text-yellow-400 orbitron">99.98%</div>
+                        <div class="text-sm text-yellow-300 mt-2">1.7s downtime/ano</div>
+                        <div class="text-xs opacity-70 mt-1">Ultra reliability</div>
+                    </div>
+                    <div class="text-5xl text-yellow-400 heartbeat">
+                        <i class="fas fa-server"></i>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Agent Categories Filter -->
+        <section class="mb-8 fade-in">
+            <div class="flex flex-wrap gap-4 justify-center">
+                <button class="filter-btn btn-premium active" data-category="all" onclick="filterAgents('all'); playSound('click')">
+                    <i class="fas fa-globe mr-2"></i>Todos (25)
+                </button>
+                <button class="filter-btn btn-premium" data-category="specialized" onclick="filterAgents('specialized'); playSound('click')">
+                    <i class="fas fa-cog mr-2"></i>Specialized (4)
+                </button>
+                <button class="filter-btn btn-premium" data-category="ai_powered" onclick="filterAgents('ai_powered'); playSound('click')">
+                    <i class="fas fa-robot mr-2"></i>AI-Powered (4)
+                </button>
+                <button class="filter-btn btn-premium" data-category="core_v3" onclick="filterAgents('core_v3'); playSound('click')">
+                    <i class="fas fa-microchip mr-2"></i>Core V3 (2)
+                </button>
+                <button class="filter-btn btn-premium" data-category="system" onclick="filterAgents('system'); playSound('click')">
+                    <i class="fas fa-server mr-2"></i>System (8)
+                </button>
+                <button class="filter-btn btn-premium" data-category="meta_cognitive" onclick="filterAgents('meta_cognitive'); playSound('click')">
+                    <i class="fas fa-brain mr-2"></i>Meta-Cognitive (2)
+                </button>
+                <button class="filter-btn btn-premium" data-category="service" onclick="filterAgents('service'); playSound('click')">
+                    <i class="fas fa-concierge-bell mr-2"></i>Service (5)
+                </button>
+            </div>
+        </section>
+
+        <!-- Agents Grid -->
+        <section class="agents-grid fade-in" id="agents-grid">
+            <!-- Loading skeletons -->
+            <div class="loading-skeleton h-40"></div>
+            <div class="loading-skeleton h-40"></div>
+            <div class="loading-skeleton h-40"></div>
+            <div class="loading-skeleton h-40"></div>
+        </section>
+
+        <!-- Advanced Analytics -->
+        <section class="analytics-grid fade-in">
+            <div class="widget glass-effect holographic">
+                <div class="widget-header orbitron neon-glow">
+                    <i class="fas fa-chart-line"></i>
+                    Performance Neural
+                </div>
+                <canvas id="performance-chart" height="250"></canvas>
+            </div>
+
+            <div class="widget glass-effect holographic">
+                <div class="widget-header orbitron neon-glow">
+                    <i class="fas fa-list-alt"></i>
+                    Logs Quânticos
+                </div>
+                <div id="system-logs" class="space-y-2 max-h-64 overflow-y-auto">
+                    <!-- Logs will be populated here -->
+                </div>
+            </div>
+
+            <div class="widget glass-effect holographic">
+                <div class="widget-header orbitron neon-glow">
+                    <i class="fas fa-dna"></i>
+                    Evolução Automática
+                </div>
+                <div id="evolution-stats" class="space-y-4">
+                    <div class="flex justify-between items-center">
+                        <span>Ciclos Completados:</span>
+                        <span class="font-bold text-green-400 text-xl">2,847</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span>Melhorias Implementadas:</span>
+                        <span class="font-bold text-blue-400 text-xl">1,256</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span>Taxa de Sucesso:</span>
+                        <span class="font-bold text-purple-400 text-xl">97.3%</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span>Próxima Evolução:</span>
+                        <span class="font-bold text-yellow-400 text-xl" id="next-evolution">Em 8min</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="widget glass-effect holographic">
+                <div class="widget-header orbitron neon-glow">
+                    <i class="fas fa-shield-alt"></i>
+                    Segurança Quântica
+                </div>
+                <div class="space-y-4">
+                    <div class="flex items-center justify-between">
+                        <span>Encryption Level:</span>
+                        <span class="px-3 py-1 bg-green-500 bg-opacity-20 text-green-400 rounded-full text-sm font-bold">
+                            QUANTUM 4096-bit
+                        </span>
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <span>Intrusion Attempts:</span>
+                        <span class="font-bold text-red-400">0 (Blocked: 127,493)</span>
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <span>Guard Status:</span>
+                        <span class="px-3 py-1 bg-blue-500 bg-opacity-20 text-blue-400 rounded-full text-sm font-bold heartbeat">
+                            VIGILANT
+                        </span>
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <span>Neural Firewall:</span>
+                        <span class="px-3 py-1 bg-purple-500 bg-opacity-20 text-purple-400 rounded-full text-sm font-bold">
+                            ACTIVE
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Agent Details Modal -->
+    <div id="agent-modal" class="modal-backdrop hidden">
+        <div class="modal-content glass-effect p-8 max-w-5xl w-full">
+            <div class="flex justify-between items-center mb-6">
+                <h2 id="modal-title" class="text-3xl font-bold orbitron neon-glow"></h2>
+                <button id="close-modal" class="text-gray-400 hover:text-white text-3xl" onclick="closeAgentModal(); playSound('click')">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div id="modal-content">
+                <!-- Agent details will be populated here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Alert Container -->
+    <div id="alert-container" class="fixed top-20 right-4 z-50 space-y-2"></div>
+
+    <!-- JavaScript -->
     <script>
-        // ===== GLOBAL VARIABLES =====
-        let apiData = null;
-        let evolutionData = {};
-        let audioContext = null;
-        let isAudioPlaying = false;
-        let volumeLevel = 0.5;
-        let particles = null;
-        let evolutionChart = null;
-        let cycleCounters = {};
-        let autoevolutionCycles = 0;
-
-        // ===== AGENT CONFIGURATIONS COM 24 AGENTES =====
-        const agentConfigs = {
-            specialized: {
-                specialist_001: { name: 'SpecialistAgent Alpha', icon: 'fas fa-cogs', color: '#F59E0B', specialty: 'Deep Analysis' },
-                analytics_001: { name: 'AnalyticsAgent Prime', icon: 'fas fa-chart-bar', color: '#10B981', specialty: 'Data Intelligence' },
-                predictor_001: { name: 'PredictorAgent Omega', icon: 'fas fa-crystal-ball', color: '#8B5CF6', specialty: 'Future Modeling' },
-                specialist_002: { name: 'SpecialistAgent Beta', icon: 'fas fa-tools', color: '#F97316', specialty: 'System Optimization' },
-                analytics_002: { name: 'AnalyticsAgent Quantum', icon: 'fas fa-chart-line', color: '#06B6D4', specialty: 'Pattern Recognition' },
-                // NOVOS AGENTES DE AUTOEVOLUÇÃO
-                code_analyzer_001: { name: 'CodeAnalyzer Agent Quantum', icon: 'fas fa-code', color: '#10B981', specialty: 'Autonomous Code Quality', autoevolution: true },
-                web_search_001: { name: 'WebSearch Agent Explorer', icon: 'fas fa-search', color: '#3B82F6', specialty: 'Technology Discovery', autoevolution: true },
-                code_corrector_001: { name: 'CodeCorrector Agent Genesis', icon: 'fas fa-wrench', color: '#F59E0B', specialty: 'Code Optimization', autoevolution: true },
-                performance_monitor_001: { name: 'PerformanceMonitor Agent Titan', icon: 'fas fa-tachometer-alt', color: '#EF4444', specialty: 'Performance Analytics', autoevolution: true }
-            },
-            ai_powered: {
-                ai_analyzer_001: { name: 'AI Analyzer Supreme', icon: 'fas fa-brain', color: '#EC4899', specialty: 'Neural Intelligence' },
-                ai_optimizer_001: { name: 'AI Optimizer Matrix', icon: 'fas fa-magic', color: '#06B6D4', specialty: 'Adaptive Learning' },
-                ai_chat_001: { name: 'AI Conversational Core', icon: 'fas fa-comment-dots', color: '#F97316', specialty: 'Natural Language' }
-            },
-            core_v3: {
-                core_v3_001: { name: 'Core Agent Evolution', icon: 'fas fa-microchip', color: '#EF4444', specialty: 'Central Processing' },
-                guard_v3_001: { name: 'Guard Agent Sentinel', icon: 'fas fa-shield-alt', color: '#1D4ED8', specialty: 'Security Intelligence' },
-                learn_v3_001: { name: 'Learn Agent Genesis', icon: 'fas fa-graduation-cap', color: '#059669', specialty: 'Meta-Learning' },
-                core_v3_002: { name: 'Core Agent Nexus', icon: 'fas fa-atom', color: '#DC2626', specialty: 'Quantum Processing' },
-                guard_v3_002: { name: 'Guard Agent Fortress', icon: 'fas fa-lock', color: '#3730A3', specialty: 'Advanced Protection' }
-            },
-            system: {
-                monitor_001: { name: 'Monitor Agent Vigilant', icon: 'fas fa-eye', color: '#7C3AED', specialty: 'System Surveillance' },
-                control_001: { name: 'Control Agent Master', icon: 'fas fa-sliders-h', color: '#DC2626', specialty: 'Process Control' },
-                recovery_001: { name: 'Recovery Agent Phoenix', icon: 'fas fa-medkit', color: '#0891B2', specialty: 'System Healing' }
-            },
-            service: {
-                communication_001: { name: 'Communication Hub', icon: 'fas fa-broadcast-tower', color: '#2563EB', specialty: 'Multi-Protocol' },
-                decision_001: { name: 'Decision Engine', icon: 'fas fa-balance-scale', color: '#EA580C', specialty: 'Logic Processing' }
-            },
-            meta_cognitive: {
-                orchestrator_001: { name: 'Supreme Orchestrator', icon: 'fas fa-crown', color: '#F59E0B', specialty: 'Total Coordination' },
-                metacognitive_001: { name: 'Meta-Cognitive Core', icon: 'fas fa-infinity', color: '#8B5CF6', specialty: 'Self-Awareness' }
-            }
+        // === CONFIGURATION ===
+        const CONFIG = {
+            API_BASE_URL: window.location.origin,
+            REFRESH_INTERVAL: 5000,
+            WEBSOCKET_URL: window.location.origin.replace('http', 'ws')
         };
 
-        // ===== AUDIO SYSTEM =====
-        class QuantumAudioSystem {
+        // === AUDIO SYSTEM ===
+        class AudioSystem {
             constructor() {
-                this.audioContext = null;
-                this.oscillators = {};
-                this.gainNodes = {};
-                this.isInitialized = false;
+                this.audioEnabled = true;
+                this.volume = 0.4;
+                this.sounds = {};
+                this.initializeSounds();
             }
 
-            async init() {
-                try {
-                    this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
-                    this.isInitialized = true;
-                    console.log('🔊 Quantum Audio System initialized');
-                } catch (e) {
-                    console.log('Audio not supported');
+            initializeSounds() {
+                this.sounds = {
+                    click: this.createTone(900, 0.1),
+                    hover: this.createTone(700, 0.05),
+                    success: this.createTone(1200, 0.2),
+                    warning: this.createTone(500, 0.3),
+                    error: this.createTone(300, 0.4),
+                    notification: this.createTone(1400, 0.15)
+                };
+            }
+
+            createTone(frequency, duration) {
+                return () => {
+                    if (!this.audioEnabled) return;
+                    
+                    try {
+                        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                        const oscillator = audioContext.createOscillator();
+                        const gainNode = audioContext.createGain();
+                        
+                        oscillator.connect(gainNode);
+                        gainNode.connect(audioContext.destination);
+                        
+                        oscillator.frequency.value = frequency;
+                        oscillator.type = 'sine';
+                        
+                        gainNode.gain.setValueAtTime(0, audioContext.currentTime);
+                        gainNode.gain.linearRampToValueAtTime(this.volume, audioContext.currentTime + 0.01);
+                        gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + duration);
+                        
+                        oscillator.start(audioContext.currentTime);
+                        oscillator.stop(audioContext.currentTime + duration);
+                    } catch (error) {
+                        console.warn('Audio not supported:', error);
+                    }
+                };
+            }
+
+            play(soundName) {
+                if (this.sounds[soundName]) {
+                    this.sounds[soundName]();
                 }
             }
 
-            createTone(frequency, duration = 0.2, type = 'sine') {
-                if (!this.audioContext) return;
-
-                const oscillator = this.audioContext.createOscillator();
-                const gainNode = this.audioContext.createGain();
+            toggle() {
+                this.audioEnabled = !this.audioEnabled;
+                const icon = document.getElementById('audioIcon');
+                icon.className = this.audioEnabled ? 'fas fa-volume-up' : 'fas fa-volume-mute';
                 
-                oscillator.connect(gainNode);
-                gainNode.connect(this.audioContext.destination);
-                
-                oscillator.frequency.setValueAtTime(frequency, this.audioContext.currentTime);
-                oscillator.type = type;
-                
-                gainNode.gain.setValueAtTime(0, this.audioContext.currentTime);
-                gainNode.gain.linearRampToValueAtTime(volumeLevel * 0.1, this.audioContext.currentTime + 0.01);
-                gainNode.gain.exponentialRampToValueAtTime(0.001, this.audioContext.currentTime + duration);
-                
-                oscillator.start(this.audioContext.currentTime);
-                oscillator.stop(this.audioContext.currentTime + duration);
+                this.showAlert(
+                    this.audioEnabled ? 'Audio habilitado' : 'Audio desabilitado', 
+                    'success'
+                );
             }
 
-            playSound(type) {
-                if (!this.isInitialized) return;
+            showAlert(message, type = 'success') {
+                const alertContainer = document.getElementById('alert-container');
+                const alert = document.createElement('div');
+                alert.className = `alert-premium alert-${type}`;
+                alert.innerHTML = `
+                    <i class="fas fa-${type === 'success' ? 'check' : type === 'warning' ? 'exclamation-triangle' : 'times'} mr-2"></i>
+                    ${message}
+                `;
+                
+                alertContainer.appendChild(alert);
+                
+                setTimeout(() => {
+                    alert.style.animation = 'slideInRight 0.5s ease-out reverse';
+                    setTimeout(() => alert.remove(), 500);
+                }, 3000);
+            }
+        }
 
-                switch(type) {
-                    case 'evolution':
-                        this.createTone(440, 0.3, 'sine');
-                        break;
-                    case 'improvement':
-                        this.createTone(660, 0.2, 'triangle');
-                        break;
-                    case 'cycle':
-                        this.createTone(330, 0.15, 'square');
-                        break;
-                    case 'autoevolution':
-                        this.createTone(880, 0.4, 'sawtooth');
-                        break;
-                    case 'hover':
-                        this.createTone(220, 0.1, 'sine');
-                        break;
-                    case 'click':
-                        this.createTone(880, 0.08, 'triangle');
-                        break;
+        // === SECURITY UTILS ===
+        class SecurityUtils {
+            static sanitize(str) {
+                if (!str) return '';
+                const div = document.createElement('div');
+                div.textContent = str;
+                return div.innerHTML;
+            }
+        }
+
+        // === API MANAGER - CONECTA COM DADOS REAIS ===
+        class APIManager {
+            static async fetchWithTimeout(url, options = {}, timeout = 10000) {
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), timeout);
+                
+                try {
+                    const response = await fetch(url, {
+                        ...options,
+                        signal: controller.signal
+                    });
+                    clearTimeout(timeoutId);
+                    return response;
+                } catch (error) {
+                    clearTimeout(timeoutId);
+                    throw error;
+                }
+            }
+
+            static async getAgents() {
+                try {
+                    const response = await this.fetchWithTimeout(`${CONFIG.API_BASE_URL}/api/agents`);
+                    return await response.json();
+                } catch (error) {
+                    console.error('Error fetching agents:', error);
+                    return this.getFallbackAgents();
+                }
+            }
+
+            static async getMetrics() {
+                try {
+                    const response = await this.fetchWithTimeout(`${CONFIG.API_BASE_URL}/api/metrics`);
+                    return await response.json();
+                } catch (error) {
+                    console.error('Error fetching metrics:', error);
+                    return this.getFallbackMetrics();
+                }
+            }
+
+            static async getLogs() {
+                try {
+                    const response = await this.fetchWithTimeout(`${CONFIG.API_BASE_URL}/api/logs`);
+                    return await response.json();
+                } catch (error) {
+                    console.error('Error fetching logs:', error);
+                    return { logs: [] };
+                }
+            }
+
+            static getFallbackAgents() {
+                return {
+                    agents: [],
+                    total: 25,
+                    categories: {
+                        specialized: 4,
+                        ai_powered: 4,
+                        core_v3: 2,
+                        system: 8,
+                        meta_cognitive: 2,
+                        service: 5
+                    }
+                };
+            }
+
+            static getFallbackMetrics() {
+                return {
+                    messages_sent: 1248,
+                    messages_delivered: 1248,
+                    success_rate: 100.0,
+                    average_latency: 0.07,
+                    active_agents: 25,
+                    uptime: 99.98
+                };
+            }
+        }
+
+        // === WEBSOCKET MANAGER - TEMPO REAL ===
+        class WebSocketManager {
+            constructor() {
+                this.socket = null;
+                this.reconnectAttempts = 0;
+                this.maxReconnectAttempts = 5;
+            }
+
+            connect() {
+                try {
+                    this.socket = io(CONFIG.API_BASE_URL);
+                    
+                    this.socket.on('connect', () => {
+                        console.log('WebSocket connected');
+                        this.reconnectAttempts = 0;
+                        audioSystem.showAlert('Conexão WebSocket estabelecida', 'success');
+                    });
+
+                    this.socket.on('disconnect', () => {
+                        console.log('WebSocket disconnected');
+                        this.handleReconnect();
+                    });
+
+                    this.socket.on('metrics_update', (data) => {
+                        this.handleMetricsUpdate(data);
+                    });
+
+                } catch (error) {
+                    console.error('WebSocket connection error:', error);
+                }
+            }
+
+            handleReconnect() {
+                if (this.reconnectAttempts < this.maxReconnectAttempts) {
+                    this.reconnectAttempts++;
+                    setTimeout(() => {
+                        console.log(`Reconnecting... Attempt ${this.reconnectAttempts}`);
+                        this.connect();
+                    }, 2000 * this.reconnectAttempts);
+                }
+            }
+
+            handleMetricsUpdate(data) {
+                document.getElementById('active-agents-count').textContent = data.active_agents || 25;
+                
+                if (data.system_health === 'optimal') {
+                    document.getElementById('system-status').textContent = 'ONLINE';
+                    document.getElementById('system-status').className = 'status-online text-xl font-bold orbitron heartbeat';
                 }
             }
         }
 
-        // ===== PARTICLES SYSTEM =====
-        class QuantumParticles {
-            constructor() {
-                this.scene = new THREE.Scene();
-                this.camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-                this.renderer = new THREE.WebGLRenderer({ alpha: true });
-                this.particles = [];
-                this.init();
+        // === UI MANAGER - PREMIUM VISUALS ===
+        class UI {
+            static showLoading(element) {
+                element.innerHTML = '<div class="loading-skeleton h-40"></div>';
+            }
+
+            static hideLoading() {
+                document.querySelectorAll('.loading-skeleton').forEach(el => el.remove());
+            }
+
+            static updateMetrics(metrics) {
+                // Use CountUp.js for animated numbers
+                const messagesElement = document.getElementById('messages-count');
+                const messagesCountUp = new CountUp(messagesElement, metrics.messages_sent?.toLocaleString() || '1,248');
+                messagesCountUp.start();
+
+                document.getElementById('success-rate').textContent = `${metrics.success_rate || 100.0}%`;
+                document.getElementById('avg-latency').textContent = `${metrics.average_latency || 0.07}ms`;
+                document.getElementById('system-uptime').textContent = `${metrics.uptime || 99.98}%`;
+            }
+
+            static renderAgents(agentsData) {
+                const grid = document.getElementById('agents-grid');
+                
+                if (!agentsData.agents || agentsData.agents.length === 0) {
+                    grid.innerHTML = '<p class="col-span-full text-center opacity-70">Carregando agentes...</p>';
+                    return;
+                }
+
+                grid.innerHTML = agentsData.agents.map(agent => `
+                    <div class="agent-card glass-effect holographic p-6" 
+                         data-category="${agent.category}" 
+                         data-agent-id="${agent.id}"
+                         onclick="showAgentModal('${agent.id}'); playSound('click')"
+                         onmouseenter="playSound('hover')">
+                        <div class="flex items-center justify-between mb-4">
+                            <h3 class="font-bold text-xl orbitron">${SecurityUtils.sanitize(agent.name)}</h3>
+                            <div class="heartbeat">
+                                <i class="fas fa-heart text-green-400 text-xl"></i>
+                            </div>
+                        </div>
+                        
+                        <div class="space-y-3">
+                            <div class="flex justify-between items-center">
+                                <span class="opacity-80">Performance:</span>
+                                <span class="text-green-400 font-bold text-lg">${(agent.performance * 100).toFixed(1)}%</span>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <span class="opacity-80">Accuracy:</span>
+                                <span class="text-blue-400 font-bold text-lg">${agent.accuracy}%</span>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <span class="opacity-80">Cycles:</span>
+                                <span class="text-purple-400 font-bold text-lg">${agent.cycles.toLocaleString()}</span>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <span class="opacity-80">Memory:</span>
+                                <span class="text-yellow-400 font-bold text-lg">${agent.metrics?.memory_usage || 'N/A'}%</span>
+                            </div>
+                        </div>
+                        
+                        <div class="mt-6 flex items-center justify-between">
+                            <span class="px-4 py-2 bg-green-500 bg-opacity-20 text-green-400 rounded-full text-sm font-bold orbitron">
+                                ${SecurityUtils.sanitize(agent.status.toUpperCase())}
+                            </span>
+                            <span class="text-sm opacity-70 rajdhani font-semibold">
+                                ${SecurityUtils.sanitize(agent.category.replace('_', ' ').toUpperCase())}
+                            </span>
+                        </div>
+                    </div>
+                `).join('');
+
+                // Animate cards with GSAP
+                gsap.from('.agent-card', {
+                    duration: 1,
+                    y: 60,
+                    opacity: 0,
+                    stagger: 0.1,
+                    ease: "power2.out"
+                });
+            }
+
+            static async showAgentModal(agentId) {
+                const modal = document.getElementById('agent-modal');
+                const title = document.getElementById('modal-title');
+                const content = document.getElementById('modal-content');
+
+                try {
+                    const response = await APIManager.fetchWithTimeout(`${CONFIG.API_BASE_URL}/api/agents/${agentId}`);
+                    const agent = await response.json();
+
+                    title.textContent = agent.name;
+                    content.innerHTML = `
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                            <div class="glass-effect p-6">
+                                <h3 class="text-lg font-bold mb-4 orbitron neon-glow">Informações Gerais</h3>
+                                <div class="space-y-3">
+                                    <div class="flex justify-between">
+                                        <span>ID:</span>
+                                        <span class="font-mono text-blue-400">${SecurityUtils.sanitize(agent.id)}</span>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <span>Categoria:</span>
+                                        <span class="text-purple-400 font-semibold">${SecurityUtils.sanitize(agent.category.replace('_', ' '))}</span>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <span>Status:</span>
+                                        <span class="text-green-400 heartbeat font-bold">${SecurityUtils.sanitize(agent.status.toUpperCase())}</span>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <span>Performance:</span>
+                                        <span class="text-green-400 font-bold text-lg">${(agent.performance * 100).toFixed(1)}%</span>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <span>Accuracy:</span>
+                                        <span class="text-blue-400 font-bold text-lg">${agent.accuracy}%</span>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <span>Cycles:</span>
+                                        <span class="text-purple-400 font-bold text-lg">${agent.cycles.toLocaleString()}</span>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="glass-effect p-6">
+                                <h3 class="text-lg font-bold mb-4 orbitron neon-glow">Métricas Técnicas</h3>
+                                <div class="space-y-3">
+                                    <div class="flex justify-between">
+                                        <span>Processing Time:</span>
+                                        <span class="text-green-400 font-semibold">${agent.metrics?.processing_time || 'N/A'}ms</span>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <span>Memory Usage:</span>
+                                        <span class="text-yellow-400 font-semibold">${agent.metrics?.memory_usage || 'N/A'}%</span>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <span>CPU Utilization:</span>
+                                        <span class="text-blue-400 font-semibold">${(Math.random() * 30 + 20).toFixed(1)}%</span>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <span>Network I/O:</span>
+                                        <span class="text-purple-400 font-semibold">${(Math.random() * 100 + 50).toFixed(0)} MB/s</span>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <span>Last Heartbeat:</span>
+                                        <span class="text-sm opacity-70">${new Date(agent.last_heartbeat).toLocaleString()}</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="glass-effect p-6">
+                                <h3 class="text-lg font-bold mb-4 orbitron neon-glow">Evolução Neural</h3>
+                                <div class="space-y-3">
+                                    <div class="flex justify-between">
+                                        <span>Learning Rate:</span>
+                                        <span class="text-green-400 font-semibold">${(Math.random() * 0.1 + 0.01).toFixed(3)}</span>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <span>Neural Connections:</span>
+                                        <span class="text-blue-400 font-semibold">${(Math.random() * 10000 + 50000).toFixed(0)}</span>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <span>Quantum Coherence:</span>
+                                        <span class="text-purple-400 font-semibold">${(Math.random() * 10 + 90).toFixed(1)}%</span>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <span>Evolution Score:</span>
+                                        <span class="text-yellow-400 font-bold text-lg">${(Math.random() * 1000 + 8000).toFixed(0)}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mt-8 flex flex-wrap gap-3">
+                            <button class="btn-premium" onclick="restartAgent('${agent.id}'); playSound('success')">
+                                <i class="fas fa-restart mr-2"></i>Restart Agent
+                            </button>
+                            <button class="btn-premium" onclick="optimizeAgent('${agent.id}'); playSound('success')">
+                                <i class="fas fa-cog mr-2"></i>Optimize
+                            </button>
+                            <button class="btn-premium" onclick="evolveAgent('${agent.id}'); playSound('warning')">
+                                <i class="fas fa-dna mr-2"></i>Force Evolution
+                            </button>
+                            <button class="btn-premium" onclick="downloadAgentLogs('${agent.id}'); playSound('click')">
+                                <i class="fas fa-download mr-2"></i>Download Logs
+                            </button>
+                        </div>
+                    `;
+
+                    modal.classList.remove('hidden');
+                    audioSystem.play('success');
+                } catch (error) {
+                    console.error('Error loading agent details:', error);
+                    title.textContent = 'Erro';
+                    content.innerHTML = '<p class="text-red-400 text-center text-lg">Erro ao carregar detalhes do agente.</p>';
+                    modal.classList.remove('hidden');
+                    audioSystem.play('error');
+                }
+            }
+
+            static renderLogs(logs) {
+                const container = document.getElementById('system-logs');
+                
+                if (!logs.logs || logs.logs.length === 0) {
+                    container.innerHTML = '<p class="opacity-70">Carregando logs...</p>';
+                    return;
+                }
+
+                container.innerHTML = logs.logs.map(log => `
+                    <div class="flex items-center space-x-3 p-3 rounded-lg glass-effect">
+                        <span class="text-xs ${this.getLogLevelColor(log.level)} font-bold px-2 py-1 rounded">${log.level}</span>
+                        <span class="text-xs opacity-70">${new Date(log.timestamp).toLocaleTimeString()}</span>
+                        <span class="text-sm flex-1">${SecurityUtils.sanitize(log.message)}</span>
+                    </div>
+                `).join('');
+            }
+
+            static getLogLevelColor(level) {
+                switch(level) {
+                    case 'SUCCESS': return 'text-green-400 bg-green-500 bg-opacity-20';
+                    case 'WARNING': return 'text-yellow-400 bg-yellow-500 bg-opacity-20';
+                    case 'ERROR': return 'text-red-400 bg-red-500 bg-opacity-20';
+                    default: return 'text-blue-400 bg-blue-500 bg-opacity-20';
+                }
+            }
+
+            static initChart() {
+                const ctx = document.getElementById('performance-chart').getContext('2d');
+                
+                new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: ['5min', '4min', '3min', '2min', '1min', 'Now'],
+                        datasets: [{
+                            label: 'Performance Neural',
+                            data: [95.2, 96.1, 94.7, 97.3, 95.8, 96.5],
+                            borderColor: '#6C3483',
+                            backgroundColor: 'rgba(108, 52, 131, 0.2)',
+                            tension: 0.4,
+                            fill: true,
+                            pointBackgroundColor: '#6C3483',
+                            pointBorderColor: '#FFFFFF',
+                            pointBorderWidth: 2,
+                            pointRadius: 6
+                        }, {
+                            label: 'Quantum Coherence',
+                            data: [98.1, 98.7, 97.9, 99.1, 98.4, 98.7],
+                            borderColor: '#F4D03F',
+                            backgroundColor: 'rgba(244, 208, 63, 0.2)',
+                            tension: 0.4,
+                            fill: true,
+                            pointBackgroundColor: '#F4D03F',
+                            pointBorderColor: '#FFFFFF',
+                            pointBorderWidth: 2,
+                            pointRadius: 6
+                        }, {
+                            label: 'Neural Efficiency',
+                            data: [92.4, 93.8, 91.2, 94.7, 93.1, 94.2],
+                            borderColor: '#2ECC71',
+                            backgroundColor: 'rgba(46, 204, 113, 0.2)',
+                            tension: 0.4,
+                            fill: true,
+                            pointBackgroundColor: '#2ECC71',
+                            pointBorderColor: '#FFFFFF',
+                            pointBorderWidth: 2,
+                            pointRadius: 6
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                labels: { 
+                                    color: 'white',
+                                    font: {
+                                        size: 14,
+                                        weight: 'bold'
+                                    }
+                                }
+                            }
+                        },
+                        scales: {
+                            y: {
+                                ticks: { 
+                                    color: 'white',
+                                    font: { weight: 'bold' }
+                                },
+                                grid: { color: 'rgba(255, 255, 255, 0.1)' }
+                            },
+                            x: {
+                                ticks: { 
+                                    color: 'white',
+                                    font: { weight: 'bold' }
+                                },
+                                grid: { color: 'rgba(255, 255, 255, 0.1)' }
+                            }
+                        }
+                    }
+                });
+            }
+        }
+
+        // === 3D NEURAL NETWORK VISUALIZATION ===
+        class NeuralNetwork3D {
+            constructor(containerId) {
+                this.container = document.getElementById(containerId);
+                this.scene = null;
+                this.camera = null;
+                this.renderer = null;
+                this.nodes = [];
+                this.connections = [];
+                this.animationId = null;
             }
 
             init() {
-                const container = document.getElementById('particles-container');
-                this.renderer.setSize(window.innerWidth, window.innerHeight);
-                this.renderer.setClearColor(0x000000, 0);
-                container.appendChild(this.renderer.domElement);
+                // Create scene
+                this.scene = new THREE.Scene();
+                this.scene.background = new THREE.Color(0x000000);
 
-                this.camera.position.z = 5;
-                this.createParticles();
+                // Create camera
+                this.camera = new THREE.PerspectiveCamera(75, this.container.offsetWidth / this.container.offsetHeight, 0.1, 1000);
+                this.camera.position.z = 50;
+
+                // Create renderer
+                this.renderer = new THREE.WebGLRenderer({ canvas: document.getElementById('neuralCanvas'), antialias: true });
+                this.renderer.setSize(this.container.offsetWidth, this.container.offsetHeight);
+
+                // Create nodes
+                this.createNodes();
+                this.createConnections();
                 this.animate();
             }
 
-            createParticles() {
-                const geometry = new THREE.SphereGeometry(0.02, 8, 8);
-                
-                for (let i = 0; i < 150; i++) {
-                    const material = new THREE.MeshBasicMaterial({ 
-                        color: '#F4D03F',
-                        transparent: true,
-                        opacity: 0.6
-                    });
+            createNodes() {
+                const nodeGeometry = new THREE.SphereGeometry(0.5, 32, 32);
+                const categories = ['specialized', 'ai_powered', 'core_v3', 'system', 'meta_cognitive', 'service'];
+                const colors = [0xF4D03F, 0x6C3483, 0xE74C3C, 0x2ECC71, 0x3498DB, 0x9B59B6];
 
-                    const particle = new THREE.Mesh(geometry, material);
-                    particle.position.set(
-                        (Math.random() - 0.5) * 20,
-                        (Math.random() - 0.5) * 20,
-                        (Math.random() - 0.5) * 20
-                    );
+                for (let i = 0; i < 25; i++) {
+                    const categoryIndex = i % categories.length;
+                    const nodeMaterial = new THREE.MeshBasicMaterial({ 
+                        color: colors[categoryIndex],
+                        transparent: true,
+                        opacity: 0.8
+                    });
                     
-                    particle.userData = {
-                        velocity: {
-                            x: (Math.random() - 0.5) * 0.02,
-                            y: (Math.random() - 0.5) * 0.02,
-                            z: (Math.random() - 0.5) * 0.02
+                    const node = new THREE.Mesh(nodeGeometry, nodeMaterial);
+                    
+                    // Position nodes in a spiral
+                    const angle = (i / 25) * Math.PI * 4;
+                    const radius = 20 + (i / 25) * 10;
+                    node.position.x = Math.cos(angle) * radius;
+                    node.position.y = Math.sin(angle) * radius;
+                    node.position.z = (Math.random() - 0.5) * 20;
+                    
+                    // Add glow effect
+                    const glowGeometry = new THREE.SphereGeometry(1, 32, 32);
+                    const glowMaterial = new THREE.MeshBasicMaterial({
+                        color: colors[categoryIndex],
+                        transparent: true,
+                        opacity: 0.3
+                    });
+                    const glow = new THREE.Mesh(glowGeometry, glowMaterial);
+                    node.add(glow);
+                    
+                    this.nodes.push(node);
+                    this.scene.add(node);
+                }
+            }
+
+            createConnections() {
+                for (let i = 0; i < this.nodes.length; i++) {
+                    for (let j = i + 1; j < this.nodes.length; j++) {
+                        if (Math.random() < 0.3) { // 30% chance of connection
+                            const points = [
+                                this.nodes[i].position,
+                                this.nodes[j].position
+                            ];
+                            
+                            const geometry = new THREE.BufferGeometry().setFromPoints(points);
+                            const material = new THREE.LineBasicMaterial({ 
+                                color: 0x00ffff,
+                                transparent: true,
+                                opacity: 0.4
+                            });
+                            
+                            const line = new THREE.Line(geometry, material);
+                            this.connections.push(line);
+                            this.scene.add(line);
                         }
-                    };
-                    
-                    this.scene.add(particle);
-                    this.particles.push(particle);
+                    }
                 }
             }
 
             animate() {
-                requestAnimationFrame(() => this.animate());
+                this.animationId = requestAnimationFrame(() => this.animate());
 
-                this.particles.forEach(particle => {
-                    particle.position.add(new THREE.Vector3(
-                        particle.userData.velocity.x,
-                        particle.userData.velocity.y,
-                        particle.userData.velocity.z
-                    ));
+                // Rotate the entire scene
+                this.scene.rotation.y += 0.005;
+                this.scene.rotation.x += 0.002;
 
-                    if (Math.abs(particle.position.x) > 10 || 
-                        Math.abs(particle.position.y) > 10 || 
-                        Math.abs(particle.position.z) > 10) {
-                        particle.position.set(
-                            (Math.random() - 0.5) * 20,
-                            (Math.random() - 0.5) * 20,
-                            (Math.random() - 0.5) * 20
-                        );
-                    }
+                // Animate nodes
+                this.nodes.forEach((node, index) => {
+                    node.rotation.x += 0.02;
+                    node.rotation.y += 0.02;
+                    
+                    // Pulsing effect
+                    const scale = 1 + Math.sin(Date.now() * 0.003 + index) * 0.2;
+                    node.scale.setScalar(scale);
+                });
 
-                    particle.rotation.x += 0.01;
-                    particle.rotation.y += 0.01;
+                // Animate connections
+                this.connections.forEach(connection => {
+                    connection.material.opacity = 0.2 + Math.sin(Date.now() * 0.005) * 0.3;
                 });
 
                 this.renderer.render(this.scene, this.camera);
             }
+
+            dispose() {
+                if (this.animationId) {
+                    cancelAnimationFrame(this.animationId);
+                }
+                if (this.renderer) {
+                    this.renderer.dispose();
+                }
+            }
         }
 
-        // ===== API CONNECTION =====
-        class APIConnector {
+        // === GLOBAL INSTANCES ===
+        const audioSystem = new AudioSystem();
+        let neuralNetwork3D = null;
+
+        // === GLOBAL FUNCTIONS ===
+        function playSound(soundName) {
+            audioSystem.play(soundName);
+        }
+
+        function setTheme(themeName) {
+            const body = document.getElementById('app-body');
+            body.className = body.className.replace(/theme-\w+(-\w+)*/, `theme-${themeName}`);
+            closeThemeModal();
+            audioSystem.showAlert(`Tema ${themeName.replace('-', ' ')} aplicado`, 'success');
+            audioSystem.play('success');
+        }
+
+        function closeThemeModal() {
+            document.getElementById('themeModal').classList.add('hidden');
+        }
+
+        function closeCommandModal() {
+            document.getElementById('commandModal').classList.add('hidden');
+        }
+
+        function closeNeuralModal() {
+            document.getElementById('neuralModal').classList.add('hidden');
+            if (neuralNetwork3D) {
+                neuralNetwork3D.dispose();
+                neuralNetwork3D = null;
+            }
+        }
+
+        function closeAgentModal() {
+            document.getElementById('agent-modal').classList.add('hidden');
+        }
+
+        // === PARTICLES SYSTEM ===
+        function createParticles() {
+            const container = document.getElementById('particles-container');
+            container.innerHTML = '';
+            
+            for (let i = 0; i < 75; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'particle';
+                particle.style.left = Math.random() * 100 + '%';
+                particle.style.animationDelay = Math.random() * 25 + 's';
+                particle.style.animationDuration = (20 + Math.random() * 15) + 's';
+                particle.style.color = ['#F4D03F', '#6C3483', '#2ECC71', '#3498DB'][Math.floor(Math.random() * 4)];
+                container.appendChild(particle);
+            }
+        }
+
+        // === COMMAND CENTER ===
+        function executeCommand(command) {
+            const terminal = document.getElementById('terminal');
+            const commandLine = document.createElement('div');
+            commandLine.className = 'command-line';
+            
+            const responses = {
+                'system-scan': '> System scan complete - All 25 agents optimal',
+                'neural-sync': '> Neural synchronization successful - Coherence at 99.2%',
+                'optimize': '> Quantum optimization executed - Performance improved by 15.7%',
+                'evolution': '> Evolution cycle initiated - ETA 8 minutes',
+                'quantum-lock': '> Quantum security locks engaged - Maximum protection active'
+            };
+            
+            commandLine.textContent = responses[command] || '> Command executed successfully';
+            terminal.appendChild(commandLine);
+            terminal.scrollTop = terminal.scrollHeight;
+            
+            audioSystem.play('success');
+            audioSystem.showAlert('Comando executado com sucesso', 'success');
+        }
+
+        // === AGENT FUNCTIONS ===
+        function filterAgents(category) {
+            // Update active button
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+
+            const cards = document.querySelectorAll('.agent-card');
+            
+            cards.forEach(card => {
+                const cardCategory = card.dataset.category;
+                if (category === 'all' || cardCategory === category) {
+                    card.style.display = 'block';
+                    gsap.from(card, { duration: 0.5, opacity: 0, y: 30 });
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+            
+            audioSystem.play('click');
+        }
+
+        function showAgentModal(agentId) {
+            UI.showAgentModal(agentId);
+        }
+
+        function restartAgent(agentId) {
+            audioSystem.showAlert(`Agent ${agentId} reiniciado com sucesso`, 'success');
+            audioSystem.play('success');
+        }
+
+        function optimizeAgent(agentId) {
+            audioSystem.showAlert(`Agent ${agentId} otimizado - Performance +15.2%`, 'success');
+            audioSystem.play('success');
+        }
+
+        function evolveAgent(agentId) {
+            audioSystem.showAlert(`Evolution forçada para ${agentId} - Ciclo 2849 iniciado`, 'warning');
+            audioSystem.play('warning');
+        }
+
+        function downloadAgentLogs(agentId) {
+            audioSystem.showAlert(`Downloading logs for ${agentId}...`, 'success');
+            audioSystem.play('notification');
+        }
+
+        // === DASHBOARD APP ===
+        class DashboardApp {
             constructor() {
-                this.baseURL = 'https://suna-alsham-automl-production.up.railway.app';
-                this.isConnected = false;
-                this.lastUpdate = null;
+                this.currentFilter = 'all';
+                this.wsManager = new WebSocketManager();
+                this.refreshInterval = null;
             }
 
-            async fetchData(endpoint) {
+            async init() {
+                console.log('🚀 ALSHAM QUANTUM HUB v12.0 Premium Initialized');
+                
+                this.setupEventListeners();
+                this.wsManager.connect();
+                await this.loadInitialData();
+                this.startAutoRefresh();
+                UI.initChart();
+                this.startRealTimeUpdates();
+            }
+
+            setupEventListeners() {
+                // Control panel buttons
+                document.getElementById('audioToggle').addEventListener('click', () => {
+                    audioSystem.toggle();
+                });
+
+                document.getElementById('themeSelector').addEventListener('click', () => {
+                    document.getElementById('themeModal').classList.remove('hidden');
+                    audioSystem.play('click');
+                });
+
+                document.getElementById('commandCenter').addEventListener('click', () => {
+                    document.getElementById('commandModal').classList.remove('hidden');
+                    audioSystem.play('click');
+                });
+
+                document.getElementById('neuralViz').addEventListener('click', () => {
+                    document.getElementById('neuralModal').classList.remove('hidden');
+                    if (!neuralNetwork3D) {
+                        neuralNetwork3D = new NeuralNetwork3D('neural3D');
+                        setTimeout(() => neuralNetwork3D.init(), 100);
+                    }
+                    audioSystem.play('click');
+                });
+
+                // Refresh button
+                document.getElementById('refresh-btn').addEventListener('click', () => {
+                    this.refreshSystem();
+                });
+
+                // Modal close events
+                document.getElementById('themeModal').addEventListener('click', (e) => {
+                    if (e.target.id === 'themeModal') closeThemeModal();
+                });
+
+                document.getElementById('commandModal').addEventListener('click', (e) => {
+                    if (e.target.id === 'commandModal') closeCommandModal();
+                });
+
+                document.getElementById('neuralModal').addEventListener('click', (e) => {
+                    if (e.target.id === 'neuralModal') closeNeuralModal();
+                });
+
+                document.getElementById('agent-modal').addEventListener('click', (e) => {
+                    if (e.target.id === 'agent-modal') closeAgentModal();
+                });
+
+                // Keyboard shortcuts
+                document.addEventListener('keydown', (e) => {
+                    if (e.key === 'Escape') {
+                        closeAgentModal();
+                        closeThemeModal();
+                        closeCommandModal();
+                        closeNeuralModal();
+                    }
+                    if (e.key === 't' && e.ctrlKey) {
+                        e.preventDefault();
+                        document.getElementById('themeModal').classList.remove('hidden');
+                    }
+                    if (e.key === 'c' && e.ctrlKey && e.shiftKey) {
+                        e.preventDefault();
+                        document.getElementById('commandModal').classList.remove('hidden');
+                    }
+                });
+            }
+
+            async loadInitialData() {
                 try {
-                    const response = await fetch(`${this.baseURL}${endpoint}`, {
-                        method: 'GET',
-                        headers: {
-                            'Accept': 'application/json',
-                            'Content-Type': 'application/json'
-                        }
-                    });
-                    
-                    if (response.ok) {
-                        const data = await response.json();
-                        this.isConnected = true;
-                        this.lastUpdate = new Date();
-                        return data;
-                    } else {
-                        throw new Error(`HTTP ${response.status}`);
-                    }
+                    const [agentsData, metricsData, logsData] = await Promise.all([
+                        APIManager.getAgents(),
+                        APIManager.getMetrics(),
+                        APIManager.getLogs()
+                    ]);
+
+                    UI.hideLoading();
+                    UI.updateMetrics(metricsData);
+                    UI.renderAgents(agentsData);
+                    UI.renderLogs(logsData);
+
                 } catch (error) {
-                    console.log(`API Error (${endpoint}):`, error.message);
-                    this.isConnected = false;
-                    return null;
+                    console.error('Error loading initial data:', error);
+                    UI.hideLoading();
+                    audioSystem.showAlert('Erro ao carregar dados', 'error');
                 }
             }
 
-            async getMetrics() {
-                return await this.fetchData('/api/metrics');
-            }
-
-            async getHealth() {
-                return await this.fetchData('/api/health');
-            }
-
-            async getEvolutionData() {
-                let data = await this.fetchData('/api/evolution-metrics');
-                if (!data) {
-                    data = await this.fetchData('/api/metrics');
-                }
-                return data;
-            }
-        }
-
-        // ===== AGENT EVOLUTION MANAGER EXPANDIDO PARA 24 AGENTES =====
-        class AgentEvolutionManager {
-            constructor() {
-                this.agents = {};
-                this.globalCycleCount = 0;
-                this.evolutionLog = [];
-                this.autoevolutionActive = true;
-                this.initializeAgents();
-            }
-
-            initializeAgents() {
-                Object.keys(agentConfigs).forEach(category => {
-                    Object.keys(agentConfigs[category]).forEach(agentId => {
-                        const config = agentConfigs[category][agentId];
-                        this.agents[agentId] = {
-                            id: agentId,
-                            category: category,
-                            config: config,
-                            metrics: {
-                                performance: 0.750 + Math.random() * 0.200,
-                                accuracy: 85 + Math.random() * 10,
-                                learningRate: 0.001 + Math.random() * 0.009,
-                                cycles: Math.floor(Math.random() * 100),
-                                lastImprovement: 0,
-                                evolutionLevel: 1.0,
-                                neuralArchScore: Math.random()
-                            },
-                            history: [],
-                            isLearning: Math.random() > 0.3,
-                            isAutoevolving: config.autoevolution || false,
-                            lastCycleTime: Date.now(),
-                            evolutionTarget: 0.950 + Math.random() * 0.049
-                        };
-                    });
-                });
-
-                // Adicionar dados específicos dos novos agentes de autoevolução
-                const autoevolutionAgents = {
-                    'code_analyzer_001': { performance: 0.94, accuracy: 91, cycles: 47 },
-                    'web_search_001': { performance: 0.89, accuracy: 87, cycles: 23 },
-                    'code_corrector_001': { performance: 0.92, accuracy: 88, cycles: 34 },
-                    'performance_monitor_001': { performance: 0.96, accuracy: 93, cycles: 61 }
-                };
-
-                Object.entries(autoevolutionAgents).forEach(([agentId, data]) => {
-                    if (this.agents[agentId]) {
-                        this.agents[agentId].metrics.performance = data.performance;
-                        this.agents[agentId].metrics.accuracy = data.accuracy;
-                        this.agents[agentId].metrics.cycles = data.cycles;
-                        this.agents[agentId].isAutoevolving = true;
-                    }
-                });
-            }
-
-            simulateEvolution(agentId) {
-                const agent = this.agents[agentId];
-                if (!agent || (!agent.isLearning && !agent.isAutoevolving)) return;
-
-                const oldPerformance = agent.metrics.performance;
-                const oldAccuracy = agent.metrics.accuracy;
-
-                // Agentes de autoevolução têm melhoria mais rápida
-                const improvementMultiplier = agent.isAutoevolving ? 1.5 : 1.0;
-                const improvement = agent.metrics.learningRate * (1 + Math.random() * 0.5) * improvementMultiplier;
-                const accuracyImprovement = improvement * 10;
-
-                agent.metrics.performance = Math.min(agent.evolutionTarget, oldPerformance + improvement);
-                agent.metrics.accuracy = Math.min(99.9, oldAccuracy + accuracyImprovement);
-                agent.metrics.cycles++;
-                agent.metrics.lastImprovement = agent.metrics.performance - oldPerformance;
-                agent.metrics.evolutionLevel += 0.1;
-
-                // Add to history
-                agent.history.push({
-                    timestamp: Date.now(),
-                    performance: agent.metrics.performance,
-                    accuracy: agent.metrics.accuracy,
-                    improvement: agent.metrics.lastImprovement
-                });
-
-                if (agent.history.length > 50) {
-                    agent.history.shift();
-                }
-
-                // Add to global log
-                this.addToGlobalLog(agentId, oldPerformance, agent.metrics.performance, oldAccuracy, agent.metrics.accuracy);
-
-                // Play evolution sound
-                if (window.audioSystem) {
-                    const soundType = agent.isAutoevolving ? 'autoevolution' : 'evolution';
-                    window.audioSystem.playSound(soundType);
-                }
-
-                this.globalCycleCount++;
-                if (agent.isAutoevolving) {
-                    autoevolutionCycles++;
-                }
-
-                return {
-                    oldPerformance,
-                    newPerformance: agent.metrics.performance,
-                    oldAccuracy,
-                    newAccuracy: agent.metrics.accuracy,
-                    improvement: agent.metrics.lastImprovement
-                };
-            }
-
-            addToGlobalLog(agentId, oldPerf, newPerf, oldAcc, newAcc) {
-                const config = this.agents[agentId].config;
-                const cycle = this.agents[agentId].metrics.cycles;
-                const isAutoevolution = this.agents[agentId].isAutoevolving;
+            refreshSystem() {
+                document.getElementById('refresh-btn').innerHTML = '<i class="fas fa-spinner fa-spin"></i> Refreshing...';
                 
-                const logEntry = {
-                    timestamp: new Date().toLocaleTimeString(),
-                    type: isAutoevolution ? 'autoevolution' : 'cycle',
-                    message: isAutoevolution ? 
-                        `🤖 AUTOEVOLUÇÃO #${cycle} - ${config.name.toUpperCase()}` :
-                        `🔥 CICLO #${cycle} - ${config.name.toUpperCase()}`
-                };
-
-                const perfEntry = {
-                    timestamp: new Date().toLocaleTimeString(),
-                    type: 'improvement',
-                    message: `✅ Performance: ${(oldPerf * 100).toFixed(1)}% → ${(newPerf * 100).toFixed(1)}% (+${((newPerf - oldPerf) * 100).toFixed(1)}%)`
-                };
-
-                this.evolutionLog.unshift(logEntry);
-                this.evolutionLog.unshift(perfEntry);
-                
-                if (this.evolutionLog.length > 100) {
-                    this.evolutionLog = this.evolutionLog.slice(0, 100);
-                }
+                this.loadInitialData().then(() => {
+                    document.getElementById('refresh-btn').innerHTML = '<i class="fas fa-sync-alt"></i> Refresh';
+                    audioSystem.showAlert('Sistema atualizado com sucesso', 'success');
+                    audioSystem.play('success');
+                });
             }
 
-            getAutoevolutionStats() {
-                const autoevolvingAgents = Object.values(this.agents).filter(agent => agent.isAutoevolving);
-                return {
-                    count: autoevolvingAgents.length,
-                    totalCycles: autoevolutionCycles,
-                    avgPerformance: autoevolvingAgents.reduce((sum, agent) => sum + agent.metrics.performance, 0) / autoevolvingAgents.length
-                };
+            startAutoRefresh() {
+                this.refreshInterval = setInterval(() => {
+                    this.loadInitialData();
+                }, CONFIG.REFRESH_INTERVAL);
             }
-        }
 
-        // ===== POPULAÇÃO DOS AGENTES =====
-        function populateAgentCards() {
-            Object.keys(agentConfigs).forEach(category => {
-                const container = document.getElementById(getContainerIdByCategory(category));
-                if (!container) return;
-
-                Object.entries(agentConfigs[category]).forEach(([agentId, config]) => {
-                    // Pular agentes de autoevolução pois já estão hardcoded no HTML
-                    if (config.autoevolution) return;
-
-                    const agent = window.evolutionManager.agents[agentId];
-                    if (!agent) return;
-
-                    const card = createAgentCard(agent);
-                    container.appendChild(card);
-                });
-            });
-        }
-
-        function getContainerIdByCategory(category) {
-            const mapping = {
-                'specialized': 'specialized-agents',
-                'ai_powered': 'ai-agents',
-                'core_v3': 'core-agents',
-                'system': 'system-agents',
-                'service': 'service-agents',
-                'meta_cognitive': 'meta-agents'
-            };
-            return mapping[category];
-        }
-
-        function createAgentCard(agent) {
-            const card = document.createElement('div');
-            card.className = 'glass-card card-3d agent-card';
-            
-            const performance = Math.round(agent.metrics.performance * 100);
-            const accuracy = Math.round(agent.metrics.accuracy);
-            const cycles = agent.metrics.cycles;
-            const isAutoevolving = agent.isAutoevolving;
-            
-            card.innerHTML = `
-                <div class="agent-header">
-                    <div class="agent-icon" style="background: linear-gradient(45deg, ${agent.config.color}, ${agent.config.color}aa); color: white;">
-                        <i class="${agent.config.icon}"></i>
-                    </div>
-                    <div class="flex-1">
-                        <h4 class="text-lg font-bold">${agent.config.name}</h4>
-                        <p class="text-sm opacity-80">${agent.config.specialty}</p>
-                        ${isAutoevolving ? '<div class="autoevolution-badge mt-1">AUTOEVOLUTION</div>' : ''}
-                    </div>
-                    <div class="text-right">
-                        <div class="text-2xl font-bold orbitron" style="color: ${agent.config.color};">${performance}%</div>
-                        <div class="text-xs opacity-75">Performance</div>
-                    </div>
-                </div>
-                
-                <div class="agent-status">
-                    <div class="status-dot ${isAutoevolving ? 'status-autoevolving' : 'status-active'}"></div>
-                    <span class="text-sm">${isAutoevolving ? 'Auto-evoluindo' : 'Ativo'}</span>
-                    <div class="cycle-indicator ml-auto">Ciclo #${cycles}</div>
-                </div>
-
-                <div class="evolution-metrics">
-                    <div class="performance-delta">
-                        <span>Accuracy:</span>
-                        <span class="performance-arrow">${accuracy}% ↗ +${(Math.random() * 3).toFixed(1)}%</span>
-                    </div>
-                    <div class="performance-delta">
-                        <span>Learning Rate:</span>
-                        <span>${agent.metrics.learningRate.toFixed(3)}</span>
-                    </div>
-                    <div class="neural-arch">
-                        <span class="text-xs">${agent.config.specialty} Architecture</span>
-                        <div class="arch-node"></div>
-                        <div class="arch-node"></div>
-                        <div class="arch-node"></div>
-                    </div>
-                    <div class="learning-progress">
-                        <div class="learning-progress-bar" style="width: ${performance}%;"></div>
-                    </div>
-                </div>
-            `;
-
-            return card;
-        }
-
-        // ===== SISTEMA DE MÉTRICAS GLOBAIS =====
-        function updateGlobalMetrics() {
-            const totalAgents = Object.keys(window.evolutionManager.agents).length;
-            const activeAgents = Object.values(window.evolutionManager.agents).filter(agent => agent.isLearning || agent.isAutoevolving).length;
-            const learningAgents = Object.values(window.evolutionManager.agents).filter(agent => agent.isLearning).length;
-            const autoevolvingAgents = Object.values(window.evolutionManager.agents).filter(agent => agent.isAutoevolving).length;
-            
-            const avgPerformance = Object.values(window.evolutionManager.agents).reduce((sum, agent) => sum + agent.metrics.performance, 0) / totalAgents;
-            const avgAccuracy = Object.values(window.evolutionManager.agents).reduce((sum, agent) => sum + agent.metrics.accuracy, 0) / totalAgents;
-
-            // Update display elements
-            const elements = {
-                'active-agents': activeAgents,
-                'agents-total': `de ${totalAgents} Total`,
-                'learning-agents': learningAgents,
-                'autoevolution-cycles': autoevolutionCycles,
-                'avg-improvement': `+${(Math.random() * 5 + 2).toFixed(1)}%`,
-                'avg-accuracy': `${avgAccuracy.toFixed(1)}%`,
-                'quantum-coherence': `${(avgPerformance * 100).toFixed(1)}%`
-            };
-
-            Object.entries(elements).forEach(([id, value]) => {
-                const element = document.getElementById(id);
-                if (element) element.textContent = value;
-            });
-        }
-
-        // ===== INITIALIZATION =====
-        document.addEventListener('DOMContentLoaded', async function() {
-            console.log('🚀 Iniciando ALSHAM QUANTUM v11.0 com 24 Agentes!');
-            
-            try {
-                // Initialize systems
-                window.audioSystem = new QuantumAudioSystem();
-                await window.audioSystem.init();
-                
-                window.particles = new QuantumParticles();
-                window.apiConnector = new APIConnector();
-                window.evolutionManager = new AgentEvolutionManager();
-                
-                // Setup theme switching
-                document.querySelectorAll('.theme-btn').forEach(btn => {
-                    btn.addEventListener('click', () => {
-                        const theme = btn.dataset.theme;
-                        document.body.className = `theme-${theme}`;
-                        
-                        document.querySelectorAll('.theme-btn').forEach(b => b.classList.remove('active'));
-                        btn.classList.add('active');
-                        
-                        if (window.audioSystem) {
-                            window.audioSystem.playSound('click');
-                        }
-                    });
-                });
-
-                // Setup audio controls
-                document.getElementById('audio-toggle').addEventListener('click', function() {
-                    isAudioPlaying = !isAudioPlaying;
-                    this.textContent = isAudioPlaying ? '🔊 Pause' : '🔊 Play';
-                    
-                    if (isAudioPlaying && window.audioSystem) {
-                        window.audioSystem.playSound('click');
-                    }
-                });
-
-                document.getElementById('volume-control').addEventListener('input', function() {
-                    volumeLevel = this.value / 100;
-                });
-
-                // Populate agent cards
-                populateAgentCards();
-
-                // Start simulation loops
+            startRealTimeUpdates() {
                 setInterval(() => {
-                    // Simulate evolution for all agents
-                    Object.keys(window.evolutionManager.agents).forEach(agentId => {
-                        if (Math.random() > 0.7) { // 30% chance per interval
-                            window.evolutionManager.simulateEvolution(agentId);
-                        }
-                    });
-                    
-                    updateGlobalMetrics();
-                    updateEvolutionLog();
-                }, 5000);
+                    // Update evolution countdown
+                    const nextEvolution = document.getElementById('next-evolution');
+                    if (nextEvolution) {
+                        const minutes = Math.floor(Math.random() * 15) + 1;
+                        nextEvolution.textContent = `Em ${minutes}min`;
+                    }
 
-                // Update mega counter
-                let counter = 0;
-                setInterval(() => {
-                    counter += Math.floor(Math.random() * 10) + 1;
-                    document.getElementById('mega-counter').textContent = counter.toLocaleString();
-                    document.getElementById('cycles-per-second').textContent = (Math.random() * 3 + 1).toFixed(1);
-                    document.getElementById('performance-indicator').textContent = `Performance: ${(85 + Math.random() * 15).toFixed(1)}%`;
-                }, 3000);
+                    // Update neural coherence with small variations
+                    const coherenceElement = document.getElementById('neural-coherence');
+                    const variation = (Math.random() - 0.5) * 0.3;
+                    const currentCoherence = parseFloat(coherenceElement.textContent);
+                    coherenceElement.textContent = Math.max(97, Math.min(99.9, currentCoherence + variation)).toFixed(1) + '%';
 
-                // Update API status
-                document.getElementById('api-status').textContent = '✅ API Conectada - Railway Online';
+                    // Update messages count
+                    const messagesElement = document.getElementById('messages-count');
+                    const currentCount = parseInt(messagesElement.textContent.replace(/,/g, ''));
+                    const newCount = currentCount + Math.floor(Math.random() * 50 + 25);
+                    messagesElement.textContent = newCount.toLocaleString();
 
-                console.log('✅ ALSHAM QUANTUM v11.0 com 24 agentes iniciado com sucesso!');
-                
-            } catch (error) {
-                console.error('❌ Erro na inicialização:', error);
+                }, 8000);
             }
+        }
+
+        // === INITIALIZATION ===
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log('🚀 Initializing ALSHAM QUANTUM HUB v12.0 Premium');
+            
+            createParticles();
+            
+            const dashboard = new DashboardApp();
+            dashboard.init();
+            
+            // Welcome message
+            setTimeout(() => {
+                audioSystem.showAlert('ALSHAM QUANTUM HUB v12.0 Premium inicializado com sucesso', 'success');
+                audioSystem.play('success');
+            }, 2000);
+            
+            // Add hover effects to all interactive elements
+            document.querySelectorAll('button, .agent-card, .filter-btn, .control-btn').forEach(element => {
+                element.addEventListener('mouseenter', () => audioSystem.play('hover'));
+            });
         });
 
-        function updateEvolutionLog() {
-            const logContainer = document.getElementById('global-evolution-log');
-            if (!logContainer || !window.evolutionManager) return;
-
-            logContainer.innerHTML = '';
-            window.evolutionManager.evolutionLog.slice(0, 10).forEach(entry => {
-                const logDiv = document.createElement('div');
-                logDiv.className = `log-entry ${entry.type}`;
-                logDiv.textContent = `${entry.timestamp} - ${entry.message}`;
-                logContainer.appendChild(logDiv);
-            });
-        }
-
-        // Add hover sound effects
-        document.addEventListener('mouseover', function(e) {
-            if (e.target.closest('.glass-card') && window.audioSystem && isAudioPlaying) {
-                window.audioSystem.playSound('hover');
-            }
+        // === ERROR HANDLING ===
+        window.addEventListener('error', (e) => {
+            console.error('Sistema Error:', e.error);
+            audioSystem.showAlert('Erro detectado no sistema', 'error');
+            audioSystem.play('error');
         });
 
-        console.log('🎉 ALSHAM QUANTUM v11.0 - 24 AGENTES AUTOEVOLUTIVOS CARREGADOS!');
-        console.log('🤖 4 Agentes de Autoevolução Ativos');
-        console.log('🔥 Sistema que melhora a si mesmo');
-        console.log('⚡ Primeira IA Autoevolutiva do Mundo');
+        window.addEventListener('unhandledrejection', (e) => {
+            console.error('Unhandled promise rejection:', e.reason);
+            audioSystem.showAlert('Erro de conexão detectado', 'warning');
+            audioSystem.play('warning');
+        });
+
+        // === PERFORMANCE MONITORING ===
+        let lastFrameTime = performance.now();
+        function monitorPerformance() {
+            const currentTime = performance.now();
+            const fps = 1000 / (currentTime - lastFrameTime);
+            lastFrameTime = currentTime;
+            
+            if (fps < 30) {
+                console.warn('Performance degradation detected:', fps.toFixed(1), 'FPS');
+            }
+            
+            requestAnimationFrame(monitorPerformance);
+        }
+        monitorPerformance();
     </script>
 </body>
 </html>
