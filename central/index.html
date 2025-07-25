@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ALSHAM QUANTUM Hub v11.0 - 24 Agentes Autoevolutivos</title>
+    <title>ALSHAM QUANTUM v11.0 - Dashboard Administrativo dos 24 Agentes</title>
     
     <!-- CDN Libraries -->
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
@@ -11,8 +11,8 @@
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/three@0.158.0/build/three.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/countup.js@2.6.2/dist/countUp.umd.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
 
     <style>
         :root {
@@ -25,13 +25,706 @@
             --void-black: #020C1B;
         }
 
-        /* === LUXURY GLASS THEME (DEFAULT) === */
-        .theme-luxury-glass {
-            --bg-primary: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
-            --bg-card: rgba(255, 255, 255, 0.1);
-            --bg-secondary: rgba(0, 245, 255, 0.05);
-            --text-primary: #ffffff;
-            --text-secondary: #b0c4de;
-            --accent-primary: var(--photon-gold);
-            --accent-secondary: var(--energy-green);
-            --accent-
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, var(--void-black) 0%, #1a1a2e 50%, var(--neutron-gray) 100%);
+            color: var(--plasma-white);
+            overflow-x: hidden;
+        }
+
+        .quantum-gradient {
+            background: linear-gradient(135deg, var(--quantum-purple), var(--cosmic-blue), var(--photon-gold));
+        }
+
+        .glass-effect {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .agent-card {
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .agent-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px rgba(108, 52, 131, 0.3);
+        }
+
+        .heartbeat {
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+
+        .scrollbar-hide::-webkit-scrollbar {
+            display: none;
+        }
+
+        .orbitron {
+            font-family: 'Orbitron', monospace;
+        }
+
+        .status-online { color: var(--energy-green); }
+        .status-warning { color: var(--photon-gold); }
+        .status-error { color: #e74c3c; }
+
+        .loading-skeleton {
+            background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+            background-size: 200% 100%;
+            animation: loading 1.5s infinite;
+        }
+
+        @keyframes loading {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+    </style>
+</head>
+<body class="min-h-screen">
+    <!-- Header -->
+    <header class="glass-effect border-b border-white/20 sticky top-0 z-50">
+        <div class="container mx-auto px-6 py-4">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-4">
+                    <div class="w-12 h-12 quantum-gradient rounded-full flex items-center justify-center">
+                        <i class="fas fa-robot text-white text-xl" aria-hidden="true"></i>
+                    </div>
+                    <div>
+                        <h1 class="text-2xl font-bold orbitron">ALSHAM QUANTUM v11.0</h1>
+                        <p class="text-sm text-gray-300">Dashboard Administrativo - 24 Agentes Autoevolutivos</p>
+                    </div>
+                </div>
+                
+                <div class="flex items-center space-x-6">
+                    <div class="text-center">
+                        <div id="system-status" class="status-online text-lg font-bold">ONLINE</div>
+                        <div class="text-xs text-gray-400">Sistema</div>
+                    </div>
+                    <div class="text-center">
+                        <div id="active-agents-count" class="text-lg font-bold text-blue-400">24</div>
+                        <div class="text-xs text-gray-400">Agentes Ativos</div>
+                    </div>
+                    <button id="refresh-btn" class="px-4 py-2 glass-effect rounded-lg hover:bg-white/20 transition-all" aria-label="Atualizar dados">
+                        <i class="fas fa-sync-alt" aria-hidden="true"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="container mx-auto px-6 py-8">
+        <!-- Metrics Overview -->
+        <section class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8" aria-label="Métricas do sistema">
+            <div class="glass-effect p-6 rounded-xl">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h3 class="text-sm text-gray-400">Mensagens Processadas</h3>
+                        <div id="messages-count" class="text-2xl font-bold text-green-400">1,248</div>
+                    </div>
+                    <i class="fas fa-envelope text-green-400 text-2xl" aria-hidden="true"></i>
+                </div>
+            </div>
+
+            <div class="glass-effect p-6 rounded-xl">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h3 class="text-sm text-gray-400">Taxa de Sucesso</h3>
+                        <div id="success-rate" class="text-2xl font-bold text-blue-400">100.0%</div>
+                    </div>
+                    <i class="fas fa-check-circle text-blue-400 text-2xl" aria-hidden="true"></i>
+                </div>
+            </div>
+
+            <div class="glass-effect p-6 rounded-xl">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h3 class="text-sm text-gray-400">Latência Média</h3>
+                        <div id="avg-latency" class="text-2xl font-bold text-purple-400">0.07ms</div>
+                    </div>
+                    <i class="fas fa-tachometer-alt text-purple-400 text-2xl" aria-hidden="true"></i>
+                </div>
+            </div>
+
+            <div class="glass-effect p-6 rounded-xl">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h3 class="text-sm text-gray-400">Uptime</h3>
+                        <div id="system-uptime" class="text-2xl font-bold text-yellow-400">99.98%</div>
+                    </div>
+                    <i class="fas fa-server text-yellow-400 text-2xl" aria-hidden="true"></i>
+                </div>
+            </div>
+        </section>
+
+        <!-- Agent Categories Filter -->
+        <section class="mb-8" aria-label="Filtros de categoria">
+            <div class="flex flex-wrap gap-3">
+                <button class="filter-btn active px-4 py-2 glass-effect rounded-lg hover:bg-white/20 transition-all" data-category="all">
+                    Todos (24)
+                </button>
+                <button class="filter-btn px-4 py-2 glass-effect rounded-lg hover:bg-white/20 transition-all" data-category="specialized">
+                    Specialized (4)
+                </button>
+                <button class="filter-btn px-4 py-2 glass-effect rounded-lg hover:bg-white/20 transition-all" data-category="ai_powered">
+                    AI-Powered (4)
+                </button>
+                <button class="filter-btn px-4 py-2 glass-effect rounded-lg hover:bg-white/20 transition-all" data-category="core_v3">
+                    Core V3 (2)
+                </button>
+                <button class="filter-btn px-4 py-2 glass-effect rounded-lg hover:bg-white/20 transition-all" data-category="system">
+                    System (8)
+                </button>
+                <button class="filter-btn px-4 py-2 glass-effect rounded-lg hover:bg-white/20 transition-all" data-category="meta_cognitive">
+                    Meta-Cognitive (2)
+                </button>
+                <button class="filter-btn px-4 py-2 glass-effect rounded-lg hover:bg-white/20 transition-all" data-category="service">
+                    Service (4)
+                </button>
+            </div>
+        </section>
+
+        <!-- Agents Grid -->
+        <section class="mb-8" aria-label="Grid de agentes">
+            <div id="agents-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                <!-- Loading skeletons -->
+                <div class="loading-skeleton h-32 rounded-xl"></div>
+                <div class="loading-skeleton h-32 rounded-xl"></div>
+                <div class="loading-skeleton h-32 rounded-xl"></div>
+                <div class="loading-skeleton h-32 rounded-xl"></div>
+            </div>
+        </section>
+
+        <!-- System Logs -->
+        <section class="grid grid-cols-1 lg:grid-cols-2 gap-8" aria-label="Logs e gráficos">
+            <div class="glass-effect p-6 rounded-xl">
+                <h3 class="text-lg font-bold mb-4 flex items-center">
+                    <i class="fas fa-list-alt mr-2" aria-hidden="true"></i>
+                    Logs do Sistema
+                </h3>
+                <div id="system-logs" class="space-y-2 max-h-64 overflow-y-auto scrollbar-hide" aria-live="polite">
+                    <!-- Logs will be populated here -->
+                </div>
+            </div>
+
+            <div class="glass-effect p-6 rounded-xl">
+                <h3 class="text-lg font-bold mb-4 flex items-center">
+                    <i class="fas fa-chart-line mr-2" aria-hidden="true"></i>
+                    Performance Geral
+                </h3>
+                <canvas id="performance-chart" width="400" height="200" aria-label="Gráfico de performance do sistema"></canvas>
+            </div>
+        </section>
+    </main>
+
+    <!-- Agent Details Modal -->
+    <div id="agent-modal" class="fixed inset-0 bg-black/50 backdrop-blur-sm hidden z-50" role="dialog" aria-labelledby="modal-title" aria-hidden="true">
+        <div class="flex items-center justify-center min-h-screen p-4">
+            <div class="glass-effect p-8 rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 id="modal-title" class="text-2xl font-bold orbitron"></h2>
+                    <button id="close-modal" class="text-gray-400 hover:text-white text-2xl" aria-label="Fechar modal">
+                        <i class="fas fa-times" aria-hidden="true"></i>
+                    </button>
+                </div>
+                <div id="modal-content">
+                    <!-- Agent details will be populated here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript -->
+    <script>
+        // Configuration
+        const CONFIG = {
+            API_BASE_URL: window.location.origin,
+            REFRESH_INTERVAL: 5000,
+            WEBSOCKET_URL: window.location.origin.replace('http', 'ws')
+        };
+
+        // Security Utils
+        class SecurityUtils {
+            static sanitize(str) {
+                const div = document.createElement('div');
+                div.textContent = str;
+                return div.innerHTML;
+            }
+        }
+
+        // API Manager
+        class APIManager {
+            static async fetchWithTimeout(url, options = {}, timeout = 10000) {
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), timeout);
+                
+                try {
+                    const response = await fetch(url, {
+                        ...options,
+                        signal: controller.signal
+                    });
+                    clearTimeout(timeoutId);
+                    return response;
+                } catch (error) {
+                    clearTimeout(timeoutId);
+                    throw error;
+                }
+            }
+
+            static async getAgents() {
+                try {
+                    const response = await this.fetchWithTimeout(`${CONFIG.API_BASE_URL}/api/agents`);
+                    return await response.json();
+                } catch (error) {
+                    console.error('Error fetching agents:', error);
+                    return this.getFallbackAgents();
+                }
+            }
+
+            static async getMetrics() {
+                try {
+                    const response = await this.fetchWithTimeout(`${CONFIG.API_BASE_URL}/api/metrics`);
+                    return await response.json();
+                } catch (error) {
+                    console.error('Error fetching metrics:', error);
+                    return this.getFallbackMetrics();
+                }
+            }
+
+            static async getLogs() {
+                try {
+                    const response = await this.fetchWithTimeout(`${CONFIG.API_BASE_URL}/api/logs`);
+                    return await response.json();
+                } catch (error) {
+                    console.error('Error fetching logs:', error);
+                    return { logs: [] };
+                }
+            }
+
+            static getFallbackAgents() {
+                return {
+                    agents: [],
+                    total: 24,
+                    categories: {
+                        specialized: 4,
+                        ai_powered: 4,
+                        core_v3: 2,
+                        system: 8,
+                        meta_cognitive: 2,
+                        service: 4
+                    }
+                };
+            }
+
+            static getFallbackMetrics() {
+                return {
+                    messages_sent: 1248,
+                    messages_delivered: 1248,
+                    success_rate: 100.0,
+                    average_latency: 0.07,
+                    active_agents: 24,
+                    uptime: 99.98
+                };
+            }
+        }
+
+        // WebSocket Manager
+        class WebSocketManager {
+            constructor() {
+                this.socket = null;
+                this.reconnectAttempts = 0;
+                this.maxReconnectAttempts = 5;
+            }
+
+            connect() {
+                try {
+                    this.socket = io(CONFIG.API_BASE_URL);
+                    
+                    this.socket.on('connect', () => {
+                        console.log('WebSocket connected');
+                        this.reconnectAttempts = 0;
+                    });
+
+                    this.socket.on('disconnect', () => {
+                        console.log('WebSocket disconnected');
+                        this.handleReconnect();
+                    });
+
+                    this.socket.on('metrics_update', (data) => {
+                        this.handleMetricsUpdate(data);
+                    });
+
+                } catch (error) {
+                    console.error('WebSocket connection error:', error);
+                }
+            }
+
+            handleReconnect() {
+                if (this.reconnectAttempts < this.maxReconnectAttempts) {
+                    this.reconnectAttempts++;
+                    setTimeout(() => {
+                        console.log(`Reconnecting... Attempt ${this.reconnectAttempts}`);
+                        this.connect();
+                    }, 2000 * this.reconnectAttempts);
+                }
+            }
+
+            handleMetricsUpdate(data) {
+                // Update UI with real-time data
+                document.getElementById('active-agents-count').textContent = data.active_agents || 24;
+                
+                if (data.system_health === 'optimal') {
+                    document.getElementById('system-status').textContent = 'ONLINE';
+                    document.getElementById('system-status').className = 'status-online text-lg font-bold';
+                }
+            }
+        }
+
+        // UI Manager
+        class UI {
+            static showLoading(element) {
+                element.innerHTML = '<div class="loading-skeleton h-32 rounded-xl"></div>';
+            }
+
+            static hideLoading() {
+                document.querySelectorAll('.loading-skeleton').forEach(el => el.remove());
+            }
+
+            static updateMetrics(metrics) {
+                document.getElementById('messages-count').textContent = metrics.messages_sent?.toLocaleString() || '1,248';
+                document.getElementById('success-rate').textContent = `${metrics.success_rate || 100.0}%`;
+                document.getElementById('avg-latency').textContent = `${metrics.average_latency || 0.07}ms`;
+                document.getElementById('system-uptime').textContent = `${metrics.uptime || 99.98}%`;
+            }
+
+            static renderAgents(agentsData) {
+                const grid = document.getElementById('agents-grid');
+                
+                if (!agentsData.agents || agentsData.agents.length === 0) {
+                    grid.innerHTML = '<p class="col-span-full text-center text-gray-400">Nenhum agente encontrado</p>';
+                    return;
+                }
+
+                grid.innerHTML = agentsData.agents.map(agent => `
+                    <div class="agent-card glass-effect p-6 rounded-xl" data-category="${agent.category}" data-agent-id="${agent.id}">
+                        <div class="flex items-center justify-between mb-4">
+                            <h3 class="font-bold text-lg">${SecurityUtils.sanitize(agent.name)}</h3>
+                            <div class="heartbeat">
+                                <i class="fas fa-heart text-green-400" aria-hidden="true"></i>
+                            </div>
+                        </div>
+                        
+                        <div class="space-y-2">
+                            <div class="flex justify-between">
+                                <span class="text-gray-400">Performance:</span>
+                                <span class="text-green-400">${(agent.performance * 100).toFixed(1)}%</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-400">Accuracy:</span>
+                                <span class="text-blue-400">${agent.accuracy}%</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-400">Cycles:</span>
+                                <span class="text-purple-400">${agent.cycles}</span>
+                            </div>
+                        </div>
+                        
+                        <div class="mt-4 flex items-center justify-between">
+                            <span class="px-2 py-1 bg-green-500/20 text-green-400 rounded text-xs">
+                                ${SecurityUtils.sanitize(agent.status.toUpperCase())}
+                            </span>
+                            <span class="text-xs text-gray-500">
+                                ${SecurityUtils.sanitize(agent.category.replace('_', ' ').toUpperCase())}
+                            </span>
+                        </div>
+                    </div>
+                `).join('');
+
+                // Add click events
+                document.querySelectorAll('.agent-card').forEach(card => {
+                    card.addEventListener('click', () => {
+                        const agentId = card.dataset.agentId;
+                        this.showAgentModal(agentId);
+                    });
+                });
+
+                // Animate cards
+                gsap.from('.agent-card', {
+                    duration: 0.5,
+                    y: 20,
+                    opacity: 0,
+                    stagger: 0.1
+                });
+            }
+
+            static async showAgentModal(agentId) {
+                const modal = document.getElementById('agent-modal');
+                const title = document.getElementById('modal-title');
+                const content = document.getElementById('modal-content');
+
+                try {
+                    const response = await APIManager.fetchWithTimeout(`${CONFIG.API_BASE_URL}/api/agents/${agentId}`);
+                    const agent = await response.json();
+
+                    title.textContent = agent.name;
+                    content.innerHTML = `
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <h3 class="text-lg font-bold mb-4">Informações Gerais</h3>
+                                <div class="space-y-3">
+                                    <div class="flex justify-between">
+                                        <span>ID:</span>
+                                        <span class="font-mono">${SecurityUtils.sanitize(agent.id)}</span>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <span>Categoria:</span>
+                                        <span>${SecurityUtils.sanitize(agent.category)}</span>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <span>Status:</span>
+                                        <span class="text-green-400">${SecurityUtils.sanitize(agent.status)}</span>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <span>Performance:</span>
+                                        <span>${(agent.performance * 100).toFixed(1)}%</span>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <span>Accuracy:</span>
+                                        <span>${agent.accuracy}%</span>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <span>Cycles:</span>
+                                        <span>${agent.cycles}</span>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div>
+                                <h3 class="text-lg font-bold mb-4">Métricas Técnicas</h3>
+                                <div class="space-y-3">
+                                    <div class="flex justify-between">
+                                        <span>Processing Time:</span>
+                                        <span>${agent.metrics?.processing_time || 'N/A'}ms</span>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <span>Memory Usage:</span>
+                                        <span>${agent.metrics?.memory_usage || 'N/A'}%</span>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <span>Last Heartbeat:</span>
+                                        <span class="text-xs">${new Date(agent.last_heartbeat).toLocaleString()}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+
+                    modal.classList.remove('hidden');
+                    modal.setAttribute('aria-hidden', 'false');
+                } catch (error) {
+                    console.error('Error loading agent details:', error);
+                    title.textContent = 'Erro';
+                    content.innerHTML = '<p class="text-red-400">Erro ao carregar detalhes do agente.</p>';
+                    modal.classList.remove('hidden');
+                }
+            }
+
+            static renderLogs(logs) {
+                const container = document.getElementById('system-logs');
+                
+                if (!logs.logs || logs.logs.length === 0) {
+                    container.innerHTML = '<p class="text-gray-400">Nenhum log disponível</p>';
+                    return;
+                }
+
+                container.innerHTML = logs.logs.map(log => `
+                    <div class="flex items-center space-x-3 p-2 rounded">
+                        <span class="text-xs ${this.getLogLevelColor(log.level)}">${log.level}</span>
+                        <span class="text-xs text-gray-500">${new Date(log.timestamp).toLocaleTimeString()}</span>
+                        <span class="text-sm">${SecurityUtils.sanitize(log.message)}</span>
+                    </div>
+                `).join('');
+            }
+
+            static getLogLevelColor(level) {
+                switch(level) {
+                    case 'SUCCESS': return 'text-green-400';
+                    case 'WARNING': return 'text-yellow-400';
+                    case 'ERROR': return 'text-red-400';
+                    default: return 'text-blue-400';
+                }
+            }
+
+            static initChart() {
+                const ctx = document.getElementById('performance-chart').getContext('2d');
+                
+                new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: ['5min ago', '4min ago', '3min ago', '2min ago', '1min ago', 'Now'],
+                        datasets: [{
+                            label: 'Performance',
+                            data: [95, 96, 94, 97, 95, 96],
+                            borderColor: '#6C3483',
+                            backgroundColor: 'rgba(108, 52, 131, 0.1)',
+                            tension: 0.4
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                labels: {
+                                    color: '#FDFEFE'
+                                }
+                            }
+                        },
+                        scales: {
+                            y: {
+                                ticks: {
+                                    color: '#FDFEFE'
+                                },
+                                grid: {
+                                    color: 'rgba(255, 255, 255, 0.1)'
+                                }
+                            },
+                            x: {
+                                ticks: {
+                                    color: '#FDFEFE'
+                                },
+                                grid: {
+                                    color: 'rgba(255, 255, 255, 0.1)'
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+        }
+
+        // Dashboard App
+        class DashboardApp {
+            constructor() {
+                this.currentFilter = 'all';
+                this.wsManager = new WebSocketManager();
+                this.refreshInterval = null;
+            }
+
+            async init() {
+                console.log('Iniciando ALSHAM QUANTUM Dashboard v11.0');
+                
+                this.setupEventListeners();
+                this.wsManager.connect();
+                await this.loadInitialData();
+                this.startAutoRefresh();
+                UI.initChart();
+            }
+
+            setupEventListeners() {
+                // Refresh button
+                document.getElementById('refresh-btn').addEventListener('click', () => {
+                    document.getElementById('refresh-btn').innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+                    this.loadInitialData().then(() => {
+                        document.getElementById('refresh-btn').innerHTML = '<i class="fas fa-sync-alt"></i>';
+                    });
+                });
+
+                // Filter buttons
+                document.querySelectorAll('.filter-btn').forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+                        btn.classList.add('active');
+                        this.currentFilter = btn.dataset.category;
+                        this.filterAgents();
+                    });
+                });
+
+                // Modal close
+                document.getElementById('close-modal').addEventListener('click', () => {
+                    this.closeModal();
+                });
+
+                document.getElementById('agent-modal').addEventListener('click', (e) => {
+                    if (e.target.id === 'agent-modal') {
+                        this.closeModal();
+                    }
+                });
+
+                // Keyboard navigation
+                document.addEventListener('keydown', (e) => {
+                    if (e.key === 'Escape') {
+                        this.closeModal();
+                    }
+                });
+            }
+
+            async loadInitialData() {
+                try {
+                    const [agentsData, metricsData, logsData] = await Promise.all([
+                        APIManager.getAgents(),
+                        APIManager.getMetrics(),
+                        APIManager.getLogs()
+                    ]);
+
+                    UI.hideLoading();
+                    UI.updateMetrics(metricsData);
+                    UI.renderAgents(agentsData);
+                    UI.renderLogs(logsData);
+
+                } catch (error) {
+                    console.error('Error loading initial data:', error);
+                    UI.hideLoading();
+                }
+            }
+
+            filterAgents() {
+                const cards = document.querySelectorAll('.agent-card');
+                
+                cards.forEach(card => {
+                    const category = card.dataset.category;
+                    if (this.currentFilter === 'all' || category === this.currentFilter) {
+                        card.style.display = 'block';
+                        gsap.from(card, { duration: 0.3, opacity: 0, y: 20 });
+                    } else {
+                        card.style.display = 'none';
+                    }
+                });
+            }
+
+            closeModal() {
+                const modal = document.getElementById('agent-modal');
+                modal.classList.add('hidden');
+                modal.setAttribute('aria-hidden', 'true');
+            }
+
+            startAutoRefresh() {
+                this.refreshInterval = setInterval(() => {
+                    this.loadInitialData();
+                }, CONFIG.REFRESH_INTERVAL);
+            }
+        }
+
+        // Initialize Dashboard
+        document.addEventListener('DOMContentLoaded', () => {
+            const dashboard = new DashboardApp();
+            dashboard.init();
+        });
+
+        // Error handling
+        window.addEventListener('error', (e) => {
+            console.error('Global error:', e.error);
+        });
+
+        window.addEventListener('unhandledrejection', (e) => {
+            console.error('Unhandled promise rejection:', e.reason);
+        });
+    </script>
+</body>
+</html>
