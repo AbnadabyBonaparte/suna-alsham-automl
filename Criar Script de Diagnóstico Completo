@@ -1,0 +1,1014 @@
+#!/usr/bin/env python3
+"""
+Script de Diagnóstico Avançado do Sistema SUNA-ALSHAM
+Realiza verificações completas de arquivos, dependências, importações e funcionalidade
+Versão 2.0 - Diagnóstico Completo
+"""
+
+import os
+import sys
+import importlib
+import inspect
+import traceback
+import platform
+import subprocess
+import time
+from datetime import datetime
+from pathlib import Path
+from typing import List, Dict, Tuple, Any, Optional, Union, Set
+
+# Configuração de cores para terminal
+class TermColors:
+    HEADER = '\033[95m'
+    BLUE = '\033[94m'
+    CYAN = '\033[96m'
+    GREEN = '\033[92m'
+    WARNING = '\033[93m'
+    FAIL = '\033[91m'
+    ENDC = '\033[0m'
+    BOLD = '\033[1m'
+    UNDERLINE = '\033[4m'
+
+# Verifique se o terminal suporta cores
+COLOR_SUPPORT = hasattr(sys.stdout, 'isatty') and sys.stdout.isatty()
+
+def colorize(text: str, color_code: str) -> str:
+    """Adiciona cor ao texto se suportado pelo terminal"""
+    if COLOR_SUPPORT:
+        return f"{color_code}{text}{TermColors.ENDC}"
+    return text
+
+def print_header(text: str) -> None:
+    """Imprime cabeçalho formatado"""
+    separator = "=" * 70
+    print(f"\n{colorize(separator, TermColors.BLUE)}")
+    print(colorize(f"🔍 {text}", TermColors.HEADER + TermColors.BOLD))
+    print(colorize(separator, TermColors.BLUE))
+
+def print_subheader(text: str) -> None:
+    """Imprime subcabeçalho formatado"""
+    print(f"\n{colorize('>> ' + text, TermColors.CYAN + TermColors.BOLD)}")
+
+def print_success(text: str) -> None:
+    """Imprime mensagem de sucesso"""
+    print(colorize(f"✅ {text}", TermColors.GREEN))
+
+def print_warning(text: str) -> None:
+    """Imprime aviso"""
+    print(colorize(f"⚠️ {text}", TermColors.WARNING))
+
+def print_error(text: str) -> None:
+    """Imprime erro"""
+    print(colorize(f"❌ {text}", TermColors.FAIL))
+
+def print_info(text: str) -> None:
+    """Imprime informação"""
+    print(f"ℹ️ {text}")
+
+def check_system_info() -> Dict[str, str]:
+    """Coleta e retorna informações do sistema"""
+    print_header("INFORMAÇÕES DO SISTEMA")
+    
+    info = {
+        "Sistema Operacional": platform.platform(),
+        "Versão Python": platform.python_version(),
+        "Implementação Python": platform.python_implementation(),
+        "Diretório Atual": os.getcwd(),
+        "Diretório Python": sys.executable,
+        "Timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+        "Usuário": os.getlogin() if hasattr(os, 'getlogin') else 'N/A',
+    }
+    
+    # Verificar variáveis de ambiente relevantes
+    env_vars = ["PYTHONPATH", "REDIS_URL", "RAILWAY_ENVIRONMENT", "PORT"]
+    for var in env_vars:
+        info[f"Env: {var}"] = os.environ.get(var, "Não definido")
+    
+    # Mostrar informações coletadas
+    max_key_length = max(len(key) for key in info.keys())
+    for key, value in info.items():
+        padding = " " * (max_key_length - len(key))
+        print(f"{key}:{padding} {value}")
+    
+    return info
+
+def check_python_version() -> bool:
+    """Verifica versão do Python"""
+    print_header("VERIFICANDO VERSÃO DO PYTHON")
+    version = sys.version_info
+    print(f"Python {version.major}.{version.minor}.{version.micro}")
+    
+    if version.major < 3 or (version.major == 3 and version.minor < 8):
+        print_error("Python 3.8+ é necessário!")
+        print_info("Recomendação: Atualize para Python 3.8 ou superior.")
+        return False
+    else:
+        print_success("Versão do Python OK")
+        return True
+
+def find_all_project_files() -> Dict[str, List[str]]:
+    """Encontra todos os arquivos do projeto e categoriza por tipo"""
+    print_header("MAPEANDO ARQUIVOS DO PROJETO")
+    
+    file_categories = {
+        "py": [],      # Arquivos Python
+        "json": [],    # Arquivos JSON
+        "yml": [],     # Arquivos YAML
+        "sh": [],      # Scripts shell
+        "txt": [],     # Arquivos de texto
+        "md": [],      # Arquivos markdown
+        "other": []    # Outros tipos
+    }
+    
+    # Diretórios para ignorar
+    ignore_dirs = {'.git', '__pycache__', '.venv', 'venv', 'env', '.env', 'node_modules'}
+    
+    # Contador de arquivos processados
+    total_files = 0
+    
+    for root, dirs, files in os.walk('.'):
+        # Remove diretórios que devem ser ignorados
+        dirs[:] = [d for d in dirs if d not in ignore_dirs]
+        
+        for file in files:
+            total_files += 1
+            _, ext = os.path.splitext(file)
+            ext = ext[1:].lower() if ext else ""
+            file_path = os.path.join(root, file)[2:]  # Remova './' do início
+            
+            if ext == 'py':
+                file_categories['py'].append(file_path)
+            elif ext == 'json':
+                file_categories['json'].append(file_path)
+            elif ext in ('yml', 'yaml'):
+                file_categories['yml'].append(file_path)
+            elif ext == 'sh':
+                file_categories['sh'].append(file_path)
+            elif ext == 'txt':
+                file_categories['txt'].append(file_path)
+            elif ext == 'md':
+                file_categories['md'].append(file_path)
+            else:
+                file_categories['other'].append(file_path)
+    
+    # Mostrar resumo
+    print_subheader("RESUMO DE ARQUIVOS ENCONTRADOS")
+    print(f"Total de arquivos no projeto: {total_files}")
+    for category, files in file_categories.items():
+        if files:
+            print(f"- {category.upper()}: {len(files)} arquivo(s)")
+    
+    # Mostrar arquivos Python encontrados
+    print_subheader("ARQUIVOS PYTHON ENCONTRADOS")
+    agent_files = []
+    system_files = []
+    util_files = []
+    main_files = []
+    
+    for file in sorted(file_categories['py']):
+        if 'agent' in file.lower():
+            agent_files.append(file)
+            print(colorize(f"[AGENT] {file}", TermColors.CYAN))
+        elif 'main' in file.lower():
+            main_files.append(file)
+            print(colorize(f"[MAIN] {file}", TermColors.GREEN))
+        elif any(term in file.lower() for term in ['system', 'core', 'network']):
+            system_files.append(file)
+            print(colorize(f"[SYSTEM] {file}", TermColors.BLUE))
+        else:
+            util_files.append(file)
+            print(f"[UTIL] {file}")
+    
+    return file_categories
+
+def check_files(required_files: List[Tuple[str, str, bool]]) -> Tuple[bool, List[str], List[str]]:
+    """Verifica se todos os arquivos necessários existem"""
+    print_header("VERIFICANDO ARQUIVOS DO SISTEMA")
+    
+    missing_files = []
+    found_files = []
+    warning_files = []  # Arquivos encontrados mas com warnings
+    
+    for filename, description, is_critical in required_files:
+        # Verificar se é um padrão com wildcard
+        if '*' in filename:
+            base_dir = os.path.dirname(filename) if os.path.dirname(filename) else '.'
+            pattern = os.path.basename(filename)
+            base_name = pattern.replace('*', '')
+            
+            matching_files = [f for f in os.listdir(base_dir) 
+                             if os.path.isfile(os.path.join(base_dir, f)) and base_name in f]
+            
+            if matching_files:
+                file_list = ', '.join(matching_files)
+                print_success(f"{filename:<35} - {description:<30} ({len(matching_files)} encontrados: {file_list})")
+                found_files.append(filename)
+            else:
+                if is_critical:
+                    print_error(f"{filename:<35} - {description:<30} NÃO ENCONTRADO (CRÍTICO)")
+                else:
+                    print_warning(f"{filename:<35} - {description:<30} NÃO ENCONTRADO")
+                missing_files.append(filename)
+        else:
+            # Verificação normal de arquivo
+            if os.path.exists(filename):
+                size = os.path.getsize(filename)
+                if size == 0:
+                    print_warning(f"{filename:<35} - {description:<30} (ARQUIVO VAZIO)")
+                    warning_files.append(f"{filename} (vazio)")
+                else:
+                    print_success(f"{filename:<35} - {description:<30} ({size:,} bytes)")
+                found_files.append(filename)
+            else:
+                if is_critical:
+                    print_error(f"{filename:<35} - {description:<30} NÃO ENCONTRADO (CRÍTICO)")
+                else:
+                    print_warning(f"{filename:<35} - {description:<30} NÃO ENCONTRADO")
+                missing_files.append(filename)
+    
+    # Verificar se há arquivos .py duplicados (mesmo nome em diretórios diferentes)
+    print_subheader("VERIFICANDO ARQUIVOS DUPLICADOS")
+    
+    all_py_files = []
+    for root, _, files in os.walk('.'):
+        for file in files:
+            if file.endswith('.py'):
+                all_py_files.append((file, os.path.join(root, file)))
+    
+    # Agrupar por nome de arquivo
+    file_groups = {}
+    for name, path in all_py_files:
+        if name not in file_groups:
+            file_groups[name] = []
+        file_groups[name].append(path)
+    
+    # Verificar duplicatas
+    duplicates = {name: paths for name, paths in file_groups.items() if len(paths) > 1}
+    
+    if duplicates:
+        print_warning(f"Encontrados {len(duplicates)} arquivos com nomes duplicados:")
+        for name, paths in duplicates.items():
+            print(colorize(f"  {name} encontrado em:", TermColors.WARNING))
+            for path in paths:
+                print(f"    - {path}")
+        print_warning("Arquivos duplicados podem causar problemas de importação!")
+    else:
+        print_success("Não foram encontrados arquivos Python duplicados.")
+    
+    # Resumo final
+    critical_missing = [f for f, _, c in required_files if f in missing_files and c]
+    non_critical_missing = [f for f, _, c in required_files if f in missing_files and not c]
+    
+    print_subheader("RESUMO DA VERIFICAÇÃO DE ARQUIVOS")
+    print(f"📊 Total: {len(found_files)}/{len(required_files)} arquivos encontrados")
+    
+    if critical_missing:
+        print_error(f"⚠️ ARQUIVOS CRÍTICOS FALTANDO ({len(critical_missing)}):")
+        for file in critical_missing:
+            print(f"   - {file}")
+    
+    if non_critical_missing:
+        print_warning(f"⚠️ ARQUIVOS NÃO-CRÍTICOS FALTANDO ({len(non_critical_missing)}):")
+        for file in non_critical_missing:
+            print(f"   - {file}")
+    
+    if warning_files:
+        print_warning(f"⚠️ ARQUIVOS COM AVISOS ({len(warning_files)}):")
+        for file in warning_files:
+            print(f"   - {file}")
+    
+    return len(critical_missing) == 0, missing_files, warning_files
+
+def check_imports(dependencies: List[Tuple[str, str, bool]]) -> Tuple[bool, List[str], List[str]]:
+    """Verifica se todas as dependências estão instaladas"""
+    print_header("VERIFICANDO DEPENDÊNCIAS")
+    
+    missing_deps = []
+    optional_missing = []
+    installed_deps = []
+    
+    for module, description, is_core in dependencies:
+        try:
+            # Tenta importar o módulo
+            imported = importlib.import_module(module)
+            # Obtém a versão, se disponível
+            version = getattr(imported, '__version__', 'desconhecida')
+            print_success(f"{module:<20} - {description} (versão: {version})")
+            installed_deps.append(module)
+        except ImportError:
+            if is_core:
+                print_error(f"{module:<20} - {description} (CRÍTICO)")
+                missing_deps.append(module)
+            else:
+                print_warning(f"{module:<20} - {description} (Opcional)")
+                optional_missing.append(module)
+        except Exception as e:
+            print_warning(f"{module:<20} - Erro ao verificar: {str(e)}")
+            if is_core:
+                missing_deps.append(module)
+            else:
+                optional_missing.append(module)
+    
+    # Resumo final
+    print_subheader("RESUMO DE DEPENDÊNCIAS")
+    print(f"📊 Total instaladas: {len(installed_deps)}/{len(dependencies)}")
+    print(f"   - Dependências críticas faltando: {len(missing_deps)}")
+    print(f"   - Dependências opcionais faltando: {len(optional_missing)}")
+    
+    if missing_deps:
+        print_error("\n❌ DEPENDÊNCIAS CRÍTICAS FALTANDO:")
+        for dep in missing_deps:
+            print(f"   - {dep}")
+        
+        print_info("\nComando para instalar dependências críticas:")
+        print(colorize(f"   pip install {' '.join(missing_deps)}", TermColors.BOLD))
+    
+    if optional_missing:
+        print_warning("\n⚠️ DEPENDÊNCIAS OPCIONAIS FALTANDO:")
+        for dep in optional_missing:
+            print(f"   - {dep}")
+        
+        print_info("\nComando para instalar dependências opcionais:")
+        print(colorize(f"   pip install {' '.join(optional_missing)}", TermColors.BOLD))
+    
+    return len(missing_deps) == 0, missing_deps, optional_missing
+
+def check_module_imports(modules_to_check: List[str]) -> Tuple[bool, Dict[str, str]]:
+    """Verifica importações específicas de módulos do projeto"""
+    print_header("VERIFICANDO IMPORTAÇÕES DO PROJETO")
+    
+    all_ok = True
+    results = {}
+    
+    for module_name in modules_to_check:
+        try:
+            # Tempo para importação
+            start_time = time.time()
+            module = importlib.import_module(module_name)
+            import_time = time.time() - start_time
+            
+            # Obter lista de funções/classes exportadas
+            module_items = [item for item in dir(module) 
+                            if not item.startswith('_') and not item.startswith('__')]
+            
+            if hasattr(module, '__all__'):
+                exported = module.__all__
+            else:
+                exported = [item for item in module_items 
+                           if not inspect.ismodule(getattr(module, item, None))]
+            
+            # Contando classes, funções e variáveis
+            classes = []
+            functions = []
+            variables = []
+            
+            for item_name in module_items:
+                item = getattr(module, item_name)
+                if inspect.isclass(item):
+                    classes.append(item_name)
+                elif inspect.isfunction(item):
+                    functions.append(item_name)
+                elif not inspect.ismodule(item):
+                    variables.append(item_name)
+            
+            # Importações do próprio módulo
+            module_imports = set()
+            module_source = inspect.getsource(module)
+            for line in module_source.splitlines():
+                line = line.strip()
+                if line.startswith('import ') or line.startswith('from '):
+                    module_imports.add(line)
+            
+            # Exibir resultados
+            print_success(f"{module_name} importado com sucesso ({import_time:.3f}s)")
+            print(f"   - Classes: {len(classes)}, Funções: {len(functions)}, Variáveis: {len(variables)}")
+            if exported:
+                print(f"   - Exporta: {', '.join(exported[:5])}" + ("..." if len(exported) > 5 else ""))
+            
+            results[module_name] = "OK"
+            
+        except ModuleNotFoundError:
+            print_error(f"{module_name} não encontrado")
+            results[module_name] = "Não encontrado"
+            all_ok = False
+        except ImportError as e:
+            print_error(f"{module_name} erro de importação: {str(e)}")
+            results[module_name] = f"Erro de importação: {str(e)}"
+            all_ok = False
+        except Exception as e:
+            print_error(f"{module_name} erro inesperado: {str(e)}")
+            results[module_name] = f"Erro: {str(e)}"
+            all_ok = False
+    
+    return all_ok, results
+
+def test_agent_creation() -> Tuple[bool, int, List[Tuple[str, str, str]]]:
+    """Testa criação de agentes individualmente"""
+    print_header("TESTANDO CRIAÇÃO DE AGENTES")
+    
+    # Primeiro, verificar se multi_agent_network existe
+    try:
+        from multi_agent_network import MultiAgentNetwork, AgentType
+        print_success("multi_agent_network importado com sucesso")
+    except ImportError as e:
+        print_error(f"❌ Erro importando multi_agent_network: {e}")
+        return False, 0, [("multi_agent_network", "ImportError", str(e))]
+    except Exception as e:
+        print_error(f"❌ Erro inesperado: {e}")
+        traceback.print_exc()
+        return False, 0, [("multi_agent_network", type(e).__name__, str(e))]
+    
+    # Criar rede de teste
+    try:
+        network = MultiAgentNetwork()
+        print_success("MultiAgentNetwork criado com sucesso")
+    except Exception as e:
+        print_error(f"❌ Erro criando MultiAgentNetwork: {e}")
+        traceback.print_exc()
+        return False, 0, [("MultiAgentNetwork", type(e).__name__, str(e))]
+    
+    # Testar cada módulo de agentes
+    agent_modules = [
+        ('specialized_agents', 'create_specialized_agents', 5),
+        ('ai_powered_agents', 'create_ai_agents', 3),
+        ('core_agents_v3', 'create_core_agents_v3', 5),
+        ('system_agents', 'create_system_agents', 3),
+        ('service_agents', 'create_service_agents', 2),
+        ('meta_cognitive_agents', 'create_meta_cognitive_agents', 2),
+        ('code_analyzer_agent', 'create_code_analyzer_agent', 1),
+        ('web_search_agent', 'create_web_search_agent', 1),
+        ('code_corrector_agent', 'create_code_corrector_agent', 1),
+        ('performance_monitor_agent', 'create_performance_monitor_agent', 1),
+    ]
+    
+    total_expected = sum(count for _, _, count in agent_modules)
+    total_created = 0
+    failed_modules = []
+    
+    # Coletar detalhes sobre cada agente criado
+    agent_details = {}
+    
+    for module_name, create_function, expected_count in agent_modules:
+        try:
+            # Importar módulo
+            module = importlib.import_module(module_name)
+            create_func = getattr(module, create_function)
+            
+            # Criar agentes
+            start_time = time.time()
+            agents = create_func(network.message_bus)
+            creation_time = time.time() - start_time
+            
+            # Verificar se retornou lista ou dicionário
+            if isinstance(agents, dict):
+                agent_list = list(agents.values())
+            else:
+                agent_list = list(agents)
+            
+            # Coletar detalhes de cada agente
+            for agent in agent_list:
+                agent_name = getattr(agent, 'name', 'Unknown')
+                agent_type = getattr(agent, 'agent_type', 'Unknown')
+                agent_details[agent_name] = {
+                    'type': str(agent_type),
+                    'module': module_name,
+                    'capabilities': getattr(agent, 'capabilities', []),
+                    'messages_handled': getattr(agent, 'messages_handled', 0),
+                    'class': agent.__class__.__name__
+                }
+            
+            if len(agent_list) == expected_count:
+                print_success(
+                    f"{module_name:<30} - {len(agent_list)} agentes criados em {creation_time:.3f}s "
+                    f"(esperado: {expected_count})"
+                )
+                total_created += len(agent_list)
+            else:
+                print_warning(
+                    f"{module_name:<30} - {len(agent_list)} agentes criados em {creation_time:.3f}s "
+                    f"(esperado: {expected_count})"
+                )
+                total_created += len(agent_list)
+                
+        except ImportError as e:
+            print_error(f"{module_name:<30} - Erro de importação: {str(e)[:100]}")
+            failed_modules.append((module_name, 'ImportError', str(e)))
+        except AttributeError as e:
+            print_error(f"{module_name:<30} - Função não encontrada: {create_function}")
+            failed_modules.append((module_name, 'AttributeError', str(e)))
+        except Exception as e:
+            print_error(f"{module_name:<30} - Erro: {str(e)[:100]}")
+            traceback.print_exc(limit=1)
+            failed_modules.append((module_name, type(e).__name__, str(e)))
+    
+    print_subheader("RESUMO DE CRIAÇÃO DE AGENTES")
+    print(f"📊 Total: {total_created}/{total_expected} agentes criados")
+    
+    # Mostrar detalhes dos agentes criados, agrupados por tipo
+    if agent_details:
+        print_subheader("DETALHES DOS AGENTES CRIADOS")
+        
+        # Agrupar por tipo
+        agents_by_type = {}
+        for name, details in agent_details.items():
+            agent_type = details['type']
+            if agent_type not in agents_by_type:
+                agents_by_type[agent_type] = []
+            agents_by_type[agent_type].append((name, details))
+        
+        # Mostrar por tipo
+        for agent_type, agents in agents_by_type.items():
+            print(colorize(f"\n>> Agentes do tipo: {agent_type} ({len(agents)})", TermColors.BOLD))
+            for name, details in agents:
+                capabilities = details.get('capabilities', [])
+                capabilities_str = ", ".join(str(c) for c in capabilities[:3])
+                if len(capabilities) > 3:
+                    capabilities_str += "..."
+                
+                print(f"  - {name} ({details['class']})")
+                if capabilities_str:
+                    print(f"    Capabilities: {capabilities_str}")
+    
+    if failed_modules:
+        print_error(f"\n❌ MÓDULOS COM FALHA ({len(failed_modules)}):")
+        for module, error_type, error_msg in failed_modules:
+            print(f"   - {module}: {error_type}")
+            if "No module named" in error_msg:
+                mod_name = error_msg.split("'")[1]
+                print(f"     → Módulo não encontrado: {mod_name}")
+                print(f"       Verifique se '{mod_name}' está instalado ou existe no projeto")
+            else:
+                print(f"     → {error_msg[:100]}")
+    
+    return total_created == total_expected, total_created, failed_modules
+
+def check_redis_connection() -> Tuple[bool, str]:
+    """Verifica conexão com Redis"""
+    print_header("VERIFICANDO CONEXÃO REDIS")
+    
+    redis_url = os.getenv('REDIS_URL', 'Não configurado')
+    print_info(f"REDIS_URL: {redis_url}")
+    
+    try:
+        import redis
+        # Testar conexão se Redis estiver instalado
+        if redis_url != 'Não configurado':
+            try:
+                r = redis.from_url(redis_url)
+                r.ping()
+                print_success("Conexão Redis funcionando")
+                status = "Conectado"
+            except redis.exceptions.ConnectionError as e:
+                print_error(f"Falha na conexão com Redis: {e}")
+                print_info("O sistema continuará com cache em memória")
+                status = f"Erro de conexão: {str(e)}"
+        else:
+            print_warning("REDIS_URL não configurado - usando fallback para memória")
+            status = "Não configurado"
+    except ImportError:
+        print_warning("Redis não instalado - usando fallback para memória")
+        status = "Não instalado"
+    except Exception as e:
+        print_error(f"Erro inesperado: {e}")
+        status = f"Erro: {str(e)}"
+    
+    return redis_url != 'Não configurado', status
+
+def check_requirements_txt() -> Tuple[bool, Set[str], List[str]]:
+    """Verifica o arquivo requirements.txt"""
+    print_header("ANALISANDO REQUIREMENTS.TXT")
+    
+    if not os.path.exists('requirements.txt'):
+        print_error("Arquivo requirements.txt não encontrado")
+        return False, set(), []
+    
+    with open('requirements.txt', 'r') as f:
+        content = f.read()
+        
+    # Extrair dependências
+    dependencies = set()
+    lines = []
+    
+    for line in content.splitlines():
+        line = line.strip()
+        lines.append(line)
+        
+        # Pular comentários e linhas vazias
+        if not line or line.startswith('#'):
+            continue
+            
+        # Extrair apenas o nome do pacote (sem versão)
+        if '>=' in line or '==' in line or '<=' in line:
+            package = line.split('>=')[0].split('==')[0].split('<=')[0].strip()
+        else:
+            package = line.strip()
+            
+        dependencies.add(package)
+    
+    print_info(f"Total de {len(dependencies)} dependências encontradas:")
+    for dep in sorted(dependencies):
+        print(f"- {dep}")
+        
+    # Verificar se dependências críticas estão incluídas
+    critical_deps = {
+        'aiohttp', 'redis', 'psutil', 'requests', 'asyncio-mqtt'
+    }
+    
+    missing_deps = critical_deps - dependencies
+    
+    if missing_deps:
+        print_warning(f"Dependências críticas não encontradas no requirements.txt:")
+        for dep in sorted(missing_deps):
+            print(f"- {dep}")
+    else:
+        print_success("Todas as dependências críticas estão no requirements.txt")
+    
+    return len(missing_deps) == 0, dependencies, lines
+
+def check_railway_config() -> Tuple[bool, Dict[str, Any]]:
+    """Verifica configuração do Railway"""
+    print_header("VERIFICANDO CONFIGURAÇÃO RAILWAY")
+    
+    railway_config = {}
+    
+    # Verificar arquivo railway.json
+    if os.path.exists('railway.json'):
+        import json
+        try:
+            with open('railway.json', 'r') as f:
+                railway_config = json.load(f)
+            print_success("Arquivo railway.json encontrado e válido")
+            
+            # Mostrar configurações
+            print_info("Configurações do Railway:")
+            for key, value in railway_config.items():
+                print(f"- {key}: {value}")
+        except json.JSONDecodeError:
+            print_error("Arquivo railway.json está corrompido ou em formato inválido")
+        except Exception as e:
+            print_error(f"Erro ao ler railway.json: {e}")
+    else:
+        print_warning("Arquivo railway.json não encontrado")
+    
+    # Verificar variáveis de ambiente do Railway
+    railway_env = [key for key in os.environ if key.startswith('RAILWAY_')]
+    
+    if railway_env:
+        print_success(f"{len(railway_env)} variáveis de ambiente Railway encontradas:")
+        for key in railway_env:
+            print(f"- {key}")
+    else:
+        print_info("Nenhuma variável de ambiente Railway encontrada (normal em ambiente de desenvolvimento)")
+    
+    # Verificar presença do Procfile
+    if os.path.exists('Procfile'):
+        try:
+            with open('Procfile', 'r') as f:
+                procfile_content = f.read().strip()
+            print_success(f"Procfile encontrado: {procfile_content}")
+            railway_config['Procfile'] = procfile_content
+        except Exception as e:
+            print_error(f"Erro ao ler Procfile: {e}")
+    else:
+        print_warning("Procfile não encontrado. Railway pode usar o comando padrão.")
+    
+    # Verificar script deploy.sh
+    if os.path.exists('deploy.sh'):
+        print_success("Script deploy.sh encontrado")
+        railway_config['deploy_script'] = True
+    else:
+        print_info("Script deploy.sh não encontrado (não é obrigatório)")
+    
+    is_railway_env = 'RAILWAY_ENVIRONMENT' in os.environ
+    
+    return is_railway_env, railway_config
+
+def fix_common_problems(issues: Dict[str, Any]) -> None:
+    """Tenta corrigir problemas comuns"""
+    print_header("TENTANDO CORRIGIR PROBLEMAS COMUNS")
+    
+    fixes_applied = 0
+    
+    # Problema 1: requirements.txt incompleto
+    if issues.get('missing_deps_in_requirements'):
+        missing_deps = issues['missing_deps_in_requirements']
+        if missing_deps and os.path.exists('requirements.txt'):
+            print_subheader("ATUALIZANDO REQUIREMENTS.TXT")
+            try:
+                with open('requirements.txt', 'a') as f:
+                    f.write('\n# Dependências adicionadas pelo diagnóstico\n')
+                    for dep in missing_deps:
+                        f.write(f"{dep}\n")
+                        print_info(f"Adicionado: {dep}")
+                print_success("requirements.txt atualizado com sucesso")
+                fixes_applied += 1
+            except Exception as e:
+                print_error(f"Falha ao atualizar requirements.txt: {e}")
+    
+    # Problema 2: Criar __init__.py em diretórios que não têm
+    print_subheader("VERIFICANDO ARQUIVOS __INIT__.PY")
+    
+    dirs_needing_init = []
+    for root, dirs, files in os.walk('.'):
+        # Ignorar diretórios ocultos e virtuais
+        if any(ignore in root for ignore in ['.git', '__pycache__', '.venv', 'venv']):
+            continue
+            
+        has_py = any(f.endswith('.py') for f in files)
+        has_init = '__init__.py' in files
+        
+        if has_py and not has_init and root != '.':
+            dirs_needing_init.append(root)
+    
+    if dirs_needing_init:
+        print_info(f"Encontrados {len(dirs_needing_init)} diretórios sem __init__.py:")
+        for directory in dirs_needing_init:
+            init_path = os.path.join(directory, '__init__.py')
+            try:
+                with open(init_path, 'w') as f:
+                    f.write('# Criado automaticamente pelo diagnóstico\n')
+                print_success(f"Criado {init_path}")
+                fixes_applied += 1
+            except Exception as e:
+                print_error(f"Falha ao criar {init_path}: {e}")
+    else:
+        print_success("Todos os diretórios com arquivos Python já têm __init__.py")
+    
+    # Problema 3: Verificar permissões de execução em scripts .sh
+    print_subheader("VERIFICANDO PERMISSÕES DE SCRIPTS")
+    
+    for root, _, files in os.walk('.'):
+        for file in files:
+            if file.endswith('.sh'):
+                file_path = os.path.join(root, file)
+                if not os.access(file_path, os.X_OK):
+                    try:
+                        os.chmod(file_path, 0o755)  # rwxr-xr-x
+                        print_success(f"Adicionada permissão de execução a {file_path}")
+                        fixes_applied += 1
+                    except Exception as e:
+                        print_error(f"Falha ao modificar permissões de {file_path}: {e}")
+    
+    if fixes_applied > 0:
+        print_success(f"Total de {fixes_applied} correções aplicadas")
+    else:
+        print_info("Nenhuma correção foi necessária")
+        
+
+def generate_report(results: Dict[str, Any]) -> None:
+    """Gera relatório final com recomendações"""
+    print_header("RELATÓRIO FINAL E RECOMENDAÇÕES")
+    
+    print_subheader("INFORMAÇÕES DO DIAGNÓSTICO")
+    print(f"📅 Data: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+    print(f"🖥️ Sistema: {results.get('system_info', {}).get('Sistema Operacional', 'Desconhecido')}")
+    print(f"🐍 Python: {results.get('system_info', {}).get('Versão Python', 'Desconhecido')}")
+    
+    # Status geral
+    all_critical_ok = all([
+        results.get('python_version_ok', False),
+        results.get('critical_files_ok', False),
+        results.get('critical_deps_ok', False)
+    ])
+    
+    print_subheader("STATUS GERAL DO SISTEMA")
+    if all_critical_ok:
+        print_success("✅ SISTEMA COM TODOS OS COMPONENTES CRÍTICOS FUNCIONAIS")
+    else:
+        print_error("❌ SISTEMA COM PROBLEMAS CRÍTICOS")
+    
+    # Lista de problemas
+    problems = []
+    if not results.get('python_version_ok', False):
+        problems.append("❌ Versão do Python incompatível")
+    if not results.get('critical_files_ok', False):
+        problems.append("❌ Arquivos essenciais faltando")
+    if not results.get('critical_deps_ok', False):
+        problems.append("❌ Dependências críticas faltando")
+    if not results.get('agents_created_ok', False):
+        problems.append("⚠️ Nem todos os agentes puderam ser criados")
+    
+    if problems:
+        print_subheader("PROBLEMAS IDENTIFICADOS")
+        for problem in problems:
+            print(problem)
+    
+    print_subheader("AÇÕES RECOMENDADAS")
+    
+    # Recomendações baseadas nos problemas encontrados
+    if not results.get('critical_deps_ok', False):
+        missing_deps = results.get('missing_deps', [])
+        if missing_deps:
+            print(f"1. Instalar dependências críticas faltantes:")
+            print(colorize(f"   pip install {' '.join(missing_deps)}", TermColors.BOLD))
+            print()
+    
+    if not results.get('critical_files_ok', False):
+        missing_files = results.get('missing_files', [])
+        if missing_files:
+            print(f"2. Resolver arquivos faltantes:")
+            print("   - Verificar se os arquivos existem em subdiretórios")
+            print("   - Confirmar que todos os arquivos foram commitados no git")
+            print("   - Verificar se o deploy no Railway incluiu todos os arquivos")
+            print()
+            print("   Arquivos críticos faltando:")
+            for file in missing_files[:5]:  # Mostrar até 5 exemplos
+                print(f"   - {file}")
+            if len(missing_files) > 5:
+                print(f"   - ... e mais {len(missing_files) - 5} arquivo(s)")
+            print()
+    
+    if results.get('failed_modules'):
+        print(f"3. Resolver problemas de importação:")
+        print("   - Verificar se há imports circulares")
+        print("   - Confirmar que __init__.py existe em todos os diretórios com código Python")
+        print("   - Verificar estrutura de pastas e caminhos relativos nas importações")
+        print()
+        
+        # Mostrar exemplos de erros
+        failed_modules = results.get('failed_modules', [])
+        if failed_modules:
+            print("   Exemplos de erros de importação:")
+            for module, error_type, error_msg in failed_modules[:3]:  # Mostrar até 3 exemplos
+                msg = error_msg[:80] + "..." if len(error_msg) > 80 else error_msg
+                print(f"   - {module}: {error_type} - {msg}")
+            if len(failed_modules) > 3:
+                print(f"   - ... e mais {len(failed_modules) - 3} erro(s)")
+            print()
+    
+    if not results.get('railway_ok', True):
+        print(f"4. Resolver problemas de configuração do Railway:")
+        print("   - Verificar se o Procfile está presente e correto")
+        print("   - Confirmar que as variáveis de ambiente necessárias estão configuradas")
+        print("   - Verificar permissões de scripts de deploy")
+        print()
+    
+    if results.get('redis_status', 'Não verificado') != 'Conectado':
+        print(f"5. Verificar configuração do Redis:")
+        print("   - Confirmar que a variável REDIS_URL está configurada corretamente")
+        print("   - Verificar se o serviço Redis está funcionando")
+        print("   - Testar a conexão Redis em ambiente de desenvolvimento")
+        print("   - O sistema funcionará com cache em memória se o Redis não estiver disponível")
+        print()
+    
+    # Comando para executar o sistema (baseado nos arquivos encontrados)
+    main_file = None
+    for candidate in ['main.py', 'main_complete_system_v2.py', 'start.py']:
+        if os.path.exists(candidate):
+            main_file = candidate
+            break
+    
+    print_subheader("COMANDOS ÚTEIS")
+    if main_file:
+        print(f"• Para iniciar o sistema:")
+        print(colorize(f"  python {main_file}", TermColors.BOLD))
+    
+    print(f"\n• Para instalar todas as dependências:")
+    print(colorize("  pip install -r requirements.txt", TermColors.BOLD))
+    
+    print(f"\n• Para verificar estrutura de arquivos:")
+    print(colorize("  find . -name '*.py' | sort", TermColors.BOLD))
+    
+    print(f"\n• Para verificar importações específicas:")
+    print(colorize("  python -c 'import specialized_agents; print(\"OK\")'", TermColors.BOLD))
+
+def main():
+    """Executa diagnóstico completo"""
+    print("\n🏥 DIAGNÓSTICO AVANÇADO DO SISTEMA SUNA-ALSHAM")
+    print("="*70)
+    
+    # Armazenar resultados
+    results = {}
+    
+    # 1. Coletar informações do sistema
+    results['system_info'] = check_system_info()
+    
+    # 2. Verificar Python
+    results['python_version_ok'] = check_python_version()
+    
+    # 3. Mapear todos os arquivos do projeto
+    file_categories = find_all_project_files()
+    results['file_categories'] = {k: len(v) for k, v in file_categories.items()}
+    
+    # 4. Verificar arquivos específicos
+    required_files = [
+        # Arquivos principais (críticos)
+        ('main_complete_system_v2.py', 'Sistema principal', True),
+        ('multi_agent_network.py', 'Rede de comunicação', True),
+        
+        # Arquivos de agentes (críticos)
+        ('specialized_agents.py', 'Agentes especializados', True),
+        ('ai_powered_agents.py', 'Agentes com IA', True),
+        ('core_agents_v3.py', 'Agentes core v3', True),
+        ('system_agents.py', 'Agentes de sistema', True),
+        
+        # Arquivos de agentes (não críticos)
+        ('service_agents.py', 'Agentes de serviço', False),
+        ('meta_cognitive_agents.py', 'Agentes meta-cognitivos', False),
+        
+        # Arquivos de autoevolução (não críticos)
+        ('code_analyzer_agent.py', 'Analisador de código', False),
+        ('web_search_agent.py', 'Buscador web', False),
+        ('code_corrector_agent.py', 'Corretor de código', False),
+        ('performance_monitor_agent.py', 'Monitor de performance', False),
+        
+        # Arquivos de configuração
+        ('requirements.txt', 'Dependências', True),
+    ]
+    
+    critical_files_ok, missing_files, warning_files = check_files(required_files)
+    results['critical_files_ok'] = critical_files_ok
+    results['missing_files'] = missing_files
+    results['warning_files'] = warning_files
+    
+    # 5. Verificar dependências
+    dependencies = [
+        # Core Python (críticas)
+        ('asyncio', 'Assíncrono - Core Python', True),
+        ('logging', 'Logs - Core Python', True),
+        ('dataclasses', 'Dataclasses - Core Python', True),
+        ('enum', 'Enums - Core Python', True),
+        
+        # Comunicação (críticas)
+        ('aiohttp', 'HTTP assíncrono', True),
+        ('requests', 'HTTP requests', True),
+        
+        # Utilidades (algumas críticas)
+        ('redis', 'Cache Redis', True),
+        ('psutil', 'Monitoramento de sistema', True),
+        
+        # Opcionais
+        ('black', 'Formatação de código', False),
+        ('autopep8', 'Formatação PEP8', False),
+        ('isort', 'Organização de imports', False),
+        ('asyncio_mqtt', 'MQTT assíncrono', False),
+    ]
+    
+    critical_deps_ok, missing_deps, optional_missing = check_imports(dependencies)
+    results['critical_deps_ok'] = critical_deps_ok
+    results['missing_deps'] = missing_deps
+    results['optional_missing'] = optional_missing
+    
+    # 6. Verificar importações específicas do projeto
+    modules_to_check = [
+        'multi_agent_network',
+        'specialized_agents',
+        'core_agents_v3',
+        'system_agents'
+    ]
+    
+    imports_ok, import_results = check_module_imports(modules_to_check)
+    results['imports_ok'] = imports_ok
+    results['import_results'] = import_results
+    
+    # 7. Testar criação de agentes (se os principais arquivos e deps estiverem OK)
+    if results['critical_files_ok'] and results['critical_deps_ok']:
+        agents_created_ok, total_created, failed_modules = test_agent_creation()
+        results['agents_created_ok'] = agents_created_ok
+        results['total_created'] = total_created
+        results['failed_modules'] = failed_modules
+    else:
+        print_header("PULANDO TESTE DE AGENTES")
+        print_warning("Teste de agentes pulado devido a problemas com arquivos ou dependências")
+        results['agents_created_ok'] = False
+        results['total_created'] = 0
+        results['failed_modules'] = []
+    
+    # 8. Verificar Redis
+    redis_ok, redis_status = check_redis_connection()
+    results['redis_ok'] = redis_ok
+    results['redis_status'] = redis_status
+    
+    # 9. Analisar requirements.txt
+    requirements_ok, req_deps, req_lines = check_requirements_txt()
+    results['requirements_ok'] = requirements_ok
+    results['requirements_deps'] = req_deps
+    results['requirements_lines'] = req_lines
+    
+    # 10. Verificar configuração do Railway
+    railway_ok, railway_config = check_railway_config()
+    results['railway_ok'] = railway_ok
+    results['railway_config'] = railway_config
+    
+    # 11. Identificar problemas comuns e tentar corrigir
+    issues = {
+        'missing_deps_in_requirements': missing_deps - req_deps if req_deps else set()
+    }
+    fix_common_problems(issues)
+    
+    # 12. Gerar relatório final
+    generate_report(results)
+    
+    # Retornar código de saída
+    return 0 if results['critical_files_ok'] and results['critical_deps_ok'] else 1
+
+if __name__ == "__main__":
+    try:
+        sys.exit(main())
+    except KeyboardInterrupt:
+        print("\n\nDiagnóstico interrompido pelo usuário.")
+        sys.exit(130)  # 130 é o código padrão para interrupção por Ctrl+C
+    except Exception as e:
+        print(f"\n\nErro inesperado durante o diagnóstico: {e}")
+        traceback.print_exc()
+        sys.exit(1)
