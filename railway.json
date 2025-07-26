@@ -1,5 +1,5 @@
 {
   "deploy": {
-    "startCommand": "python -u debug_agent_creation.py"
+    "startCommand": "python -u analyze_agent_structure.py"
   }
 }
