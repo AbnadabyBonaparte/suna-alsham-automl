@@ -6,8 +6,7 @@ Sistema Multi-Agente com FastAPI
 
 import logging
 from multi_agent_network import MultiAgentNetwork
-# REMOVIDO: from main_complete_system_v2 import SUNAAlshamSystemV2
-# ADICIONADO: Importação direta dos componentes necessários
+from agent_loader import initialize_all_agents
 import asyncio
 import uvicorn
 from typing import Optional
@@ -31,6 +30,11 @@ async def startup_event():
     # Inicializar com MultiAgentNetwork
     system = MultiAgentNetwork()
     await system.initialize()
+    
+    # Carregar todos os 24+ agentes
+    logger.info("🚀 Carregando agentes do sistema...")
+    agent_result = await initialize_all_agents(system)
+    logger.info(f"✅ Resultado do carregamento: {agent_result.get('agents_loaded_successfully', 0)} agentes carregados")
     
     logger.info("Sistema inicializado com sucesso")
 
