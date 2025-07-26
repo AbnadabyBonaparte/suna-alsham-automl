@@ -3,8 +3,21 @@
 # Script de instalação de dependências para SUNA-ALSHAM v2.0
 # Este script instala todos os módulos Python necessários
 
+# Para em caso de erro
+set -e
+
 echo "🚀 Instalando dependências do SUNA-ALSHAM v2.0..."
 echo "=============================================="
+
+# Verificar se pip está instalado
+if ! command -v pip &> /dev/null; then
+    if command -v pip3 &> /dev/null; then
+        alias pip='pip3'
+    else
+        echo "❌ pip não encontrado. Por favor, instale o Python primeiro."
+        exit 1
+    fi
+fi
 
 # Atualizar pip
 echo "📦 Atualizando pip..."
@@ -19,7 +32,7 @@ pip install psutil  # Monitoramento de recursos do sistema
 
 # Cache e armazenamento
 pip install redis  # Cache distribuído
-pip install redis[hiredis]  # Performance otimizada para Redis
+pip install "redis[hiredis]"  # Performance otimizada para Redis
 
 # Requisições assíncronas
 pip install aiohttp  # Cliente HTTP assíncrono
@@ -47,7 +60,6 @@ pip install colorama  # Cores no terminal
 pip install tqdm  # Barras de progresso
 
 # Async e concorrência
-pip install asyncio  # Programação assíncrona
 pip install aiodns  # Resolução DNS assíncrona
 pip install cchardet  # Detecção de charset rápida
 
