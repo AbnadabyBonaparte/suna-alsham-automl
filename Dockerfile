@@ -18,10 +18,10 @@ WORKDIR /app
 # Copiar requirements
 COPY requirements.txt .
 
-# Instalar dependências Python incluindo as que faltam
+# Instalar dependências Python
 RUN pip install --no-cache-dir --upgrade pip setuptools wheel && \
     pip install --no-cache-dir -r requirements.txt && \
-    pip install psutil redis aiohttp autopep8
+    pip install psutil redis aiohttp autopep8 uvicorn
 
 # Copiar código
 COPY . .
@@ -33,5 +33,8 @@ RUN mkdir -p /app/logs /app/data /app/mlruns /app/optuna_storage && \
 # Mudar para usuário suna
 USER suna
 
-# EXECUTAR O SISTEMA CORRETO!
-CMD ["python", "-u", "main_complete_system_v2.py"]
+# Expor porta
+EXPOSE 8080
+
+# Executar o main.py que usa uvicorn
+CMD ["python", "-u", "main.py"]
