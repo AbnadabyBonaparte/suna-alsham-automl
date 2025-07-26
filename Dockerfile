@@ -18,9 +18,10 @@ WORKDIR /app
 # Copiar requirements
 COPY requirements.txt .
 
-# Instalar dependências Python
+# Instalar dependências Python incluindo as que faltam
 RUN pip install --no-cache-dir --upgrade pip setuptools wheel && \
-    pip install --no-cache-dir -r requirements.txt
+    pip install --no-cache-dir -r requirements.txt && \
+    pip install psutil redis aiohttp autopep8
 
 # Copiar código
 COPY . .
@@ -32,5 +33,5 @@ RUN mkdir -p /app/logs /app/data /app/mlruns /app/optuna_storage && \
 # Mudar para usuário suna
 USER suna
 
-# IMPORTANTE: Executar o arquivo CORRETO com output
+# EXECUTAR O SISTEMA CORRETO!
 CMD ["python", "-u", "main_complete_system_v2.py"]
