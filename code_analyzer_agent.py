@@ -357,10 +357,10 @@ class CodeAnalyzerAgent(BaseNetworkAgent):
     def _analyze_complexity(self, tree: ast.AST, file_path: str, code: str) -> List[CodeIssue]:
         """Analisa complexidade do código"""
         issues = []
+        analyzer_self = self  # Referência para usar dentro da classe interna
         
         class ComplexityVisitor(ast.NodeVisitor):
-            def __init__(self, parent):
-                self.parent = parent
+            def __init__(self):
                 self.current_function = None
                 self.complexity_stack = []
             
@@ -368,24 +368,24 @@ class CodeAnalyzerAgent(BaseNetworkAgent):
                 self.current_function = node.name
                 complexity = self._calculate_cyclomatic_complexity(node)
                 
-                if complexity > parent.max_complexity_threshold:
+                if complexity > analyzer_self.max_complexity_threshold:
                     issue = CodeIssue(
-                        issue_id=f"complexity_{len(parent.analysis_history)}_{len(issues)}",
+                        issue_id=f"complexity_{len(analyzer_self.analysis_history)}_{len(issues)}",
                         file_path=file_path,
                         line_number=node.lineno,
                         column=node.col_offset,
                         issue_type=CodeIssueType.COMPLEXITY,
                         severity=SeverityLevel.HIGH if complexity > 15 else SeverityLevel.MEDIUM,
                         message=f"Função '{node.name}' tem complexidade ciclomática {complexity}",
-                        suggestion=f"Refatore a função para reduzir complexidade (máximo recomendado: {parent.max_complexity_threshold})",
+                        suggestion=f"Refatore a função para reduzir complexidade (máximo recomendado: {analyzer_self.max_complexity_threshold})",
                         rule_id="C901"
                     )
                     issues.append(issue)
                 
                 # Verificar número de parâmetros
-                if len(node.args.args) > parent.code_rules['complexity']['max_parameters']:
+                if len(node.args.args) > analyzer_self.code_rules['complexity']['max_parameters']:
                     issue = CodeIssue(
-                        issue_id=f"params_{len(parent.analysis_history)}_{len(issues)}",
+                        issue_id=f"params_{len(analyzer_self.analysis_history)}_{len(issues)}",
                         file_path=file_path,
                         line_number=node.lineno,
                         column=node.col_offset,
@@ -409,7 +409,7 @@ class CodeAnalyzerAgent(BaseNetworkAgent):
                         complexity += len(child.values) - 1
                 return complexity
         
-        visitor = ComplexityVisitor(self)
+        visitor = ComplexityVisitor()
         visitor.visit(tree)
         
         return issues
@@ -537,10 +537,10 @@ class CodeAnalyzerAgent(BaseNetworkAgent):
     def _analyze_performance(self, tree: ast.AST, file_path: str, code: str) -> List[CodeIssue]:
         """Analisa performance do código"""
         issues = []
+        analyzer_self = self  # Referência para usar dentro da classe interna
         
         class PerformanceVisitor(ast.NodeVisitor):
-            def __init__(self, parent):
-                self.parent = parent
+            def __init__(self):
                 self.loop_depth = 0
             
             def visit_For(self, node):
@@ -549,7 +549,7 @@ class CodeAnalyzerAgent(BaseNetworkAgent):
                 # Detectar loops aninhados profundos
                 if self.loop_depth > 2:
                     issue = CodeIssue(
-                        issue_id=f"nested_loops_{len(parent.analysis_history)}_{len(issues)}",
+                        issue_id=f"nested_loops_{len(analyzer_self.analysis_history)}_{len(issues)}",
                         file_path=file_path,
                         line_number=node.lineno,
                         column=node.col_offset,
@@ -568,7 +568,7 @@ class CodeAnalyzerAgent(BaseNetworkAgent):
                 # Verificar list comprehensions complexas
                 if self._count_comprehension_complexity(node) > 3:
                     issue = CodeIssue(
-                        issue_id=f"complex_comp_{len(parent.analysis_history)}_{len(issues)}",
+                        issue_id=f"complex_comp_{len(analyzer_self.analysis_history)}_{len(issues)}",
                         file_path=file_path,
                         line_number=node.lineno,
                         column=node.col_offset,
@@ -590,7 +590,7 @@ class CodeAnalyzerAgent(BaseNetworkAgent):
                     complexity += len(generator.ifs)
                 return complexity
         
-        visitor = PerformanceVisitor(self)
+        visitor = PerformanceVisitor()
         visitor.visit(tree)
         
         # Verificar padrões de performance no código
@@ -618,16 +618,17 @@ class CodeAnalyzerAgent(BaseNetworkAgent):
     def _analyze_maintainability(self, tree: ast.AST, file_path: str, code: str) -> List[CodeIssue]:
         """Analisa manutenibilidade do código"""
         issues = []
+        analyzer_self = self  # Referência para usar dentro da classe interna
         
         class MaintainabilityVisitor(ast.NodeVisitor):
-            def __init__(self, parent):
-                self.parent = parent
+            def __init__(self):
+                pass
             
             def visit_FunctionDef(self, node):
                 # Verificar docstring
                 if not ast.get_docstring(node):
                     issue = CodeIssue(
-                        issue_id=f"no_docstring_{len(parent.analysis_history)}_{len(issues)}",
+                        issue_id=f"no_docstring_{len(analyzer_self.analysis_history)}_{len(issues)}",
                         file_path=file_path,
                         line_number=node.lineno,
                         column=node.col_offset,
@@ -641,9 +642,9 @@ class CodeAnalyzerAgent(BaseNetworkAgent):
                 
                 # Verificar tamanho da função
                 function_lines = node.end_lineno - node.lineno
-                if function_lines > parent.code_rules['complexity']['max_function_length']:
+                if function_lines > analyzer_self.code_rules['complexity']['max_function_length']:
                     issue = CodeIssue(
-                        issue_id=f"long_function_{len(parent.analysis_history)}_{len(issues)}",
+                        issue_id=f"long_function_{len(analyzer_self.analysis_history)}_{len(issues)}",
                         file_path=file_path,
                         line_number=node.lineno,
                         column=node.col_offset,
@@ -661,7 +662,7 @@ class CodeAnalyzerAgent(BaseNetworkAgent):
                 # Verificar docstring de classe
                 if not ast.get_docstring(node):
                     issue = CodeIssue(
-                        issue_id=f"class_no_doc_{len(parent.analysis_history)}_{len(issues)}",
+                        issue_id=f"class_no_doc_{len(analyzer_self.analysis_history)}_{len(issues)}",
                         file_path=file_path,
                         line_number=node.lineno,
                         column=node.col_offset,
@@ -675,7 +676,7 @@ class CodeAnalyzerAgent(BaseNetworkAgent):
                 
                 self.generic_visit(node)
         
-        visitor = MaintainabilityVisitor(self)
+        visitor = MaintainabilityVisitor()
         visitor.visit(tree)
         
         # Verificar duplicação de código (simplificado)
@@ -983,32 +984,35 @@ class CodeAnalyzerAgent(BaseNetworkAgent):
     
     async def _scan_system_files(self):
         """Escaneia arquivos do sistema para análise proativa"""
-        # Diretórios padrão para monitorar
-        monitored_dirs = [
-            ".",
-            "./src",
-            "./lib",
-            "./app"
-        ]
-        
-        for directory in monitored_dirs:
-            if os.path.exists(directory):
-                # Verificar arquivos modificados recentemente
-                for root, dirs, files in os.walk(directory):
-                    for file in files:
-                        if file.endswith('.py'):
-                            file_path = os.path.join(root, file)
-                            
-                            # Verificar tempo de modificação
-                            try:
-                                mtime = os.path.getmtime(file_path)
-                                if time.time() - mtime < 3600:  # Modificado na última hora
-                                    await self.analysis_queue.put({
-                                        'type': 'auto_scan',
-                                        'file_path': file_path
-                                    })
-                            except:
-                                pass
+        try:
+            # Diretórios padrão para monitorar
+            monitored_dirs = [
+                ".",
+                "./src",
+                "./lib",
+                "./app"
+            ]
+            
+            for directory in monitored_dirs:
+                if os.path.exists(directory):
+                    # Verificar arquivos modificados recentemente
+                    for root, dirs, files in os.walk(directory):
+                        for file in files:
+                            if file.endswith('.py'):
+                                file_path = os.path.join(root, file)
+                                
+                                # Verificar tempo de modificação
+                                try:
+                                    mtime = os.path.getmtime(file_path)
+                                    if time.time() - mtime < 3600:  # Modificado na última hora
+                                        await self.analysis_queue.put({
+                                            'type': 'auto_scan',
+                                            'file_path': file_path
+                                        })
+                                except:
+                                    pass
+        except Exception as e:
+            logger.error(f"❌ Erro no scan de arquivos do sistema: {e}")
     
     async def _generate_system_report(self):
         """Gera relatório do sistema"""
@@ -1165,6 +1169,7 @@ class CodeAnalyzerAgent(BaseNetworkAgent):
     
     async def _notify_critical_issues(self, file_path: str, issues: List[CodeIssue]):
         """Notifica sobre issues críticas"""
+        from uuid import uuid4
         notification = AgentMessage(
             id=str(uuid4()),
             sender_id=self.agent_id,
@@ -1183,6 +1188,7 @@ class CodeAnalyzerAgent(BaseNetworkAgent):
     
     async def _notify_poor_code_health(self, report: Dict[str, Any]):
         """Notifica sobre saúde ruim do código"""
+        from uuid import uuid4
         notification = AgentMessage(
             id=str(uuid4()),
             sender_id=self.agent_id,
@@ -1215,6 +1221,7 @@ class CodeAnalyzerAgent(BaseNetworkAgent):
     
     async def _send_response(self, original_message: AgentMessage, response_data: Dict[str, Any]):
         """Envia resposta para mensagem original"""
+        from uuid import uuid4
         response = AgentMessage(
             id=str(uuid4()),
             sender_id=self.agent_id,
