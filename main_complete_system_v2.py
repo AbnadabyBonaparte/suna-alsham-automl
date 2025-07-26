@@ -1,8 +1,118 @@
-# Adicione estas funções ao main_complete_system_v2.py
-# Substitua as funções existentes ou adicione se não existirem
+#!/usr/bin/env python3
+"""
+SUNA-ALSHAM AutoML Enterprise System v2.0
+Sistema Multi-Agente com Autoevolução
+"""
 
-import traceback  # Certifique-se que está importado no topo do arquivo
+import os
+import sys
+import asyncio
+import logging
+import traceback
+from datetime import datetime
+from typing import List, Dict, Optional
 
+# ============================================================
+# CONFIGURAÇÃO DE LOGGING - PRIMEIRA COISA NO ARQUIVO
+# ============================================================
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.StreamHandler(sys.stdout)
+    ]
+)
+logger = logging.getLogger('main_complete_system_v2')
+
+# ============================================================
+# CONFIGURAÇÃO DO SISTEMA
+# ============================================================
+OPENAI_API_KEY = os.getenv('OPENAI_API_KEY')
+if OPENAI_API_KEY:
+    logger.info("✅ OPENAI_API_KEY configurada")
+else:
+    logger.warning("⚠️ OPENAI_API_KEY não encontrada")
+
+# ============================================================
+# IMPORTS DOS MÓDULOS
+# ============================================================
+def safe_import(module_name):
+    """Importa módulo com tratamento de erro"""
+    try:
+        module = __import__(module_name)
+        logger.info(f"✅ Módulo {module_name} importado com sucesso")
+        return module
+    except Exception as e:
+        logger.error(f"❌ Erro importando {module_name}: {str(e)}")
+        logger.error(f"  Detalhes: {traceback.format_exc()}")
+        return None
+
+# Importar módulos do sistema
+logger.info("📦 Importando módulos do sistema...")
+multi_agent_network = safe_import('multi_agent_network')
+specialized_agents = safe_import('specialized_agents')
+ai_powered_agents = safe_import('ai_powered_agents')
+core_agents_v3 = safe_import('core_agents_v3')
+system_agents = safe_import('system_agents')
+service_agents = safe_import('service_agents')
+meta_cognitive_agents = safe_import('meta_cognitive_agents')
+code_analyzer_agent = safe_import('code_analyzer_agent')
+web_search_agent = safe_import('web_search_agent')
+code_corrector_agent = safe_import('code_corrector_agent')
+performance_monitor_agent = safe_import('performance_monitor_agent')
+
+# Importar classes necessárias
+if multi_agent_network:
+    MultiAgentNetwork = multi_agent_network.MultiAgentNetwork
+else:
+    logger.error("❌ MultiAgentNetwork não disponível!")
+    MultiAgentNetwork = None
+
+# ============================================================
+# VARIÁVEIS GLOBAIS
+# ============================================================
+network = None
+
+# ============================================================
+# FUNÇÕES AUXILIARES
+# ============================================================
+def print_header():
+    """Imprime cabeçalho do sistema"""
+    header = """
+    ============================================================
+    🚀 INICIANDO SUNA-ALSHAM SISTEMA v2.0
+    ⏰ Inicialização: {}
+    ============================================================
+    """.format(datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+    logger.info(header)
+
+def verificar_arquivos():
+    """Verifica se todos os arquivos necessários existem"""
+    logger.info("🔍 Verificando arquivos do sistema...")
+    
+    arquivos_necessarios = [
+        'multi_agent_network.py',
+        'specialized_agents.py',
+        'ai_powered_agents.py',
+        'core_agents_v3.py',
+        'system_agents.py',
+        'service_agents.py',
+        'meta_cognitive_agents.py'
+    ]
+    
+    todos_presentes = True
+    for arquivo in arquivos_necessarios:
+        if os.path.exists(arquivo):
+            logger.info(f"✅ {arquivo} encontrado")
+        else:
+            logger.error(f"❌ {arquivo} NÃO encontrado")
+            todos_presentes = False
+    
+    return todos_presentes
+
+# ============================================================
+# FUNÇÕES PRINCIPAIS DO SISTEMA
+# ============================================================
 async def criar_todos_agentes():
     """Cria todos os 24 agentes do sistema com logging detalhado"""
     logger.info("🎯 INICIANDO CRIAÇÃO DE 24 AGENTES...")
@@ -72,8 +182,11 @@ async def coordinator_loop():
     while True:
         try:
             # Verificar status dos agentes periodicamente
-            active_agents = await network.get_active_agents() if network else []
-            logger.info(f"📊 Status: {len(active_agents)} agentes ativos")
+            if network and hasattr(network, 'get_active_agents'):
+                active_agents = await network.get_active_agents()
+                logger.info(f"📊 Status: {len(active_agents)} agentes ativos")
+            else:
+                logger.debug("📊 Verificação de status...")
             
             # Aguardar 30 segundos antes da próxima verificação
             await asyncio.sleep(30)
@@ -97,13 +210,17 @@ async def main():
     arquivos_ok = verificar_arquivos()
     if not arquivos_ok:
         logger.error("❌ Verificação de arquivos falhou!")
-        return
+        logger.info("⚠️ Continuando com módulos disponíveis...")
     
     try:
-        # Inicializar rede
+        # Inicializar rede se disponível
         global network
-        network = MultiAgentNetwork()
-        logger.info("✅ Rede Multi-Agente inicializada")
+        if MultiAgentNetwork:
+            network = MultiAgentNetwork()
+            logger.info("✅ Rede Multi-Agente inicializada")
+        else:
+            logger.error("❌ MultiAgentNetwork não disponível - sistema limitado")
+            return
         
         # CRIAR TODOS OS AGENTES
         agentes = await criar_todos_agentes()
@@ -113,20 +230,28 @@ async def main():
         
         logger.info("🚀 Sistema SUNA-ALSHAM v2.0 operacional!")
         
-        # IMPORTANTE: Manter sistema rodando com múltiplos loops
-        await asyncio.gather(
-            network.heartbeat_loop(),
-            network.process_messages(),
-            coordinator_loop(),
-            keep_alive()  # Essencial para Railway
-        )
+        # Preparar tarefas assíncronas
+        tasks = [keep_alive()]  # Keep-alive é essencial
+        
+        if network and hasattr(network, 'heartbeat_loop'):
+            tasks.append(network.heartbeat_loop())
+        
+        if network and hasattr(network, 'process_messages'):
+            tasks.append(network.process_messages())
+        
+        tasks.append(coordinator_loop())
+        
+        # Executar todas as tarefas
+        await asyncio.gather(*tasks)
         
     except Exception as e:
         logger.error(f"❌ Erro fatal: {str(e)}")
         logger.error(traceback.format_exc())
-        raise  # Re-lançar para debugging
+        raise
 
-# IMPORTANTE: Bloco principal no final do arquivo
+# ============================================================
+# PONTO DE ENTRADA PRINCIPAL
+# ============================================================
 if __name__ == "__main__":
     try:
         logger.info("🚀 Iniciando SUNA-ALSHAM v2.0...")
@@ -134,8 +259,9 @@ if __name__ == "__main__":
     except KeyboardInterrupt:
         logger.info("⏹️ Sistema interrompido pelo usuário")
     except Exception as e:
-        logger.error(f"❌ Erro crítico na inicialização: {str(e)}")
-        logger.error(traceback.format_exc())
+        # Usar print se logger falhar
+        print(f"❌ Erro crítico na inicialização: {str(e)}")
+        print(traceback.format_exc())
         # Manter o processo vivo por 5 segundos para logs
         import time
         time.sleep(5)
