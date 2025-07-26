@@ -21,7 +21,7 @@ COPY requirements.txt .
 # Instalar dependências Python
 RUN pip install --no-cache-dir --upgrade pip setuptools wheel && \
     pip install --no-cache-dir -r requirements.txt && \
-    pip install psutil redis aiohttp autopep8 uvicorn
+    pip install psutil redis aiohttp autopep8 uvicorn black isort
 
 # Copiar código
 COPY . .
@@ -36,5 +36,5 @@ USER suna
 # Expor porta
 EXPOSE 8080
 
-# Executar o main.py que usa uvicorn
+# CORRIGIDO: Executar o arquivo correto!
 CMD ["python", "-u", "main.py"]
