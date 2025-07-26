@@ -1,5 +1,7 @@
-# CORREÇÃO RÁPIDA - Adicione isto ao main_complete_system_v2.py
-# Substitua a seção de criação de agentes (linha ~250-350) por:
+# Adicione estas funções ao main_complete_system_v2.py
+# Substitua as funções existentes ou adicione se não existirem
+
+import traceback  # Certifique-se que está importado no topo do arquivo
 
 async def criar_todos_agentes():
     """Cria todos os 24 agentes do sistema com logging detalhado"""
@@ -64,7 +66,29 @@ async def criar_todos_agentes():
     
     return todos_agentes
 
-# No main(), substitua a criação de agentes por:
+async def coordinator_loop():
+    """Loop do coordenador do sistema"""
+    logger.info("🎯 Coordinator loop iniciado")
+    while True:
+        try:
+            # Verificar status dos agentes periodicamente
+            active_agents = await network.get_active_agents() if network else []
+            logger.info(f"📊 Status: {len(active_agents)} agentes ativos")
+            
+            # Aguardar 30 segundos antes da próxima verificação
+            await asyncio.sleep(30)
+            
+        except Exception as e:
+            logger.error(f"Erro no coordinator: {str(e)}")
+            await asyncio.sleep(5)
+
+async def keep_alive():
+    """Mantém o sistema ativo para evitar que o container pare"""
+    logger.info("💓 Sistema keep-alive iniciado")
+    while True:
+        await asyncio.sleep(60)  # Heartbeat a cada 60 segundos
+        logger.debug("💓 Sistema ativo e operacional...")
+
 async def main():
     """Sistema principal SUNA-ALSHAM v2.0"""
     print_header()
@@ -87,16 +111,31 @@ async def main():
         if len(agentes) < 24:
             logger.warning(f"⚠️ Sistema iniciando com capacidade reduzida: {len(agentes)}/24 agentes")
         
-        # Continuar com a inicialização...
         logger.info("🚀 Sistema SUNA-ALSHAM v2.0 operacional!")
         
-        # Iniciar heartbeat e processamento
+        # IMPORTANTE: Manter sistema rodando com múltiplos loops
         await asyncio.gather(
             network.heartbeat_loop(),
             network.process_messages(),
-            coordinator_loop()
+            coordinator_loop(),
+            keep_alive()  # Essencial para Railway
         )
         
     except Exception as e:
         logger.error(f"❌ Erro fatal: {str(e)}")
         logger.error(traceback.format_exc())
+        raise  # Re-lançar para debugging
+
+# IMPORTANTE: Bloco principal no final do arquivo
+if __name__ == "__main__":
+    try:
+        logger.info("🚀 Iniciando SUNA-ALSHAM v2.0...")
+        asyncio.run(main())
+    except KeyboardInterrupt:
+        logger.info("⏹️ Sistema interrompido pelo usuário")
+    except Exception as e:
+        logger.error(f"❌ Erro crítico na inicialização: {str(e)}")
+        logger.error(traceback.format_exc())
+        # Manter o processo vivo por 5 segundos para logs
+        import time
+        time.sleep(5)
