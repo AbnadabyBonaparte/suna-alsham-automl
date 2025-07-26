@@ -1,134 +1,173 @@
 #!/usr/bin/env python3
 """
-Agent Loader - Carrega todos os agentes do SUNA-ALSHAM System
-Baseado nos arquivos existentes no repositório
+Agent Loader REAL - Chama as funções create_*_agents() dos arquivos
+Cada arquivo contém MÚLTIPLOS agentes, não apenas 1
 """
 
 import asyncio
 import logging
 from typing import List, Dict, Any
-from multi_agent_network import MultiAgentNetwork, BaseNetworkAgent, AgentType
+from multi_agent_network import MultiAgentNetwork
 
 logger = logging.getLogger(__name__)
 
-class AgentLoader:
+class RealAgentLoader:
     def __init__(self, network: MultiAgentNetwork):
         self.network = network
         self.loaded_agents = {}
+        self.total_agents = 0
         
     async def load_all_agents(self) -> Dict[str, Any]:
-        """Carrega todos os agentes baseados nos arquivos existentes"""
+        """Carrega TODOS os agentes chamando as funções create_*_agents() reais"""
         try:
-            logger.info("🚀 Iniciando carregamento de todos os agentes...")
+            logger.info("🚀 Iniciando carregamento REAL de TODOS os agentes...")
             
-            # Lista dos agentes baseada nos arquivos que vi no repositório
-            agents_to_load = [
-                # Core Agents
-                {"id": "core_agent_v3", "type": AgentType.CORE, "file": "ai_powered_agents.py"},
-                {"id": "system_agent", "type": AgentType.SYSTEM, "file": "system_agents.py"},
-                {"id": "service_agent", "type": AgentType.SERVICE, "file": "service_agents.py"},
-                
-                # Specialized Agents
-                {"id": "specialized_agent", "type": AgentType.SPECIALIZED, "file": "specialized_agents.py"},
-                {"id": "performance_monitor", "type": AgentType.MONITOR, "file": "performance_monitor_agent.py"},
-                {"id": "meta_cognitive", "type": AgentType.META_COGNITIVE, "file": "meta_cognitive_agents.py"},
-                
-                # Analytics & Intelligence
-                {"id": "analytics_agent", "type": AgentType.ANALYTICS, "file": "analyze_agent_structure.py"},
-                {"id": "code_analyzer", "type": AgentType.ANALYTICS, "file": "code_analyzer_agent.py"},
-                {"id": "code_corrector", "type": AgentType.SPECIALIST, "file": "code_corrector_agent.py"},
-                
-                # Evolution & Learning
-                {"id": "real_evolution_engine", "type": AgentType.EVOLVER, "file": "real_evolution_engine.py"},
-                {"id": "evolution_dashboard", "type": AgentType.MONITOR, "file": "evolution_dashboard.py"},
-                
-                # Automation & Control
-                {"id": "computer_control", "type": AgentType.AUTOMATOR, "file": "computer_control_agent.py"},
-                {"id": "web_search_agent", "type": AgentType.SPECIALIST, "file": "web_search_agent.py"},
-                
-                # Orchestration
-                {"id": "main_orchestrator", "type": AgentType.ORCHESTRATOR, "file": "main_orchestrator.py"},
-                {"id": "suna_alsham_bootstrap", "type": AgentType.COORDINATOR, "file": "suna_alsham_bootstrap.py"},
-                
-                # Diagnostic & Debug
-                {"id": "debug_agent", "type": AgentType.SPECIALIST, "file": "debug_agent_creation.py"},
-                {"id": "diagnostic_complete", "type": AgentType.ANALYTICS, "file": "diagnostic_complete.py"},
-                {"id": "diagnostic_enterprise", "type": AgentType.ANALYTICS, "file": "diagnostic_enterprise.py"},
-                
-                # Deployment & Optimization
-                {"id": "deployment_report", "type": AgentType.MONITOR, "file": "deployment_report.py"},
-                {"id": "deployment_optimization", "type": AgentType.OPTIMIZER, "file": "deployment_optimization.py"},
-                
-                # Guard & Security
-                {"id": "guard_service", "type": AgentType.GUARD, "file": "guard_service.py"},
-                
-                # Testing & Verification
-                {"id": "test_main_direct", "type": AgentType.SPECIALIST, "file": "test_main_direct.py"},
-                {"id": "verify_structure", "type": AgentType.SPECIALIST, "file": "verify_structure.py"},
-                
-                # Emergency & Conversational
-                {"id": "emergency_xint", "type": AgentType.SYSTEM, "file": "emergency_xint.py"},
-                {"id": "start_agent", "type": AgentType.COORDINATOR, "file": "start.py"}
-            ]
-            
-            loaded_count = 0
-            for agent_config in agents_to_load:
-                try:
-                    agent = await self._create_agent(agent_config)
-                    if agent:
-                        success = self.network.add_agent(agent)
-                        if success:
-                            self.loaded_agents[agent_config["id"]] = agent
-                            loaded_count += 1
-                            logger.info(f"✅ Agente {agent_config['id']} carregado com sucesso")
-                        else:
-                            logger.warning(f"⚠️ Falha adicionando agente {agent_config['id']} à rede")
-                    else:
-                        logger.warning(f"⚠️ Falha criando agente {agent_config['id']}")
-                except Exception as e:
-                    logger.error(f"❌ Erro carregando agente {agent_config['id']}: {e}")
-            
-            result = {
-                "status": "completed",
-                "total_agents_attempted": len(agents_to_load),
-                "agents_loaded_successfully": loaded_count,
-                "loaded_agents": list(self.loaded_agents.keys()),
-                "network_status": self.network.get_network_status()
+            results = {
+                "status": "in_progress",
+                "loaded_by_module": {},
+                "total_agents": 0,
+                "failed_modules": []
             }
             
-            logger.info(f"🎯 Carregamento concluído: {loaded_count}/{len(agents_to_load)} agentes carregados")
-            return result
+            # 1. CORE AGENTS V3 (5 agentes)
+            try:
+                from core_agents_v3 import create_core_agents_v3
+                core_agents = create_core_agents_v3(self.network.message_bus)
+                await self._add_agents_to_network(core_agents, "core_agents_v3")
+                results["loaded_by_module"]["core_agents_v3"] = len(core_agents)
+                logger.info(f"✅ core_agents_v3: {len(core_agents)} agentes carregados")
+            except Exception as e:
+                logger.error(f"❌ Erro carregando core_agents_v3: {e}")
+                results["failed_modules"].append(f"core_agents_v3: {e}")
+            
+            # 2. SPECIALIZED AGENTS (5 agentes)
+            try:
+                from specialized_agents import create_specialized_agents
+                specialized_agents = create_specialized_agents(self.network.message_bus)
+                await self._add_agents_to_network(specialized_agents, "specialized_agents")
+                results["loaded_by_module"]["specialized_agents"] = len(specialized_agents)
+                logger.info(f"✅ specialized_agents: {len(specialized_agents)} agentes carregados")
+            except Exception as e:
+                logger.error(f"❌ Erro carregando specialized_agents: {e}")
+                results["failed_modules"].append(f"specialized_agents: {e}")
+            
+            # 3. AI POWERED AGENTS (3 agentes)
+            try:
+                from ai_powered_agents import create_ai_agents
+                ai_agents = create_ai_agents(self.network.message_bus)
+                await self._add_agents_to_network(ai_agents, "ai_powered_agents")
+                results["loaded_by_module"]["ai_powered_agents"] = len(ai_agents)
+                logger.info(f"✅ ai_powered_agents: {len(ai_agents)} agentes carregados")
+            except Exception as e:
+                logger.error(f"❌ Erro carregando ai_powered_agents: {e}")
+                results["failed_modules"].append(f"ai_powered_agents: {e}")
+            
+            # 4. SYSTEM AGENTS
+            try:
+                from system_agents import create_system_agents
+                system_agents = create_system_agents(self.network.message_bus)
+                await self._add_agents_to_network(system_agents, "system_agents")
+                results["loaded_by_module"]["system_agents"] = len(system_agents)
+                logger.info(f"✅ system_agents: {len(system_agents)} agentes carregados")
+            except Exception as e:
+                logger.error(f"❌ Erro carregando system_agents: {e}")
+                results["failed_modules"].append(f"system_agents: {e}")
+            
+            # 5. SERVICE AGENTS
+            try:
+                from service_agents import create_service_agents
+                service_agents = create_service_agents(self.network.message_bus)
+                await self._add_agents_to_network(service_agents, "service_agents")
+                results["loaded_by_module"]["service_agents"] = len(service_agents)
+                logger.info(f"✅ service_agents: {len(service_agents)} agentes carregados")
+            except Exception as e:
+                logger.error(f"❌ Erro carregando service_agents: {e}")
+                results["failed_modules"].append(f"service_agents: {e}")
+            
+            # 6. META COGNITIVE AGENTS
+            try:
+                from meta_cognitive_agents import create_meta_cognitive_agents
+                meta_agents = create_meta_cognitive_agents(self.network.message_bus)
+                await self._add_agents_to_network(meta_agents, "meta_cognitive_agents")
+                results["loaded_by_module"]["meta_cognitive_agents"] = len(meta_agents)
+                logger.info(f"✅ meta_cognitive_agents: {len(meta_agents)} agentes carregados")
+            except Exception as e:
+                logger.error(f"❌ Erro carregando meta_cognitive_agents: {e}")
+                results["failed_modules"].append(f"meta_cognitive_agents: {e}")
+            
+            # 7. AGENTES INDIVIDUAIS
+            individual_agents = [
+                ("code_analyzer_agent", "create_code_analyzer_agent"),
+                ("analyze_agent_structure", "create_analyze_agent"),
+                ("performance_monitor_agent", "create_performance_monitor"),
+                ("computer_control_agent", "create_computer_control_agent"),
+                ("web_search_agent", "create_web_search_agent"),
+                ("code_corrector_agent", "create_code_corrector_agent"),
+                ("debug_agent_creation", "create_debug_agent")
+            ]
+            
+            for module_name, function_name in individual_agents:
+                try:
+                    module = __import__(module_name)
+                    create_function = getattr(module, function_name)
+                    agents = create_function(self.network.message_bus)
+                    
+                    # Normalizar para lista se retornar agente único
+                    if not isinstance(agents, list):
+                        agents = [agents] if agents else []
+                    
+                    await self._add_agents_to_network(agents, module_name)
+                    results["loaded_by_module"][module_name] = len(agents)
+                    logger.info(f"✅ {module_name}: {len(agents)} agentes carregados")
+                except Exception as e:
+                    logger.error(f"❌ Erro carregando {module_name}: {e}")
+                    results["failed_modules"].append(f"{module_name}: {e}")
+            
+            # RESULTADO FINAL
+            results["total_agents"] = self.total_agents
+            results["status"] = "completed"
+            results["network_status"] = self.network.get_network_status()
+            results["summary"] = {
+                "modules_attempted": len(results["loaded_by_module"]) + len(results["failed_modules"]),
+                "modules_successful": len(results["loaded_by_module"]),
+                "modules_failed": len(results["failed_modules"]),
+                "agents_loaded": self.total_agents
+            }
+            
+            logger.info(f"🎯 CARREGAMENTO CONCLUÍDO!")
+            logger.info(f"📊 Total de agentes: {self.total_agents}")
+            logger.info(f"✅ Módulos bem-sucedidos: {len(results['loaded_by_module'])}")
+            logger.info(f"❌ Módulos com falha: {len(results['failed_modules'])}")
+            
+            return results
             
         except Exception as e:
-            logger.error(f"❌ Erro no carregamento geral de agentes: {e}")
+            logger.error(f"❌ Erro crítico no carregamento: {e}")
             return {"status": "error", "message": str(e)}
     
-    async def _create_agent(self, config: Dict[str, Any]) -> BaseNetworkAgent:
-        """Cria um agente baseado na configuração"""
-        try:
-            # Cria um agente base funcional
-            agent = BaseNetworkAgent(
-                agent_id=config["id"],
-                agent_type=config["type"],
-                message_bus=self.network.message_bus
-            )
-            
-            # Adiciona metadados específicos
-            agent.source_file = config.get("file", "unknown")
-            agent.description = f"Agente {config['type'].value} baseado em {config['file']}"
-            
-            return agent
-            
-        except Exception as e:
-            logger.error(f"❌ Erro criando agente {config['id']}: {e}")
-            return None
+    async def _add_agents_to_network(self, agents: List, module_name: str):
+        """Adiciona lista de agentes à rede"""
+        if not agents:
+            logger.warning(f"⚠️ Nenhum agente retornado de {module_name}")
+            return
+        
+        for agent in agents:
+            try:
+                success = self.network.add_agent(agent)
+                if success:
+                    self.loaded_agents[agent.agent_id] = agent
+                    self.total_agents += 1
+                    logger.info(f"   ✅ {agent.agent_id} adicionado à rede")
+                else:
+                    logger.warning(f"   ⚠️ Falha adicionando {agent.agent_id} à rede")
+            except Exception as e:
+                logger.error(f"   ❌ Erro adicionando agente de {module_name}: {e}")
 
 async def load_agents_into_network(network: MultiAgentNetwork) -> Dict[str, Any]:
-    """Função principal para carregar agentes na rede"""
-    loader = AgentLoader(network)
+    """Função principal para carregar TODOS os agentes reais"""
+    loader = RealAgentLoader(network)
     return await loader.load_all_agents()
 
-# Função de conveniência para usar no main_complete_system.py
 async def initialize_all_agents(network: MultiAgentNetwork) -> Dict[str, Any]:
-    """Inicializa todos os agentes na rede"""
+    """Inicializa TODOS os agentes reais na rede"""
     return await load_agents_into_network(network)
