@@ -21,7 +21,7 @@ import json
 from pathlib import Path
 from collections import defaultdict, deque
 import ipaddress
-from multi_agent_network import BaseNetworkAgent, AgentType, MessageType, Priority, AgentMessage
+from suna_alsham_core.multi_agent_network import BaseNetworkAgent, AgentType, MessageType, Priority, AgentMessage
 
 logger = logging.getLogger(__name__)
 
