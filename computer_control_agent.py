@@ -12,7 +12,7 @@ from enum import Enum
 from datetime import datetime
 from pathlib import Path
 from uuid import uuid4
-from suna_alsham_core.computer_control_agent import BaseNetworkAgent, AgentMessage, ...
+from suna_alsham_core.multi_agent_network import BaseNetworkAgent, AgentType, MessageType, Priority, AgentMessage
 )
 
 # Importações opcionais com verificação
