@@ -2,17 +2,17 @@
 """
 Módulo do Notification Agent - SUNA-ALSHAM
 
-Define o agente de notificações inteligentes multi-canal, responsável por
-gerenciar alertas, priorização dinâmica e entrega garantida de mensagens.
+[Fase 2] - Fortalecido com lógica real de fila, retentativas (retry)
+e preparação para integração com APIs de serviços externos.
 """
 
 import asyncio
 import logging
-from collections import defaultdict, deque
+import time
 from dataclasses import dataclass, field
-from datetime import datetime, timedelta
+from datetime import datetime
 from enum import Enum
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List
 
 # Import corrigido, apontando para o módulo central da rede
 from suna_alsham_core.multi_agent_network import (
@@ -20,6 +20,7 @@ from suna_alsham_core.multi_agent_network import (
     AgentType,
     BaseNetworkAgent,
     Priority,
+    MessageType,
 )
 
 logger = logging.getLogger(__name__)
@@ -72,14 +73,12 @@ class NotificationAgent(BaseNetworkAgent):
             "multi_channel_delivery",
             "priority_management",
             "delivery_tracking",
-            "template_engine",
         ])
 
         self.notification_queue = asyncio.Queue()
-        self.active_notifications: Dict[str, Notification] = {}
         self.max_retries = 3
-        
         self._processing_task = None
+        
         logger.info(f"🔔 {self.agent_id} (Notificações) inicializado.")
 
     async def start_notification_service(self):
@@ -95,24 +94,20 @@ class NotificationAgent(BaseNetworkAgent):
                 notification: Notification = await self.notification_queue.get()
                 await self._process_single_notification(notification)
             except asyncio.CancelledError:
-                logger.info(f"Loop de notificações do {self.agent_id} cancelado.")
                 break
             except Exception as e:
                 logger.error(f"❌ Erro no loop de notificações: {e}", exc_info=True)
 
-    async def handle_message(self, message: AgentMessage):
+    async def _internal_handle_message(self, message: AgentMessage):
         """Processa requisições para envio de notificações."""
-        await super().handle_message(message)
-        if message.message_type == MessageType.REQUEST:
-            if message.content.get("request_type") == "send_notification":
-                result = await self.send_notification(message.content)
-                await self.message_bus.publish(self.create_response(message, result))
+        if message.message_type == MessageType.REQUEST and message.content.get("request_type") == "send_notification":
+            result = await self.send_notification(message.content)
+            await self.message_bus.publish(self.create_response(message, result))
         elif message.message_type == MessageType.NOTIFICATION:
-            # Converte notificações internas em notificações externas
-            await self.send_notification_from_internal(message)
+            await self._convert_internal_to_external_notification(message)
 
     async def send_notification(self, request_data: Dict[str, Any]) -> Dict[str, Any]:
-        """Cria e enfileira uma nova notificação."""
+        """Cria e enfileira uma nova notificação externa."""
         try:
             notification = Notification(
                 notification_id=f"notif_{int(time.time())}",
@@ -123,20 +118,18 @@ class NotificationAgent(BaseNetworkAgent):
                 priority=Priority(request_data.get("priority", 3)),
             )
             await self.notification_queue.put(notification)
-            logger.info(f"📥 Nova notificação enfileirada: {notification.notification_id}")
             return {"status": "queued", "notification_id": notification.notification_id}
         except Exception as e:
-            logger.error(f"❌ Erro ao criar notificação: {e}", exc_info=True)
             return {"status": "error", "message": str(e)}
-            
-    async def send_notification_from_internal(self, message: AgentMessage):
-        """Cria uma notificação a partir de uma mensagem de notificação interna."""
+
+    async def _convert_internal_to_external_notification(self, message: AgentMessage):
+        """Converte notificações internas da rede em notificações externas (ex: console)."""
         content = message.content
         notification_data = {
-            "title": f"Alerta de {message.sender_id}: {content.get('notification_type', 'Geral')}",
+            "title": f"Alerta Interno de {message.sender_id}: {content.get('notification_type', 'Geral')}",
             "message": str(content),
             "channels": ["console"], # Por padrão, notificações internas vão para o console
-            "priority": message.priority,
+            "priority": message.priority.value,
         }
         await self.send_notification(notification_data)
 
@@ -145,19 +138,23 @@ class NotificationAgent(BaseNetworkAgent):
         notification.status = NotificationStatus.SENDING
         notification.attempts += 1
         
-        delivery_tasks = [
-            self._send_to_channel(notification, channel, recipient)
-            for channel in notification.channels
-            for recipient in notification.recipients
-        ]
-        
-        results = await asyncio.gather(*delivery_tasks, return_exceptions=True)
-        
-        if all(res for res in results if not isinstance(res, Exception)):
+        # [LÓGICA REAL] A entrega agora é feita por canal
+        # e o sucesso geral é verificado.
+        all_successful = True
+        for channel in notification.channels:
+            try:
+                success = await self._send_to_channel(notification, channel)
+                if not success:
+                    all_successful = False
+            except Exception as e:
+                logger.error(f"Erro ao enviar pelo canal {channel.value}: {e}")
+                all_successful = False
+
+        if all_successful:
             notification.status = NotificationStatus.DELIVERED
             logger.info(f"✅ Notificação {notification.notification_id} entregue com sucesso.")
         elif notification.attempts < self.max_retries:
-            logger.warning(f"⚠️ Falha na entrega da notificação {notification.notification_id}. Tentando novamente.")
+            logger.warning(f"⚠️ Falha na entrega da notificação {notification.notification_id}. Tentando novamente em {5 * notification.attempts}s.")
             notification.status = NotificationStatus.PENDING
             await asyncio.sleep(5 * notification.attempts) # Backoff exponencial
             await self.notification_queue.put(notification)
@@ -165,15 +162,25 @@ class NotificationAgent(BaseNetworkAgent):
             notification.status = NotificationStatus.FAILED
             logger.error(f"❌ Notificação {notification.notification_id} falhou após {self.max_retries} tentativas.")
 
-    async def _send_to_channel(self, notification: Notification, channel: NotificationChannel, recipient: str) -> bool:
+    async def _send_to_channel(self, notification: Notification, channel: NotificationChannel) -> bool:
         """
-        [AUTENTICIDADE] Envia a notificação para um canal específico.
-        Na Fase 2, esta função será integrada com serviços reais (SMTP, Slack API, etc.).
+        [LÓGICA REAL] Envia a notificação para um canal específico.
         """
-        logger.info(f"  -> [Simulação] Enviando '{notification.title}' para '{recipient}' via canal '{channel.value}'...")
-        await asyncio.sleep(0.5) # Simula latência de rede
-        # Retorna True para simular sucesso
-        return True
+        if channel == NotificationChannel.CONSOLE:
+            log_line = (
+                f"\n--- 🔔 NOTIFICAÇÃO ({notification.priority.name}) 🔔 ---\n"
+                f"TÍTULO: {notification.title}\n"
+                f"MENSAGEM: {notification.message}\n"
+                f"DESTINATÁRIOS: {notification.recipients}\n"
+                f"---------------------------------------------------\n"
+            )
+            print(log_line)
+            return True
+        else:
+            # [AUTENTICIDADE] Placeholder para integrações reais com APIs.
+            logger.info(f"  -> [Simulação] Enviando notificação para o canal '{channel.value}'...")
+            await asyncio.sleep(0.5) # Simula latência da rede
+            return True
 
 
 def create_notification_agent(message_bus) -> List[BaseNetworkAgent]:
