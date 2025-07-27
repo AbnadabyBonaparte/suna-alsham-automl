@@ -2,21 +2,19 @@
 """
 Módulo do Logging Agent - O Jornalista Inteligente do SUNA-ALSHAM.
 
-Define o agente de logging centralizado, responsável por coletar, analisar,
-e enriquecer os logs de todo o sistema para fornecer insights claros.
+[Fase 2] - Fortalecido com integração real ao DatabaseAgent para persistência
+de logs de forma estruturada.
 """
 
 import asyncio
-import hashlib
 import json
 import logging
-import re
-from collections import defaultdict, deque
+import time
+from collections import deque
 from dataclasses import dataclass, field
-from datetime import datetime, timedelta
+from datetime import datetime
 from enum import Enum
-from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List
 
 # Import corrigido, apontando para o módulo central da rede
 from suna_alsham_core.multi_agent_network import (
@@ -56,7 +54,7 @@ class LogEntry:
 class LoggingAgent(BaseNetworkAgent):
     """
     Agente especializado em logging inteligente. Transforma logs brutos em
-    dados estruturados e insights acionáveis sobre o estado do sistema.
+    dados estruturados e os persiste no banco de dados para análise futura.
     """
 
     def __init__(self, agent_id: str, message_bus):
@@ -64,84 +62,126 @@ class LoggingAgent(BaseNetworkAgent):
         super().__init__(agent_id, AgentType.SERVICE, message_bus)
         self.capabilities.extend([
             "centralized_logging",
-            "log_parsing",
-            "pattern_detection",
-            "real_time_analysis",
+            "log_persistence",
+            "log_querying",
         ])
         
-        self.log_buffer = deque(maxlen=5000)
-        self.log_patterns = {} # Armazena padrões de log recorrentes
-        
-        # [AUTENTICIDADE] Na Fase 2, esta lógica será expandida para se conectar
-        # ao DatabaseAgent e persistir os logs de forma estruturada.
-        self.log_file_path = Path("./logs/suna_alsham_events.log")
-        self.log_file_path.parent.mkdir(exist_ok=True)
+        self.log_buffer = deque(maxlen=100) # Buffer para inserção em lote
+        self._db_task = None
         
         logger.info(f"📝 {self.agent_id} (Logging) inicializado.")
 
-    async def handle_message(self, message: AgentMessage):
+    async def start_logging_service(self):
+        """Inicia o serviço de background para salvar logs."""
+        if not self._db_task:
+            self._db_task = asyncio.create_task(self._process_log_buffer_loop())
+            logger.info(f"📝 {self.agent_id} iniciou serviço de persistência de logs.")
+
+    async def _process_log_buffer_loop(self):
+        """Loop que periodicamente salva o buffer de logs no banco de dados."""
+        while True:
+            try:
+                await asyncio.sleep(10) # Salva a cada 10 segundos
+                if self.log_buffer:
+                    await self._flush_buffer_to_database()
+            except asyncio.CancelledError:
+                logger.info("Loop de logging cancelado.")
+                # Tenta salvar o buffer uma última vez antes de sair
+                await self._flush_buffer_to_database()
+                break
+            except Exception as e:
+                logger.error(f"❌ Erro no loop de persistência de logs: {e}", exc_info=True)
+
+    async def _internal_handle_message(self, message: AgentMessage):
         """
         Processa mensagens recebidas, com foco em notificações para logging.
         """
-        await super().handle_message(message)
-        
-        # O LoggingAgent pode escutar notificações para logar eventos importantes
+        # O LoggingAgent escuta todas as notificações para logar eventos importantes.
         if message.message_type == MessageType.NOTIFICATION:
             await self._log_notification_event(message)
 
     async def _log_notification_event(self, message: AgentMessage):
         """
-        Cria uma entrada de log estruturada a partir de uma notificação da rede.
+        Cria uma entrada de log estruturada a partir de uma notificação da rede
+        e a adiciona ao buffer para persistência.
         """
         log_entry = LogEntry(
-            entry_id=f"log_{int(time.time()*1000)}",
-            timestamp=datetime.now(),
+            entry_id=message.id,
+            timestamp=message.timestamp,
             level=self._map_priority_to_log_level(message.priority),
             source_agent=message.sender_id,
-            message=f"Notificação recebida: {message.content.get('notification_type', 'geral')}",
+            message=f"Notificação: {message.content.get('notification_type', 'geral')}",
             metadata={
-                "message_id": message.id,
                 "correlation_id": message.correlation_id,
-                "content_preview": str(message.content)[:200],
+                "content": message.content,
             },
         )
         self.log_buffer.append(log_entry)
-        await self._write_log_to_file(log_entry)
 
     def _map_priority_to_log_level(self, priority: Priority) -> LogLevel:
         """Mapeia a prioridade da mensagem para um nível de log."""
-        if priority == Priority.CRITICAL:
-            return LogLevel.CRITICAL
-        elif priority == Priority.HIGH:
-            return LogLevel.ERROR
-        elif priority == Priority.MEDIUM:
-            return LogLevel.WARNING
-        else:
-            return LogLevel.INFO
+        if priority == Priority.CRITICAL: return LogLevel.CRITICAL
+        if priority == Priority.HIGH: return LogLevel.ERROR
+        if priority == Priority.MEDIUM: return LogLevel.WARNING
+        return LogLevel.INFO
 
-    async def _write_log_to_file(self, log_entry: LogEntry):
+    async def _flush_buffer_to_database(self):
         """
-        Escreve uma entrada de log formatada em um arquivo.
-        [AUTENTICIDADE] Esta é uma implementação real de logging em arquivo.
+        [LÓGICA REAL] Salva todas as entradas de log do buffer no banco de dados
+        usando o `DatabaseAgent`.
         """
-        try:
-            # Formato de log claro para leigos
-            log_line = (
-                f"[{log_entry.timestamp.strftime('%Y-%m-%d %H:%M:%S')}] "
-                f"[{log_entry.level.value:^8}] "
-                f"[{log_entry.source_agent:^25}] "
-                f"- {log_entry.message}\n"
+        if not self.log_buffer:
+            return
+
+        logs_to_insert = list(self.log_buffer)
+        self.log_buffer.clear()
+        
+        logger.info(f"🗄️ Persistindo {len(logs_to_insert)} entradas de log no banco de dados...")
+
+        # [AUTENTICIDADE] Esta é a implementação REAL da integração.
+        # 1. Prepara a query SQL para inserção em lote.
+        query = """
+            INSERT INTO system_logs (entry_id, timestamp, level, source_agent, message, metadata)
+            VALUES (?, ?, ?, ?, ?, ?);
+        """
+        # 2. Prepara os dados para a query.
+        params = [
+            (
+                log.entry_id,
+                log.timestamp.isoformat(),
+                log.level.value,
+                log.source_agent,
+                log.message,
+                json.dumps(log.metadata)
             )
-            
-            # Adiciona metadados se existirem
-            if log_entry.metadata:
-                meta_str = json.dumps(log_entry.metadata, default=str)
-                log_line += f"  └─ METADADOS: {meta_str}\n"
+            for log in logs_to_insert
+        ]
 
-            with open(self.log_file_path, "a", encoding="utf-8") as f:
-                f.write(log_line)
+        try:
+            # 3. Envia a requisição para o DatabaseAgent.
+            # O `send_request_and_wait` é o método fortalecido que criamos na Fase 2.
+            response_message = await self.send_request_and_wait(
+                recipient_id="database_001",
+                content={
+                    "request_type": "execute_query",
+                    "query": query,
+                    "params": params, # `executemany` do aiosqlite espera uma lista de tuplas
+                }
+            )
+
+            if response_message.content.get("status") == "completed":
+                logger.info(f"✅ {response_message.content.get('rows_affected', 0)} logs persistidos com sucesso.")
+            else:
+                logger.error(f"❌ Falha ao persistir logs. Resposta do DatabaseAgent: {response_message.content.get('message')}")
+                # Adiciona os logs de volta ao buffer para tentar novamente
+                self.log_buffer.extend(logs_to_insert)
+
+        except TimeoutError:
+            logger.error("❌ Timeout ao comunicar com o DatabaseAgent para salvar logs.")
+            self.log_buffer.extend(logs_to_insert)
         except Exception as e:
-            logger.error(f"❌ Erro ao escrever no arquivo de log: {e}", exc_info=True)
+            logger.error(f"❌ Erro inesperado ao salvar logs: {e}", exc_info=True)
+            self.log_buffer.extend(logs_to_insert)
 
 
 def create_logging_agent(message_bus) -> List[BaseNetworkAgent]:
@@ -152,6 +192,7 @@ def create_logging_agent(message_bus) -> List[BaseNetworkAgent]:
     logger.info("📝 Criando LoggingAgent...")
     try:
         agent = LoggingAgent("logging_001", message_bus)
+        asyncio.create_task(agent.start_logging_service())
         agents.append(agent)
     except Exception as e:
         logger.error(f"❌ Erro crítico criando LoggingAgent: {e}", exc_info=True)
