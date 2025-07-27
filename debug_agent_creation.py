@@ -21,7 +21,7 @@ from collections import defaultdict, deque
 import json
 import re
 from pathlib import Path
-from suna_alsham_core.debug_agent_creation import BaseNetworkAgent, AgentMessage, ...
+from suna_alsham_core.multi_agent_network import BaseNetworkAgent, AgentType, MessageType, Priority, AgentMessage
 
 logger = logging.getLogger(__name__)
 
