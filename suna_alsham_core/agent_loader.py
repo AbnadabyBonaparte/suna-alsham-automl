@@ -1,19 +1,20 @@
 #!/usr/bin/env python3
 """
-Agent Loader REAL - Chama as funções create_*_agents() dos arquivos
-Sistema completo com 39 agentes poderosos do Núcleo.
-Este módulo foi refatorado para refletir a nova estrutura de diretórios.
+Agent Loader - O Maestro do Núcleo SUNA-ALSHAM.
+
+[Fase 2] - Este módulo foi fortalecido para usar imports explícitos e carregar
+todos os agentes do núcleo de forma robusta, refletindo a nova arquitetura.
 """
 
 import asyncio
 import logging
-from typing import List, Dict, Any
+from typing import Any, Dict, List
 
-# Import corrigido, apontando para a nova estrutura
+# Import corrigido, apontando para o módulo central da rede
 from suna_alsham_core.multi_agent_network import MultiAgentNetwork
 
-# Imports explícitos para todos os módulos de agentes do núcleo
-# Esta abordagem é mais clara e robusta do que imports dinâmicos.
+# Imports explícitos para todos os módulos de agentes do núcleo.
+# Esta abordagem é mais clara, segura e profissional do que imports dinâmicos.
 from suna_alsham_core.core_agents_v3 import create_core_agents_v3
 from suna_alsham_core.specialized_agents import create_specialized_agents
 from suna_alsham_core.ai_powered_agents import create_ai_agents
@@ -37,28 +38,32 @@ from suna_alsham_core.notification_agent import create_notification_agent
 from suna_alsham_core.deployment_agent import create_deployment_agent
 from suna_alsham_core.testing_agent import create_testing_agent
 from suna_alsham_core.visualization_agent import create_visualization_agent
-
+from suna_alsham_core.security_enhancements_agent import create_security_enhancements_agent
 
 logger = logging.getLogger(__name__)
 
+
 class RealAgentLoader:
+    """
+    O "Maestro" do sistema. Responsável por chamar as "fábricas"
+    de cada módulo para construir e registrar a orquestra completa de agentes.
+    """
+
     def __init__(self, network: MultiAgentNetwork):
+        """Inicializa o RealAgentLoader."""
         self.network = network
-        self.loaded_agents: Dict[str, Any] = {}
-        self.total_agents = 0
-        
+        self.total_agents_loaded = 0
+
     async def load_all_agents(self) -> Dict[str, Any]:
-        """Carrega TODOS os agentes do Núcleo SUNA-ALSHAM."""
-        logger.info("🚀 Iniciando carregamento REAL de TODOS os agentes do núcleo...")
-        
+        """Carrega TODOS os 39 agentes do Núcleo SUNA-ALSHAM."""
+        logger.info("🚀 Iniciando carregamento de TODOS os agentes do núcleo...")
+
         results = {
-            "status": "in_progress",
             "loaded_by_module": {},
-            "total_agents": 0,
-            "failed_modules": []
+            "failed_modules": [],
         }
 
-        # Lista de todas as funções de criação de agentes para carregar
+        # Lista de todas as funções de criação de agentes para carregar.
         agent_creation_functions = [
             ("core_agents_v3", create_core_agents_v3),
             ("specialized_agents", create_specialized_agents),
@@ -83,6 +88,7 @@ class RealAgentLoader:
             ("deployment_agent", create_deployment_agent),
             ("testing_agent", create_testing_agent),
             ("visualization_agent", create_visualization_agent),
+            ("security_enhancements_agent", create_security_enhancements_agent),
         ]
 
         for module_name, create_function in agent_creation_functions:
@@ -90,53 +96,41 @@ class RealAgentLoader:
                 # A função já foi importada, agora apenas a chamamos.
                 agents = create_function(self.network.message_bus)
                 
-                # Normalizar para lista se a função retornar um único agente
-                if not isinstance(agents, list):
-                    agents = [agents] if agents else []
-                
-                await self._add_agents_to_network(agents, module_name)
-                results["loaded_by_module"][module_name] = len(agents)
-                logger.info(f"✅ {module_name}: {len(agents)} agente(s) carregado(s)")
+                # O registro do agente já é feito na `BaseNetworkAgent`.
+                # Apenas confirmamos a contagem.
+                num_loaded = len(agents)
+                if num_loaded > 0:
+                    results["loaded_by_module"][module_name] = num_loaded
+                    self.total_agents_loaded += num_loaded
+                    logger.info(f"✅ {module_name}: {num_loaded} agente(s) carregado(s)")
+                else:
+                    logger.warning(f"⚠️ Módulo '{module_name}' não retornou agentes.")
+
             except Exception as e:
                 logger.error(f"❌ Erro carregando o módulo '{module_name}': {e}", exc_info=True)
-                results["failed_modules"].append(f"{module_name}: {e}")
+                results["failed_modules"].append(f"{module_name}: {str(e)}")
         
         # Resultado Final
-        results["total_agents"] = self.total_agents
-        results["status"] = "completed"
-        results["summary"] = {
+        summary = {
             "modules_attempted": len(agent_creation_functions),
             "modules_successful": len(results["loaded_by_module"]),
             "modules_failed": len(results["failed_modules"]),
-            "agents_loaded": self.total_agents
+            "agents_loaded": self.total_agents_loaded,
         }
         
         logger.info("🎯 CARREGAMENTO DO NÚCLEO CONCLUÍDO!")
-        logger.info(f"📊 Total de agentes de infraestrutura: {self.total_agents}")
-        logger.info(f"✅ Módulos bem-sucedidos: {results['summary']['modules_successful']}")
-        logger.info(f"❌ Módulos com falha: {results['summary']['modules_failed']}")
+        logger.info(f"📊 Total de agentes de infraestrutura: {summary['agents_loaded']}")
+        logger.info(f"✅ Módulos bem-sucedidos: {summary['modules_successful']}")
+        logger.info(f"❌ Módulos com falha: {summary['modules_failed']}")
         
+        results["summary"] = summary
         return results
-        
-    async def _add_agents_to_network(self, agents: List, module_name: str):
-        """Adiciona uma lista de agentes à rede."""
-        if not agents:
-            logger.warning(f"⚠️ Nenhum agente retornado de '{module_name}' para adicionar.")
-            return
-        
-        for agent in agents:
-            try:
-                # O registro do agente já é feito no __init__ da BaseNetworkAgent
-                if hasattr(agent, 'agent_id') and agent.agent_id in self.network.agents:
-                    self.loaded_agents[agent.agent_id] = agent
-                    self.total_agents += 1
-                    logger.info(f"   -> Agente '{agent.agent_id}' confirmado na rede.")
-                else:
-                    logger.warning(f"   -> ⚠️ Falha ao confirmar o registro do agente de '{module_name}'")
-            except Exception as e:
-                logger.error(f"   -> ❌ Erro ao adicionar agente de '{module_name}': {e}")
+
 
 async def initialize_all_agents(network: MultiAgentNetwork) -> Dict[str, Any]:
-    """Função principal para carregar TODOS os agentes do núcleo."""
+    """
+    Função de fábrica principal para carregar TODOS os agentes do núcleo.
+    Esta é a função que será chamada pelo `system.py`.
+    """
     loader = RealAgentLoader(network)
     return await loader.load_all_agents()
