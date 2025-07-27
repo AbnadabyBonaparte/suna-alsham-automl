@@ -14,7 +14,7 @@ from enum import Enum
 from datetime import datetime, timedelta
 from collections import defaultdict, deque
 import logging
-from multi_agent_network import BaseNetworkAgent, AgentType, MessageType, Priority, AgentMessage
+from suna_alsham_core.multi_agent_network import BaseNetworkAgent, AgentType, MessageType, Priority, AgentMessage
 
 logger = logging.getLogger(__name__)
 
