@@ -2,19 +2,25 @@
 """
 Módulo do Performance Monitor Agent - SUNA-ALSHAM
 
-Define o agente especializado em monitoramento e validação de performance,
-capaz de detectar gargalos, rastrear recursos e validar otimizações.
+[Fase 2] - Fortalecido com coleta de métricas real usando `psutil`
+e um loop de monitoramento contínuo.
 """
 
 import asyncio
 import logging
 import time
 from dataclasses import dataclass, field
-from datetime import datetime, timedelta
+from datetime import datetime
 from enum import Enum
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Deque
 
-import psutil
+# [AUTENTICIDADE] psutil é a biblioteca padrão para métricas de sistema.
+try:
+    import psutil
+    PSUTIL_AVAILABLE = True
+except ImportError:
+    PSUTIL_AVAILABLE = False
+
 
 # Import corrigido, apontando para o módulo central da rede
 from suna_alsham_core.multi_agent_network import (
@@ -63,50 +69,56 @@ class PerformanceMonitorAgent(BaseNetworkAgent):
             "optimization_validation",
             "bottleneck_detection",
             "resource_tracking",
-            "profiling",
         ])
         
-        self.snapshots = deque(maxlen=100) # Mantém os últimos 100 snapshots
+        if not PSUTIL_AVAILABLE:
+            self.status = "degraded"
+            logger.critical("Biblioteca 'psutil' não encontrada. O PerformanceMonitorAgent operará em modo degradado.")
+
+        self.snapshots: Deque[PerformanceSnapshot] = deque(maxlen=120) # Mantém 2 minutos de snapshots (a cada 1s)
         self.alert_thresholds = {"cpu_percent": 85.0, "memory_mb": 1024.0} # Limite de 1GB de RAM
 
-        self._monitoring_task = None
+        self._monitoring_task: Optional[asyncio.Task] = None
         logger.info(f"📊 {self.agent_id} (Monitor de Performance) inicializado.")
 
     async def start_monitoring_service(self):
         """Inicia os serviços de background do agente."""
-        if not self._monitoring_task:
+        if not self._monitoring_task and self.status == "active":
             self._monitoring_task = asyncio.create_task(self._monitoring_loop())
-            logger.info(f"📊 {self.agent_id} iniciou serviço de monitoramento.")
+            logger.info(f"📊 {self.agent_id} iniciou serviço de monitoramento contínuo.")
 
     async def _monitoring_loop(self):
         """Loop principal que coleta métricas de performance periodicamente."""
         while True:
             try:
                 await self._collect_system_metrics()
-                await asyncio.sleep(30) # Coleta a cada 30 segundos
+                await asyncio.sleep(1) # Coleta a cada segundo para alta granularidade
             except asyncio.CancelledError:
                 logger.info(f"Loop de monitoramento do {self.agent_id} cancelado.")
                 break
             except Exception as e:
                 logger.error(f"❌ Erro no loop de monitoramento: {e}", exc_info=True)
 
-    async def handle_message(self, message: AgentMessage):
+    async def _internal_handle_message(self, message: AgentMessage):
         """Processa requisições de monitoramento e validação."""
-        await super().handle_message(message)
-        if message.message_type == MessageType.REQUEST:
-            request_type = message.content.get("request_type")
-            if request_type == "get_performance_report":
-                result = self.get_performance_report()
-                await self.message_bus.publish(self.create_response(message, result))
-            else:
-                logger.warning(f"Ação de performance desconhecida: {request_type}")
+        if message.message_type != MessageType.REQUEST:
+            return
+
+        request_type = message.content.get("request_type")
+        if request_type == "get_performance_report":
+            result = self.get_performance_report()
+            await self.message_bus.publish(self.create_response(message, result))
+        else:
+            logger.warning(f"Ação de performance desconhecida: {request_type}")
+            await self.message_bus.publish(self.create_error_response(message, "Ação de performance desconhecida"))
     
     async def _collect_system_metrics(self):
-        """Coleta métricas gerais do sistema e cria um snapshot."""
+        """[LÓGICA REAL] Coleta métricas gerais do sistema e cria um snapshot."""
         try:
-            cpu = psutil.cpu_percent(interval=1)
-            mem = psutil.virtual_memory()
-            mem_mb = mem.used / (1024 * 1024)
+            process = psutil.Process()
+            cpu = process.cpu_percent(interval=0.1)
+            mem_info = process.memory_info()
+            mem_mb = mem_info.rss / (1024 * 1024) # Resident Set Size
 
             status = self._determine_system_status(cpu, mem_mb)
             
@@ -118,7 +130,6 @@ class PerformanceMonitorAgent(BaseNetworkAgent):
             )
             self.snapshots.append(snapshot)
 
-            # Gera alerta se o status for crítico
             if status == PerformanceStatus.CRITICAL:
                 await self._generate_performance_alert(snapshot)
 
@@ -180,6 +191,7 @@ def create_performance_monitor_agent(message_bus) -> List[BaseNetworkAgent]:
     logger.info("📊 Criando PerformanceMonitorAgent...")
     try:
         agent = PerformanceMonitorAgent("performance_monitor_001", message_bus)
+        # Inicia o serviço de monitoramento em background
         asyncio.create_task(agent.start_monitoring_service())
         agents.append(agent)
     except Exception as e:
