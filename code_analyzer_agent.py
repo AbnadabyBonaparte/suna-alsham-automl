@@ -9,7 +9,7 @@ from datetime import datetime
 import asyncio
 from pathlib import Path
 from collections import defaultdict
-from multi_agent_network import BaseNetworkAgent, AgentType, MessageType, Priority, AgentMessage
+from suna_alsham_core.code_analyzer_agent import BaseNetworkAgent, AgentMessage, ...
 
 logger = logging.getLogger(__name__)
 
