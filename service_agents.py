@@ -6,7 +6,7 @@ from datetime import datetime, timedelta
 import asyncio
 import json
 from collections import defaultdict
-from multi_agent_network import AgentType, BaseNetworkAgent, MessageType, Priority, AgentMessage
+from suna_alsham_core.multi_agent_network import BaseNetworkAgent, AgentType, MessageType, Priority, AgentMessage
 
 logger = logging.getLogger(__name__)
 
