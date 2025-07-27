@@ -185,7 +185,7 @@ class CodeCorrectorAgent(BaseNetworkAgent):
         diff = difflib.unified_diff(
             original.splitlines(), corrected.splitlines(), lineterm=""
         )
-        # Contar apenas as linhas que começam com '+' ou '-'
+        # Contar apenas as linhas que começam com '+' ou '-' (excluindo cabeçalhos do diff)
         return sum(1 for line in diff if line.startswith(("+ ", "- ")))
 
 
