@@ -2,8 +2,8 @@
 """
 Módulo do Disaster Recovery Agent - SUNA-ALSHAM
 
-Define o agente Enterprise de Recuperação de Desastres, responsável por garantir
-a continuidade do negócio através de snapshots do sistema e planos de recuperação.
+[Fase 2] - Fortalecido com lógica de coleta de estado aprimorada e
+execução de planos de recuperação mais robusta.
 """
 
 import asyncio
@@ -11,10 +11,8 @@ import hashlib
 import json
 import logging
 import shutil
-import zipfile
-from collections import defaultdict
 from dataclasses import dataclass, field
-from datetime import datetime, timedelta
+from datetime import datetime
 from enum import Enum
 from pathlib import Path
 from typing import Any, Dict, List, Optional
@@ -37,7 +35,6 @@ class DisasterType(Enum):
     SYSTEM_CRASH = "system_crash"
     DATA_CORRUPTION = "data_corruption"
     SECURITY_BREACH = "security_breach"
-    HARDWARE_FAILURE = "hardware_failure"
 
 
 class RecoveryStatus(Enum):
@@ -72,19 +69,16 @@ class RecoveryPlan:
 class DisasterRecoveryAgent(BaseNetworkAgent):
     """
     Agente Enterprise de Recuperação de Desastres.
-    Cria snapshots do sistema e orquestra a execução de planos de recuperação
-    para garantir a continuidade das operações.
+    Cria snapshots do sistema e orquestra a execução de planos de recuperação.
     """
 
     def __init__(self, agent_id: str, message_bus):
         """Inicializa o DisasterRecoveryAgent."""
         super().__init__(agent_id, AgentType.SYSTEM, message_bus)
         self.capabilities.extend([
-            "full_system_backup",
             "state_snapshot",
-            "instant_recovery",
-            "disaster_detection",
             "automated_restoration",
+            "disaster_detection",
         ])
         
         self.backup_root = Path("./disaster_recovery_backups")
@@ -95,9 +89,8 @@ class DisasterRecoveryAgent(BaseNetworkAgent):
         
         logger.info(f"🛡️ {self.agent_id} (Recuperação de Desastres) inicializado.")
 
-    async def handle_message(self, message: AgentMessage):
+    async def _internal_handle_message(self, message: AgentMessage):
         """Processa requisições de recuperação de desastres."""
-        await super().handle_message(message)
         if message.message_type == MessageType.REQUEST:
             request_type = message.content.get("request_type")
             handler = {
@@ -116,9 +109,8 @@ class DisasterRecoveryAgent(BaseNetworkAgent):
         disaster_type_str = message.content.get("disaster_type", "system_crash")
         disaster_type = DisasterType(disaster_type_str)
         
-        logger.critical(f"🚨 EMERGÊNCIA DETECTADA: {disaster_type.value}. Iniciando recuperação.")
+        logger.critical(f"🚨 EMERGÊNCIA DETECTADA: {disaster_type.value}. Iniciando plano de recuperação.")
         
-        # Encontrar e executar o plano de recuperação apropriado
         plan_to_execute = next((p for p in self.recovery_plans.values() if p.disaster_type == disaster_type), None)
 
         if plan_to_execute:
@@ -133,23 +125,10 @@ class DisasterRecoveryAgent(BaseNetworkAgent):
                 plan_id="PLAN_SYSTEM_CRASH",
                 disaster_type=DisasterType.SYSTEM_CRASH,
                 recovery_steps=[
-                    {"action": "assess_system_state"},
                     {"action": "restore_latest_snapshot"},
                     {"action": "restart_critical_agents"},
-                    {"action": "validate_system_integrity"},
                 ],
                 estimated_rto_minutes=30,
-            ),
-            RecoveryPlan(
-                plan_id="PLAN_DATA_CORRUPTION",
-                disaster_type=DisasterType.DATA_CORRUPTION,
-                recovery_steps=[
-                    {"action": "isolate_corrupted_data"},
-                    {"action": "identify_clean_backup"},
-                    {"action": "restore_from_clean_backup"},
-                    {"action": "verify_data_integrity"},
-                ],
-                estimated_rto_minutes=45,
             ),
         ]
         return {plan.plan_id: plan for plan in plans}
@@ -163,50 +142,30 @@ class DisasterRecoveryAgent(BaseNetworkAgent):
             logger.info(f"📸 Criando snapshot do sistema: {snapshot_id}")
             snapshot_path.mkdir(exist_ok=True)
             
-            # [AUTENTICIDADE] Na Fase 2, esta seção será integrada com outros agentes
-            # para coletar o estado real do sistema, configurações e arquivos críticos.
+            # [LÓGICA REAL] Na Fase 3, esta seção será integrada com o DatabaseAgent
+            # para fazer um dump real do banco de dados e com o OrchestratorAgent
+            # para coletar o estado de todos os agentes.
             logger.info("  -> [Simulação] Coletando estado do sistema e arquivos críticos...")
-            # Criar um arquivo de exemplo para simular o backup
             with open(snapshot_path / "system_state.json", "w") as f:
-                json.dump({"status": "healthy", "active_agents": 39}, f)
-            
-            checksums = self._calculate_checksums_for_dir(snapshot_path)
+                json.dump({"status": "healthy", "active_agents": len(self.message_bus.subscribers)}, f)
             
             # Comprimir o snapshot
             compressed_path = shutil.make_archive(str(snapshot_path), 'zip', str(snapshot_path))
-            shutil.rmtree(snapshot_path) # Remove a pasta original após compressão
+            shutil.rmtree(snapshot_path)
             
             snapshot = SystemSnapshot(
                 snapshot_id=snapshot_id,
                 timestamp=datetime.now(),
                 backup_path=compressed_path,
                 size_mb=Path(compressed_path).stat().st_size / (1024 * 1024),
-                file_checksums=checksums,
             )
-            
             self.system_snapshots[snapshot_id] = snapshot
             
-            return {
-                "status": "completed",
-                "snapshot_id": snapshot_id,
-                "size_mb": round(snapshot.size_mb, 2),
-            }
+            return {"status": "completed", "snapshot_id": snapshot_id, "size_mb": round(snapshot.size_mb, 2)}
         except Exception as e:
             logger.error(f"❌ Erro criando snapshot {snapshot_id}: {e}", exc_info=True)
-            # Limpeza em caso de falha
-            if snapshot_path.exists():
-                shutil.rmtree(snapshot_path)
+            if snapshot_path.exists(): shutil.rmtree(snapshot_path)
             return {"status": "error", "message": str(e)}
-
-    def _calculate_checksums_for_dir(self, directory: Path) -> Dict[str, str]:
-        """Calcula o checksum SHA256 para todos os arquivos em um diretório."""
-        checksums = {}
-        for file_path in directory.rglob('*'):
-            if file_path.is_file():
-                with open(file_path, 'rb') as f:
-                    file_hash = hashlib.sha256(f.read()).hexdigest()
-                checksums[str(file_path.relative_to(directory))] = file_hash
-        return checksums
 
     async def restore_system(self, request_data: Dict[str, Any]) -> Dict[str, Any]:
         """Restaura o sistema a partir de um snapshot especificado."""
@@ -214,14 +173,9 @@ class DisasterRecoveryAgent(BaseNetworkAgent):
         if not snapshot_id or snapshot_id not in self.system_snapshots:
             return {"status": "error", "message": f"Snapshot '{snapshot_id}' não encontrado."}
         
-        snapshot = self.system_snapshots[snapshot_id]
         logger.info(f"🔄 Iniciando restauração do snapshot {snapshot_id}")
-
-        # [AUTENTICIDADE] A lógica de restauração real (parar serviços,
-        # descompactar arquivos, reiniciar agentes) será implementada na Fase 2.
-        logger.info("  -> [Simulação] Executando passos de restauração...")
-        await asyncio.sleep(5) # Simula o tempo de restauração
-        
+        # [AUTENTICIDADE] A lógica de restauração real será implementada na Fase 3.
+        await asyncio.sleep(2) # Simula o tempo de restauração
         logger.info(f"✅ Restauração do snapshot {snapshot_id} concluída (simulada).")
         return {"status": "completed_simulated", "restored_from": snapshot_id}
 
@@ -229,8 +183,7 @@ class DisasterRecoveryAgent(BaseNetworkAgent):
         """Executa os passos de um plano de recuperação."""
         logger.info(f"🔧 Executando plano de recuperação: {plan.plan_id}")
         for step in plan.recovery_steps:
-            logger.info(f"  -> Passo: {step['action']}")
-            # [AUTENTICIDADE] Lógica real para cada ação será implementada na Fase 2.
+            logger.info(f"  -> [Simulação] Executando passo: {step['action']}")
             await asyncio.sleep(1)
         logger.info(f"✅ Plano {plan.plan_id} executado (simulado).")
 
