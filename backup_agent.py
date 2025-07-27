@@ -21,7 +21,7 @@ import sqlite3
 from collections import defaultdict
 import threading
 import time
-from suna_alsham_core.backup_agent import BaseNetworkAgent, AgentMessage, ...
+from suna_alsham_core.multi_agent_network import BaseNetworkAgent, AgentType, MessageType, Priority, AgentMessage
 
 logger = logging.getLogger(__name__)
 
