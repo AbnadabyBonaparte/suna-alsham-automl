@@ -9,7 +9,7 @@ from enum import Enum
 from datetime import datetime, timedelta
 from urllib.parse import quote_plus
 from collections import defaultdict
-from multi_agent_network import BaseNetworkAgent, AgentType, MessageType, Priority, AgentMessage
+from suna_alsham_core.multi_agent_network import BaseNetworkAgent, AgentType, MessageType, Priority, AgentMessage
 
 logger = logging.getLogger(__name__)
 
