@@ -7,7 +7,7 @@ Sistema completo com 39 agentes poderosos
 import asyncio
 import logging
 from typing import List, Dict, Any
-from suna_alsham_core.multi_agent_network import MultiAgentNetwork
+from suna_alsham_core.agent_loader import BaseNetworkAgent, AgentMessage, ...
 
 logger = logging.getLogger(__name__)
 
