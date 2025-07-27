@@ -1,172 +1,94 @@
 #!/usr/bin/env python3
 """
-Ponto de Entrada Único e Oficial do Sistema SUNA-ALSHAM.
+Módulo Principal do Sistema SUNA-ALSHAM v2.0
 
-Este script é responsável por:
-1. Configurar o logging.
-2. Inicializar a aplicação web FastAPI.
-3. Instanciar e inicializar o sistema SUNAAlshamSystemV2 completo na startup.
-4. Expor os endpoints essenciais da API (health, status, metrics).
-5. Iniciar o servidor web Uvicorn, detectando a porta do ambiente (Railway).
+Este módulo define a classe principal que orquestra a inicialização e o estado
+geral da rede de agentes.
 """
 
-import os
-import sys
-import asyncio
-import uvicorn
 import logging
-from typing import Optional
-from pathlib import Path
+import time
+from typing import Dict, Any, List
 
-# Adicionar o diretório raiz ao path para garantir que os imports funcionem
-sys.path.append(str(Path(__file__).parent))
+# Imports corrigidos para a nova estrutura
+from suna_alsham_core.multi_agent_network import MultiAgentNetwork
+from suna_alsham_core.agent_loader import initialize_all_agents
 
-from fastapi import FastAPI, HTTPException
-from fastapi.responses import JSONResponse
-from fastapi.middleware.cors import CORSMiddleware
-from datetime import datetime
+logger = logging.getLogger(__name__)
 
-# --- Configuração de Logging ---
-# Configura um logger claro e informativo para a saída do console.
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - [%(levelname)s] - %(message)s',
-    handlers=[logging.StreamHandler(sys.stdout)]
-)
-logger = logging.getLogger("SUNA_ALSHAM_MAIN")
+class SUNAAlshamSystemV2:
+    """A classe principal que gerencia e orquestra o sistema multi-agente."""
 
-# --- Variável Global do Sistema ---
-# Esta variável irá conter a instância principal do nosso sistema de agentes.
-system = None
+    def __init__(self):
+        self.network = MultiAgentNetwork()
+        self.all_agents: Dict[str, Any] = {}
+        self.agent_categories: Dict[str, int] = {}
+        self.total_agents = 0
+        self.system_status = "initializing"
+        self.initialized = False
+        self.start_time = time.time()
 
-# --- Inicialização da Aplicação FastAPI ---
-# O 'app' é o núcleo da nossa API web.
-app = FastAPI(
-    title="SUNA-ALSHAM: Sistema Multi-Agente Auto-Evolutivo",
-    description="API para o Núcleo do Sistema SUNA-ALSHAM, orquestrando todos os agentes e serviços.",
-    version="2.0.0-refactored"
-)
+    async def initialize_complete_system(self) -> bool:
+        """
+        Inicializa a rede e carrega todos os agentes do sistema.
+        """
+        try:
+            logger.info("Inicializando a rede de comunicação (MessageBus)...")
+            await self.network.initialize()
 
-# --- Middlewares ---
-# Configura CORS para permitir que aplicações web de qualquer origem se comuniquem com nossa API.
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-
-# --- Eventos de Startup e Shutdown ---
-
-@app.on_event("startup")
-async def startup_sequence():
-    """
-    Executa na inicialização do servidor. É aqui que a "mágica" acontece:
-    o sistema completo de agentes é carregado e iniciado.
-    """
-    global system
-    logger.info("🚀 INICIANDO SEQUÊNCIA DE STARTUP DO SUNA-ALSHAM...")
-    
-    try:
-        # Importamos a classe principal do sistema aqui para evitar imports circulares.
-        from main_complete_system_v2 import SUNAAlshamSystemV2
-        
-        logger.info("🤖 Instanciando o sistema de agentes...")
-        system = SUNAAlshamSystemV2()
-        
-        success = await system.initialize_complete_system()
-        
-        if success:
-            logger.info(f"✅ SISTEMA INICIALIZADO COM SUCESSO! {system.total_agents} agentes ativos.")
-        else:
-            logger.error("❌ FALHA CRÍTICA NA INICIALIZAÇÃO DO SISTEMA DE AGENTES.")
-            # Em um sistema de produção real, poderíamos decidir parar o serviço aqui.
+            logger.info("Carregando todos os 59 agentes do sistema...")
+            # A função initialize_all_agents agora retorna um dicionário com os resultados
+            load_result = await initialize_all_agents(self.network)
             
-    except ImportError as e:
-        logger.critical(f"FATAL: Não foi possível importar 'SUNAAlshamSystemV2'. Verifique o arquivo 'main_complete_system_v2.py'. Erro: {e}")
-        # Parar a aplicação se o componente principal não puder ser importado.
-        sys.exit(1)
-    except Exception as e:
-        logger.critical(f"FATAL: Um erro inesperado ocorreu durante a inicialização: {e}", exc_info=True)
-        sys.exit(1)
+            self.all_agents = self.network.agents
+            self.total_agents = load_result.get('summary', {}).get('agents_loaded', 0)
+            self._categorize_agents()
 
-@app.on_event("shutdown")
-async def shutdown_sequence():
-    """Executa quando o servidor está sendo desligado para uma finalização limpa."""
-    logger.info("🛑 INICIANDO SEQUÊNCIA DE SHUTDOWN...")
-    if system:
-        # Futuramente, podemos adicionar uma lógica de shutdown gracioso para os agentes aqui.
-        logger.info("✅ Sistema finalizado.")
+            self.system_status = "active"
+            self.initialized = True
+            logger.info(f"Sistema completo inicializado com {self.total_agents} agentes.")
+            return True
+        except Exception as e:
+            logger.critical(f"Falha catastrófica na inicialização do sistema: {e}", exc_info=True)
+            self.system_status = "error"
+            return False
 
-# --- Endpoints da API ---
+    def _categorize_agents(self):
+        """Categoriza os agentes carregados por tipo para relatórios."""
+        categories = defaultdict(int)
+        for agent in self.all_agents.values():
+            if hasattr(agent, 'agent_type') and hasattr(agent.agent_type, 'value'):
+                categories[agent.agent_type.value] += 1
+        self.agent_categories = dict(categories)
 
-@app.get("/", tags=["Status"])
-async def root():
-    """Endpoint raiz que fornece um status geral e boas-vindas."""
-    return {
-        "message": "SUNA-ALSHAM Sistema Multi-Agente Online",
-        "status": system.system_status if system else "initializing",
-        "total_agents": system.total_agents if system else 0,
-        "timestamp": datetime.now().isoformat()
-    }
+    def get_uptime(self) -> float:
+        """Retorna o tempo de atividade do sistema em segundos."""
+        return time.time() - self.start_time
 
-@app.get("/health", tags=["Status"])
-async def health_check():
-    """
-    Health Check. Essencial para sistemas de orquestração (como Kubernetes ou Railway)
-    saberem se a aplicação está viva e saudável.
-    """
-    if system and system.system_status == 'active':
-        return JSONResponse(
-            status_code=200,
-            content={
-                "status": "healthy",
-                "agents_count": system.total_agents,
-                "uptime_seconds": system.get_uptime()
+    def get_system_status(self) -> Dict[str, Any]:
+        """Retorna um status detalhado do sistema."""
+        return {
+            "system_status": self.system_status,
+            "total_agents": self.total_agents,
+            "agent_categories": self.agent_categories,
+            "uptime_seconds": self.get_uptime(),
+            "network_metrics": self.network.get_network_status().get('message_bus_metrics', {})
+        }
+
+    async def execute_system_wide_task(self, task: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Envia uma tarefa para ser processada pelo agente orquestrador.
+        """
+        if not self.initialized or "orchestrator_001" not in self.all_agents:
+            return {"status": "error", "message": "Orquestrador não está disponível."}
+        
+        # Este método precisará ser implementado no OrchestratorAgent
+        # Por enquanto, é um placeholder.
+        logger.info(f"Enviando tarefa para o orquestrador: {task.get('id')}")
+        return {
+            "status": "submitted",
+            "task_id": task.get('id'),
+            "orchestration_result": {
+                "execution_status": "completed_simulated"
             }
-        )
-    else:
-        return JSONResponse(
-            status_code=503, # Service Unavailable
-            content={
-                "status": "unhealthy",
-                "message": "Sistema em inicialização ou em estado de erro."
-            }
-        )
-
-@app.get("/status", tags=["Status"])
-async def get_system_status():
-    """Retorna o status detalhado de todos os componentes do sistema."""
-    if not system:
-        raise HTTPException(status_code=503, detail="Sistema não inicializado.")
-    
-    try:
-        # Este método deve ser implementado na classe SUNAAlshamSystemV2
-        # para retornar um dicionário com o status de cada agente principal.
-        return system.get_system_status()
-    except Exception as e:
-        logger.error(f"Erro ao obter status detalhado: {e}")
-        raise HTTPException(status_code=500, detail="Erro interno ao buscar status do sistema.")
-
-# --- Execução do Servidor ---
-
-def main():
-    """Função principal que inicia o servidor web."""
-    host = "0.0.0.0"
-    # Railway define a porta através de uma variável de ambiente.
-    # Usamos 8080 como padrão para desenvolvimento local.
-    port = int(os.environ.get("PORT", 8080))
-
-    logger.info(f"🌐 Servidor Uvicorn será iniciado em http://{host}:{port}")
-
-    uvicorn.run(
-        "start:app",  # Aponta para a variável 'app' neste arquivo 'start.py'
-        host=host,
-        port=port,
-        log_level="info",
-        reload=False # 'reload=True' é ótimo para dev, mas deve ser False em produção.
-    )
-
-if __name__ == "__main__":
-    main()
+        }
