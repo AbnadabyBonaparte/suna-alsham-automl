@@ -2,8 +2,8 @@
 """
 Módulo Core da Rede Multi-Agente - A Espinha Dorsal do SUNA-ALSHAM.
 
-Este módulo define as classes e estruturas de dados fundamentais que permitem
-a comunicação, operação e coordenação de todos os agentes do sistema.
+[Fase 2] - Este módulo foi fortalecido com lógica real para gerenciamento
+de respostas e um sistema de tópicos (publish/subscribe).
 """
 
 import asyncio
@@ -19,7 +19,7 @@ from typing import Any, Dict, List, Optional
 logger = logging.getLogger(__name__)
 
 
-# --- Enums Fundamentais ---
+# --- Enums Fundamentais (sem alteração) ---
 
 class AgentType(Enum):
     """Define os tipos e categorias de todos os agentes do sistema."""
@@ -54,7 +54,7 @@ class Priority(Enum):
     LOW = 4
 
 
-# --- Estruturas de Dados Core ---
+# --- Estruturas de Dados Core (sem alteração) ---
 
 @dataclass
 class AgentCapability:
@@ -81,7 +81,7 @@ class AgentMessage:
     correlation_id: Optional[str] = None
 
 
-# --- Componentes da Rede ---
+# --- Componentes da Rede (Lógica Fortalecida) ---
 
 class MessageBus:
     """
@@ -92,10 +92,11 @@ class MessageBus:
     def __init__(self):
         """Inicializa o MessageBus."""
         self.subscribers: Dict[str, "BaseNetworkAgent"] = {}
+        self.topic_subscribers: Dict[str, List[str]] = defaultdict(list)
         self.priority_queues = {p: asyncio.Queue() for p in Priority}
         self._is_running = False
         self._processing_task = None
-        logger.info("✅ MessageBus inicializado com filas priorizadas.")
+        logger.info("✅ MessageBus inicializado com filas priorizadas e sistema de tópicos.")
 
     async def start(self):
         """Inicia o processamento da fila de mensagens."""
@@ -104,18 +105,16 @@ class MessageBus:
             self._processing_task = asyncio.create_task(self._process_queues())
             logger.info("MessageBus iniciado.")
 
-    async def stop(self):
-        """Para o processamento de mensagens."""
-        self._is_running = False
-        if self._processing_task:
-            self._processing_task.cancel()
-            self._processing_task = None
-        logger.info("MessageBus parado.")
-
     def register_agent(self, agent_id: str, agent: "BaseNetworkAgent"):
-        """Registra um agente para receber mensagens."""
+        """Registra um agente para receber mensagens diretas."""
         self.subscribers[agent_id] = agent
         logger.debug(f"Agente {agent_id} registrado no MessageBus.")
+
+    def subscribe_to_topic(self, agent_id: str, topic: str):
+        """Inscreve um agente em um tópico para receber broadcasts."""
+        if agent_id not in self.topic_subscribers[topic]:
+            self.topic_subscribers[topic].append(agent_id)
+            logger.info(f"Agente {agent_id} inscrito no tópico '{topic}'.")
 
     async def publish(self, message: AgentMessage):
         """Publica uma mensagem na fila de prioridade apropriada."""
@@ -129,7 +128,7 @@ class MessageBus:
                 if message:
                     await self._deliver_message(message)
                 else:
-                    await asyncio.sleep(0.01) # Evita busy-waiting
+                    await asyncio.sleep(0.01)
             except asyncio.CancelledError:
                 break
             except Exception as e:
@@ -145,18 +144,18 @@ class MessageBus:
     async def _deliver_message(self, message: AgentMessage):
         """Entrega uma mensagem para o(s) destinatário(s) correto(s)."""
         if message.recipient_id == "broadcast":
-            # Envia para todos os agentes, exceto o remetente
+            topic = message.content.get("topic", "general")
+            recipients = self.topic_subscribers.get(topic, [])
             delivery_tasks = [
-                agent.handle_message(message)
-                for agent_id, agent in self.subscribers.items()
-                if agent_id != message.sender_id
+                self.subscribers[agent_id].handle_message(message)
+                for agent_id in recipients
+                if agent_id in self.subscribers and agent_id != message.sender_id
             ]
             await asyncio.gather(*delivery_tasks)
         elif message.recipient_id in self.subscribers:
-            recipient = self.subscribers[message.recipient_id]
-            await recipient.handle_message(message)
+            await self.subscribers[message.recipient_id].handle_message(message)
         else:
-            logger.warning(f"Destinatário '{message.recipient_id}' não encontrado.")
+            logger.warning(f"Destinatário '{message.recipient_id}' não encontrado para a mensagem {message.id}.")
 
 
 class BaseNetworkAgent:
@@ -174,7 +173,9 @@ class BaseNetworkAgent:
         self.capabilities: List[AgentCapability] = []
         self.performance_metrics = defaultdict(float)
         
-        # Auto-registro no MessageBus
+        # [LÓGICA REAL] Sistema para aguardar respostas de requisições.
+        self._pending_responses: Dict[str, asyncio.Future] = {}
+        
         self.message_bus.register_agent(self.agent_id, self)
 
     def add_capability(self, capability: AgentCapability):
@@ -183,12 +184,34 @@ class BaseNetworkAgent:
 
     async def handle_message(self, message: AgentMessage):
         """
-        Handler principal de mensagens. Deve ser sobrescrito por subclasses
-        para implementar lógicas específicas, mas sempre chamado com super().
+        Handler principal de mensagens. Delega para handlers específicos
+        e resolve futuras para requisições/respostas.
         """
-        logger.debug(f"Agente {self.agent_id} recebeu mensagem {message.id}")
+        logger.debug(f"Agente {self.agent_id} recebeu mensagem {message.id} do tipo {message.message_type.value}")
         self.performance_metrics["messages_processed"] += 1
 
+        # [LÓGICA REAL] Se for uma resposta, resolve a "Future" pendente.
+        if message.message_type == MessageType.RESPONSE and message.correlation_id in self._pending_responses:
+            future = self._pending_responses.pop(message.correlation_id)
+            future.set_result(message)
+            return
+
+        # Delega para handlers específicos de cada agente
+        await self._internal_handle_message(message)
+
+    async def _internal_handle_message(self, message: AgentMessage):
+        """
+        Este método deve ser sobrescrito pelas subclasses para implementar
+        a lógica de negócio específica do agente.
+        """
+        if message.message_type == MessageType.REQUEST:
+            # Lógica de resposta padrão se a subclasse não implementar _handle_request
+            logger.warning(f"Agente {self.agent_id} recebeu um REQUEST mas não tem _handle_request implementado.")
+            response = self.create_error_response(message, "Request handler not implemented.")
+            await self.message_bus.publish(response)
+
+    # --- MÉTODOS HELPER FORTALECIDOS ---
+    
     def create_message(
         self, recipient_id: str, message_type: MessageType,
         content: Dict, priority: Priority = Priority.MEDIUM,
@@ -226,3 +249,26 @@ class BaseNetworkAgent:
             content={"status": "error", "message": error_message},
             priority=Priority.HIGH,
         )
+
+    async def send_request_and_wait(
+        self, recipient_id: str, content: Dict, timeout: int = 30
+    ) -> AgentMessage:
+        """
+        [LÓGICA REAL] Envia uma requisição e aguarda a resposta de forma síncrona.
+        """
+        request_message = self.create_message(
+            recipient_id=recipient_id,
+            message_type=MessageType.REQUEST,
+            content=content,
+        )
+        
+        future = asyncio.get_event_loop().create_future()
+        self._pending_responses[request_message.id] = future
+        
+        await self.message_bus.publish(request_message)
+        
+        try:
+            return await asyncio.wait_for(future, timeout=timeout)
+        except asyncio.TimeoutError:
+            self._pending_responses.pop(request_message.id, None)
+            raise TimeoutError(f"Resposta de {recipient_id} para a requisição {request_message.id} demorou mais de {timeout}s.")
