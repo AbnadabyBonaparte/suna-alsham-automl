@@ -10,15 +10,15 @@ import asyncio
 import logging
 import shutil
 import difflib
+import ast
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional
 
 # [AUTENTICIDADE] Ferramentas de formatação são importadas de forma segura.
 try:
-    import autopep8
     import black
     import isort
     FORMATTERS_AVAILABLE = True
@@ -82,16 +82,20 @@ class CodeCorrectorAgent(BaseNetworkAgent):
         
         logger.info(f"🔧 {self.agent_id} (Corretor de Código) inicializado.")
 
-    async def handle_message(self, message: AgentMessage):
+    async def _internal_handle_message(self, message: AgentMessage):
         """Processa requisições para correção de código."""
-        await super().handle_message(message)
         if message.message_type == MessageType.REQUEST:
             request_type = message.content.get("request_type")
-            if request_type == "format_code":
-                result = await self.format_code(message.content)
+            handler = {
+                "format_code": self.format_code,
+            }.get(request_type)
+
+            if handler:
+                result = await handler(message.content)
                 await self.message_bus.publish(self.create_response(message, result))
             else:
                 logger.warning(f"Ação de correção desconhecida: {request_type}")
+                await self.message_bus.publish(self.create_error_response(message, "Ação de correção desconhecida"))
 
     async def format_code(self, request_data: Dict[str, Any]) -> Dict[str, Any]:
         """
@@ -181,4 +185,17 @@ class CodeCorrectorAgent(BaseNetworkAgent):
         diff = difflib.unified_diff(
             original.splitlines(), corrected.splitlines(), lineterm=""
         )
-        # Contar apenas as linhas que começam com '+'
+        # Contar apenas as linhas que começam com '+' ou '-'
+        return sum(1 for line in diff if line.startswith(("+ ", "- ")))
+
+
+def create_code_corrector_agent(message_bus) -> List[BaseNetworkAgent]:
+    """Cria o agente Corretor de Código."""
+    agents = []
+    logger.info("🔧 Criando CodeCorrectorAgent...")
+    try:
+        agent = CodeCorrectorAgent("code_corrector_001", message_bus)
+        agents.append(agent)
+    except Exception as e:
+        logger.error(f"❌ Erro crítico criando CodeCorrectorAgent: {e}", exc_info=True)
+    return agents
