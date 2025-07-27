@@ -17,7 +17,7 @@ from pathlib import Path
 import sqlalchemy
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 from sqlalchemy.orm import sessionmaker
-from suna_alsham_core.database_agent import BaseNetworkAgent, AgentMessage, ...
+from suna_alsham_core.multi_agent_network import BaseNetworkAgent, AgentType, MessageType, Priority, AgentMessage
 
 logger = logging.getLogger(__name__)
 
