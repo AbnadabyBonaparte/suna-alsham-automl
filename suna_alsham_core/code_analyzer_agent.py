@@ -116,7 +116,7 @@ class CodeAnalyzerAgent(BaseNetworkAgent):
             
             all_issues = complexity_issues + security_issues
             
-            health_score = self._calculate_health_score(all_issues, code)
+            health_score = self._calculate_health_score(all_issues)
 
             return {
                 "status": "completed",
@@ -185,7 +185,7 @@ class CodeAnalyzerAgent(BaseNetworkAgent):
                 )
         return issues
 
-    def _calculate_health_score(self, issues: List[CodeIssue], code: str) -> float:
+    def _calculate_health_score(self, issues: List[CodeIssue]) -> float:
         """Calcula um score de saúde para o código de 0 a 100."""
         score = 100.0
         for issue in issues:
