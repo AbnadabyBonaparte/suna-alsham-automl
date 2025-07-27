@@ -5,7 +5,8 @@ from enum import Enum
 import asyncio
 from datetime import datetime
 import json
-from suna_alsham_core.ai_powered_agents import BaseNetworkAgent, AgentMessage, ...
+from suna_alsham_core.multi_agent_network import BaseNetworkAgent, AgentType, MessageType, Priority, AgentMessage
+
 
 logger = logging.getLogger(__name__)
 
