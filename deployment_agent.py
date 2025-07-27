@@ -19,7 +19,7 @@ from datetime import datetime, timedelta
 from pathlib import Path
 import shutil
 import hashlib
-from suna_alsham_core.deployment_agent import BaseNetworkAgent, AgentMessage, ...
+from suna_alsham_core.multi_agent_network import BaseNetworkAgent, AgentType, MessageType, Priority, AgentMessage
 
 logger = logging.getLogger(__name__)
 
