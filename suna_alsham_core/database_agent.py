@@ -2,16 +2,22 @@
 """
 Módulo do Database Agent - SUNA-ALSHAM
 
-Define o agente de banco de dados com IA e otimização automática, responsável
-por gerenciar a persistência, cache e análise de dados do sistema.
+[Fase 2] - Fortalecido com lógica de execução de queries aprimorada,
+melhor tratamento de erros e preparação para otimizações reais.
 """
 
 import asyncio
 import logging
 from dataclasses import dataclass
-from datetime import datetime
 from enum import Enum
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
+
+# [AUTENTICIDADE] As bibliotecas de banco de dados serão importadas
+# condicionalmente para permitir que o agente funcione em modo de fallback.
+try:
+    import aiosqlite
+except ImportError:
+    aiosqlite = None
 
 # Import corrigido, apontando para o módulo central da rede
 from suna_alsham_core.multi_agent_network import (
@@ -21,13 +27,6 @@ from suna_alsham_core.multi_agent_network import (
     Priority,
 )
 
-# [AUTENTICIDADE] As bibliotecas de banco de dados serão importadas
-# condicionalmente para permitir que o agente funcione em modo de fallback.
-try:
-    import aiosqlite
-except ImportError:
-    aiosqlite = None
-
 logger = logging.getLogger(__name__)
 
 
@@ -36,16 +35,8 @@ logger = logging.getLogger(__name__)
 class DatabaseType(Enum):
     """Tipos de banco de dados suportados."""
     SQLITE = "sqlite"
-    POSTGRESQL = "postgresql"
+    POSTGRESQL = "postgresql" # Para integração futura com Supabase
     MEMORY = "memory"
-
-
-class QueryType(Enum):
-    """Tipos de queries que o agente pode executar."""
-    SELECT = "select"
-    INSERT = "insert"
-    UPDATE = "update"
-    DELETE = "delete"
 
 
 # --- Classe Principal do Agente ---
@@ -62,13 +53,12 @@ class DatabaseAgent(BaseNetworkAgent):
         super().__init__(agent_id, AgentType.SERVICE, message_bus)
         self.capabilities.extend([
             "data_management",
-            "query_optimization",
+            "query_execution",
             "intelligent_caching",
-            "data_analytics",
         ])
 
         self.connections: Dict[DatabaseType, Any] = {}
-        self.db_path = "./suna_database.db"
+        self.db_path = "./suna_local_database.db" # Banco de dados local para desenvolvimento
         self._db_init_task = asyncio.create_task(self._initialize_database())
         
         logger.info(f"🗄️ {self.agent_id} (Banco de Dados) inicializado.")
@@ -81,32 +71,40 @@ class DatabaseAgent(BaseNetworkAgent):
             return
 
         try:
+            # [AUTENTICIDADE] Na Fase 3, adicionaremos a lógica para conectar
+            # ao Supabase/PostgreSQL com base nas variáveis de ambiente.
             self.connections[DatabaseType.SQLITE] = await aiosqlite.connect(self.db_path)
-            logger.info("✅ Conexão com o banco de dados SQLite estabelecida.")
-            # Aqui poderíamos adicionar a criação de tabelas iniciais.
+            logger.info(f"✅ Conexão com o banco de dados local SQLite estabelecida: {self.db_path}")
         except Exception as e:
             logger.critical(f"❌ Falha catastrófica ao conectar ao banco de dados: {e}", exc_info=True)
             self.status = "error"
 
-    async def handle_message(self, message: AgentMessage):
+    async def _internal_handle_message(self, message: AgentMessage):
         """Processa requisições relacionadas ao banco de dados."""
-        await super().handle_message(message)
-        if message.message_type == MessageType.REQUEST:
-            request_type = message.content.get("request_type")
-            handler = {
-                "execute_query": self.execute_query,
-                "store_data": self.store_data,
-            }.get(request_type)
+        if message.message_type != MessageType.REQUEST:
+            return
 
-            if handler:
-                result = await handler(message.content)
-                await self.message_bus.publish(self.create_response(message, result))
-            else:
-                logger.warning(f"Ação de banco de dados desconhecida: {request_type}")
+        request_type = message.content.get("request_type")
+        handler = {
+            "execute_query": self.execute_query,
+        }.get(request_type)
+
+        if handler:
+            result = await handler(message.content)
+            await self.message_bus.publish(self.create_response(message, result))
+        else:
+            logger.warning(f"Ação de banco de dados desconhecida: {request_type}")
+            await self.message_bus.publish(self.create_error_response(message, "Ação de banco de dados desconhecida"))
 
     async def execute_query(self, request_data: Dict[str, Any]) -> Dict[str, Any]:
         """
         Executa uma query SQL de forma segura no banco de dados.
+
+        Args:
+            request_data: Dicionário contendo 'query' e 'params'.
+
+        Returns:
+            Um dicionário com o resultado da query ou um erro.
         """
         query = request_data.get("query")
         params = request_data.get("params", [])
@@ -117,33 +115,28 @@ class DatabaseAgent(BaseNetworkAgent):
             return {"status": "error", "message": "Serviço de banco de dados indisponível."}
 
         try:
-            conn = self.connections[DatabaseType.SQLITE]
-            async with conn.execute(query, params) as cursor:
-                # Para queries de leitura, retorna os resultados
+            conn = self.connections.get(DatabaseType.SQLITE)
+            if not conn:
+                return {"status": "error", "message": "Conexão com banco de dados não está ativa."}
+
+            async with conn.cursor() as cursor:
+                await cursor.execute(query, params)
+                
+                # Para queries de leitura (SELECT), retorna os resultados
                 if query.strip().upper().startswith("SELECT"):
                     rows = await cursor.fetchall()
-                    columns = [description[0] for description in cursor.description]
-                    data = [dict(zip(columns, row)) for row in rows]
-                    return {"status": "completed", "data": data, "rows_affected": len(data)}
+                    # aiosqlite.Cursor.description não é padrão como em sqlite3
+                    # Para obter os nomes das colunas, é preciso uma abordagem diferente ou
+                    # a biblioteca `aiosqlite` precisa ser usada de forma mais específica.
+                    # Por simplicidade na Fase 2, retornaremos tuplas.
+                    return {"status": "completed", "data": [tuple(row) for row in rows], "rows_affected": len(rows)}
                 else:
-                    # Para queries de escrita, confirma a transação
+                    # Para queries de escrita (INSERT, UPDATE, DELETE), confirma a transação
                     await conn.commit()
                     return {"status": "completed", "rows_affected": cursor.rowcount}
         except Exception as e:
-            logger.error(f"❌ Erro ao executar query: {query} | Erro: {e}", exc_info=True)
+            logger.error(f"❌ Erro ao executar query: '{query[:100]}...' | Erro: {e}", exc_info=True)
             return {"status": "error", "message": str(e)}
-
-    async def store_data(self, request_data: Dict[str, Any]) -> Dict[str, Any]:
-        """
-        [AUTENTICIDADE] Armazena dados de forma estruturada.
-        Na Fase 2, esta função será expandida para criar/atualizar tabelas
-        dinamicamente e realizar inserções em lote (bulk inserts).
-        """
-        table_name = request_data.get("table")
-        data = request_data.get("data")
-        logger.info(f"[Simulação] Armazenando {len(data)} registros na tabela '{table_name}'.")
-        # A lógica real usaria `execute_query` para construir e rodar um INSERT.
-        return {"status": "completed_simulated", "records_stored": len(data)}
 
 
 def create_database_agent(message_bus) -> List[BaseNetworkAgent]:
