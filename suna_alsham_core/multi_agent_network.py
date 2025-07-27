@@ -105,6 +105,14 @@ class MessageBus:
             self._processing_task = asyncio.create_task(self._process_queues())
             logger.info("MessageBus iniciado.")
 
+    async def stop(self):
+        """Para o processamento de mensagens."""
+        self._is_running = False
+        if self._processing_task:
+            self._processing_task.cancel()
+            self._processing_task = None
+        logger.info("MessageBus parado.")
+
     def register_agent(self, agent_id: str, agent: "BaseNetworkAgent"):
         """Registra um agente para receber mensagens diretas."""
         self.subscribers[agent_id] = agent
@@ -128,7 +136,7 @@ class MessageBus:
                 if message:
                     await self._deliver_message(message)
                 else:
-                    await asyncio.sleep(0.01)
+                    await asyncio.sleep(0.01) # Evita busy-waiting
             except asyncio.CancelledError:
                 break
             except Exception as e:
@@ -176,6 +184,7 @@ class BaseNetworkAgent:
         # [LÓGICA REAL] Sistema para aguardar respostas de requisições.
         self._pending_responses: Dict[str, asyncio.Future] = {}
         
+        # Auto-registro no MessageBus
         self.message_bus.register_agent(self.agent_id, self)
 
     def add_capability(self, capability: AgentCapability):
