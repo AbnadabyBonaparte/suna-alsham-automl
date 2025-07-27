@@ -9,13 +9,15 @@ autenticação (JWT), rate limiting, e roteamento de requisições para outros a
 import asyncio
 import logging
 import time
-from dataclasses import dataclass
-from datetime import datetime, timedelta
-from enum import Enum
-from typing import Any, Dict, List
-
+import hashlib
 import jwt
-from fastapi import FastAPI, HTTPException, Request
+import json
+from typing import Dict, List, Any, Optional
+from dataclasses import dataclass, field
+from enum import Enum
+from datetime import datetime, timedelta
+from collections import defaultdict, deque
+from fastapi import FastAPI, Request, HTTPException
 from fastapi.responses import JSONResponse
 
 # Import corrigido, apontando para o módulo central da rede
@@ -43,8 +45,9 @@ class APIEndpoint:
     """Configuração de um endpoint da API."""
     path: str
     methods: List[str]
-    target_agent: str
+    target_service: str # ID do agente de destino
     auth_level: AuthLevel
+    description: str = ""
 
 
 # --- Classe Principal do Agente ---
@@ -79,20 +82,23 @@ class APIGatewayAgent(BaseNetworkAgent):
             APIEndpoint(
                 path="/api/agents",
                 methods=["GET"],
-                target_agent="orchestrator_001",
+                target_service="orchestrator_001",
                 auth_level=AuthLevel.ADMIN,
+                description="Lista todos os agentes ativos no sistema."
             ),
             APIEndpoint(
                 path="/api/tasks",
                 methods=["POST"],
-                target_agent="orchestrator_001",
+                target_service="orchestrator_001",
                 auth_level=AuthLevel.AUTHENTICATED,
+                description="Submete uma nova tarefa para a rede."
             ),
             APIEndpoint(
-                path="/api/status",
+                path="/api/public/status",
                 methods=["GET"],
-                target_agent="monitor_001",
+                target_service="monitor_001", # Simulação, deveria ser um agente de monitoramento
                 auth_level=AuthLevel.PUBLIC,
+                description="Retorna o status público e a saúde do sistema."
             ),
         ]
         for endpoint in default_endpoints:
@@ -126,19 +132,21 @@ class APIGatewayAgent(BaseNetworkAgent):
         """
         Cria uma mensagem, envia para o agente de destino e aguarda a resposta.
         """
-        logger.info(f"  -> Roteando requisição de '{endpoint.path}' para o agente '{endpoint.target_agent}'.")
+        logger.info(f"  -> Roteando requisição de '{endpoint.path}' para o agente '{endpoint.target_service}'.")
         
         # [AUTENTICIDADE] A lógica de aguardar a resposta (com correlation_id)
         # será implementada na Fase 2 para garantir a comunicação síncrona.
         
+        body = await request.body()
         internal_message = self.create_message(
-            recipient_id=endpoint.target_agent,
+            recipient_id=endpoint.target_service,
             message_type=MessageType.REQUEST,
             content={
                 "request_type": "api_request",
                 "path": endpoint.path,
                 "method": request.method,
                 "headers": dict(request.headers),
+                "body": body.decode('utf-8') if body else None,
             },
         )
         await self.message_bus.publish(internal_message)
@@ -148,7 +156,8 @@ class APIGatewayAgent(BaseNetworkAgent):
             status_code=202, # Accepted
             content={
                 "status": "processing",
-                "message": f"Requisição encaminhada para o agente {endpoint.target_agent}.",
+                "message": f"Requisição encaminhada para o agente {endpoint.target_service}.",
+                "correlation_id": internal_message.id,
             },
         )
 
