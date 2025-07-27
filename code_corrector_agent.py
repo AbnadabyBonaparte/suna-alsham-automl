@@ -15,7 +15,7 @@ import difflib
 import json
 from pathlib import Path
 from collections import defaultdict
-from suna_alsham_core.code_corrector_agent import BaseNetworkAgent, AgentMessage, ...
+from suna_alsham_core.multi_agent_network import BaseNetworkAgent, AgentType, MessageType, Priority, AgentMessage
 
 logger = logging.getLogger(__name__)
 
