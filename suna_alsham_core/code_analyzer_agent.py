@@ -79,7 +79,7 @@ class CodeAnalyzerAgent(BaseNetworkAgent):
 
     async def handle_message(self, message: AgentMessage):
         """Processa requisições de análise de código."""
-        await super().handle_message(message)
+        await super()._internal_handle_message(message) # Chama o handler da Base
         if message.message_type == MessageType.REQUEST:
             request_type = message.content.get("request_type")
             if request_type == "analyze_file":
@@ -87,6 +87,7 @@ class CodeAnalyzerAgent(BaseNetworkAgent):
                 await self.message_bus.publish(self.create_response(message, result))
             else:
                 logger.warning(f"Ação de análise desconhecida: {request_type}")
+                await self.message_bus.publish(self.create_error_response(message, "Ação de análise desconhecida"))
 
     async def analyze_file(self, request_data: Dict[str, Any]) -> Dict[str, Any]:
         """
