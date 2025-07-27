@@ -2,15 +2,13 @@
 """
 Módulo do Testing Agent - SUNA-ALSHAM
 
-Define o agente de testes automatizados avançado, responsável por executar
-testes, monitorar cobertura de código e detectar regressões no sistema.
+[Fase 2] - Fortalecido com lógica real de execução de testes usando `pytest`
+e medição de cobertura com `coverage.py`.
 """
 
 import asyncio
 import json
 import logging
-import os
-import subprocess
 import sys
 import time
 from dataclasses import dataclass, field
@@ -37,7 +35,6 @@ class TestType(Enum):
     UNIT = "unit"
     INTEGRATION = "integration"
     PERFORMANCE = "performance"
-    REGRESSION = "regression"
 
 
 class TestStatus(Enum):
@@ -47,6 +44,7 @@ class TestStatus(Enum):
     PASSED = "passed"
     FAILED = "failed"
     ERROR = "error"
+    TIMEOUT = "timeout"
 
 
 @dataclass
@@ -57,7 +55,6 @@ class TestRun:
     status: TestStatus = TestStatus.PENDING
     start_time: Optional[datetime] = None
     end_time: Optional[datetime] = None
-    summary: Dict[str, int] = field(default_factory=dict)
     coverage_percentage: float = 0.0
     report_path: Optional[str] = None
 
@@ -77,11 +74,8 @@ class TestingAgent(BaseNetworkAgent):
             "automated_testing",
             "code_coverage",
             "regression_testing",
-            "test_generation",
-            "quality_assurance",
         ])
         
-        # Configurações do ambiente de teste
         self.test_directory = Path("./tests")
         self.reports_directory = self.test_directory / "reports"
         self.test_directory.mkdir(exist_ok=True)
@@ -90,7 +84,7 @@ class TestingAgent(BaseNetworkAgent):
         self.test_queue = asyncio.Queue()
         self.active_test_runs: Dict[str, TestRun] = {}
         
-        self._testing_task = None
+        self._testing_task: Optional[asyncio.Task] = None
         logger.info(f"🧪 {self.agent_id} (Agente de Testes) inicializado.")
 
     async def start_testing_service(self):
@@ -106,79 +100,69 @@ class TestingAgent(BaseNetworkAgent):
                 test_request = await self.test_queue.get()
                 await self._process_test_request(test_request)
             except asyncio.CancelledError:
-                logger.info(f"Loop de testes do {self.agent_id} cancelado.")
                 break
             except Exception as e:
                 logger.error(f"❌ Erro no loop de testes: {e}", exc_info=True)
 
-    async def handle_message(self, message: AgentMessage):
+    async def _internal_handle_message(self, message: AgentMessage):
         """Processa requisições para execução de testes."""
-        await super().handle_message(message)
-        if message.message_type == MessageType.REQUEST:
-            request_type = message.content.get("request_type")
-            if request_type == "run_tests":
-                result = await self.run_tests(message.content)
-                await self.message_bus.publish(self.create_response(message, result))
-            else:
-                logger.warning(f"Ação de teste desconhecida: {request_type}")
+        if message.message_type == MessageType.REQUEST and message.content.get("request_type") == "run_tests":
+            result = await self.run_tests(message.content)
+            await self.message_bus.publish(self.create_response(message, result))
 
     async def run_tests(self, request_data: Dict[str, Any]) -> Dict[str, Any]:
-        """
-        Cria e enfileira um novo trabalho de execução de testes.
-        """
+        """Cria e enfileira um novo trabalho de execução de testes."""
         try:
             test_type = TestType(request_data.get("type", "unit"))
-            pattern = request_data.get("pattern", "test_*.py")
             
             run_id = f"test_run_{int(time.time())}"
             test_run = TestRun(run_id=run_id, test_type=test_type)
             
-            await self.test_queue.put({"run": test_run, "pattern": pattern})
+            await self.test_queue.put(test_run)
             
-            logger.info(f"📥 Novo job de teste enfileirado: {run_id} ({test_type.value})")
             return {"status": "queued", "run_id": run_id}
         except Exception as e:
-            logger.error(f"❌ Erro ao criar job de teste: {e}", exc_info=True)
             return {"status": "error", "message": str(e)}
 
-    async def _process_test_request(self, request: Dict[str, Any]):
-        """Processa uma requisição da fila de testes."""
-        run: TestRun = request["pattern"]
-        pattern: str = request["pattern"]
-        
+    async def _process_test_request(self, run: TestRun):
+        """
+        [LÓGICA REAL] Processa uma requisição da fila de testes, executando
+        o pytest como um subprocesso.
+        """
         self.active_test_runs[run.run_id] = run
         run.status = TestStatus.RUNNING
         run.start_time = datetime.now()
 
         try:
-            # Comando para executar pytest com cobertura e relatório JSON
-            report_path = self.reports_directory / f"{run.run_id}.json"
+            report_path_json = self.reports_directory / f"{run.run_id}_cov.json"
+            report_path_html = self.reports_directory / f"{run.run_id}_html"
+            
             cmd = [
                 sys.executable, "-m", "pytest",
-                "--cov=suna_alsham_core", # Medir cobertura do nosso núcleo
-                f"--cov-report=json:{report_path}",
-                "-q", # Modo quieto para saída limpa
-                self.test_directory.as_posix() # Diretório de testes
+                f"--cov=suna_alsham_core",
+                f"--cov-report=json:{report_path_json.as_posix()}",
+                f"--cov-report=html:{report_path_html.as_posix()}",
+                "-q", # Modo quieto
+                self.test_directory.as_posix()
             ]
+            
+            logger.info(f"Executando comando de teste: {' '.join(cmd)}")
             
             proc = await asyncio.create_subprocess_exec(
                 *cmd,
                 stdout=asyncio.subprocess.PIPE,
                 stderr=asyncio.subprocess.PIPE,
             )
-            stdout, stderr = await asyncio.wait_for(proc.communicate(), timeout=300)
+            stdout, stderr = await asyncio.wait_for(proc.communicate(), timeout=300) # Timeout de 5 minutos
 
-            if proc.returncode == 0:
-                run.status = TestStatus.PASSED
-            else:
-                run.status = TestStatus.FAILED
+            run.status = TestStatus.PASSED if proc.returncode == 0 else TestStatus.FAILED
             
-            # Processar o relatório de cobertura
-            if report_path.exists():
-                with open(report_path) as f:
+            if report_path_json.exists():
+                with open(report_path_json) as f:
                     coverage_data = json.load(f)
                 run.coverage_percentage = coverage_data.get("totals", {}).get("percent_covered", 0)
-                run.report_path = str(report_path)
+                run.report_path = str(report_path_html) # Link para o relatório HTML
+                logger.info(f"Testes concluídos. Cobertura: {run.coverage_percentage:.2f}%")
         
         except asyncio.TimeoutError:
             run.status = TestStatus.TIMEOUT
@@ -189,8 +173,7 @@ class TestingAgent(BaseNetworkAgent):
 
         finally:
             run.end_time = datetime.now()
-            if run.run_id in self.active_test_runs:
-                del self.active_test_runs[run.run_id]
+            self.active_test_runs.pop(run.run_id, None)
 
 
 def create_testing_agent(message_bus) -> List[BaseNetworkAgent]:
