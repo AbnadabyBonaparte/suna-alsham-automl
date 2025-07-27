@@ -19,7 +19,7 @@ from pathlib import Path
 import subprocess
 import tempfile
 from collections import defaultdict
-from suna_alsham_core.disaster_recovery_agent import BaseNetworkAgent, AgentMessage, ...
+from suna_alsham_core.multi_agent_network import BaseNetworkAgent, AgentType, MessageType, Priority, AgentMessage
 
 logger = logging.getLogger(__name__)
 
