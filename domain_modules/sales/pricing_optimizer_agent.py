@@ -1,16 +1,17 @@
 #!/usr/bin/env python3
 """
-Módulo do Pricing Optimizer Agent - ALSHAM GLOBAL
+Módulo do Agente Otimizador de Preços - SUNA-ALSHAM (ALSHAM GLOBAL)
 
-Este super agente de negócio é responsável por otimizar preços dinamicamente,
-testar ofertas e maximizar a conversão e o lucro.
+[Versão Fortalecida]
+Este agente usa IA para analisar dados de mercado, custos, características
+do produto e preços de concorrentes para recomendar um preço de venda ótimo.
 """
 
-import asyncio
 import logging
-from typing import Any, Dict, List
+import uuid
+from typing import Any, Dict
 
-# Importa a classe base e as ferramentas do nosso núcleo fortalecido
+# Importa a classe base e os tipos essenciais do núcleo do sistema
 from suna_alsham_core.multi_agent_network import (
     AgentMessage,
     AgentType,
@@ -24,113 +25,105 @@ logger = logging.getLogger(__name__)
 
 class PricingOptimizerAgent(BaseNetworkAgent):
     """
-    Otimiza preços dinamicamente, testa diferentes ofertas, maximiza a conversão
-    e o lucro, e pode criar urgência e escassez.
+    Agente especialista em otimização de estratégia de preços.
     """
 
     def __init__(self, agent_id: str, message_bus):
         """Inicializa o PricingOptimizerAgent."""
-        super().__init__(agent_id, AgentType.SPECIALIZED, message_bus)
-        
+        super().__init__(
+            agent_id=agent_id,
+            agent_type=AgentType.BUSINESS_DOMAIN,
+            message_bus=message_bus,
+        )
         self.capabilities.extend([
             "dynamic_pricing",
-            "offer_testing",
-            "conversion_maximization",
-            "profit_maximization",
+            "competitor_price_analysis",
+            "demand_forecasting",
+            "margin_optimization",
         ])
-        
-        self.pricing_models = {} # Armazena modelos de precificação por produto
-        logger.info(f"💎 {self.agent_id} (Otimizador de Preços) inicializado.")
+        # Armazena o estado das otimizações em andamento
+        self.pending_optimizations = {}
+        logger.info(f"💲 Agente Otimizador de Preços ({self.agent_id}) fortalecido e inicializado.")
 
     async def _internal_handle_message(self, message: AgentMessage):
-        """Processa requisições relacionadas à otimização de preços."""
-        if message.message_type != MessageType.REQUEST:
+        """
+        Processa requisições para otimizar preços ou respostas do AIPoweredAgent.
+        """
+        if message.message_type == MessageType.RESPONSE:
+            await self._handle_ai_response(message)
             return
 
-        request_type = message.content.get("request_type")
-        handler = {
-            "optimize_price": self._optimize_price_handler,
-            "test_offer": self._test_offer_handler,
-        }.get(request_type)
+        if message.message_type == MessageType.REQUEST and message.content.get("request_type") == "optimize_price":
+            await self.handle_optimize_price_request(message)
 
-        if handler:
-            result = await handler(message.content)
-            await self.message_bus.publish(self.create_response(message, result))
-        else:
-            await self.message_bus.publish(self.create_error_response(message, "Ação de precificação desconhecida"))
-
-    async def _optimize_price_handler(self, request_data: Dict[str, Any]) -> Dict[str, Any]:
+    async def handle_optimize_price_request(self, original_message: AgentMessage):
         """
-        [LÓGICA REAL] Otimiza o preço de um produto usando o AIAnalyzerAgent para
-        analisar dados de mercado e do produto.
+        Recebe dados do produto e do mercado, cria um prompt e delega a análise de preço.
         """
-        product_data = request_data.get("product_data", {})
-        market_data = request_data.get("market_data", {})
-        
-        if not product_data or not market_data:
-            return {"status": "error", "message": "Dados de produto e mercado são obrigatórios."}
+        product_data = original_message.content.get("product_data", {})
+        market_data = original_message.content.get("market_data", {})
 
-        logger.info(f"Otimizando preço para o produto: {product_data.get('name', 'desconhecido')}...")
+        if not product_data:
+            await self.publish_error_response(original_message, "Dados do produto não fornecidos para otimização.")
+            return
 
+        logger.info(f"Iniciando otimização de preço para o produto: {product_data.get('name', 'N/A')}")
+
+        # 1. Engenharia de Prompt para otimização de preço
         prompt = (
-            "Você é um especialista em estratégias de precificação (pricing). "
-            "Analise os dados do produto e do mercado para sugerir o preço ótimo que maximiza o lucro. "
-            f"Dados do Produto: {str(product_data)}. "
-            f"Dados de Mercado (concorrência, demanda): {str(market_data)}. "
-            "Responda em formato JSON com as chaves 'optimal_price' (float), 'strategy' (string, ex: 'value-based', 'competitive'), e 'justification' (string)."
+            "Aja como um especialista em precificação. Analise os dados do produto e do mercado abaixo. "
+            "Sugira um preço de venda ótimo e forneça uma breve justificativa para sua recomendação.\n"
+            f"Dados do Produto: {product_data}\n"
+            f"Dados de Mercado e Concorrência: {market_data}\n"
+            "Responda em formato JSON com as chaves 'suggested_price' (float), 'currency' (string) e 'rationale' (string)."
         )
         
-        try:
-            response_message = await self.send_request_and_wait(
-                recipient_id="ai_analyzer_001",
-                content={"request_type": "ai_analysis", "data": {"prompt": prompt}}
-            )
-            
-            # A lógica real de parsing da resposta JSON viria aqui
-            analysis_result = {"optimal_price": 97.50, "strategy": "competitive", "justification": "Preço posicionado ligeiramente abaixo do principal concorrente."}
-            
-            product_id = product_data.get("id", "default")
-            self.pricing_models[product_id] = analysis_result
+        # 2. Cria uma mensagem para o AIPoweredAgent
+        optimization_id = str(uuid.uuid4())
+        request_to_ai = self.create_message(
+            recipient_id="ai_powered_001",
+            message_type=MessageType.REQUEST,
+            content={
+                "request_type": "generate_structured_text",
+                "prompt": prompt,
+            },
+            callback_id=optimization_id
+        )
 
-            return {"status": "completed", "product_id": product_id, "pricing_optimization": analysis_result}
-
-        except TimeoutError:
-            return {"status": "error", "message": "Timeout: O AIAnalyzerAgent não respondeu a tempo."}
-        except Exception as e:
-            logger.error(f"Erro ao otimizar preço: {e}", exc_info=True)
-            return {"status": "error", "message": str(e)}
-
-    async def _test_offer_handler(self, request_data: Dict[str, Any]) -> Dict[str, Any]:
-        """
-        [AUTENTICIDADE] Placeholder para realizar um teste A/B de ofertas.
-        A implementação real na Fase 3 se integrará com o `DatabaseAgent` para
-        registrar os resultados do teste e com o `AnalyticsAgent` para analisá-los.
-        """
-        offer_a = request_data.get("offer_a")
-        offer_b = request_data.get("offer_b")
-
-        if not offer_a or not offer_b:
-            return {"status": "error", "message": "Duas ofertas (offer_a, offer_b) são necessárias para o teste."}
-
-        logger.info(f"📊 [Simulação] Iniciando teste A/B entre as ofertas: '{offer_a['name']}' vs '{offer_b['name']}'...")
-        await asyncio.sleep(1)
-
-        return {
-            "status": "completed_simulated",
-            "message": "Teste A/B iniciado (simulado).",
-            "next_step": "Acompanhar resultados via AnalyticsAgent.",
+        # 3. Armazena o contexto da otimização
+        self.pending_optimizations[optimization_id] = {
+            "original_message": original_message,
+            "product_name": product_data.get("name")
         }
 
+        # 4. Envia a requisição para o agente de IA
+        await self.message_bus.publish(request_to_ai)
+        logger.info(f"Requisição de otimização de preço enviada para ai_powered_001 com optimization_id: {optimization_id}")
 
-def create_pricing_optimizer_agent(message_bus) -> List[PricingOptimizerAgent]:
-    """
-    Cria o agente Otimizador de Preços.
-    """
-    agents = []
-    logger.info("💎 Criando PricingOptimizerAgent...")
-    try:
-        agent = PricingOptimizerAgent("pricing_optimizer_001", message_bus)
-        agents.append(agent)
-    except Exception as e:
-        logger.error(f"❌ Erro crítico criando PricingOptimizerAgent: {e}", exc_info=True)
-    return agents
+    async def _handle_ai_response(self, response_message: AgentMessage):
+        """
+        Processa a resposta com a sugestão de preço vinda do AIPoweredAgent.
+        """
+        optimization_id = response_message.callback_id
+        if optimization_id not in self.pending_optimizations:
+            return
+
+        task_context = self.pending_optimizations.pop(optimization_id)
+        original_message = task_context["original_message"]
+        
+        if response_message.content.get("status") != "completed":
+            logger.error(f"Otimização de preço pela IA falhou para a tarefa {optimization_id}.")
+            await self.publish_error_response(original_message, "Falha na otimização de preço pela IA.")
+            return
+
+        price_suggestion = response_message.content.get("result", {}).get("structured_data", {})
+        logger.info(f"Sugestão de preço recebida da IA para a tarefa {optimization_id}: {price_suggestion}")
+
+        # 5. Enviar a resposta final para o solicitante original
+        final_response_content = {
+            "status": "completed",
+            "product_name": task_context["product_name"],
+            "suggestion": price_suggestion
+        }
+        final_response = self.create_response(original_message, final_response_content)
+        await self.message_bus.publish(final_response)
