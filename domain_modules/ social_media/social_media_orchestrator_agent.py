@@ -1,16 +1,18 @@
 #!/usr/bin/env python3
 """
-Módulo do Social Media Orchestrator Agent - ALSHAM GLOBAL
+Módulo do Agente Orquestrador de Mídias Sociais - SUNA-ALSHAM (ALSHAM GLOBAL)
 
-[Fase 3] - Fortalecido com lógica real de coordenação entre os agentes
-de mídias sociais.
+[Versão Fortalecida]
+Este agente atua como o ponto central de entrada e coordenação (roteador)
+para todas as tarefas relacionadas ao domínio de Mídias Sociais. Ele recebe
+requisições de alto nível e as delega para os agentes especialistas apropriados.
 """
 
-import asyncio
 import logging
-from typing import Any, Dict, List
+import uuid
+from typing import Any, Dict
 
-# Importa a classe base e as ferramentas do nosso núcleo fortalecido
+# Importa a classe base e os tipos essenciais do núcleo do sistema
 from suna_alsham_core.multi_agent_network import (
     AgentMessage,
     AgentType,
@@ -24,128 +26,87 @@ logger = logging.getLogger(__name__)
 
 class SocialMediaOrchestratorAgent(BaseNetworkAgent):
     """
-    O cérebro da operação de mídias sociais. Coordena outros agentes
-    para executar a estratégia de conteúdo, engajamento e crescimento.
+    O agente orquestrador para o domínio de Mídias Sociais.
+    Sua principal função é rotear tarefas para os agentes especialistas.
     """
 
     def __init__(self, agent_id: str, message_bus):
         """Inicializa o SocialMediaOrchestratorAgent."""
-        super().__init__(agent_id, AgentType.SPECIALIZED, message_bus)
-        
+        super().__init__(
+            agent_id=agent_id,
+            agent_type=AgentType.BUSINESS_DOMAIN,
+            message_bus=message_bus,
+        )
         self.capabilities.extend([
-            "social_media_strategy",
-            "trend_analysis",
-            "content_coordination",
-            "performance_reporting",
+            "social_media_orchestration",
+            "task_routing",
+            "workflow_management",
         ])
-        
-        self.active_strategy = None
-        logger.info(f"🎯 {self.agent_id} (Orquestrador de Mídias Sociais) inicializado.")
+        # Mapeia o tipo de requisição ao agente especialista e seu ID
+        self.specialist_map = {
+            "create_post_text": "content_creator_001",
+            "create_video_from_images": "video_automation_001",
+            "analyze_and_engage_comment": "engagement_maximizer_001",
+            "find_influencers": "influencer_network_001",
+        }
+        self.pending_delegations = {}
+        logger.info(f"mgr 🧠 Agente Orquestrador de Mídias Sociais ({self.agent_id}) fortalecido e inicializado.")
 
     async def _internal_handle_message(self, message: AgentMessage):
-        """Processa requisições para orquestração de mídias sociais."""
-        if message.message_type != MessageType.REQUEST:
+        """
+        Processa mensagens recebidas, roteando requisições para especialistas
+        ou encaminhando respostas de volta ao solicitante original.
+        """
+        if message.message_type == MessageType.RESPONSE:
+            await self._handle_specialist_response(message)
             return
-
-        request_type = message.content.get("request_type")
-        handler = {
-            "define_strategy": self._define_strategy,
-            "analyze_trends": self._analyze_trends,
-            "coordinate_posting": self._coordinate_posting,
-        }.get(request_type)
-
-        if handler:
-            result = await handler(message.content)
-            await self.message_bus.publish(self.create_response(message, result))
-        else:
-            await self.message_bus.publish(self.create_error_response(message, "Ação de orquestração desconhecida"))
-
-    async def _define_strategy(self, request_data: Dict[str, Any]) -> Dict[str, Any]:
-        """Usa o AIAnalyzerAgent para definir uma estratégia de conteúdo."""
-        client_briefing = request_data.get("briefing", "Nenhum briefing fornecido.")
-        logger.info(f"Definindo estratégia de mídias sociais com base em: '{client_briefing[:50]}...'")
-
-        try:
-            response_message = await self.send_request_and_wait(
-                "ai_analyzer_001",
-                {"request_type": "ai_analysis", "data": {"prompt": f"Crie uma estratégia de mídias sociais para: {client_briefing}"}}
-            )
-            self.active_strategy = response_message.content.get("analysis", "Estratégia não definida.")
-            return {"status": "completed", "strategy_defined": self.active_strategy}
-        except Exception as e:
-            return {"status": "error", "message": str(e)}
-
-    async def _analyze_trends(self, request_data: Dict[str, Any]) -> Dict[str, Any]:
-        """
-        [LÓGICA REAL] Usa o WebSearchAgent para buscar tendências.
-        """
-        topic = request_data.get("topic", "marketing digital")
-        logger.info(f"Analisando tendências para o tópico: '{topic}'")
-        
-        try:
-            response_message = await self.send_request_and_wait(
-                "web_search_001",
-                {"request_type": "search_solutions", "problem_description": f"tendências de {topic} para redes sociais"}
-            )
-            trends = response_message.content.get("solution", {})
-            return {"status": "completed", "trends_found": trends}
-        except Exception as e:
-            return {"status": "error", "message": str(e)}
-
-    async def _coordinate_posting(self, request_data: Dict[str, Any]) -> Dict[str, Any]:
-        """
-        [LÓGICA REAL] Orquestra a criação e postagem de conteúdo,
-        comandando os outros super agentes.
-        """
-        topic = request_data.get("topic", "inteligência artificial")
-        logger.info(f"Coordenando postagem sobre: '{topic}'")
-        
-        try:
-            # 1. Pede ao ContentCreatorAgent para criar um roteiro de vídeo.
-            logger.info("  -> Solicitando roteiro ao ContentCreatorAgent...")
-            script_response = await self.send_request_and_wait(
-                "content_creator_001",
-                {
-                    "request_type": "generate_content",
-                    "content_type": "article_script",
-                    "topic": topic,
-                    "tone": "inspirador",
-                    "target_audience": "empreendedores"
-                }
-            )
-            script = script_response.content.get("generated_content", "Roteiro padrão.")
             
-            # 2. Pede ao VideoAutomationAgent para criar um vídeo com o roteiro.
-            logger.info("  -> Solicitando criação de vídeo ao VideoAutomationAgent...")
-            video_response = await self.send_request_and_wait(
-                "video_automation_001",
-                {
-                    "request_type": "create_video",
-                    "script_scenes": script.split('\n')[:5], # Pega as 5 primeiras linhas
-                    "format": "reels"
-                }
-            )
-            video_path = video_response.content.get("video_path")
+        if message.message_type == MessageType.REQUEST:
+            request_type = message.content.get("request_type")
+            specialist_id = self.specialist_map.get(request_type)
 
-            return {
-                "status": "completed",
-                "message": "Criação e postagem coordenadas com sucesso.",
-                "roteiro_criado": script,
-                "video_final_path": video_path
-            }
+            if specialist_id:
+                await self.delegate_to_specialist(specialist_id, message)
+            else:
+                await self.publish_error_response(message, f"O tipo de requisição '{request_type}' não é suportado por este módulo.")
 
-        except Exception as e:
-            logger.error(f"Erro na coordenação de postagem: {e}", exc_info=True)
-            return {"status": "error", "message": str(e)}
+    async def delegate_to_specialist(self, specialist_id: str, original_message: AgentMessage):
+        """
+        Encaminha a requisição para o agente especialista apropriado.
+        """
+        delegation_id = str(uuid.uuid4())
+        
+        # Cria uma nova mensagem para o especialista, mantendo o conteúdo original
+        delegated_request = self.create_message(
+            recipient_id=specialist_id,
+            message_type=MessageType.REQUEST,
+            content=original_message.content,
+            callback_id=delegation_id
+        )
+        
+        # Armazena a mensagem original para poder responder a ela mais tarde
+        self.pending_delegations[delegation_id] = original_message
+        
+        await self.message_bus.publish(delegated_request)
+        logger.info(f"Orquestrador delegou tarefa '{original_message.content.get('request_type')}' para {specialist_id} (ID da delegação: {delegation_id})")
 
-
-def create_social_media_orchestrator_agent(message_bus) -> List[SocialMediaOrchestratorAgent]:
-    """Cria o agente Orquestrador de Mídias Sociais."""
-    agents = []
-    logger.info("🎯 Criando SocialMediaOrchestratorAgent...")
-    try:
-        agent = SocialMediaOrchestratorAgent("social_media_orchestrator_001", message_bus)
-        agents.append(agent)
-    except Exception as e:
-        logger.error(f"❌ Erro crítico criando SocialMediaOrchestratorAgent: {e}", exc_info=True)
-    return agents
+    async def _handle_specialist_response(self, response_from_specialist: AgentMessage):
+        """
+        Recebe a resposta do especialista e a encaminha para o solicitante original.
+        """
+        delegation_id = response_from_specialist.callback_id
+        if delegation_id not in self.pending_delegations:
+            logger.warning(f"Orquestrador recebeu resposta para uma delegação desconhecida: {delegation_id}")
+            return
+            
+        original_message = self.pending_delegations.pop(delegation_id)
+        
+        # Cria a resposta final para o solicitante original,
+        # repassando o conteúdo da resposta do especialista.
+        final_response = self.create_response(
+            original_message,
+            response_from_specialist.content
+        )
+        
+        await self.message_bus.publish(final_response)
+        logger.info(f"Orquestrador encaminhou a resposta final da delegação {delegation_id} para {final_response.recipient_id}.")
