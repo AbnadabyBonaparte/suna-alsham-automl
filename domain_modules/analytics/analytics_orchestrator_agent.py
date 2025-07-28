@@ -19,11 +19,12 @@ from suna_alsham_core.multi_agent_network import (
     Priority
 )
 
-# --- IMPORTAÇÕES ATUALIZADAS ---
+# --- IMPORTAÇÕES FINAIS DO MÓDULO ---
 from .data_collector_agent import DataCollectorAgent
 from .data_processing_agent import DataProcessingAgent
 from .predictive_analysis_agent import PredictiveAnalysisAgent
-# -----------------------------
+from .reporting_visualization_agent import ReportingVisualizationAgent
+# ------------------------------------
 
 logger = logging.getLogger(__name__)
 
@@ -37,11 +38,11 @@ class AnalyticsOrchestratorAgent(BaseNetworkAgent):
         """Inicializa o AnalyticsOrchestratorAgent."""
         super().__init__(
             agent_id=agent_id,
-            agent_type=AgentType.BUSINESS_DOMAIN,  # Este é um agente de domínio de negócio
+            agent_type=AgentType.BUSINESS_DOMAIN,
             message_bus=message_bus,
         )
         self.capabilities.extend([
-            "analytics_orchestration",
+            "analytics_ orchestration",
             "task_delegation",
             "data_aggregation",
             "report_generation"
@@ -95,14 +96,15 @@ def create_analytics_agents(message_bus) -> List[BaseNetworkAgent]:
     """
     logger.info("🔧 Criando agentes do domínio de Analytics & Intelligence...")
     
-    # --- LISTA DE AGENTES ATUALIZADA ---
+    # --- LISTA FINAL DE AGENTES DO MÓDULO ---
     agents = [
         AnalyticsOrchestratorAgent("analytics_orchestrator_001", message_bus),
         DataCollectorAgent("data_collector_001", message_bus),
         DataProcessingAgent("data_processing_001", message_bus),
-        PredictiveAnalysisAgent("predictive_analysis_001", message_bus)
+        PredictiveAnalysisAgent("predictive_analysis_001", message_bus),
+        ReportingVisualizationAgent("reporting_visualization_001", message_bus)
     ]
-    # ------------------------------------
+    # ---------------------------------------------
     
     logger.info(f"✅ {len(agents)} agentes de Analytics criados.")
     return agents
