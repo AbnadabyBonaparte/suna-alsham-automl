@@ -2,6 +2,7 @@
 """
 Módulo dos Agentes Meta-Cognitivos - O Cérebro do SUNA-ALSHAM.
 
+[Fase 2] - Revisão Final. Alinhado com a BaseNetworkAgent fortalecida.
 Define os agentes de mais alto nível:
 - OrchestratorAgent: O maestro supremo, responsável pela distribuição de tarefas.
 - MetaCognitiveAgent: O cérebro estratégico, que analisa e otimiza o próprio sistema.
@@ -9,24 +10,25 @@ Define os agentes de mais alto nível:
 
 import asyncio
 import logging
-from collections import defaultdict, deque
+from collections import deque
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
 from typing import Any, Dict, List, Optional
 
-# Import corrigido, apontando para o módulo central da rede
+# Import alinhado com a Fase 1
 from suna_alsham_core.multi_agent_network import (
     AgentMessage,
     AgentType,
     BaseNetworkAgent,
+    MessageType,
     Priority,
 )
 
 logger = logging.getLogger(__name__)
 
 
-# --- Enums e Dataclasses para Tipagem Forte ---
+# --- Enums e Dataclasses (sem alteração) ---
 
 class TaskStatus(Enum):
     """Status de uma tarefa gerenciada pelo orquestrador."""
@@ -40,14 +42,12 @@ class OrchestrationStrategy(Enum):
     """Estratégias que o orquestrador pode usar para distribuir tarefas."""
     LOAD_BALANCED = "load_balanced"
     CAPABILITY_BASED = "capability_based"
-    ADAPTIVE = "adaptive"
 
 
 @dataclass
 class SystemTask:
     """Representa uma tarefa a ser executada pela rede de agentes."""
     task_id: str
-    task_type: str
     priority: Priority
     requirements: List[str]
     status: TaskStatus = TaskStatus.PENDING
@@ -61,36 +61,26 @@ class OrchestratorAgent(BaseNetworkAgent):
     Agente Orquestrador Supremo. Atua como o ponto central de distribuição de
     tarefas, balanceamento de carga e coordenação geral da rede.
     """
-
     def __init__(self, agent_id: str, message_bus):
         """Inicializa o OrchestratorAgent."""
         super().__init__(agent_id, AgentType.ORCHESTRATOR, message_bus)
-        self.capabilities.extend([
-            "orchestration",
-            "task_distribution",
-            "load_balancing",
-        ])
-        
+        self.capabilities.extend(["orchestration", "load_balancing"])
         self.task_queue = asyncio.Queue()
-        self.active_tasks: Dict[str, SystemTask] = {}
-        self.strategy = OrchestrationStrategy.ADAPTIVE
-        
+        self.strategy = OrchestrationStrategy.CAPABILITY_BASED
         logger.info(f"👑 {self.agent_id} (Orquestrador Supremo) inicializado.")
 
-    async def handle_message(self, message: AgentMessage):
+    async def _internal_handle_message(self, message: AgentMessage):
         """Processa requisições de tarefas e notificações de status."""
-        await super().handle_message(message)
-        if message.message_type == MessageType.REQUEST:
-            if message.content.get("request_type") == "submit_task":
-                await self._queue_task(message.content)
-
+        if message.message_type == MessageType.REQUEST and message.content.get("request_type") == "submit_task":
+            await self._queue_task(message.content.get("task", {}))
+            # Resposta imediata confirmando o recebimento
+            await self.message_bus.publish(self.create_response(message, {"status": "task_queued"}))
 
     async def _queue_task(self, task_data: Dict[str, Any]):
         """Adiciona uma nova tarefa à fila de orquestração."""
         try:
             task = SystemTask(
                 task_id=task_data.get("task_id", f"task_{int(time.time())}"),
-                task_type=task_data.get("type", "general"),
                 priority=Priority(task_data.get("priority", 3)),
                 requirements=task_data.get("requirements", []),
             )
@@ -105,18 +95,11 @@ class MetaCognitiveAgent(BaseNetworkAgent):
     O Cérebro Estratégico. Este agente analisa o comportamento da rede como um
     todo, gera insights e recomenda otimizações para o OrchestratorAgent.
     """
-
     def __init__(self, agent_id: str, message_bus):
         """Inicializa o MetaCognitiveAgent."""
         super().__init__(agent_id, AgentType.META_COGNITIVE, message_bus)
-        self.capabilities.extend([
-            "meta_cognition",
-            "system_analysis",
-            "optimization_recommendations",
-        ])
-        
-        self.knowledge_base = {"patterns": [], "insights": []}
-        self._analysis_task = None
+        self.capabilities.append("system_analysis")
+        self._analysis_task: Optional[asyncio.Task] = None
         logger.info(f"🧠 {self.agent_id} (Meta-Cognitivo) inicializado.")
 
     async def start_meta_cognition(self):
@@ -127,14 +110,13 @@ class MetaCognitiveAgent(BaseNetworkAgent):
 
     async def _analysis_loop(self):
         """
-        [AUTENTICIDADE] Loop de análise do sistema. Na Fase 2, este loop irá
+        [AUTENTICIDADE] Loop de análise do sistema. Na Fase 3, este loop irá
         solicitar dados reais do DatabaseAgent e do PerformanceMonitorAgent
         para identificar padrões e gerar insights.
         """
         while True:
             try:
                 logger.info("[Simulação] Analisando performance da rede...")
-                # Lógica de análise real a ser implementada aqui.
                 await asyncio.sleep(300) # Analisa a cada 5 minutos
             except asyncio.CancelledError:
                 break
@@ -161,6 +143,6 @@ def create_meta_cognitive_agents(message_bus) -> List[BaseNetworkAgent]:
                 asyncio.create_task(agent.start_meta_cognition())
             agents.append(agent)
         except Exception as e:
-            logger.error(f"❌ Erro criando agente {config['id']}: {e}", exc_info=True)
+            logger.error(f"❌ Erro criando agente meta-cognitivo {config['id']}: {e}", exc_info=True)
 
     return agents
