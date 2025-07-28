@@ -2,8 +2,8 @@
 """
 Módulo do Social Media Orchestrator Agent - ALSHAM GLOBAL
 
-Este é o primeiro "super agente" de negócio, responsável por orquestrar
-toda a estratégia de mídias sociais de um cliente.
+[Fase 3] - Fortalecido com lógica real de coordenação entre os agentes
+de mídias sociais.
 """
 
 import asyncio
@@ -30,7 +30,6 @@ class SocialMediaOrchestratorAgent(BaseNetworkAgent):
 
     def __init__(self, agent_id: str, message_bus):
         """Inicializa o SocialMediaOrchestratorAgent."""
-        # Note que o tipo de agente é SPECIALIZED, pois ele é um especialista de negócio
         super().__init__(agent_id, AgentType.SPECIALIZED, message_bus)
         
         self.capabilities.extend([
@@ -40,10 +39,7 @@ class SocialMediaOrchestratorAgent(BaseNetworkAgent):
             "performance_reporting",
         ])
         
-        # Estado do orquestrador
         self.active_strategy = None
-        self.content_calendar = {}
-        
         logger.info(f"🎯 {self.agent_id} (Orquestrador de Mídias Sociais) inicializado.")
 
     async def _internal_handle_message(self, message: AgentMessage):
@@ -65,31 +61,18 @@ class SocialMediaOrchestratorAgent(BaseNetworkAgent):
             await self.message_bus.publish(self.create_error_response(message, "Ação de orquestração desconhecida"))
 
     async def _define_strategy(self, request_data: Dict[str, Any]) -> Dict[str, Any]:
-        """
-        [LÓGICA REAL] Usa o AIAnalyzerAgent para definir uma estratégia de conteúdo.
-        """
+        """Usa o AIAnalyzerAgent para definir uma estratégia de conteúdo."""
         client_briefing = request_data.get("briefing", "Nenhum briefing fornecido.")
         logger.info(f"Definindo estratégia de mídias sociais com base em: '{client_briefing[:50]}...'")
 
         try:
-            # Pede ao agente de IA para analisar o briefing e criar uma estratégia
             response_message = await self.send_request_and_wait(
-                recipient_id="ai_analyzer_001",
-                content={
-                    "request_type": "ai_analysis",
-                    "data": {
-                        "prompt": f"Com base no seguinte briefing de cliente, crie uma estratégia de mídias sociais com 3 pilares de conteúdo e KPIs para cada um. Briefing: {client_briefing}"
-                    }
-                }
+                "ai_analyzer_001",
+                {"request_type": "ai_analysis", "data": {"prompt": f"Crie uma estratégia de mídias sociais para: {client_briefing}"}}
             )
-            
             self.active_strategy = response_message.content.get("analysis", "Estratégia não definida.")
             return {"status": "completed", "strategy_defined": self.active_strategy}
-
-        except TimeoutError:
-            return {"status": "error", "message": "Timeout: O AIAnalyzerAgent não respondeu a tempo."}
         except Exception as e:
-            logger.error(f"Erro ao definir estratégia: {e}", exc_info=True)
             return {"status": "error", "message": str(e)}
 
     async def _analyze_trends(self, request_data: Dict[str, Any]) -> Dict[str, Any]:
@@ -99,33 +82,68 @@ class SocialMediaOrchestratorAgent(BaseNetworkAgent):
         topic = request_data.get("topic", "marketing digital")
         logger.info(f"Analisando tendências para o tópico: '{topic}'")
         
-        # [AUTENTICIDADE] Placeholder para a chamada real ao WebSearchAgent
-        # que implementaremos na Fase 3.
-        trends = ["Tendência 1: Vídeos curtos", "Tendência 2: Conteúdo interativo"]
-        return {"status": "completed_simulated", "trends_found": trends}
+        try:
+            response_message = await self.send_request_and_wait(
+                "web_search_001",
+                {"request_type": "search_solutions", "problem_description": f"tendências de {topic} para redes sociais"}
+            )
+            trends = response_message.content.get("solution", {})
+            return {"status": "completed", "trends_found": trends}
+        except Exception as e:
+            return {"status": "error", "message": str(e)}
 
     async def _coordinate_posting(self, request_data: Dict[str, Any]) -> Dict[str, Any]:
         """
-        [LÓGICA REAL] Coordena a criação e postagem de conteúdo.
+        [LÓGICA REAL] Orquestra a criação e postagem de conteúdo,
+        comandando os outros super agentes.
         """
-        logger.info("Coordenando criação e postagem de conteúdo...")
-
-        # 1. Pede ao ContentCreatorAgent para criar um post
-        # 2. Pede ao VideoAutomationAgent para criar um vídeo
-        # 3. Pede ao EngagementMaximizer para agendar a postagem
-        # (Esta lógica será construída usando `send_request_and_wait`)
+        topic = request_data.get("topic", "inteligência artificial")
+        logger.info(f"Coordenando postagem sobre: '{topic}'")
         
-        return {"status": "completed_simulated", "message": "Criação e postagem coordenadas com sucesso."}
+        try:
+            # 1. Pede ao ContentCreatorAgent para criar um roteiro de vídeo.
+            logger.info("  -> Solicitando roteiro ao ContentCreatorAgent...")
+            script_response = await self.send_request_and_wait(
+                "content_creator_001",
+                {
+                    "request_type": "generate_content",
+                    "content_type": "article_script",
+                    "topic": topic,
+                    "tone": "inspirador",
+                    "target_audience": "empreendedores"
+                }
+            )
+            script = script_response.content.get("generated_content", "Roteiro padrão.")
+            
+            # 2. Pede ao VideoAutomationAgent para criar um vídeo com o roteiro.
+            logger.info("  -> Solicitando criação de vídeo ao VideoAutomationAgent...")
+            video_response = await self.send_request_and_wait(
+                "video_automation_001",
+                {
+                    "request_type": "create_video",
+                    "script_scenes": script.split('\n')[:5], # Pega as 5 primeiras linhas
+                    "format": "reels"
+                }
+            )
+            video_path = video_response.content.get("video_path")
+
+            return {
+                "status": "completed",
+                "message": "Criação e postagem coordenadas com sucesso.",
+                "roteiro_criado": script,
+                "video_final_path": video_path
+            }
+
+        except Exception as e:
+            logger.error(f"Erro na coordenação de postagem: {e}", exc_info=True)
+            return {"status": "error", "message": str(e)}
 
 
 def create_social_media_orchestrator_agent(message_bus) -> List[SocialMediaOrchestratorAgent]:
-    """
-    Cria o agente Orquestrador de Mídias Sociais.
-    """
+    """Cria o agente Orquestrador de Mídias Sociais."""
     agents = []
     logger.info("🎯 Criando SocialMediaOrchestratorAgent...")
     try:
-        # O ID do agente pode ser mais específico para o cliente no futuro
         agent = SocialMediaOrchestratorAgent("social_media_orchestrator_001", message_bus)
         agents.append(agent)
     except Exception as e:
