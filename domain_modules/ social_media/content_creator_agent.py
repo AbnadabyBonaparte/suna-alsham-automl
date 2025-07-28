@@ -1,26 +1,18 @@
 #!/usr/bin/env python3
 """
-Módulo do Content Creator Agent - ALSHAM GLOBAL
+Módulo do Agente Criador de Conteúdo - SUNA-ALSHAM (ALSHAM GLOBAL)
 
-[Fase 3] - Fortalecido com cache inteligente e melhor tratamento de erros.
-Este super agente de negócio é responsável por gerar conteúdo de alta qualidade
-(posts, artigos, scripts) usando IA, adaptado para diferentes plataformas.
+[Versão Fortalecida]
+Este agente é responsável pela criação de conteúdo para as mídias sociais.
+Ele se integra com o AIPoweredAgent do núcleo para gerar textos criativos,
+roteiros e outras peças de conteúdo com base em um tópico fornecido.
 """
 
-import asyncio
 import logging
-import os
-from typing import Any, Dict, List
+import uuid
+from typing import Any, Dict
 
-# [AUTENTICIDADE] A biblioteca da OpenAI é importada de forma segura.
-try:
-    import openai
-    from openai import error as openai_error
-    OPENAI_AVAILABLE = True
-except ImportError:
-    OPENAI_AVAILABLE = False
-
-# Importa a classe base e as ferramentas do nosso núcleo fortalecido
+# Importa a classe base e os tipos essenciais do núcleo do sistema
 from suna_alsham_core.multi_agent_network import (
     AgentMessage,
     AgentType,
@@ -31,113 +23,107 @@ from suna_alsham_core.multi_agent_network import (
 
 logger = logging.getLogger(__name__)
 
-# --- Configuração da API OpenAI ---
-if OPENAI_AVAILABLE:
-    openai.api_key = os.getenv("OPENAI_API_KEY")
-
 
 class ContentCreatorAgent(BaseNetworkAgent):
     """
-    Gera conteúdo viral automaticamente, cria posts, artigos e scripts,
-    e adapta o tom e estilo por plataforma.
+    Agente especialista em gerar conteúdo textual e criativo para posts.
     """
 
     def __init__(self, agent_id: str, message_bus):
         """Inicializa o ContentCreatorAgent."""
-        super().__init__(agent_id, AgentType.SPECIALIZED, message_bus)
-        
+        super().__init__(
+            agent_id=agent_id,
+            agent_type=AgentType.BUSINESS_DOMAIN,
+            message_bus=message_bus,
+        )
         self.capabilities.extend([
-            "content_generation",
-            "style_adaptation",
-            "viral_content_creation",
+            "text_generation",
+            "creative_writing",
+            "hashtag_suggestion",
+            "ai_prompt_engineering",
         ])
-
-        if not OPENAI_AVAILABLE or not openai.api_key:
-            self.status = "degraded"
-            logger.warning(f"Agente {agent_id} operando em modo degradado: OpenAI não configurado.")
-        
-        # [LÓGICA REAL] Cache para evitar chamadas repetidas à API.
-        self.content_cache = {}
-        
-        logger.info(f"✍️ {self.agent_id} (Criador de Conteúdo) inicializado.")
+        # Armazena o estado das tarefas de criação em andamento
+        self.pending_creations = {}
+        logger.info(f"✍️ Agente Criador de Conteúdo ({self.agent_id}) fortalecido e inicializado.")
 
     async def _internal_handle_message(self, message: AgentMessage):
-        """Processa requisições para criação de conteúdo."""
-        if message.message_type != MessageType.REQUEST:
+        """
+        Processa requisições para criar conteúdo ou respostas do AIPoweredAgent.
+        """
+        if message.message_type == MessageType.RESPONSE:
+            await self._handle_ai_response(message)
             return
 
-        request_type = message.content.get("request_type")
-        if request_type == "generate_content":
-            result = await self._generate_content_handler(message.content)
-            await self.message_bus.publish(self.create_response(message, result))
-        else:
-            await self.message_bus.publish(self.create_error_response(message, "Ação de criação desconhecida"))
+        if message.message_type == MessageType.REQUEST and message.content.get("request_type") == "create_post_text":
+            await self.handle_create_text_request(message)
 
-    async def _generate_content_handler(self, request_data: Dict[str, Any]) -> Dict[str, Any]:
+    async def handle_create_text_request(self, original_message: AgentMessage):
         """
-        [LÓGICA REAL] Gera conteúdo utilizando a API da OpenAI com prompts inteligentes,
-        cache e tratamento de erros aprimorado.
+        Recebe um tópico, cria um prompt para a IA e delega a geração de texto.
         """
-        if self.status == "degraded":
-            return {"status": "error", "message": "Serviço de IA indisponível."}
+        topic = original_message.content.get("topic")
+        platform = original_message.content.get("platform", "Instagram")
 
-        content_type = request_data.get("content_type", "tweet")
-        topic = request_data.get("topic", "tecnologia")
-        tone = request_data.get("tone", "informativo")
-        target_audience = request_data.get("target_audience", "entusiastas de tecnologia")
+        if not topic:
+            await self.publish_error_response(original_message, "O tópico para a criação de conteúdo não foi fornecido.")
+            return
 
-        # Gera uma chave única para o cache
-        cache_key = f"{content_type}:{topic}:{tone}:{target_audience}"
-        if cache_key in self.content_cache:
-            logger.info(f"Cache HIT para: {cache_key}")
-            return {"status": "completed_from_cache", "generated_content": self.content_cache[cache_key]}
+        logger.info(f"Iniciando criação de conteúdo para a plataforma '{platform}' sobre o tópico: '{topic}'")
+
+        # 1. Engenharia de Prompt: Cria um prompt mais detalhado para a IA
+        prompt = (
+            f"Crie um texto para um post de {platform} sobre o seguinte tópico: '{topic}'. "
+            f"O tom deve ser engajador e informativo. "
+            f"Inclua 3 a 5 hashtags relevantes no final."
+        )
         
-        logger.info(f"Cache MISS. Gerando conteúdo novo para: {cache_key}")
+        # 2. Cria uma mensagem para o AIPoweredAgent
+        creation_id = str(uuid.uuid4())
+        request_to_ai = self.create_message(
+            recipient_id="ai_powered_001",  # ID do agente de IA do núcleo
+            message_type=MessageType.REQUEST,
+            content={
+                "request_type": "generate_text",
+                "prompt": prompt,
+                "max_tokens": 280  # Limite de caracteres para um post
+            },
+            callback_id=creation_id
+        )
 
-        try:
-            prompt = self._build_intelligent_prompt(content_type, topic, tone, target_audience)
-            
-            response = await openai.ChatCompletion.acreate(
-                model="gpt-4",
-                messages=[
-                    {"role": "system", "content": "Você é um especialista em marketing digital e criação de conteúdo viral."},
-                    {"role": "user", "content": prompt}
-                ],
-                temperature=0.7,
-                max_tokens=1024,
-            )
-            
-            generated_content = response.choices[0].message.content.strip()
-            self.content_cache[cache_key] = generated_content # Salva no cache
-            
-            return {"status": "completed", "generated_content": generated_content}
+        # 3. Armazena o contexto da criação
+        self.pending_creations[creation_id] = {
+            "original_message": original_message,
+            "topic": topic
+        }
 
-        except openai_error.RateLimitError:
-            logger.error("❌ Erro de Rate Limit da API OpenAI. Aguardando para tentar novamente.")
-            return {"status": "error", "message": "API da OpenAI com excesso de requisições. Tente mais tarde."}
-        except Exception as e:
-            logger.error(f"❌ Erro ao gerar conteúdo com IA: {e}", exc_info=True)
-            return {"status": "error", "message": str(e)}
+        # 4. Envia a requisição para o agente de IA
+        await self.message_bus.publish(request_to_ai)
+        logger.info(f"Requisição de geração de texto enviada para ai_powered_001 com creation_id: {creation_id}")
 
-    def _build_intelligent_prompt(self, content_type: str, topic: str, tone: str, audience: str) -> str:
-        """Constrói um prompt otimizado para a geração de conteúdo."""
-        prompt = f"Crie um conteúdo do tipo '{content_type}' para o público '{audience}' sobre o tópico '{topic}'. O tom deve ser '{tone}'."
-        if content_type == "tweet":
-            prompt += " O conteúdo deve ser curto, impactante e incluir 2-3 hashtags relevantes. Não exceda 280 caracteres."
-        elif content_type == "post_linkedin":
-            prompt += " O post deve ser profissional, começar com uma frase de gancho forte, usar parágrafos curtos e emojis para escaneabilidade, e terminar com uma pergunta para engajar. Inclua 3-5 hashtags de negócio."
-        elif content_type == "article_script":
-            prompt += " Crie um roteiro para um artigo de blog ou vídeo curto (1 minuto). A estrutura deve ser: Introdução com gancho, 3 pontos principais com exemplos, e uma conclusão com uma chamada para ação (call to action)."
-        return prompt
+    async def _handle_ai_response(self, response_message: AgentMessage):
+        """
+        Processa a resposta com o texto gerado recebida do AIPoweredAgent.
+        """
+        creation_id = response_message.callback_id
+        if creation_id not in self.pending_creations:
+            return
 
+        task_context = self.pending_creations.pop(creation_id)
+        original_message = task_context["original_message"]
+        
+        if response_message.content.get("status") != "completed":
+            logger.error(f"Geração de texto falhou para a tarefa {creation_id}.")
+            await self.publish_error_response(original_message, "Falha na geração de conteúdo pela IA.")
+            return
 
-def create_content_creator_agent(message_bus) -> List[ContentCreatorAgent]:
-    """Cria o agente Criador de Conteúdo."""
-    agents = []
-    logger.info("✍️ Criando ContentCreatorAgent...")
-    try:
-        agent = ContentCreatorAgent("content_creator_001", message_bus)
-        agents.append(agent)
-    except Exception as e:
-        logger.error(f"❌ Erro crítico criando ContentCreatorAgent: {e}", exc_info=True)
-    return agents
+        generated_text = response_message.content.get("result", {}).get("text", "")
+        logger.info(f"Texto gerado pela IA recebido para a tarefa {creation_id}.")
+
+        # 5. Enviar a resposta final para o solicitante original
+        final_response_content = {
+            "status": "completed",
+            "topic": task_context["topic"],
+            "post_text": generated_text.strip()
+        }
+        final_response = self.create_response(original_message, final_response_content)
+        await self.message_bus.publish(final_response)
