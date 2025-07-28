@@ -37,7 +37,6 @@ class InfluencerNetworkAgent(BaseNetworkAgent):
             "profile_analysis",
             "automated_outreach",
             "campaign_monitoring",
-            "roi_calculation",
         ])
         
         self._discovery_task: asyncio.Task = None
@@ -56,9 +55,6 @@ class InfluencerNetworkAgent(BaseNetworkAgent):
         while True:
             try:
                 logger.info("Buscando por novos influenciadores potenciais...")
-                
-                # [AUTENTICIDADE] Na Fase 3, esta lógica será expandida com
-                # chamadas reais a APIs de plataformas de influencers ou web scraping.
                 
                 # 1. Simula a descoberta de novos perfis.
                 discovered_profiles = self._discover_influencers()
@@ -79,8 +75,8 @@ class InfluencerNetworkAgent(BaseNetworkAgent):
                 await asyncio.sleep(3600)
 
     def _discover_influencers(self) -> List[Dict]:
-        """[SIMULAÇÃO] Busca por novos influenciadores."""
-        # Esta função se conectaria a APIs como a do Instagram ou TikTok.
+        """[AUTENTICIDADE] Placeholder para buscar novos influenciadores."""
+        # A implementação real na Fase 3 se conectará a APIs de redes sociais.
         return [
             {"platform": "instagram", "username": "@tech_guru", "followers": 150000, "niche": "tecnologia"},
             {"platform": "tiktok", "username": "@finance_bro", "followers": 500000, "niche": "finanças"},
@@ -114,8 +110,6 @@ class InfluencerNetworkAgent(BaseNetworkAgent):
         """
         logger.info(f"Iniciando contato com o influenciador '{profile['username']}'...")
         
-        # [AUTENTICIDADE] Esta é uma chamada real para o NotificationAgent,
-        # que na Fase 3 será conectado a um serviço de e-mail real.
         outreach_message = (
             f"Olá {profile['username']}, meu nome é Alsham. Nosso sistema de IA analisou seu perfil e "
             "identificou uma grande sinergia com um de nossos clientes no nicho de tecnologia. "
@@ -127,7 +121,7 @@ class InfluencerNetworkAgent(BaseNetworkAgent):
             content={
                 "request_type": "send_notification",
                 "channels": ["email"], # Ou "instagram_dm" no futuro
-                "recipients": [f"{profile['username']}@example.com"], # E-mail seria buscado por outra ferramenta
+                "recipients": [f"{profile['username']}@example.com"],
                 "title": "Proposta de Parceria Estratégica",
                 "message": outreach_message
             }
