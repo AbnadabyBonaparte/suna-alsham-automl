@@ -22,6 +22,7 @@ from suna_alsham_core.multi_agent_network import (
 # --- IMPORTAÇÕES ATUALIZADAS ---
 from .data_collector_agent import DataCollectorAgent
 from .data_processing_agent import DataProcessingAgent
+from .predictive_analysis_agent import PredictiveAnalysisAgent
 # -----------------------------
 
 logger = logging.getLogger(__name__)
@@ -98,7 +99,8 @@ def create_analytics_agents(message_bus) -> List[BaseNetworkAgent]:
     agents = [
         AnalyticsOrchestratorAgent("analytics_orchestrator_001", message_bus),
         DataCollectorAgent("data_collector_001", message_bus),
-        DataProcessingAgent("data_processing_001", message_bus)
+        DataProcessingAgent("data_processing_001", message_bus),
+        PredictiveAnalysisAgent("predictive_analysis_001", message_bus)
     ]
     # ------------------------------------
     
