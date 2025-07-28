@@ -2,21 +2,18 @@
 """
 Módulo do Video Automation Agent - ALSHAM GLOBAL
 
-[Fase 3] - Fortalecido com estrutura real para criação de vídeos e
-verificação de dependências.
+[Fase 3] - Fortalecido com lógica real de renderização de vídeo usando MoviePy.
 """
 
 import asyncio
 import logging
-from pathlib import Path
 from typing import Any, Dict, List
+from pathlib import Path
 from datetime import datetime
 
 # [AUTENTICIDADE] Bibliotecas de edição de vídeo são importadas de forma segura.
 try:
-    from moviepy.editor import (TextClip, ImageClip, CompositeVideoClip, 
-                                AudioFileClip, concatenate_videoclips)
-    from PIL import Image, ImageDraw, ImageFont
+    from moviepy.editor import TextClip, CompositeVideoClip, ColorClip
     VIDEO_LIBS_AVAILABLE = True
 except ImportError:
     VIDEO_LIBS_AVAILABLE = False
@@ -50,7 +47,7 @@ class VideoAutomationAgent(BaseNetworkAgent):
 
         if not VIDEO_LIBS_AVAILABLE:
             self.status = "degraded"
-            logger.warning(f"Agente {agent_id} operando em modo degradado: bibliotecas de vídeo (moviepy, Pillow) não encontradas.")
+            logger.warning(f"Agente {agent_id} operando em modo degradado: bibliotecas de vídeo (moviepy) não encontradas.")
         
         self.output_path = Path("./video_outputs")
         self.output_path.mkdir(exist_ok=True)
@@ -71,13 +68,13 @@ class VideoAutomationAgent(BaseNetworkAgent):
 
     async def _create_video_handler(self, request_data: Dict[str, Any]) -> Dict[str, Any]:
         """
-        Orquestra a criação de um vídeo a partir de um roteiro e assets.
+        [LÓGICA REAL] Orquestra a criação de um vídeo a partir de um roteiro.
         """
         if self.status == "degraded":
             return {"status": "error", "message": "Serviço de vídeo indisponível (dependências faltando)."}
 
         script_scenes = request_data.get("script_scenes", [])
-        video_format = request_data.get("format", "reels") # reels, shorts, tiktok
+        video_format = request_data.get("format", "reels")
         
         if not script_scenes:
             return {"status": "error", "message": "Nenhum roteiro (script_scenes) fornecido."}
@@ -85,15 +82,23 @@ class VideoAutomationAgent(BaseNetworkAgent):
         logger.info(f"🎬 Iniciando criação de vídeo formato '{video_format}' com {len(script_scenes)} cenas.")
 
         try:
-            # [LÓGICA REAL] A orquestração agora é real, chamando placeholders.
             video_clips = []
+            total_duration = 0
             for i, scene_text in enumerate(script_scenes):
                 logger.info(f"  -> Processando cena {i+1}: '{scene_text[:30]}...'")
-                clip = self._create_text_clip(scene_text, duration=3)
+                # Define a duração de cada clipe, por exemplo, 3 segundos
+                clip_duration = 3
+                clip = self._create_text_clip(scene_text, duration=clip_duration)
                 if clip:
+                    # Define o tempo de início de cada clipe
+                    clip = clip.set_start(total_duration)
                     video_clips.append(clip)
+                    total_duration += clip_duration
             
-            final_video_path = self._render_video(video_clips, video_format)
+            if not video_clips:
+                return {"status": "error", "message": "Nenhum clipe de vídeo pôde ser criado."}
+
+            final_video_path = self._render_video(video_clips, total_duration, video_format)
 
             return {
                 "status": "completed", 
@@ -107,33 +112,44 @@ class VideoAutomationAgent(BaseNetworkAgent):
 
     def _create_text_clip(self, text: str, duration: int) -> Any:
         """
-        [AUTENTICIDADE] Placeholder para criar um clipe de vídeo com texto.
-        A implementação real usará moviepy e Pillow para gerar um clipe visual.
+        [LÓGICA REAL] Cria um clipe de vídeo com texto usando MoviePy.
         """
-        logger.info(f"    -> [Simulação] Criando clipe de texto para: '{text}'")
-        # A lógica real seria:
-        # size = (1080, 1920)
-        # clip = TextClip(text, fontsize=70, color='white', size=size).set_duration(duration)
-        # return clip
-        return {"type": "clip", "text": text} # Retorna um placeholder
+        try:
+            logger.info(f"    -> Criando clipe de texto para: '{text}'")
+            video_size = (1080, 1920) # Formato Reels/Shorts/TikTok
+            
+            # Cria um clipe de texto
+            text_clip = TextClip(
+                txt=text,
+                fontsize=70,
+                color='white',
+                font='Arial-Bold', # Use uma fonte disponível no seu sistema
+                size=video_size,
+                method='caption'
+            ).set_duration(duration)
+            
+            return text_clip
+        except Exception as e:
+            logger.error(f"Erro ao criar clipe de texto: {e}")
+            return None
 
-    def _render_video(self, clips: List[Any], video_format: str) -> Path:
+    def _render_video(self, clips: List[Any], total_duration: int, video_format: str) -> Path:
         """
-        [AUTENTICIDADE] Placeholder para renderizar o vídeo final.
-        A implementação real usará moviepy para concatenar clipes e exportar o MP4.
+        [LÓGICA REAL] Renderiza o vídeo final usando MoviePy.
         """
-        logger.info(f"  -> [Simulação] Renderizando {len(clips)} clipes para o vídeo final.")
-        
-        # A lógica real seria:
-        # final_clip = concatenate_videoclips(clips, method="compose")
-        # final_clip.write_videofile(str(final_video_path), fps=24)
+        logger.info(f"  -> Renderizando {len(clips)} clipes para o vídeo final.")
         
         video_filename = f"{video_format}_{int(datetime.now().timestamp())}.mp4"
         final_video_path = self.output_path / video_filename
         
-        # Cria um arquivo vazio para representar o vídeo
-        with open(final_video_path, "w") as f:
-            f.write(f"Vídeo simulado com {len(clips)} cenas.")
+        # Cria um clipe de fundo colorido
+        background_clip = ColorClip(size=(1080, 1920), color=(25, 25, 112), duration=total_duration) # Cor "Midnight Blue"
+        
+        # Compõe o vídeo final
+        final_clip = CompositeVideoClip([background_clip] + clips)
+        
+        # Renderiza o arquivo de vídeo
+        final_clip.write_videofile(str(final_video_path), fps=24, codec='libx264')
             
         return final_video_path
 
