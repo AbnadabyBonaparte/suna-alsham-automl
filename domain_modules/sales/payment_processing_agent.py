@@ -1,23 +1,35 @@
 #!/usr/bin/env python3
 """
-Módulo do Payment Processing Agent - ALSHAM GLOBAL
+Módulo do Agente de Processamento de Pagamentos - SUNA-ALSHAM (ALSHAM GLOBAL)
 
-Este super agente de negócio é responsável por processar pagamentos,
-gerenciar assinaturas e recuperar pagamentos falhados de forma autônoma.
+[Versão Fortalecida]
+Este agente é um conector seguro para gateways de pagamento externos (ex: Stripe).
+Ele lida com a criação de cobranças, gerenciamento de assinaturas e outras
+operações financeiras, garantindo que dados sensíveis não sejam expostos.
 """
 
-import asyncio
 import logging
-from typing import Any, Dict, List
-from datetime import datetime
+import os
+from typing import Any, Dict
 
-# Importa a classe base e as ferramentas do nosso núcleo fortalecido
+try:
+    import stripe
+    # Configura a chave de API do Stripe a partir de variáveis de ambiente
+    stripe.api_key = os.environ.get("STRIPE_API_KEY")
+    STRIPE_AVAILABLE = True
+    if not stripe.api_key:
+        logging.critical("A variável de ambiente STRIPE_API_KEY não está configurada!")
+        STRIPE_AVAILABLE = False
+except ImportError:
+    STRIPE_AVAILABLE = False
+
+
+# Importa a classe base e os tipos essenciais do núcleo do sistema
 from suna_alsham_core.multi_agent_network import (
     AgentMessage,
     AgentType,
     BaseNetworkAgent,
     MessageType,
-    Priority,
 )
 
 logger = logging.getLogger(__name__)
@@ -25,103 +37,89 @@ logger = logging.getLogger(__name__)
 
 class PaymentProcessingAgent(BaseNetworkAgent):
     """
-    Processa pagamentos automaticamente, gerencia assinaturas recorrentes
-    e recupera pagamentos falhados.
+    Agente especialista em interagir de forma segura com APIs de pagamento.
     """
 
     def __init__(self, agent_id: str, message_bus):
         """Inicializa o PaymentProcessingAgent."""
-        super().__init__(agent_id, AgentType.SPECIALIZED, message_bus)
-        
+        super().__init__(
+            agent_id=agent_id,
+            agent_type=AgentType.BUSINESS_DOMAIN,
+            message_bus=message_bus,
+        )
         self.capabilities.extend([
-            "payment_processing",
+            "charge_creation",
             "subscription_management",
-            "failed_payment_recovery",
+            "secure_transaction_processing",
         ])
         
-        # [AUTENTICIDADE] As chaves de API de gateways de pagamento
-        # seriam carregadas de forma segura a partir de variáveis de ambiente.
-        self.payment_gateway_keys = {
-            "stripe": os.getenv("STRIPE_API_KEY"),
-            "paypal": os.getenv("PAYPAL_API_KEY"),
-        }
-        
-        logger.info(f"💳 {self.agent_id} (Processador de Pagamentos) inicializado.")
+        if not STRIPE_AVAILABLE:
+            self.status = "degraded"
+            logger.critical(
+                "Biblioteca 'stripe' ou a chave de API não estão disponíveis. "
+                "O PaymentProcessingAgent operará em modo degradado."
+            )
+
+        logger.info(f"💳 Agente de Processamento de Pagamentos ({self.agent_id}) fortalecido e inicializado.")
 
     async def _internal_handle_message(self, message: AgentMessage):
-        """Processa requisições relacionadas a pagamentos."""
-        if message.message_type != MessageType.REQUEST:
+        """Processa requisições para realizar uma transação financeira."""
+        if self.status == "degraded":
+            await self.publish_error_response(message, "O serviço de pagamento está indisponível.")
             return
 
-        request_type = message.content.get("request_type")
-        handler = {
-            "process_payment": self._process_payment_handler,
-            "create_subscription": self._create_subscription_handler,
-        }.get(request_type)
+        if message.message_type == MessageType.REQUEST and message.content.get("request_type") == "process_payment":
+            await self.handle_process_payment_request(message)
 
-        if handler:
-            result = await handler(message.content)
-            await self.message_bus.publish(self.create_response(message, result))
-        else:
-            await self.message_bus.publish(self.create_error_response(message, "Ação de pagamento desconhecida"))
-
-    async def _process_payment_handler(self, request_data: Dict[str, Any]) -> Dict[str, Any]:
+    async def handle_process_payment_request(self, message: AgentMessage):
         """
-        [AUTENTICIDADE] Placeholder para processar um pagamento único.
-        A implementação real na Fase 3 se integrará com a API de um gateway
-        de pagamento como o Stripe.
+        Lida com a lógica de criar uma cobrança usando o gateway de pagamento.
         """
-        payment_details = request_data.get("payment_details", {})
-        amount = payment_details.get("amount")
-        currency = payment_details.get("currency", "BRL")
+        payment_details = message.content.get("payment_details", {})
+        amount_cents = payment_details.get("amount_cents") # O valor deve ser em centavos
+        currency = payment_details.get("currency", "brl")
+        # O 'payment_token' é gerado pelo frontend (Stripe.js) e não é o número do cartão
+        token = payment_details.get("payment_token") 
+        description = payment_details.get("description", "Pagamento para SUNA-ALSHAM")
 
-        if not amount:
-            return {"status": "error", "message": "Valor do pagamento não especificado."}
+        if not all([amount_cents, token]):
+            await self.publish_error_response(message, "Detalhes do pagamento incompletos (requer amount_cents e payment_token).")
+            return
 
-        logger.info(f"💳 [Simulação] Processando pagamento de {amount} {currency}...")
-        
-        # A lógica real chamaria a API do Stripe/Paypal aqui.
-        await asyncio.sleep(1.5) # Simula latência da API de pagamento
+        logger.info(f"Processando pagamento de {amount_cents} {currency.upper()}.")
 
-        return {
-            "status": "completed_simulated",
-            "transaction_id": f"txn_{int(datetime.now().timestamp())}",
-            "message": "Pagamento processado com sucesso (simulado).",
-        }
+        try:
+            # 1. Cria a cobrança na API do Stripe
+            charge = stripe.Charge.create(
+                amount=amount_cents,
+                currency=currency,
+                source=token, # Usa o token seguro
+                description=description,
+            )
 
-    async def _create_subscription_handler(self, request_data: Dict[str, Any]) -> Dict[str, Any]:
-        """
+            logger.info(f"Pagamento processado com sucesso. ID da transação: {charge.id}")
+            
+            # 2. Responde com sucesso e o ID da transação
+            response_content = {
+                "status": "completed",
+                "transaction_id": charge.id,
+                "amount_charged": charge.amount,
+                "currency": charge.currency,
+                "receipt_url": charge.receipt_url,
+            }
+            await self.publish_response(message, response_content)
 
-        [AUTENTICIDADE] Placeholder para criar uma assinatura recorrente.
-        A implementação real na Fase 3 se integrará com a API de assinaturas
-        de um gateway de pagamento.
-        """
-        subscription_details = request_data.get("subscription_details", {})
-        plan_id = subscription_details.get("plan_id")
-        customer_id = subscription_details.get("customer_id")
-        
-        if not plan_id or not customer_id:
-            return {"status": "error", "message": "ID do plano e do cliente são obrigatórios."}
-
-        logger.info(f"🔄 [Simulação] Criando assinatura do plano '{plan_id}' para o cliente '{customer_id}'...")
-        await asyncio.sleep(1)
-
-        return {
-            "status": "completed_simulated",
-            "subscription_id": f"sub_{int(datetime.now().timestamp())}",
-            "message": "Assinatura criada com sucesso (simulado).",
-        }
-
-
-def create_payment_processing_agent(message_bus) -> List[PaymentProcessingAgent]:
-    """
-    Cria o agente de Processamento de Pagamentos.
-    """
-    agents = []
-    logger.info("💳 Criando PaymentProcessingAgent...")
-    try:
-        agent = PaymentProcessingAgent("payment_processing_001", message_bus)
-        agents.append(agent)
-    except Exception as e:
-        logger.error(f"❌ Erro crítico criando PaymentProcessingAgent: {e}", exc_info=True)
-    return agents
+        except stripe.error.CardError as e:
+            # Erro específico do cartão (ex: recusado)
+            body = e.json_body
+            err = body.get('error', {})
+            logger.error(f"Erro de cartão ao processar pagamento: {err.get('message')}")
+            await self.publish_error_response(message, f"Erro de Cartão: {err.get('message')}")
+        except stripe.error.StripeError as e:
+            # Outros erros da API do Stripe
+            logger.error(f"Erro da API do Stripe: {e}", exc_info=True)
+            await self.publish_error_response(message, f"Erro do Gateway de Pagamento: {e}")
+        except Exception as e:
+            # Erros inesperados
+            logger.error(f"Erro inesperado no processamento de pagamento: {e}", exc_info=True)
+            await self.publish_error_response(message, "Ocorreu um erro interno inesperado no serviço de pagamento.")
