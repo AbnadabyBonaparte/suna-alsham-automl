@@ -1,22 +1,23 @@
 #!/usr/bin/env python3
 """
-Módulo do Revenue Optimization Agent - ALSHAM GLOBAL
+Módulo do Agente de Otimização de Receita - SUNA-ALSHAM (ALSHAM GLOBAL)
 
-Este super agente de negócio é responsável por analisar dados de vendas
-e clientes para maximizar a receita de forma autônoma.
+[Versão Fortalecida]
+Este agente analisa dados históricos de vendas e comportamento do cliente
+para identificar oportunidades de aumento de receita, como cross-selling,
+up-selling e pacotes de produtos.
 """
 
-import asyncio
 import logging
-from typing import Any, Dict, List
+import uuid
+from typing import Any, Dict
 
-# Importa a classe base e as ferramentas do nosso núcleo fortalecido
+# Importa a classe base e os tipos essenciais do núcleo do sistema
 from suna_alsham_core.multi_agent_network import (
     AgentMessage,
     AgentType,
     BaseNetworkAgent,
     MessageType,
-    Priority,
 )
 
 logger = logging.getLogger(__name__)
@@ -24,97 +25,103 @@ logger = logging.getLogger(__name__)
 
 class RevenueOptimizationAgent(BaseNetworkAgent):
     """
-    Maximiza a receita por cliente, identifica oportunidades de crescimento,
-    otimiza o mix de produtos e prevê a receita futura.
+    Agente especialista em encontrar oportunidades para maximizar a receita.
     """
 
     def __init__(self, agent_id: str, message_bus):
         """Inicializa o RevenueOptimizationAgent."""
-        super().__init__(agent_id, AgentType.SPECIALIZED, message_bus)
-        
+        super().__init__(
+            agent_id=agent_id,
+            agent_type=AgentType.BUSINESS_DOMAIN,
+            message_bus=message_bus,
+        )
         self.capabilities.extend([
-            "revenue_maximization",
-            "growth_opportunity_identification",
-            "product_mix_optimization",
-            "revenue_forecasting",
+            "cross_sell_analysis",
+            "up_sell_identification",
+            "customer_ltv_prediction",
         ])
-        
-        logger.info(f"📈 {self.agent_id} (Otimizador de Receita) inicializado.")
+        # Armazena o estado das análises de otimização em andamento
+        self.pending_optimizations = {}
+        logger.info(f"📈 Agente de Otimização de Receita ({self.agent_id}) fortalecido e inicializado.")
 
     async def _internal_handle_message(self, message: AgentMessage):
-        """Processa requisições relacionadas à otimização de receita."""
-        if message.message_type != MessageType.REQUEST:
+        """
+        Processa requisições para otimizar a receita de um cliente ou respostas do AIPoweredAgent.
+        """
+        if message.message_type == MessageType.RESPONSE:
+            await self._handle_ai_response(message)
             return
 
-        request_type = message.content.get("request_type")
-        handler = {
-            "analyze_revenue_opportunities": self._analyze_opportunities_handler,
-        }.get(request_type)
+        if message.message_type == MessageType.REQUEST and message.content.get("request_type") == "find_revenue_opportunity":
+            await self.handle_find_opportunity_request(message)
 
-        if handler:
-            result = await handler(message.content)
-            await self.message_bus.publish(self.create_response(message, result))
-        else:
-            await self.message_bus.publish(self.create_error_response(message, "Ação de otimização de receita desconhecida"))
-
-    async def _analyze_opportunities_handler(self, request_data: Dict[str, Any]) -> Dict[str, Any]:
+    async def handle_find_opportunity_request(self, original_message: AgentMessage):
         """
-        [LÓGICA REAL] Orquestra a busca por dados e a análise com IA para
-        encontrar oportunidades de aumento de receita.
+        Recebe dados do cliente, cria um prompt e delega a análise de oportunidade.
         """
-        client_id = request_data.get("client_id")
-        if not client_id:
-            return {"status": "error", "message": "ID do cliente é obrigatório."}
+        customer_history = original_message.content.get("customer_history", {})
+        available_products = original_message.content.get("available_products", [])
 
-        logger.info(f"Analisando oportunidades de receita para o cliente: {client_id}...")
+        if not customer_history or not available_products:
+            await self.publish_error_response(original_message, "Histórico do cliente ou produtos disponíveis não fornecidos.")
+            return
 
-        try:
-            # 1. [LÓGICA REAL] Pede ao DatabaseAgent os dados de vendas e clientes.
-            sales_data_response = await self.send_request_and_wait(
-                "database_001",
-                {"request_type": "execute_query", "query": f"SELECT * FROM sales WHERE client_id = '{client_id}';"}
-            )
-            sales_data = sales_data_response.content.get("data", [])
+        customer_id = customer_history.get('customer_id', 'N/A')
+        logger.info(f"Buscando oportunidades de receita para o cliente: {customer_id}")
 
-            # 2. [LÓGICA REAL] Pede ao AIAnalyzerAgent para analisar os dados.
-            prompt = (
-                "Você é um consultor de crescimento de negócios. Analise os seguintes dados de vendas de um cliente e "
-                "identifique as 3 principais oportunidades para aumentar a receita (upsell, cross-sell, otimização de produto). "
-                f"Dados: {str(sales_data)}. "
-                "Responda em formato JSON com a chave 'opportunities', que deve ser uma lista de dicionários, cada um com 'type', 'description' e 'estimated_impact_percent'."
-            )
-            
-            ai_response_message = await self.send_request_and_wait(
-                "ai_analyzer_001",
-                {"request_type": "ai_analysis", "data": {"prompt": prompt}}
-            )
+        # 1. Engenharia de Prompt para encontrar oportunidades
+        prompt = (
+            "Aja como um estrategista de vendas. Analise o histórico de compras do cliente abaixo, "
+            "compare com a lista de produtos disponíveis e identifique a melhor oportunidade de "
+            "cross-sell ou up-sell. Descreva a oportunidade e justifique sua escolha.\n"
+            f"Histórico do Cliente: {customer_history}\n"
+            f"Produtos Disponíveis: {available_products}\n"
+            "Responda em formato JSON com as chaves 'opportunity_type' (cross-sell/up-sell), "
+            "'suggested_product_id' (string) e 'justification' (string)."
+        )
+        
+        # 2. Cria uma mensagem para o AIPoweredAgent
+        optimization_id = str(uuid.uuid4())
+        request_to_ai = self.create_message(
+            recipient_id="ai_powered_001",
+            message_type=MessageType.REQUEST,
+            content={"request_type": "generate_structured_text", "prompt": prompt},
+            callback_id=optimization_id
+        )
 
-            # A lógica real de parsing da resposta JSON viria aqui
-            analysis_result = {
-                "opportunities": [
-                    {"type": "upsell", "description": "Oferecer plano Premium para clientes com mais de 10 compras.", "estimated_impact_percent": 15},
-                    {"type": "cross_sell", "description": "Oferecer 'Produto B' para clientes que compraram 'Produto A'.", "estimated_impact_percent": 8},
-                ]
-            }
+        # 3. Armazena o contexto
+        self.pending_optimizations[optimization_id] = {
+            "original_message": original_message,
+            "customer_id": customer_id
+        }
 
-            return {"status": "completed", "analysis": analysis_result}
+        # 4. Envia a requisição
+        await self.message_bus.publish(request_to_ai)
+        logger.info(f"Requisição de otimização de receita enviada para ai_powered_001 com ID: {optimization_id}")
 
-        except TimeoutError:
-            return {"status": "error", "message": "Timeout: Um agente do núcleo não respondeu a tempo."}
-        except Exception as e:
-            logger.error(f"Erro ao analisar oportunidades de receita: {e}", exc_info=True)
-            return {"status": "error", "message": str(e)}
+    async def _handle_ai_response(self, response_message: AgentMessage):
+        """
+        Processa a resposta com a sugestão de oportunidade vinda do AIPoweredAgent.
+        """
+        optimization_id = response_message.callback_id
+        if optimization_id not in self.pending_optimizations:
+            return
 
+        task_context = self.pending_optimizations.pop(optimization_id)
+        original_message = task_context["original_message"]
+        
+        if response_message.content.get("status") != "completed":
+            await self.publish_error_response(original_message, "Falha na análise de oportunidade pela IA.")
+            return
 
-def create_revenue_optimization_agent(message_bus) -> List[RevenueOptimizationAgent]:
-    """
-    Cria o agente de Otimização de Receita.
-    """
-    agents = []
-    logger.info("📈 Criando RevenueOptimizationAgent...")
-    try:
-        agent = RevenueOptimizationAgent("revenue_optimization_001", message_bus)
-        agents.append(agent)
-    except Exception as e:
-        logger.error(f"❌ Erro crítico criando RevenueOptimizationAgent: {e}", exc_info=True)
-    return agents
+        opportunity = response_message.content.get("result", {}).get("structured_data", {})
+        logger.info(f"Oportunidade de receita encontrada pela IA: {opportunity}")
+
+        # 5. Enviar a resposta final
+        final_response_content = {
+            "status": "completed",
+            "customer_id": task_context["customer_id"],
+            "opportunity": opportunity
+        }
+        final_response = self.create_response(original_message, final_response_content)
+        await self.message_bus.publish(final_response)
