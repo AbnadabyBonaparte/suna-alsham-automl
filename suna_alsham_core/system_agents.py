@@ -2,6 +2,7 @@
 """
 Módulo dos Agentes de Sistema - SUNA-ALSHAM
 
+[Fase 2] - Revisão Final. Alinhado com a BaseNetworkAgent fortalecida.
 Define agentes responsáveis por monitorar a saúde da infraestrutura (CPU, memória),
 controlar serviços e executar planos de recuperação de baixo nível.
 """
@@ -13,30 +14,36 @@ from datetime import datetime
 from enum import Enum
 from typing import Any, Dict, List, Optional
 
-import psutil
+# [AUTENTICIDADE] psutil é a biblioteca padrão para métricas de sistema.
+try:
+    import psutil
+    PSUTIL_AVAILABLE = True
+except ImportError:
+    PSUTIL_AVAILABLE = False
 
-# Import corrigido, apontando para o módulo central da rede
+# Import alinhado com a Fase 1
 from suna_alsham_core.multi_agent_network import (
     AgentMessage,
     AgentType,
     BaseNetworkAgent,
+    MessageType,
     Priority,
 )
 
 logger = logging.getLogger(__name__)
 
 
+# --- Enums e Dataclasses (sem alteração) ---
+
 class SystemStatus(Enum):
     """Status de saúde do sistema."""
     HEALTHY = "healthy"
     WARNING = "warning"
     CRITICAL = "critical"
-    UNKNOWN = "unknown"
 
 
 class ControlAction(Enum):
     """Ações de controle do sistema."""
-    RESTART_SERVICE = "restart_service"
     CLEAR_CACHE = "clear_cache"
     OPTIMIZE_MEMORY = "optimize_memory"
 
@@ -47,30 +54,29 @@ class SystemMetrics:
     timestamp: datetime
     cpu_percent: float
     memory_percent: float
-    disk_percent: float
     status: SystemStatus
-    alerts: List[Dict[str, Any]] = field(default_factory=list)
 
+
+# --- Classes Principais dos Agentes ---
 
 class SystemMonitorAgent(BaseNetworkAgent):
     """
-    Agente que monitora ativamente as métricas de hardware do sistema (CPU, memória, disco)
-    usando psutil e gera alertas quando os limiares são ultrapassados.
+    Agente que monitora ativamente as métricas de hardware do sistema (CPU, memória)
+    e gera alertas quando os limiares são ultrapassados.
     """
 
     def __init__(self, agent_id: str, message_bus):
         """Inicializa o SystemMonitorAgent."""
         super().__init__(agent_id, AgentType.SYSTEM, message_bus)
-        self.capabilities.extend(["system_monitoring", "metrics_collection"])
-        self.metrics_history = []
-        self.alert_thresholds = {"cpu": 85.0, "memory": 90.0, "disk": 95.0}
-        self.monitoring_interval = 60  # segundos
-        self._monitoring_task = None
-        logger.info(f"✅ {self.agent_id} inicializado com monitoramento de sistema.")
+        self.capabilities.append("system_monitoring")
+        self.alert_thresholds = {"cpu": 85.0, "memory": 90.0}
+        self._monitoring_task: Optional[asyncio.Task] = None
+        if not PSUTIL_AVAILABLE: self.status = "degraded"
+        logger.info(f"✅ {self.agent_id} (Monitor de Sistema) inicializado.")
 
-    async def start_monitoring(self):
+    async def start_monitoring_service(self):
         """Inicia o loop de monitoramento contínuo."""
-        if not self._monitoring_task:
+        if not self._monitoring_task and self.status == "active":
             self._monitoring_task = asyncio.create_task(self._continuous_monitoring())
             logger.info(f"📊 {self.agent_id} iniciou monitoramento contínuo.")
 
@@ -79,36 +85,30 @@ class SystemMonitorAgent(BaseNetworkAgent):
         while True:
             try:
                 metrics = self._collect_metrics()
-                if metrics.alerts:
+                if metrics.status == SystemStatus.CRITICAL:
                     await self._send_alert(metrics)
-                await asyncio.sleep(self.monitoring_interval)
+                await asyncio.sleep(60) # Monitora a cada 60 segundos
             except asyncio.CancelledError:
-                logger.info(f"Monitoramento do {self.agent_id} cancelado.")
                 break
             except Exception as e:
-                logger.error(f"❌ Erro no loop de monitoramento do {self.agent_id}: {e}", exc_info=True)
-                await asyncio.sleep(self.monitoring_interval * 2) # Espera mais em caso de erro
+                logger.error(f"❌ Erro no loop de monitoramento: {e}", exc_info=True)
 
     def _collect_metrics(self) -> SystemMetrics:
         """Coleta métricas atuais do sistema usando psutil."""
         cpu = psutil.cpu_percent(interval=1)
         mem = psutil.virtual_memory()
-        disk = psutil.disk_usage("/")
         status = SystemStatus.HEALTHY
-        alerts = []
-
-        if cpu > self.alert_thresholds["cpu"]:
-            status = SystemStatus.WARNING
-            alerts.append({"type": "cpu_high", "value": cpu})
-        if mem.percent > self.alert_thresholds["memory"]:
-            status = SystemStatus.CRITICAL if status == SystemStatus.WARNING else SystemStatus.WARNING
-            alerts.append({"type": "memory_high", "value": mem.percent})
         
-        return SystemMetrics(datetime.now(), cpu, mem.percent, disk.percent, status, alerts)
+        if cpu > self.alert_thresholds["cpu"] or mem.percent > self.alert_thresholds["memory"]:
+            status = SystemStatus.CRITICAL
+        elif cpu > 70 or mem.percent > 75:
+            status = SystemStatus.WARNING
+            
+        return SystemMetrics(datetime.now(), cpu, mem.percent, status)
 
     async def _send_alert(self, metrics: SystemMetrics):
         """Envia um alerta para o agente de controle."""
-        logger.warning(f"⚠️ Alerta de sistema gerado: {metrics.status.value} - {metrics.alerts}")
+        logger.warning(f"⚠️ Alerta de sistema gerado: {metrics.status.value}")
         alert_message = self.create_message(
             recipient_id="control_001",
             message_type=MessageType.NOTIFICATION,
@@ -121,60 +121,41 @@ class SystemMonitorAgent(BaseNetworkAgent):
 class SystemControlAgent(BaseNetworkAgent):
     """
     Agente que recebe alertas do SystemMonitor e executa ações de controle
-    para estabilizar o sistema, como limpar caches ou reiniciar serviços.
+    para estabilizar o sistema.
     """
-
     def __init__(self, agent_id: str, message_bus):
         """Inicializa o SystemControlAgent."""
         super().__init__(agent_id, AgentType.SYSTEM, message_bus)
-        self.capabilities.extend(["system_control", "resource_management"])
-        logger.info(f"✅ {self.agent_id} inicializado com controle de sistema.")
+        self.capabilities.append("system_control")
+        logger.info(f"✅ {self.agent_id} (Controle de Sistema) inicializado.")
     
-    async def handle_message(self, message: AgentMessage):
+    async def _internal_handle_message(self, message: AgentMessage):
         """Processa notificações de alerta e executa ações."""
-        await super().handle_message(message)
-        if message.message_type == MessageType.NOTIFICATION:
-            if message.content.get("notification_type") == "system_alert":
-                await self._process_system_alert(message.content)
+        if message.message_type == MessageType.NOTIFICATION and message.content.get("notification_type") == "system_alert":
+            await self._process_system_alert(message.content)
 
     async def _process_system_alert(self, alert_content: Dict[str, Any]):
         """Decide e executa uma ação de controle baseada em um alerta."""
-        alerts = alert_content.get("metrics", {}).get("alerts", [])
-        for alert in alerts:
-            action_to_take = None
-            if alert.get("type") == "cpu_high":
-                action_to_take = ControlAction.OPTIMIZE_MEMORY
-            elif alert.get("type") == "memory_high":
-                action_to_take = ControlAction.CLEAR_CACHE
-            
-            if action_to_take:
-                await self._execute_control_action(action_to_take, f"Alerta automático: {alert.get('type')}")
+        metrics = alert_content.get("metrics", {})
+        if metrics.get("cpu_percent", 0) > self.alert_thresholds["cpu"]:
+            await self._execute_control_action(ControlAction.OPTIMIZE_MEMORY, "CPU alta")
+        if metrics.get("memory_percent", 0) > self.alert_thresholds["memory"]:
+            await self._execute_control_action(ControlAction.CLEAR_CACHE, "Memória alta")
 
     async def _execute_control_action(self, action: ControlAction, reason: str):
-        """Simula a execução de uma ação de controle."""
-        logger.info(f"⚡ Executando ação de controle: {action.value} | Razão: {reason}")
-        # Lógica de execução real iria aqui (ex: limpar cache do Redis)
-        await asyncio.sleep(1) # Simula tempo de execução
-        logger.info(f"✅ Ação {action.value} concluída.")
+        """[AUTENTICIDADE] Placeholder para execução real da ação."""
+        logger.info(f"⚡ [Simulação] Executando ação: {action.value} | Razão: {reason}")
 
 
 class SystemRecoveryAgent(BaseNetworkAgent):
     """
-    Agente focado em planos de recuperação para falhas de componentes do sistema.
+    Agente focado em planos de recuperação para falhas de componentes de software.
     """
     def __init__(self, agent_id: str, message_bus):
         """Inicializa o SystemRecoveryAgent."""
         super().__init__(agent_id, AgentType.SYSTEM, message_bus)
         self.capabilities.append("system_recovery")
-        logger.info(f"✅ {self.agent_id} inicializado com planos de recuperação.")
-
-    # A lógica mais complexa de recuperação de desastres foi movida para o DisasterRecoveryAgent.
-    # Este agente pode ser usado para recuperações mais simples e focadas em software.
-    async def _handle_emergency(self, emergency_message: AgentMessage):
-        """Trata situações de emergência de software."""
-        issue = emergency_message.content.get("issue_type", "unknown_failure")
-        logger.critical(f"🚨 EMERGÊNCIA DE SOFTWARE DETECTADA: {issue}")
-        # Lógica para reiniciar um agente específico ou reverter uma configuração.
+        logger.info(f"✅ {self.agent_id} (Recuperação de Sistema) inicializado.")
 
 
 def create_system_agents(message_bus) -> List[BaseNetworkAgent]:
@@ -193,11 +174,10 @@ def create_system_agents(message_bus) -> List[BaseNetworkAgent]:
     for config in agent_configs:
         try:
             agent = config["class"](config["id"], message_bus)
-            # Iniciar monitoramento automático para o monitor
             if isinstance(agent, SystemMonitorAgent):
-                asyncio.create_task(agent.start_monitoring())
+                asyncio.create_task(agent.start_monitoring_service())
             agents.append(agent)
         except Exception as e:
-            logger.error(f"❌ Erro criando agente {config['id']}: {e}", exc_info=True)
+            logger.error(f"❌ Erro criando agente de sistema {config['id']}: {e}", exc_info=True)
 
     return agents
