@@ -19,6 +19,10 @@ from suna_alsham_core.multi_agent_network import (
     Priority
 )
 
+# --- IMPORTAÇÃO ADICIONADA ---
+from .data_collector_agent import DataCollectorAgent
+# -----------------------------
+
 logger = logging.getLogger(__name__)
 
 
@@ -89,11 +93,12 @@ def create_analytics_agents(message_bus) -> List[BaseNetworkAgent]:
     """
     logger.info("🔧 Criando agentes do domínio de Analytics & Intelligence...")
     
-    # Por enquanto, criamos apenas o orquestrador.
-    # Os outros agentes serão adicionados a esta lista conforme os criarmos.
+    # --- LISTA DE AGENTES ATUALIZADA ---
     agents = [
-        AnalyticsOrchestratorAgent("analytics_orchestrator_001", message_bus)
+        AnalyticsOrchestratorAgent("analytics_orchestrator_001", message_bus),
+        DataCollectorAgent("data_collector_001", message_bus)
     ]
+    # ------------------------------------
     
     logger.info(f"✅ {len(agents)} agentes de Analytics criados.")
     return agents
