@@ -608,26 +608,26 @@
                 <div class="kpi-card fade-in">
                     <div class="kpi-label">Agentes Inteligentes</div>
                     <div class="kpi-value">
-                        <span id="active-agents">0</span>/<span id="total-agents">50</span>
+                        <span id="active-agents">0</span>/<span id="total-agents">51</span>
                     </div>
                     <div class="text-sm text-gray-400 mt-2">
-                        Taxa de Disponibilidade: <span class="text-green-400">98.7%</span>
+                        Eficiência Operacional: <span id="operational-efficiency" class="text-green-400">0%</span>
                     </div>
-                    <div class="kpi-trend positive">
+                    <div class="kpi-trend" id="agents-trend">
                         <i class="fas fa-check-circle"></i>
-                        <span>Optimal</span>
+                        <span>Active</span>
                     </div>
                 </div>
 
                 <div class="kpi-card fade-in">
-                    <div class="kpi-label">Valor do Investimento</div>
-                    <div class="kpi-value">R$ 2.5M</div>
+                    <div class="kpi-label">Valor de Mercado Atual</div>
+                    <div class="kpi-value" id="market-value">R$ 2.5M</div>
                     <div class="text-sm text-gray-400 mt-2">
-                        ROI Projetado: <span class="text-green-400">+347%</span>
+                        ROI Real: <span id="roi-percentage" class="text-green-400">Calculando...</span>
                     </div>
-                    <div class="kpi-trend positive">
+                    <div class="kpi-trend" id="roi-trend">
                         <i class="fas fa-chart-line"></i>
-                        <span>Growth</span>
+                        <span id="roi-status">Analyzing</span>
                     </div>
                 </div>
             </div>
@@ -666,6 +666,34 @@
                     </h3>
                     <div style="height: 200px;">
                         <canvas id="performanceChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Financial Metrics Section -->
+            <div class="mb-8">
+                <h2 class="text-2xl font-bold mb-6 flex items-center gap-3">
+                    <div class="category-icon" style="background: linear-gradient(135deg, #10b981, #059669);">
+                        <i class="fas fa-chart-line"></i>
+                    </div>
+                    Métricas Financeiras em Tempo Real
+                </h2>
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <div class="enterprise-card text-center">
+                        <div class="text-sm text-gray-400 mb-2">Economia Gerada</div>
+                        <div class="text-2xl font-bold text-green-400" id="cost-savings">R$ 0</div>
+                    </div>
+                    <div class="enterprise-card text-center">
+                        <div class="text-sm text-gray-400 mb-2">Receita Gerada</div>
+                        <div class="text-2xl font-bold text-blue-400" id="revenue-generated">R$ 0</div>
+                    </div>
+                    <div class="enterprise-card text-center">
+                        <div class="text-sm text-gray-400 mb-2">Valor Total Gerado</div>
+                        <div class="text-2xl font-bold text-purple-400" id="total-value-generated">R$ 0</div>
+                    </div>
+                    <div class="enterprise-card text-center">
+                        <div class="text-sm text-gray-400 mb-2">Taxa de Sucesso</div>
+                        <div class="text-2xl font-bold text-yellow-400" id="success-rate">0%</div>
                     </div>
                 </div>
             </div>
@@ -1169,13 +1197,45 @@
                 document.getElementById('uptime-value').textContent = 
                     formatUptime(data.uptime_seconds || 0);
                 
+                // DADOS FINANCEIROS REAIS
+                if (data.financial_metrics) {
+                    // Valor de Mercado
+                    const marketValue = data.financial_metrics.current_market_value || data.financial_metrics.initial_investment;
+                    document.getElementById('market-value').textContent = 
+                        `R$ ${(marketValue / 1000000).toFixed(2)}M`;
+                    
+                    // ROI REAL
+                    const roi = data.financial_metrics.roi_percentage || 0;
+                    document.getElementById('roi-percentage').textContent = 
+                        roi >= 0 ? `+${roi.toFixed(2)}%` : `${roi.toFixed(2)}%`;
+                    
+                    // Trend do ROI
+                    const roiTrend = document.getElementById('roi-trend');
+                    const roiStatus = document.getElementById('roi-status');
+                    if (roi > 0) {
+                        roiTrend.className = 'kpi-trend positive';
+                        roiStatus.textContent = 'Growing';
+                    } else if (roi < 0) {
+                        roiTrend.className = 'kpi-trend negative';
+                        roiStatus.textContent = 'Building';
+                    } else {
+                        roiTrend.className = 'kpi-trend';
+                        roiStatus.textContent = 'Stable';
+                    }
+                }
+                
                 // System metrics
                 if (data.system_health) {
                     document.getElementById('cpu-usage').textContent = 
                         `${(data.system_health.cpu_usage || 0).toFixed(1)}%`;
                     document.getElementById('memory-usage').textContent = 
                         `${(data.system_health.memory_usage || 0).toFixed(1)}%`;
+                    document.getElementById('operational-efficiency').textContent = 
+                        `${(data.system_health.operational_efficiency || 0).toFixed(1)}%`;
                 }
+                
+                // Atualizar agentes totais (agora são 51 com o Valuation Agent)
+                document.getElementById('total-agents').textContent = data.total_agents || 51;
                 
                 return true;
             } catch (error) {
@@ -1252,6 +1312,19 @@
                 if (!response.ok) throw new Error('Erro ao buscar métricas');
                 
                 const data = await response.json();
+                
+                // ATUALIZAR MÉTRICAS FINANCEIRAS REAIS
+                if (data.financial_metrics) {
+                    // Formatar valores em Reais
+                    document.getElementById('cost-savings').textContent = 
+                        `R$ ${data.financial_metrics.cost_savings.toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+                    document.getElementById('revenue-generated').textContent = 
+                        `R$ ${data.financial_metrics.revenue_generated.toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+                    document.getElementById('total-value-generated').textContent = 
+                        `R$ ${data.financial_metrics.total_value_generated.toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+                    document.getElementById('success-rate').textContent = 
+                        `${data.financial_metrics.success_rate.toFixed(2)}%`;
+                }
                 
                 // Atualizar gráfico
                 if (performanceChart && data.performance_timeline) {
