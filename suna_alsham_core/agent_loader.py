@@ -41,7 +41,7 @@ from suna_alsham_core.deployment_agent import create_deployment_agent
 from suna_alsham_core.testing_agent import create_testing_agent
 from suna_alsham_core.visualization_agent import create_visualization_agent
 from suna_alsham_core.security_enhancements_agent import create_security_enhancements_agent
-from suna_alsham_core.real_evolution_engine import create_evolution_engine_agent
+from suna_alsham_core.real_evolution_engine import create_evolution_engine_agents # <-- 's' ADICIONADO AQUI
 
 # Módulos de Domínio (ALSHAM GLOBAL)
 from domain_modules.analytics.analytics_orchestrator_agent import create_analytics_agents
@@ -69,7 +69,7 @@ async def initialize_all_agents(network: Any) -> Dict[str, Any]:
             create_disaster_recovery_agent, create_backup_agent, create_database_agent,
             create_logging_agent, create_api_gateway_agent, create_notification_agent,
             create_deployment_agent, create_testing_agent, create_visualization_agent,
-            create_security_enhancements_agent, create_evolution_engine_agent
+            create_security_enhancements_agent, create_evolution_engine_agents # <-- 's' ADICIONADO AQUI
         ],
         "domain": [
             create_analytics_agents, create_sales_agents, create_social_media_agents
