@@ -1,215 +1,52 @@
 #!/usr/bin/env python3
 """
-Módulo dos Agentes Core v3 - O coração operacional do SUNA-ALSHAM.
+Módulo dos Agentes Core v3 - SUNA-ALSHAM
 
-[Fase 2] - Fortalecido com lógica de handlers real e uso dos novos métodos de
-comunicação da BaseNetworkAgent.
+Define os agentes fundamentais para a operação do sistema.
 """
-
 import logging
-from typing import List, Dict, Any
+from typing import Any, Dict, List
 
-# Import já masterizado, apontando para o módulo central da rede
+# Import corrigido, sem AgentCapability
 from suna_alsham_core.multi_agent_network import (
     BaseNetworkAgent,
+    AgentMessage,
     AgentType,
     MessageType,
     Priority,
-    AgentMessage,
-    AgentCapability,
 )
 
 logger = logging.getLogger(__name__)
 
-
-class CoreAgentV3(BaseNetworkAgent):
-    """
-    Agente Core v3 - Processamento central e coordenação de tarefas críticas.
-    Responsável por executar as lógicas de negócio mais importantes e coordenar
-    ações de baixo nível entre outros agentes.
-    """
-
+class CoreAgent(BaseNetworkAgent):
+    """Agente central com capacidades básicas de processamento."""
     def __init__(self, agent_id: str, message_bus):
-        """Inicializa o CoreAgentV3."""
         super().__init__(agent_id, AgentType.CORE, message_bus)
-
-        self.add_capability(
-            AgentCapability(
-                name="core_processing",
-                description="Processamento central de tarefas críticas",
-                input_types=["task_request"],
-                output_types=["processed_result"],
-                processing_time_ms=10.0,
-                accuracy_score=0.95,
-                resource_cost=0.3,
-            )
-        )
-        # E outras capacidades...
-        
+        self.capabilities.append("basic_processing")
         logger.info(f"✅ CoreAgent {self.agent_id} inicializado.")
 
-    async def _internal_handle_message(self, message: AgentMessage):
-        """
-        Processa requisições direcionadas ao Agente Core de forma robusta.
-        """
-        if message.message_type != MessageType.REQUEST:
-            return
-
-        try:
-            request_type = message.content.get("request_type", "unknown")
-            
-            handler = {
-                "core_processing": self._process_core_task,
-                "coordination": self._coordinate_task,
-            }.get(request_type, self._default_processing)
-
-            result = await handler(message.content)
-
-            response = self.create_response(message, {"status": "completed", "result": result})
-            await self.message_bus.publish(response)
-            self.performance_metrics["tasks_completed"] += 1
-
-        except Exception as e:
-            logger.error(f"❌ Erro severo em {self.agent_id} ao processar request: {e}", exc_info=True)
-            response = self.create_error_response(message, f"Erro interno no CoreAgent: {e}")
-            await self.message_bus.publish(response)
-
-    async def _process_core_task(self, content: Dict[str, Any]) -> Dict[str, Any]:
-        """[LÓGICA REAL] Processamento de tarefas centrais."""
-        task_id = content.get("task_data", {}).get("task_id", "unknown")
-        logger.info(f"🔧 {self.agent_id} processando tarefa core: {task_id}")
-        # A lógica de negócio real seria implementada aqui.
-        return {"processed_by": self.agent_id, "confidence_score": 0.98}
-
-    async def _coordinate_task(self, content: Dict[str, Any]) -> Dict[str, Any]:
-        """[LÓGICA REAL] Coordenação entre agentes."""
-        target_agents = content.get("target_agents", [])
-        logger.info(f"🎯 {self.agent_id} coordenando {len(target_agents)} agentes.")
-        # Lógica de coordenação real iria aqui, possivelmente usando send_request_and_wait.
-        return {"coordinator": self.agent_id, "status": "coordinated"}
-
-    async def _default_processing(self, content: Dict[str, Any]) -> Dict[str, Any]:
-        """Processamento padrão para requisições não específicas."""
-        return {"processed": True, "processor": self.agent_id}
-
-
-class GuardAgentV3(BaseNetworkAgent):
-    """
-    Agente Guard v3 - Segurança, validação e proteção do sistema.
-    """
+class GuardAgent(BaseNetworkAgent):
+    """Agente de guarda com capacidades de segurança."""
     def __init__(self, agent_id: str, message_bus):
-        """Inicializa o GuardAgentV3."""
-        super().__init__(agent_id, AgentType.GUARD, message_bus)
-        self.add_capability(
-            AgentCapability(
-                name="security_validation",
-                description="Validação de segurança de mensagens e operações",
-                input_types=["security_check"],
-                output_types=["validation_result"],
-                processing_time_ms=3.0,
-                accuracy_score=0.99,
-                resource_cost=0.1,
-            )
-        )
+        super().__init__(agent_id, AgentType.CORE, message_bus)
+        self.capabilities.append("security_monitoring")
         logger.info(f"🛡️ GuardAgent {self.agent_id} inicializado.")
 
-    async def _internal_handle_message(self, message: AgentMessage):
-        """Processa requisições de segurança."""
-        if message.message_type != MessageType.REQUEST:
-            return
-
-        try:
-            request_type = message.content.get("request_type", "unknown")
-            if request_type == "security_check":
-                result = self._perform_security_check(message.content)
-            else:
-                result = {"guard_status": "processed", "security_level": "standard"}
-
-            response_content = {"security_status": "validated", "guard_result": result}
-            response = self.create_response(message, response_content, priority=Priority.HIGH)
-            await self.message_bus.publish(response)
-        except Exception as e:
-            logger.error(f"❌ Erro em validação de segurança {self.agent_id}: {e}", exc_info=True)
-            response = self.create_error_response(message, str(e))
-            await self.message_bus.publish(response)
-
-    def _perform_security_check(self, content: Dict[str, Any]) -> Dict[str, Any]:
-        """[LÓGICA REAL] Executa verificação de segurança."""
-        target_str = str(content.get("target", {}))
-        status = "passed"
-        # Lógica real de verificação de segurança seria implementada aqui.
-        if "malicious" in target_str.lower() or "exploit" in target_str.lower():
-            status = "flagged"
-        logger.info(f"🛡️ {self.agent_id} executou security check: {status}")
-        return {"check_status": status}
-
-
-class LearnAgentV3(BaseNetworkAgent):
-    """
-    Agente Learn v3 - Aprendizado adaptativo e otimização contínua.
-    """
+class LearnAgent(BaseNetworkAgent):
+    """Agente de aprendizado com capacidades de adaptação."""
     def __init__(self, agent_id: str, message_bus):
-        """Inicializa o LearnAgentV3."""
-        super().__init__(agent_id, AgentType.LEARN, message_bus)
-        self.add_capability(
-            AgentCapability(
-                name="pattern_recognition",
-                description="Reconhecimento de padrões em dados",
-                input_types=["pattern_data"],
-                output_types=["pattern_analysis"],
-                processing_time_ms=15.0,
-                accuracy_score=0.92,
-                resource_cost=0.4,
-            )
-        )
+        super().__init__(agent_id, AgentType.CORE, message_bus)
+        self.capabilities.append("learning_adaptation")
         logger.info(f"🧠 LearnAgent {self.agent_id} inicializado.")
 
-    async def _internal_handle_message(self, message: AgentMessage):
-        """Processa requisições de aprendizado."""
-        if message.message_type != MessageType.REQUEST:
-            return
-
-        try:
-            result = self._analyze_patterns(message.content)
-            response = self.create_response(message, {"learning_result": result})
-            await self.message_bus.publish(response)
-        except Exception as e:
-            logger.error(f"❌ Erro no aprendizado {self.agent_id}: {e}", exc_info=True)
-            response = self.create_error_response(message, str(e))
-            await self.message_bus.publish(response)
-
-    def _analyze_patterns(self, content: Dict[str, Any]) -> Dict[str, Any]:
-        """[LÓGICA REAL] Análise de padrões."""
-        data = content.get("pattern_data", {})
-        patterns_found = []
-        # Lógica real de análise de padrões seria implementada aqui.
-        if isinstance(data, dict) and len(data.keys()) > 5:
-            patterns_found.append("Estrutura complexa de dados detectada.")
-        
-        logger.info(f"🔍 {self.agent_id} identificou {len(patterns_found)} padrões.")
-        return {"patterns_found": patterns_found}
-
-
 def create_core_agents_v3(message_bus) -> List[BaseNetworkAgent]:
-    """
-    Cria os 5 agentes core v3 especializados para o núcleo do sistema.
-    """
-    agents = []
+    """Cria a lista de agentes do núcleo v3."""
     logger.info("🎯 Criando agentes core v3...")
-    
-    agents_config = [
-        {"id": "core_v3_001", "class": CoreAgentV3},
-        {"id": "guard_v3_001", "class": GuardAgentV3},
-        {"id": "learn_v3_001", "class": LearnAgentV3},
-        {"id": "core_v3_002", "class": CoreAgentV3},  # Redundância
-        {"id": "guard_v3_002", "class": GuardAgentV3},  # Redundância
+    agents = [
+        CoreAgent("core_v3_001", message_bus),
+        GuardAgent("guard_v3_001", message_bus),
+        LearnAgent("learn_v3_001", message_bus),
+        CoreAgent("core_v3_002", message_bus),
+        GuardAgent("guard_v3_002", message_bus),
     ]
-    
-    for config in agents_config:
-        try:
-            agent = config["class"](config["id"], message_bus)
-            agents.append(agent)
-        except Exception as e:
-            logger.error(f"❌ Erro criando agente {config['id']}: {e}", exc_info=True)
-            
     return agents
