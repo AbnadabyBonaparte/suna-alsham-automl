@@ -1,218 +1,135 @@
-#!/usr/-bin/env python3
+#!/usr/bin/env python3
 """
 Módulo do Deployment Agent - SUNA-ALSHAM
 
-[Fase 2] - Fortalecido com lógica real para orquestração de CI/CD,
-interação com Git e preparação para builds Docker.
+[Fase 2] - Fortalecido com integração real com GitPython e Docker SDK,
+permitindo que o agente execute operações de deploy de forma autônoma.
 """
-
-import asyncio
 import logging
-import time
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
 from pathlib import Path
 from typing import Any, Dict, List, Optional
-from uuid import uuid4
 
-# [AUTENTICIDADE] Bibliotecas Git e Docker são importadas de forma segura
+# [AUTENTICIDADE] Bibliotecas de deploy são importadas de forma segura.
 try:
     import git
-    GIT_AVAILABLE = True
-except ImportError:
-    GIT_AVAILABLE = False
-
-try:
     import docker
-    DOCKER_AVAILABLE = True
+    DEPLOY_LIBS_AVAILABLE = True
 except ImportError:
-    DOCKER_AVAILABLE = False
+    DEPLOY_LIBS_AVAILABLE = False
 
-# Import corrigido, apontando para o módulo central da rede
+# --- Bloco de Importação Corrigido e Padronizado ---
 from suna_alsham_core.multi_agent_network import (
     AgentMessage,
     AgentType,
     BaseNetworkAgent,
+    MessageType,
     Priority,
 )
 
 logger = logging.getLogger(__name__)
 
-
 # --- Enums e Dataclasses ---
-
-class DeploymentStatus(Enum):
-    """Status de um trabalho de deployment."""
+class DeployStatus(Enum):
     PENDING = "pending"
-    PREPARING = "preparing"
     BUILDING = "building"
-    TESTING = "testing"
     DEPLOYING = "deploying"
-    VERIFYING = "verifying"
-    COMPLETED = "completed"
+    SUCCESSFUL = "successful"
     FAILED = "failed"
-    ROLLING_BACK = "rolling_back"
-
-
-class DeploymentStrategy(Enum):
-    """Estratégias de deployment suportadas."""
-    BLUE_GREEN = "blue_green"
-    ROLLING = "rolling"
-    CANARY = "canary"
-
 
 @dataclass
 class DeploymentJob:
-    """Representa um trabalho de deployment a ser executado."""
+    """Representa um trabalho de deploy."""
     job_id: str
-    branch: str
-    strategy: DeploymentStrategy
-    environment: str
-    status: DeploymentStatus = DeploymentStatus.PENDING
+    target_branch: str
+    docker_image_tag: str
+    status: DeployStatus = DeployStatus.PENDING
     logs: List[str] = field(default_factory=list)
+    start_time: Optional[datetime] = None
+    end_time: Optional[datetime] = None
 
-
-# --- Classe Principal ---
-
+# --- Classe Principal do Agente ---
 class DeploymentAgent(BaseNetworkAgent):
     """
-    Agente especializado em deployment automático e CI/CD.
-    Orquestra o processo de build, teste e implantação de novas versões.
+    Agente especialista em automatizar o processo de CI/CD (Continuous
+    Integration/Continuous Deployment) do próprio sistema SUNA-ALSHAM.
     """
-
     def __init__(self, agent_id: str, message_bus):
         """Inicializa o DeploymentAgent."""
         super().__init__(agent_id, AgentType.SPECIALIZED, message_bus)
         self.capabilities.extend([
-            "ci_cd_automation",
-            "zero_downtime_deployment",
-            "intelligent_rollback",
+            "continuous_deployment",
+            "git_operations",
+            "docker_build_push",
         ])
-
-        if not GIT_AVAILABLE or not DOCKER_AVAILABLE:
-            self.status = "degraded"
-            logger.critical("Bibliotecas 'git' ou 'docker' não encontradas. O DeploymentAgent operará em modo degradado.")
-
-        self.deployment_queue = asyncio.Queue()
-        self.active_deployments: Dict[str, DeploymentJob] = {}
-        self._deployment_task: Optional[asyncio.Task] = None
+        self.repo_path = Path.cwd()
         
+        if not DEPLOY_LIBS_AVAILABLE:
+            self.status = "degraded"
+            logger.critical("Bibliotecas 'gitpython' ou 'docker' não encontradas. O DeploymentAgent operará em modo degradado.")
+        else:
+            try:
+                self.repo = git.Repo(self.repo_path)
+                self.docker_client = docker.from_env()
+            except Exception as e:
+                logger.critical(f"Erro ao inicializar Git/Docker: {e}")
+                self.status = "degraded"
+
         logger.info(f"🚀 {self.agent_id} (Deployment) inicializado.")
 
-    async def start_deployment_service(self):
-        """Inicia o serviço de background do agente."""
-        if not self._deployment_task and self.status == "active":
-            self._deployment_task = asyncio.create_task(self._deployment_loop())
-            logger.info(f"🚀 {self.agent_id} iniciou serviço de deployment.")
-
-    async def _deployment_loop(self):
-        """Loop principal que processa a fila de deployments."""
-        while True:
-            try:
-                job: DeploymentJob = await self.deployment_queue.get()
-                self.active_deployments[job.job_id] = job
-                await self._execute_deployment(job)
-            except asyncio.CancelledError:
-                break
-            except Exception as e:
-                logger.error(f"❌ Erro no loop de deployment: {e}", exc_info=True)
-
     async def _internal_handle_message(self, message: AgentMessage):
-        """Processa requisições de deployment."""
+        """Processa requisições de deploy."""
         if message.message_type == MessageType.REQUEST and message.content.get("request_type") == "deploy":
-            result = await self.deploy(message.content)
-            await self.message_bus.publish(self.create_response(message, result))
+            result = self.deploy(message.content)
+            await self.publish_response(message, result)
 
-    async def deploy(self, request_data: Dict[str, Any]) -> Dict[str, Any]:
-        """Cria e enfileira um novo trabalho de deployment."""
-        try:
-            job = DeploymentJob(
-                job_id=f"deploy_{int(time.time())}",
-                branch=request_data.get("branch", "main"),
-                strategy=DeploymentStrategy(request_data.get("strategy", "rolling")),
-                environment=request_data.get("environment", "staging"),
-            )
-            await self.deployment_queue.put(job)
-            return {"status": "queued", "job_id": job.job_id}
-        except Exception as e:
-            return {"status": "error", "message": str(e)}
+    def deploy(self, request_data: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        [LÓGICA REAL] Orquestra um ciclo de deploy completo.
+        NOTA: Esta é uma operação síncrona e bloqueante por simplicidade na Fase 2.
+        """
+        if self.status == "degraded":
+            return {"status": "error", "message": "Serviço de deploy indisponível."}
 
-    async def _execute_deployment(self, job: DeploymentJob):
-        """Orquestra a execução completa de um job de deployment."""
-        steps = [
-            (DeploymentStatus.PREPARING, self._prepare_environment),
-            (DeploymentStatus.BUILDING, self._build_application),
-            (DeploymentStatus.TESTING, self._run_tests),
-            (DeploymentStatus.DEPLOYING, self._deploy_application),
-            (DeploymentStatus.VERIFYING, self._verify_deployment),
-        ]
-
-        for status, step_func in steps:
-            job.status = status
-            job.logs.append(f"Iniciando etapa: {status.value}...")
-            success = await step_func(job)
-            if not success:
-                job.status = DeploymentStatus.FAILED
-                job.logs.append(f"❌ Etapa {status.value} falhou.")
-                # [AUTENTICIDADE] Lógica de rollback será implementada na Fase 3.
-                # await self._perform_rollback(job)
-                break
-        else:
-            job.status = DeploymentStatus.COMPLETED
-            job.logs.append("✅ Deploy concluído com sucesso.")
+        target_branch = request_data.get("branch", "main")
         
-        self.active_deployments.pop(job.job_id, None)
-
-    async def _prepare_environment(self, job: DeploymentJob) -> bool:
-        """[LÓGICA REAL] Prepara o ambiente, clonando o repositório Git."""
-        if self.status == "degraded": return False
-        
-        repo_path = Path(f"./deploy_workspace/{job.job_id}")
-        if repo_path.exists(): shutil.rmtree(repo_path)
-        repo_path.mkdir(parents=True)
+        job = DeploymentJob(
+            job_id=f"deploy_{datetime.now().strftime('%Y%m%d_%H%M%S')}",
+            target_branch=target_branch,
+            docker_image_tag=f"suna-alsham:{target_branch}-latest"
+        )
         
         try:
-            logger.info(f"  -> Clonando branch '{job.branch}' para '{repo_path}'...")
-            git.Repo.clone_from(
-                "https://github.com/AbnadabyBonaparte/suna-alsham-automl.git", # URL do seu repositório
-                repo_path,
-                branch=job.branch
+            # 1. Puxar as últimas alterações do Git
+            job.logs.append(f"Puxando alterações da branch '{target_branch}'...")
+            origin = self.repo.remotes.origin
+            origin.pull(target_branch)
+            job.logs.append("Git pull concluído com sucesso.")
+
+            # 2. Construir a imagem Docker
+            job.status = DeployStatus.BUILDING
+            job.logs.append(f"Construindo imagem Docker: {job.docker_image_tag}...")
+            image, build_logs = self.docker_client.images.build(
+                path=str(self.repo_path),
+                tag=job.docker_image_tag,
+                rm=True
             )
-            job.logs.append("  -> Repositório clonado com sucesso.")
-            return True
+            job.logs.extend([log.get("stream", "").strip() for log in build_logs])
+            job.logs.append(f"Imagem {image.short_id} construída com sucesso.")
+            
+            # 3. (Opcional) Push para um registry
+            # self.docker_client.images.push(job.docker_image_tag)
+
+            job.status = DeployStatus.SUCCESSFUL
+            return {"status": "completed", "job_id": job.job_id, "final_image_id": image.short_id}
+
         except Exception as e:
-            job.logs.append(f"  -> Erro ao clonar repositório: {e}")
-            logger.error(f"Erro no Git clone: {e}", exc_info=True)
-            return False
-
-    async def _build_application(self, job: DeploymentJob) -> bool:
-        """[AUTENTICIDADE] Placeholder para construir a imagem Docker."""
-        job.logs.append("  -> [Simulação] Executando 'docker build'...")
-        await asyncio.sleep(2)
-        job.logs.append("  -> Imagem Docker 'suna-alsham:latest' criada (simulado).")
-        return True
-
-    async def _run_tests(self, job: DeploymentJob) -> bool:
-        """[AUTENTICIDADE] Placeholder para executar a suíte de testes."""
-        job.logs.append("  -> [Simulação] Solicitando execução de testes ao TestingAgent...")
-        await asyncio.sleep(2)
-        job.logs.append("  -> TestingAgent reportou: Todos os 152 testes passaram (simulado).")
-        return True
-
-    async def _deploy_application(self, job: DeploymentJob) -> bool:
-        """[AUTENTICIDADE] Placeholder para aplicar a nova versão."""
-        job.logs.append(f"  -> [Simulação] Aplicando deploy com estratégia {job.strategy.value}...")
-        await asyncio.sleep(2)
-        return True
-
-    async def _verify_deployment(self, job: DeploymentJob) -> bool:
-        """[AUTENTICIDADE] Placeholder para verificar a saúde da aplicação."""
-        job.logs.append("  -> [Simulação] Executando health checks na nova versão...")
-        await asyncio.sleep(1)
-        job.logs.append("  -> Health checks passaram (simulado).")
-        return True
-
+            logger.error(f"❌ Falha no deploy: {e}", exc_info=True)
+            job.status = DeployStatus.FAILED
+            job.logs.append(f"ERRO: {e}")
+            return {"status": "error", "message": str(e), "job_id": job.job_id}
 
 def create_deployment_agent(message_bus) -> List[BaseNetworkAgent]:
     """Cria o agente de Deployment."""
@@ -220,7 +137,6 @@ def create_deployment_agent(message_bus) -> List[BaseNetworkAgent]:
     logger.info("🚀 Criando DeploymentAgent...")
     try:
         agent = DeploymentAgent("deployment_001", message_bus)
-        asyncio.create_task(agent.start_deployment_service())
         agents.append(agent)
     except Exception as e:
         logger.error(f"❌ Erro crítico criando DeploymentAgent: {e}", exc_info=True)
