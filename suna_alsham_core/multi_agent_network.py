@@ -1,4 +1,4 @@
-from __future__ import annotations # <-- ESTA É A CORREÇÃO MÁGICA
+from __future__ import annotations
 #!/usr/bin/env python3
 """
 Módulo da Rede Multi-Agente - O Coração do Núcleo SUNA-ALSHAM
@@ -28,6 +28,7 @@ class Priority(Enum):
     CRITICAL = 0
 
 class AgentType(Enum):
+    """Define os tipos de agentes no sistema."""
     CORE = "core"
     SPECIALIZED = "specialized"
     SERVICE = "service"
@@ -36,6 +37,8 @@ class AgentType(Enum):
     BUSINESS_DOMAIN = "business_domain"
     AI_POWERED = "ai_powered"
     ORCHESTRATOR = "orchestrator"
+    GUARD = "guard"             # <-- CORREÇÃO
+    AUTOMATOR = "automator"     # <-- CORREÇÃO
 
 @dataclass
 class AgentMessage:
