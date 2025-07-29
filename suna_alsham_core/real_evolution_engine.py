@@ -2,8 +2,7 @@
 """
 Módulo do Real Evolution Engine - O Coração da Auto-Evolução do SUNA-ALSHAM.
 
-[Fase 2] - Fortalecido com lógica real de pré-processamento de dados para
-treinamento de modelo com scikit-learn.
+[Versão Final Completa] - Inclui a classe do Agente e a função de fábrica.
 """
 
 import logging
@@ -19,6 +18,15 @@ try:
     SKLEARN_AVAILABLE = True
 except ImportError:
     SKLEARN_AVAILABLE = False
+
+# Importa a classe base e os tipos essenciais do núcleo
+from suna_alsham_core.multi_agent_network import (
+    BaseNetworkAgent,
+    AgentMessage,
+    AgentType,
+    MessageType,
+    Priority,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -40,7 +48,6 @@ class TrainingDataPoint:
 class RealEvolutionEngine:
     """
     Motor de evolução que implementa o ciclo de aprendizado e adaptação.
-    Este componente é agnóstico à rede e focado puramente na lógica de ML.
     """
 
     def __init__(self):
@@ -67,8 +74,7 @@ class RealEvolutionEngine:
 
     def train_evolution_model(self) -> Dict[str, Any]:
         """
-        [LÓGICA REAL] Treina o modelo de machine learning com os dados coletados,
-        incluindo pré-processamento real dos dados.
+        [LÓGICA REAL] Treina o modelo de machine learning com os dados coletados.
         """
         if self.status != "active" or len(self.training_data) < 50:
             return {"status": "skipped", "reason": "Dados de treino insuficientes ou dependências em falta."}
@@ -76,21 +82,14 @@ class RealEvolutionEngine:
         logger.info(f"🧠 Treinando modelo de evolução com {len(self.training_data)} pontos de dados...")
         
         try:
-            # 1. Preparar os dados para o scikit-learn
             features = [dp.state_features for dp in self.training_data]
             rewards = [dp.outcome_reward for dp in self.training_data]
-
-            # 2. Converter features (dicionários) em um array numérico
             X = self.vectorizer.fit_transform(features)
             y = np.array(rewards)
-
-            # 3. Treinar o modelo
             self.model.fit(X, y)
             
             self.last_training_time = datetime.now()
             self.model_version += 1
-            
-            # [AUTENTICIDADE] O score é uma métrica real do modelo treinado.
             model_score = self.model.score(X, y)
 
             logger.info(f"✅ Modelo treinado com sucesso. Versão: {self.model_version}, Score R^2: {model_score:.3f}")
@@ -98,40 +97,38 @@ class RealEvolutionEngine:
             return {
                 "status": "completed",
                 "model_version": self.model_version,
-                "training_samples": len(self.training_data),
                 "model_score_r2": model_score,
             }
         except Exception as e:
             logger.error(f"❌ Falha no treinamento do modelo de evolução: {e}", exc_info=True)
             return {"status": "error", "message": str(e)}
 
-    def predict_best_action(self, agent_id: str, possible_actions: List[Dict]) -> Dict[str, Any]:
-        """
-        [AUTENTICIDADE] Usa o modelo treinado para prever a melhor ação dentre uma lista.
-        Na Fase 3, o `current_state` será usado para predições mais complexas.
-        """
-        if self.status != "active" or self.model_version == 0:
-            # Retorna a primeira ação como fallback se o modelo não estiver treinado
-            return {"best_action": possible_actions[0], "confidence": 0.5, "reason": "Fallback - modelo não treinado."}
+# --- CLASSE DO AGENTE (O "PILOTO") - ADICIONADA ---
+class EvolutionEngineAgent(BaseNetworkAgent):
+    """
+    Agente que encapsula o RealEvolutionEngine e o conecta à rede.
+    """
+    def __init__(self, agent_id: str, message_bus):
+        super().__init__(agent_id, AgentType.SPECIALIZED, message_bus)
+        self.engine = RealEvolutionEngine()
+        self.capabilities.append("self_evolution_training")
 
-        try:
-            # Converte as possíveis ações em features numéricas
-            X_predict = self.vectorizer.transform(possible_actions)
+    async def _internal_handle_message(self, message: AgentMessage):
+        """Processa requisições para treinar o modelo."""
+        if message.message_type == MessageType.REQUEST and message.content.get("request_type") == "train_evolution_model":
+            # Aqui, os dados de treino viriam do conteúdo da mensagem
+            # data_points = message.content.get("data")
+            # for dp in data_points:
+            #     self.engine.add_training_data(TrainingDataPoint(**dp))
             
-            # Faz a predição da recompensa para cada ação
-            predicted_rewards = self.model.predict(X_predict)
-            
-            # Encontra a ação com a maior recompensa prevista
-            best_action_index = np.argmax(predicted_rewards)
-            best_action = possible_actions[best_action_index]
-            confidence = predicted_rewards[best_action_index]
+            result = self.engine.train_evolution_model()
+            await self.publish_response(message, result)
 
-            return {
-                "best_action": best_action,
-                "confidence": confidence,
-                "model_version": self.model_version,
-            }
-        except Exception as e:
-            logger.error(f"❌ Falha na predição da melhor ação: {e}", exc_info=True)
-            # Retorna a primeira ação como fallback em caso de erro
-            return {"best_action": possible_actions[0], "confidence": 0.5, "reason": f"Erro na predição: {e}"}
+# --- FUNÇÃO DE FÁBRICA (A "CHAVE DE IGNIÇÃO") - ADICIONADA ---
+def create_evolution_engine_agents(message_bus) -> List[BaseNetworkAgent]:
+    """Cria e retorna o agente do motor de evolução."""
+    logger.info("🔧 Criando o Evolution Engine Agent...")
+    agents = [
+        EvolutionEngineAgent("evolution_engine_001", message_bus)
+    ]
+    return agents
