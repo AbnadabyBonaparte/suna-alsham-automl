@@ -129,6 +129,14 @@
             margin-bottom: 20px;
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
         }
+        .pending-data {
+            border: 1px dashed #4a5568;
+            background-color: rgba(74, 85, 104, 0.2);
+            color: #a0aec0;
+            text-align: center;
+            padding: 20px;
+            border-radius: 6px;
+        }
     </style>
 </head>
 <body class="p-6">
@@ -139,18 +147,21 @@
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
             <div class="dashboard-card">
                 <div class="metric-label">CICLOS TOTAIS EXECUTADOS</div>
-                <div class="metric-value">78,946</div>
-                <div class="text-sm">Uptime: 1d 3h 47m</div>
-                <div class="text-sm">23.457 ciclos/segundo | 84,445 ciclos/hora</div>
+                <div class="pending-data">
+                    <i class="fas fa-plug mr-2"></i>
+                    Aguardando conexão com API
+                    <div class="text-xs mt-2">Endpoint: /api/cycles</div>
+                </div>
+                <div class="text-sm mt-2">Uptime: <span class="pending-connection">Conectando...</span></div>
             </div>
             
             <div class="dashboard-card">
                 <div class="metric-label">Performance Global</div>
-                <div class="metric-value status-good">97%</div>
-                <div class="progress-bar">
-                    <div class="progress-value" style="width: 97%"></div>
+                <div class="pending-data">
+                    <i class="fas fa-chart-line mr-2"></i>
+                    Aguardando métricas de desempenho
+                    <div class="text-xs mt-2">Endpoint: /api/performance</div>
                 </div>
-                <div class="text-sm mt-2">Sistema Operacional</div>
             </div>
             
             <div class="dashboard-card">
@@ -161,7 +172,7 @@
             
             <div class="dashboard-card">
                 <div class="metric-label">Valor do Sistema</div>
-                <div class="metric-value">R$ 1.430.000</div>
+                <div class="metric-value">R$ 2.500.000</div>
                 <div class="text-sm">Investimento Total</div>
             </div>
         </div>
@@ -424,7 +435,7 @@
                 </div>
             </div>
             
-            <!-- Domínio de Negócios: 16 agentes (mostraremos 8 e indicaremos que há mais) -->
+            <!-- Domínio de Negócios: 16 agentes -->
             <div class="dashboard-card">
                 <div class="category-header">
                     <i class="fas fa-briefcase mr-2"></i> Domínio de Negócios (16 agentes)
@@ -470,19 +481,57 @@
                         <span class="font-bold">quality_agent_001</span>
                         <div class="text-xs text-gray-400 mt-2">Controle de qualidade</div>
                     </div>
-                </div>
-                <div class="mt-4 text-center">
-                    <button class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition">
-                        Ver todos os 16 agentes de Negócios
-                    </button>
+                    <div class="agent-card">
+                        <span class="agent-status online"></span>
+                        <span class="font-bold">inventory_agent_001</span>
+                        <div class="text-xs text-gray-400 mt-2">Gestão de inventário</div>
+                    </div>
+                    <div class="agent-card">
+                        <span class="agent-status online"></span>
+                        <span class="font-bold">logistics_agent_001</span>
+                        <div class="text-xs text-gray-400 mt-2">Logística</div>
+                    </div>
+                    <div class="agent-card">
+                        <span class="agent-status online"></span>
+                        <span class="font-bold">procurement_agent_001</span>
+                        <div class="text-xs text-gray-400 mt-2">Compras</div>
+                    </div>
+                    <div class="agent-card">
+                        <span class="agent-status online"></span>
+                        <span class="font-bold">pricing_agent_001</span>
+                        <div class="text-xs text-gray-400 mt-2">Estratégia de preços</div>
+                    </div>
+                    <div class="agent-card">
+                        <span class="agent-status online"></span>
+                        <span class="font-bold">analytics_agent_001</span>
+                        <div class="text-xs text-gray-400 mt-2">Análise de negócios</div>
+                    </div>
+                    <div class="agent-card">
+                        <span class="agent-status online"></span>
+                        <span class="font-bold">social_media_001</span>
+                        <div class="text-xs text-gray-400 mt-2">Redes sociais</div>
+                    </div>
+                    <div class="agent-card">
+                        <span class="agent-status online"></span>
+                        <span class="font-bold">content_agent_001</span>
+                        <div class="text-xs text-gray-400 mt-2">Criação de conteúdo</div>
+                    </div>
+                    <div class="agent-card">
+                        <span class="agent-status online"></span>
+                        <span class="font-bold">crm_agent_001</span>
+                        <div class="text-xs text-gray-400 mt-2">Gestão de relacionamento</div>
+                    </div>
                 </div>
             </div>
             
             <!-- Gráfico de Performance -->
             <div class="dashboard-card">
                 <div class="category-header">Performance Timeline</div>
-                <div style="height: 300px;">
-                    <canvas id="performanceChart"></canvas>
+                <div class="pending-data" style="height: 300px;">
+                    <i class="fas fa-chart-line fa-2x mb-4"></i>
+                    <div>Aguardando dados históricos de desempenho</div>
+                    <div class="text-xs mt-2">Configure o endpoint /api/performance/history</div>
+                    <div class="text-xs mt-1">para popular este gráfico automaticamente</div>
                 </div>
             </div>
         </div>
@@ -495,155 +544,44 @@
                 <i class="fas fa-terminal mr-2"></i> Live Event Log <span class="badge status-good ml-2">LIVE</span>
             </div>
         </div>
-        <div class="event-log">
-            <div class="log-entry">
-                <span class="log-timestamp">[2023-11-02 10:45:23]</span> 
-                <span class="log-level-info">[INFO]</span> Sistema inicializado com sucesso. 50 agentes ativos.
+        <div class="pending-data" style="height: 300px;">
+            <i class="fas fa-terminal fa-2x mb-4"></i>
+            <div>Aguardando conexão com logs em tempo real</div>
+            <div class="text-xs mt-2">Configure o endpoint /api/logs/stream</div>
+            <div class="text-xs mt-1">para exibir logs do sistema em tempo real</div>
+        </div>
+    </div>
+    
+    <div class="mt-8 bg-gray-800 p-4 rounded-lg">
+        <h3 class="text-lg font-bold mb-2">Instruções para integração com API</h3>
+        <p class="mb-4">Para conectar este dashboard aos dados reais do sistema SUNA-ALSHAM, configure os seguintes endpoints:</p>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+            <div>
+                <div class="font-bold">/api/status</div>
+                <div class="text-gray-400 mb-1">Retorna status geral do sistema</div>
+                <code class="bg-gray-900 p-1 rounded text-xs block">{"system_status":"active","total_agents":50,...}</code>
             </div>
-            <div class="log-entry">
-                <span class="log-timestamp">[2023-11-02 10:45:28]</span> 
-                <span class="log-level-info">[INFO]</span> Conexão com banco de dados estabelecida.
+            <div>
+                <div class="font-bold">/api/cycles</div>
+                <div class="text-gray-400 mb-1">Contagem de ciclos executados</div>
+                <code class="bg-gray-900 p-1 rounded text-xs block">{"cycles_total":0,"cycles_per_second":0}</code>
             </div>
-            <div class="log-entry">
-                <span class="log-timestamp">[2023-11-02 10:45:35]</span> 
-                <span class="log-level-info">[INFO]</span> security_guardian_001 iniciou verificação de segurança.
+            <div>
+                <div class="font-bold">/api/performance</div>
+                <div class="text-gray-400 mb-1">Métricas de desempenho atual</div>
+                <code class="bg-gray-900 p-1 rounded text-xs block">{"cpu":0,"memory":0,"network":0,"global":0}</code>
             </div>
-            <div class="log-entry">
-                <span class="log-timestamp">[2023-11-02 10:46:12]</span> 
-                <span class="log-level-warning">[AVISO]</span> Pico de uso de CPU detectado (78%). Aplicando otimização.
-            </div>
-            <div class="log-entry">
-                <span class="log-timestamp">[2023-11-02 10:47:01]</span> 
-                <span class="log-level-info">[INFO]</span> Otimização concluída. Uso de CPU normalizado (42%).
-            </div>
-            <div class="log-entry">
-                <span class="log-timestamp">[2023-11-02 10:48:17]</span> 
-                <span class="log-level-info">[INFO]</span> Backup automático iniciado pelo system_backup_001.
-            </div>
-            <div class="log-entry">
-                <span class="log-timestamp">[2023-11-02 10:49:23]</span> 
-                <span class="log-level-info">[INFO]</span> visualization_001 gerou novos relatórios de desempenho.
-            </div>
-            <div class="log-entry">
-                <span class="log-timestamp">[2023-11-02 10:50:47]</span> 
-                <span class="log-level-info">[INFO]</span> deep_learning_001 concluiu o treinamento do modelo v3.2.
-            </div>
-            <div class="log-entry">
-                <span class="log-timestamp">[2023-11-02 10:51:14]</span> 
-                <span class="log-level-warning">[AVISO]</span> Tentativa de acesso não autorizado detectada e bloqueada.
-            </div>
-            <div class="log-entry">
-                <span class="log-timestamp">[2023-11-02 10:51:58]</span> 
-                <span class="log-level-info">[INFO]</span> security_enhancements_001 atualizou regras de firewall.
-            </div>
-            <div class="log-entry">
-                <span class="log-timestamp">[2023-11-02 10:52:42]</span> 
-                <span class="log-level-info">[INFO]</span> Todos os 50 agentes reportando status normal.
+            <div>
+                <div class="font-bold">/api/logs/stream</div>
+                <div class="text-gray-400 mb-1">Stream de logs em tempo real</div>
+                <code class="bg-gray-900 p-1 rounded text-xs block">WebSocket: ws://hostname/api/logs/stream</code>
             </div>
         </div>
     </div>
     
     <div class="text-center text-gray-500 mt-6">
         <p>© 2023 SUNA-ALSHAM Quantum v12.0 - Sistema Unificado Neural Avançado</p>
-        <p class="text-sm">Protocolo: Anomaly Detection | Conexão: Secure | Uptime: 1d 3h 47m</p>
+        <p class="text-sm">Valor do Sistema: R$ 2.500.000 | Total de Agentes: 50 | Status: Ativo</p>
     </div>
-
-    <script>
-        // Performance Chart
-        const ctx = document.getElementById('performanceChart').getContext('2d');
-        const performanceChart = new Chart(ctx, {
-            type: 'line',
-            data: {
-                labels: ['6h', '8h', '10h', '12h', '14h', '16h', '18h', '20h', '22h', '00h', '02h', '04h', 'Agora'],
-                datasets: [
-                    {
-                        label: 'CPU (%)',
-                        data: [45, 52, 78, 65, 59, 80, 81, 56, 55, 40, 42, 49, 46],
-                        borderColor: 'rgba(66, 153, 225, 1)',
-                        backgroundColor: 'rgba(66, 153, 225, 0.1)',
-                        borderWidth: 2,
-                        tension: 0.4,
-                        fill: true
-                    },
-                    {
-                        label: 'Memória (%)',
-                        data: [62, 59, 75, 71, 68, 74, 79, 70, 67, 61, 58, 64, 67],
-                        borderColor: 'rgba(72, 187, 120, 1)',
-                        backgroundColor: 'rgba(72, 187, 120, 0.1)',
-                        borderWidth: 2,
-                        tension: 0.4,
-                        fill: true
-                    },
-                    {
-                        label: 'Rede (Mbps)',
-                        data: [120, 132, 145, 140, 158, 165, 172, 168, 155, 142, 138, 143, 149],
-                        borderColor: 'rgba(237, 137, 54, 1)',
-                        backgroundColor: 'rgba(237, 137, 54, 0.1)',
-                        borderWidth: 2,
-                        tension: 0.4,
-                        fill: true
-                    }
-                ]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        grid: {
-                            color: 'rgba(255, 255, 255, 0.1)'
-                        },
-                        ticks: {
-                            color: '#a0aec0'
-                        }
-                    },
-                    x: {
-                        grid: {
-                            color: 'rgba(255, 255, 255, 0.1)'
-                        },
-                        ticks: {
-                            color: '#a0aec0'
-                        }
-                    }
-                },
-                plugins: {
-                    legend: {
-                        labels: {
-                            color: '#e2e8f0'
-                        }
-                    }
-                }
-            }
-        });
-        
-        // Simular novos eventos de log
-        function addLogEntry() {
-            const logContainer = document.querySelector('.event-log');
-            const now = new Date();
-            const timestamp = `[${now.getFullYear()}-${(now.getMonth()+1).toString().padStart(2, '0')}-${now.getDate().toString().padStart(2, '0')} ${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}:${now.getSeconds().toString().padStart(2, '0')}]`;
-            
-            const events = [
-                `<span class="log-timestamp">${timestamp}</span> <span class="log-level-info">[INFO]</span> Verificação de integridade concluída. Todos os sistemas operacionais.`,
-                `<span class="log-timestamp">${timestamp}</span> <span class="log-level-info">[INFO]</span> automl_agent_001 otimizou modelo de previsão de vendas.`,
-                `<span class="log-timestamp">${timestamp}</span> <span class="log-level-warning">[AVISO]</span> Uso de memória elevado. Iniciando limpeza de cache.`,
-                `<span class="log-timestamp">${timestamp}</span> <span class="log-level-info">[INFO]</span> Novos dados processados por data_mining_001.`,
-                `<span class="log-timestamp">${timestamp}</span> <span class="log-level-info">[INFO]</span> forecast_001 gerou previsões atualizadas.`
-            ];
-            
-            const newEntry = document.createElement('div');
-            newEntry.className = 'log-entry';
-            newEntry.innerHTML = events[Math.floor(Math.random() * events.length)];
-            
-            logContainer.insertBefore(newEntry, logContainer.firstChild);
-            
-            if (logContainer.children.length > 30) {
-                logContainer.removeChild(logContainer.lastChild);
-            }
-        }
-        
-        // Adicionar novos logs periodicamente
-        setInterval(addLogEntry, 5000);
-    </script>
 </body>
 </html>
