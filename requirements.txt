@@ -27,6 +27,7 @@ redis==5.0.1
 sqlalchemy==2.0.23
 alembic==1.12.1
 psycopg2-binary==2.9.9
+aiosqlite==0.19.0
 
 # ===== HTTP & NETWORKING =====
 httpx==0.25.2
@@ -106,13 +107,3 @@ phonenumbers==8.13.25
 
 # ===== TIMEZONE & LOCALIZATION =====
 babel==2.13.1
-
-# ===== PRODUCTION OPTIMIZATIONS =====
-# Versões fixas para garantir estabilidade
-# Pacotes otimizados para performance
-# Dependências mínimas para reduzir tamanho
-# Compatibilidade com Docker e Railway
-# Suporte a Redis para cache distribuído
-# Monitoramento com Prometheus
-# Logging estruturado para produção
-# Segurança enterprise com criptografia
