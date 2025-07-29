@@ -197,7 +197,7 @@ def logs():
 
 @socketio.on('connect')
 def handle_connect():
-    logger.info('Cliente WebSocket conectado')
+    logger.info('Cliente conectado via WebSocket')
 
 @socketio.on('disconnect')
 def handle_disconnect():
@@ -207,5 +207,5 @@ if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
     logger.info(f"Servidor iniciando na porta {port}")
     logger.info(f"Sistema configurado para 6 ciclos por hora")
-    # Usar app.run normal pois o WebSocket está dando problema
-    app.run(host='0.0.0.0', port=port, debug=False)
+    # Substituindo app.run pelo socketio.run conforme solicitado
+    socketio.run(app, host='0.0.0.0', port=port, debug=False)
