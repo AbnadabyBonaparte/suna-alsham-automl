@@ -1,33 +1,118 @@
-# Core Dependencies
-python-dotenv>=1.0.0
-psutil>=5.9.0
-redis>=4.5.0
+# 🚀 SUNA-ALSHAM Multi-Agent System - Production Requirements
+# Dependências otimizadas para produção com versões fixas para estabilidade
 
-# Web Framework
-uvicorn>=0.23.0
-fastapi>=0.103.0
-aiohttp>=3.8.0
-aiofiles>=23.0.0
+# ===== CORE FRAMEWORK =====
+fastapi==0.104.1
+uvicorn[standard]==0.24.0
+pydantic==2.5.0
+pydantic-settings==2.1.0
 
-# Code Quality & Formatting
-autopep8>=2.0.0
-black>=23.0.0
-isort>=5.12.0
-flake8>=6.0.0
+# ===== ASYNC & CONCURRENCY =====
+asyncio-mqtt==0.16.1
+aiofiles==23.2.1
+aioredis==2.0.1
+websockets==12.0
 
-# AI/ML
-openai>=1.0.0
-numpy>=1.24.0
-pandas>=2.0.0
-scikit-learn>=1.2.0
+# ===== AI & MACHINE LEARNING =====
+openai==1.3.7
+numpy==1.24.3
+pandas==2.0.3
+scikit-learn==1.3.0
+joblib==1.3.2
+transformers==4.35.2
+torch==2.1.1
 
-# Async & Concurrency
-asyncio-throttle>=1.0.0
+# ===== DATABASE & CACHING =====
+redis==5.0.1
+sqlalchemy==2.0.23
+alembic==1.12.1
+psycopg2-binary==2.9.9
 
-# Utils
-colorama>=0.4.6
-tqdm>=4.65.0
-loguru>=0.7.0
+# ===== HTTP & NETWORKING =====
+httpx==0.25.2
+requests==2.31.0
+urllib3==2.0.7
+certifi==2023.11.17
 
-# Monitoring
-prometheus-client>=0.16.0
+# ===== SECURITY & AUTHENTICATION =====
+cryptography==41.0.7
+bcrypt==4.1.2
+python-jose[cryptography]==3.3.0
+passlib[bcrypt]==1.7.4
+python-multipart==0.0.6
+
+# ===== PAYMENT GATEWAY (Módulo de Vendas) =====
+stripe==8.5.0
+
+# ===== MONITORING & LOGGING =====
+prometheus-client==0.19.0
+structlog==23.2.0
+python-json-logger==2.0.7
+sentry-sdk[fastapi]==1.38.0
+
+# ===== DATA PROCESSING & VISUALIZATION =====
+jsonschema==4.20.0
+python-dateutil==2.8.2
+pytz==2023.3
+marshmallow==3.20.1
+matplotlib==3.8.2
+seaborn==0.13.0
+plotly==5.17.0
+# [Fase 3] - Adicionado para automação de vídeo
+moviepy==1.0.3
+Pillow==10.0.1
+
+
+# ===== UTILITIES =====
+python-dotenv==1.0.0
+click==8.1.7
+rich==13.7.0
+typer==0.9.0
+pyyaml==6.0.1
+
+# ===== TESTING (MINIMAL FOR PROD) =====
+pytest==7.4.3
+pytest-asyncio==0.21.1
+
+# ===== WEB & API =====
+jinja2==3.1.2
+starlette==0.27.0
+python-multipart==0.0.6
+
+# ===== PERFORMANCE OPTIMIZATION =====
+orjson==3.9.10
+msgpack==1.0.7
+lz4==4.3.2
+cachetools==5.3.2
+
+# ===== DEPLOYMENT & CONTAINERIZATION =====
+gunicorn==21.2.0
+docker==6.1.3
+gitpython==3.1.41
+
+# ===== SYSTEM MONITORING =====
+psutil==5.9.6
+py-cpuinfo==9.0.0
+GPUtil==1.4.0
+
+# ===== NETWORKING & PROTOCOLS =====
+websocket-client==1.6.4
+paho-mqtt==1.6.1
+paramiko==3.4.0
+
+# ===== DATA VALIDATION =====
+email-validator==2.1.0
+phonenumbers==8.13.25
+
+# ===== TIMEZONE & LOCALIZATION =====
+babel==2.13.1
+
+# ===== PRODUCTION OPTIMIZATIONS =====
+# Versões fixas para garantir estabilidade
+# Pacotes otimizados para performance
+# Dependências mínimas para reduzir tamanho
+# Compatibilidade com Docker e Railway
+# Suporte a Redis para cache distribuído
+# Monitoramento com Prometheus
+# Logging estruturado para produção
+# Segurança enterprise com criptografia

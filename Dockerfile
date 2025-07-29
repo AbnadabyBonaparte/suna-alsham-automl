@@ -1,40 +1,40 @@
-FROM python:3.11-slim-bullseye
+# ===== FASE 1: Builder =====
+# Usamos uma imagem base leve do Python para construir nossas dependências.
+FROM python:3.11-slim-bullseye AS builder
 
-# Criar usuário
-RUN groupadd --gid 1000 suna && \
-    useradd --uid 1000 --gid suna --shell /bin/bash --create-home suna
+# Define variáveis de ambiente para otimizar o Python no Docker
+ENV PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1
 
-# Instalar dependências do sistema
-RUN apt-get update && apt-get install -y \
-    curl wget git build-essential gcc g++ \
-    libopenblas-dev liblapack-dev gfortran \
-    libpq-dev postgresql-client \
-    && apt-get clean \
-    && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
-
-# Diretório de trabalho
+# Define o diretório de trabalho dentro do container
 WORKDIR /app
 
-# Copiar requirements
+# Copia apenas o arquivo de dependências primeiro para aproveitar o cache do Docker
 COPY requirements.txt .
 
-# Instalar dependências Python
-RUN pip install --no-cache-dir --upgrade pip setuptools wheel && \
-    pip install --no-cache-dir -r requirements.txt && \
-    pip install psutil redis aiohttp autopep8 uvicorn black isort
+# Instala as dependências de produção
+RUN pip install --no-cache-dir --upgrade pip && \
+    pip install --no-cache-dir -r requirements.txt
 
-# Copiar código
+# Copia todo o resto do código da aplicação
 COPY . .
 
-# Criar diretórios necessários
-RUN mkdir -p /app/logs /app/data /app/mlruns /app/optuna_storage && \
-    chown -R suna:suna /app
 
-# Mudar para usuário suna
-USER suna
+# ===== FASE 2: Final =====
+# Começamos de novo com uma imagem limpa para criar o container final e leve.
+FROM python:3.11-slim-bullseye
 
-# Expor porta
+# Define o mesmo diretório de trabalho
+WORKDIR /app
+
+# Copia apenas o código da aplicação e as dependências já instaladas da fase 'builder'
+# Isso resulta em uma imagem final menor e mais segura, sem ferramentas de build.
+COPY --from=builder /app /app
+COPY --from=builder /usr/local/lib/python3.11/site-packages /usr/local/lib/python3.11/site-packages
+
+# Expõe a porta que nossa aplicação irá usar (o Railway detecta isso)
 EXPOSE 8080
 
-# CORRIGIDO: Executar o arquivo correto!
-CMD ["python", "-u", "main.py"]
+# O comando para iniciar nosso sistema quando o container rodar.
+# Ele executa o nosso ponto de entrada principal, start.py.
+CMD ["python", "start.py"]
