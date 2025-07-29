@@ -1,39 +1,111 @@
+#!/usr/bin/env python3
+"""
+Ponto de Entrada Único e Oficial do Sistema SUNA-ALSHAM.
+"""
+
+import asyncio
+import logging
 import os
 import sys
-import time
+from datetime import datetime
+from pathlib import Path
+from contextlib import asynccontextmanager
 
-print("--- INICIANDO DIAGNÓSTICO DO CONTAINER ---")
-print(f"Data e Hora do Diagnóstico: {time.ctime()}")
+import uvicorn
+from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 
-# 1. Onde estamos? (Diretório de Trabalho Atual)
-current_directory = os.getcwd()
-print(f"[*] Diretório de Trabalho Atual: {current_directory}")
+# --- CORREÇÃO DEFINITIVA DO PATH ---
+# Adiciona a pasta raiz do projeto ao "mapa" do Python.
+sys.path.append(str(Path(__file__).parent.resolve()))
+# ------------------------------------
 
-# 2. O que tem na pasta principal?
-try:
-    app_root_contents = os.listdir(current_directory)
-    print(f"[*] Conteúdo da Pasta Principal ({current_directory}):")
-    for item in app_root_contents:
-        print(f"    - {item}")
-except Exception as e:
-    print(f"[!] Erro ao listar a pasta principal: {e}")
+# Agora que o path está configurado, podemos importar nossos módulos.
+from suna_alsham_core.system import SUNAAlshamSystemV2
 
-# 3. A pasta que precisamos (domain_modules) existe?
-domain_modules_path = os.path.join(current_directory, "domain_modules")
-print("\n--- VERIFICAÇÃO PRINCIPAL ---")
-if "domain_modules" in app_root_contents:
-    print(">>> ✅ SUCESSO: A pasta 'domain_modules' FOI ENCONTRADA!")
+# --- Configuração de Logging ---
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s - %(name)s - [%(levelname)s] - %(message)s",
+    handlers=[logging.StreamHandler(sys.stdout)],
+)
+logger = logging.getLogger("SUNA_ALSHAM_START")
+
+# --- Instância Global do Sistema ---
+system: SUNAAlshamSystemV2 = None
+
+# --- Ciclo de Vida da Aplicação (Lifespan) ---
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """
+    Gerencia o ciclo de vida da aplicação.
+    """
+    global system
+    logger.info("🚀 INICIANDO SEQUÊNCIA DE STARTUP DO SUNA-ALSHAM...")
+    
     try:
-        domain_contents = os.listdir(domain_modules_path)
-        print(f"[*] Conteúdo de 'domain_modules': {domain_contents}")
+        logger.info("🤖 Instanciando a classe principal do sistema...")
+        system = SUNAAlshamSystemV2()
+        
+        success = await system.initialize_complete_system()
+        
+        if success:
+            logger.info(f"✅ SISTEMA INICIALIZADO COM SUCESSO! Status: {system.system_status.upper()}")
+        else:
+            logger.critical("❌ FALHA CRÍTICA NA INICIALIZAÇÃO DO SISTEMA DE AGENTES.")
+            
     except Exception as e:
-        print(f"[!] Erro ao listar 'domain_modules': {e}")
-else:
-    print(">>> ❌ FALHA CRÍTICA: A pasta 'domain_modules' NÃO FOI ENCONTRADA NA PASTA PRINCIPAL.")
-    print(">>> Causa provável: O arquivo .dockerignore pode estar excluindo a pasta.")
+        logger.critical(f"FATAL: Um erro inesperado ocorreu durante a inicialização: {e}", exc_info=True)
+        if not system:
+             system = SUNAAlshamSystemV2()
+        system.system_status = "error"
 
-print("--- FIM DO DIAGNÓSTICO ---")
+    yield
 
-# 4. Sair do programa para vermos apenas o log de diagnóstico.
-# O deploy vai falhar de propósito, o que é o que queremos.
-sys.exit(1)
+    # --- Lógica de Shutdown ---
+    logger.info("🛑 INICIANDO SEQUÊNCIA DE SHUTDOWN...")
+    if system and hasattr(system, 'network') and hasattr(system.network, 'message_bus') and hasattr(system.network.message_bus, 'stop'):
+        await system.network.message_bus.stop()
+    logger.info("✅ Sistema finalizado.")
+
+# --- Inicialização da Aplicação FastAPI ---
+app = FastAPI(
+    title="SUNA-ALSHAM: Sistema Multi-Agente Auto-Evolutivo",
+    description="API para o Núcleo do Sistema SUNA-ALSHAM.",
+    version="2.1.0",
+    lifespan=lifespan
+)
+
+# --- Middlewares ---
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# --- Endpoints da API ---
+@app.get("/", tags=["Status"])
+async def root():
+    if not system:
+        return {"message": "SUNA-ALSHAM Sistema Multi-Agente em Inicialização..."}
+    return system.get_system_status()
+
+@app.get("/health", tags=["Status"])
+async def health_check():
+    if system and system.system_status in ["active", "degraded"]:
+        return JSONResponse(status_code=200, content={"status": "healthy"})
+    else:
+        return JSONResponse(status_code=503, content={"status": "unhealthy"})
+
+# --- Execução do Servidor ---
+def main():
+    host = os.environ.get("HOST", "0.0.0.0")
+    port = int(os.environ.get("PORT", 8080))
+    logger.info(f"🌐 Servidor Uvicorn será iniciado em http://{host}:{port}")
+    uvicorn.run("start:app", host=host, port=port, log_level="info", reload=False)
+
+if __name__ == "__main__":
+    main()
