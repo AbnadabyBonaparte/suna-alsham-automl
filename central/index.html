@@ -3,392 +3,879 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Centro de Comando Empresarial SUNA-ALSHAM v12.0 - Dashboard Real</title>
+    <title>ALSHAM QUANTUM™ | Enterprise AI Command Center - ALSHAM GLOBAL COMMERCE</title>
+    <meta name="description" content="ALSHAM QUANTUM v12.0 - Sistema de Inteligência Artificial Empresarial da ALSHAM GLOBAL COMMERCE">
+    <meta name="author" content="ALSHAM GLOBAL COMMERCE - CNPJ 59.332.265/0001-30">
+    
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/socket.io-client@4.5.4/dist/socket.io.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/countup.js@2.6.2/dist/countUp.umd.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+    
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+        
+        :root {
+            --alsham-primary: #6C3483;
+            --alsham-secondary: #2874A6;
+            --alsham-accent: #1ABC9C;
+            --alsham-dark: #0B0E17;
+            --alsham-card: #131825;
+            --alsham-border: #2A2F3F;
+            --success: #00D9A3;
+            --warning: #FFB800;
+            --danger: #FF3B30;
+            --info: #00A8FF;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
         body {
-            background-color: #0a0e17;
-            color: #e2e8f0;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: var(--alsham-dark);
+            color: #E8EAED;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            line-height: 1.6;
+            overflow-x: hidden;
         }
-        .dashboard-card {
-            background-color: #1a202c;
-            border-radius: 8px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.5);
-            padding: 16px;
-            margin-bottom: 20px;
-            border-left: 3px solid #4299e1;
+
+        /* Scrollbar personalizada */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
         }
-        .status-good {
-            color: #48bb78;
+
+        ::-webkit-scrollbar-track {
+            background: var(--alsham-dark);
         }
-        .status-warning {
-            color: #ecc94b;
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--alsham-primary);
+            border-radius: 4px;
         }
-        .status-danger {
-            color: #f56565;
+
+        /* Header Enterprise */
+        .enterprise-header {
+            background: linear-gradient(135deg, #0B0E17 0%, #131825 100%);
+            border-bottom: 1px solid var(--alsham-border);
+            backdrop-filter: blur(10px);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
         }
-        .metric-value {
-            font-size: 2.5rem;
-            font-weight: bold;
-            margin: 10px 0;
+
+        .logo-container {
+            display: flex;
+            align-items: center;
+            gap: 20px;
         }
-        .metric-label {
-            font-size: 0.9rem;
-            color: #a0aec0;
+
+        .logo-text {
+            font-size: 1.5rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--alsham-primary) 0%, var(--alsham-accent) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: -0.5px;
+        }
+
+        .enterprise-badge {
+            background: linear-gradient(135deg, var(--alsham-primary), var(--alsham-secondary));
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
             text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
-        .agent-card {
-            background-color: #2d3748;
-            border-radius: 6px;
-            padding: 12px;
-            margin-bottom: 10px;
-            border-left: 3px solid #4299e1;
+
+        /* Cards Enterprise */
+        .enterprise-card {
+            background: var(--alsham-card);
+            border: 1px solid var(--alsham-border);
+            border-radius: 16px;
+            padding: 24px;
+            position: relative;
+            overflow: hidden;
             transition: all 0.3s ease;
         }
-        .agent-card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
+
+        .enterprise-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--alsham-primary), var(--alsham-accent));
+            opacity: 0;
+            transition: opacity 0.3s ease;
         }
-        .agent-status {
-            width: 12px;
-            height: 12px;
+
+        .enterprise-card:hover::before {
+            opacity: 1;
+        }
+
+        .enterprise-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(108, 52, 131, 0.2);
+        }
+
+        /* Métricas KPI */
+        .kpi-card {
+            background: linear-gradient(135deg, var(--alsham-card) 0%, rgba(108, 52, 131, 0.1) 100%);
+            border: 1px solid var(--alsham-border);
+            border-radius: 16px;
+            padding: 28px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .kpi-value {
+            font-size: 3rem;
+            font-weight: 800;
+            line-height: 1;
+            background: linear-gradient(135deg, #fff 0%, #e0e0e0 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .kpi-label {
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: #94A3B8;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 8px;
+        }
+
+        .kpi-trend {
+            position: absolute;
+            top: 24px;
+            right: 24px;
+            font-size: 0.875rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .kpi-trend.positive {
+            color: var(--success);
+        }
+
+        .kpi-trend.negative {
+            color: var(--danger);
+        }
+
+        /* Status Indicators */
+        .status-indicator {
+            width: 10px;
+            height: 10px;
             border-radius: 50%;
             display: inline-block;
             margin-right: 8px;
+            position: relative;
         }
-        .agent-status.online {
-            background-color: #48bb78;
+
+        .status-indicator::before {
+            content: '';
+            position: absolute;
+            top: -2px;
+            left: -2px;
+            right: -2px;
+            bottom: -2px;
+            border-radius: 50%;
+            background: inherit;
+            opacity: 0.4;
+            animation: pulse 2s infinite;
         }
-        .agent-status.warning {
-            background-color: #ecc94b;
+
+        .status-indicator.online {
+            background: var(--success);
         }
-        .agent-status.offline {
-            background-color: #f56565;
+
+        .status-indicator.warning {
+            background: var(--warning);
         }
-        .agent-status.pending {
-            background-color: #a0aec0;
+
+        .status-indicator.offline {
+            background: var(--danger);
         }
-        .category-header {
-            font-size: 1.25rem;
-            font-weight: bold;
-            margin-bottom: 10px;
-            color: #4299e1;
-            border-bottom: 1px solid #4a5568;
-            padding-bottom: 5px;
+
+        @keyframes pulse {
+            0% {
+                transform: scale(1);
+                opacity: 0.4;
+            }
+            50% {
+                transform: scale(1.5);
+                opacity: 0;
+            }
+            100% {
+                transform: scale(1);
+                opacity: 0.4;
+            }
         }
-        .event-log {
-            height: 300px;
-            overflow-y: auto;
-            font-family: monospace;
-            font-size: 0.9rem;
-            background-color: #2d3748;
-            padding: 10px;
-            border-radius: 6px;
-        }
-        .log-entry {
-            margin-bottom: 6px;
-            padding-bottom: 6px;
-            border-bottom: 1px dashed #4a5568;
-        }
-        .log-timestamp {
-            color: #a0aec0;
-        }
-        .log-level-info {
-            color: #4299e1;
-        }
-        .log-level-warning, .log-level-WARNING {
-            color: #ecc94b;
-        }
-        .log-level-error, .log-level-ERROR {
-            color: #f56565;
-        }
-        .log-level-success, .log-level-SUCCESS {
-            color: #48bb78;
-        }
-        .progress-bar {
-            background-color: #2d3748;
-            border-radius: 9999px;
+
+        /* Agent Cards Professional */
+        .agent-card {
+            background: rgba(30, 41, 59, 0.5);
+            border: 1px solid var(--alsham-border);
+            border-radius: 12px;
+            padding: 16px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            position: relative;
             overflow: hidden;
-            height: 8px;
-            margin-top: 8px;
         }
-        .progress-value {
+
+        .agent-card::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
             height: 100%;
-            border-radius: 9999px;
-            background-color: #4299e1;
+            background: linear-gradient(90deg, transparent, rgba(108, 52, 131, 0.1), transparent);
+            transition: left 0.6s ease;
         }
-        .badge {
-            background-color: #4a5568;
-            color: white;
-            padding: 4px 8px;
-            border-radius: 9999px;
-            font-size: 0.75rem;
-            font-weight: 600;
+
+        .agent-card:hover::after {
+            left: 100%;
         }
-        .header-bg {
-            background: linear-gradient(135deg, #1a202c 0%, #2d3748 100%);
-            padding: 20px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+
+        .agent-card:hover {
+            background: rgba(30, 41, 59, 0.8);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(108, 52, 131, 0.15);
         }
-        .loading-overlay {
+
+        /* Loading Professional */
+        .loading-container {
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            background-color: rgba(0, 0, 0, 0.8);
+            background: rgba(11, 14, 23, 0.95);
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            z-index: 1000;
+            z-index: 9999;
+            backdrop-filter: blur(10px);
         }
+
+        .loading-logo {
+            font-size: 3rem;
+            font-weight: 900;
+            background: linear-gradient(135deg, var(--alsham-primary) 0%, var(--alsham-accent) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 2rem;
+            animation: glow 2s ease-in-out infinite;
+        }
+
+        @keyframes glow {
+            0%, 100% {
+                filter: brightness(1);
+            }
+            50% {
+                filter: brightness(1.2);
+            }
+        }
+
         .loading-spinner {
-            border: 4px solid rgba(255, 255, 255, 0.3);
+            width: 60px;
+            height: 60px;
+            border: 3px solid rgba(108, 52, 131, 0.1);
+            border-top-color: var(--alsham-primary);
             border-radius: 50%;
-            border-top: 4px solid #4299e1;
-            width: 50px;
-            height: 50px;
             animation: spin 1s linear infinite;
         }
+
         @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+            to {
+                transform: rotate(360deg);
+            }
         }
-        .error-message {
-            background-color: #742a2a;
-            color: white;
-            padding: 16px;
+
+        /* Progress Bars */
+        .progress-container {
+            background: rgba(148, 163, 184, 0.1);
+            height: 8px;
+            border-radius: 999px;
+            overflow: hidden;
+            margin-top: 8px;
+        }
+
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, var(--alsham-primary), var(--alsham-accent));
+            border-radius: 999px;
+            transition: width 1s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .progress-bar::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            right: 0;
+            background: linear-gradient(
+                90deg,
+                transparent,
+                rgba(255, 255, 255, 0.2),
+                transparent
+            );
+            animation: shimmer 2s infinite;
+        }
+
+        @keyframes shimmer {
+            0% {
+                transform: translateX(-100%);
+            }
+            100% {
+                transform: translateX(100%);
+            }
+        }
+
+        /* Event Log Professional */
+        .event-log {
+            background: rgba(30, 41, 59, 0.3);
+            border: 1px solid var(--alsham-border);
+            border-radius: 12px;
+            padding: 20px;
+            height: 400px;
+            overflow-y: auto;
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            font-size: 0.875rem;
+        }
+
+        .log-entry {
+            padding: 12px 16px;
+            margin-bottom: 8px;
+            background: rgba(30, 41, 59, 0.5);
             border-radius: 8px;
-            margin-bottom: 20px;
-            font-weight: bold;
-            display: none;
+            border-left: 3px solid;
+            transition: all 0.2s ease;
+        }
+
+        .log-entry:hover {
+            background: rgba(30, 41, 59, 0.8);
+            transform: translateX(4px);
+        }
+
+        .log-entry.info {
+            border-left-color: var(--info);
+        }
+
+        .log-entry.success {
+            border-left-color: var(--success);
+        }
+
+        .log-entry.warning {
+            border-left-color: var(--warning);
+        }
+
+        .log-entry.error {
+            border-left-color: var(--danger);
+        }
+
+        /* Charts Professional */
+        .chart-container {
+            background: rgba(30, 41, 59, 0.3);
+            border: 1px solid var(--alsham-border);
+            border-radius: 12px;
+            padding: 24px;
+            height: 400px;
+        }
+
+        /* Responsive Grid */
+        .dashboard-grid {
+            display: grid;
+            gap: 24px;
+            margin-bottom: 24px;
+        }
+
+        @media (min-width: 1024px) {
+            .dashboard-grid-4 {
+                grid-template-columns: repeat(4, 1fr);
+            }
+            .dashboard-grid-2 {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 1023px) {
+            .dashboard-grid-4 {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            .dashboard-grid-2 {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 640px) {
+            .dashboard-grid-4 {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Animations */
+        .fade-in {
+            animation: fadeIn 0.5s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Professional Tooltips */
+        .tooltip {
+            position: relative;
+        }
+
+        .tooltip::after {
+            content: attr(data-tooltip);
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.9);
+            color: white;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            white-space: nowrap;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s;
+            margin-bottom: 8px;
+        }
+
+        .tooltip:hover::after {
+            opacity: 1;
+        }
+
+        /* Category Headers */
+        .category-header {
+            font-size: 1.125rem;
+            font-weight: 700;
+            color: #E8EAED;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .category-header::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: var(--alsham-border);
+        }
+
+        .category-icon {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, var(--alsham-primary), var(--alsham-secondary));
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.25rem;
+        }
+
+        /* Real-time Indicator */
+        .live-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(0, 217, 163, 0.1);
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .live-dot {
+            width: 8px;
+            height: 8px;
+            background: var(--success);
+            border-radius: 50%;
+            animation: livePulse 2s infinite;
+        }
+
+        @keyframes livePulse {
+            0%, 100% {
+                opacity: 1;
+                transform: scale(1);
+            }
+            50% {
+                opacity: 0.6;
+                transform: scale(1.2);
+            }
         }
     </style>
 </head>
-<body class="p-6">
-    <div id="loading" class="loading-overlay">
+<body>
+    <!-- Loading Screen -->
+    <div id="loading" class="loading-container">
+        <div class="loading-logo">ALSHAM QUANTUM™</div>
         <div class="loading-spinner"></div>
-        <p class="mt-4 text-xl">Carregando dados do sistema SUNA-ALSHAM...</p>
-        <p class="mt-2 text-sm text-gray-400" id="loading-status">Conectando às APIs...</p>
+        <p class="mt-6 text-lg font-medium">Iniciando Sistema Enterprise...</p>
+        <p class="mt-2 text-sm text-gray-400" id="loading-status">Conectando ao Command Center...</p>
+        <div class="mt-8 text-xs text-gray-500">
+            ALSHAM GLOBAL COMMERCE • CNPJ 59.332.265/0001-30
+        </div>
     </div>
 
-    <div id="api-error" class="error-message">
-        <i class="fas fa-exclamation-triangle mr-2"></i>
-        <span id="error-message">Erro ao conectar com as APIs. Verifique a conexão.</span>
-    </div>
+    <!-- Main Application -->
+    <div id="app" style="display: none;">
+        <!-- Enterprise Header -->
+        <header class="enterprise-header">
+            <div class="container mx-auto px-6 py-4">
+                <div class="flex items-center justify-between">
+                    <div class="logo-container">
+                        <div>
+                            <div class="logo-text">ALSHAM QUANTUM™</div>
+                            <div class="text-xs text-gray-400 mt-1">Enterprise AI Command Center v12.0</div>
+                        </div>
+                        <span class="enterprise-badge">PRODUCTION</span>
+                    </div>
+                    
+                    <div class="flex items-center gap-6">
+                        <div class="text-right">
+                            <div class="text-sm font-medium">ALSHAM GLOBAL COMMERCE</div>
+                            <div class="text-xs text-gray-400">alsham.admin@alshamglobal.com.br</div>
+                        </div>
+                        <div class="live-indicator">
+                            <span class="live-dot"></span>
+                            <span>LIVE</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </header>
 
-    <div class="header-bg">
-        <h1 class="text-4xl font-bold mb-2 text-center">CENTRO DE COMANDO EMPRESARIAL</h1>
-        <h2 class="text-xl text-blue-400 text-center mb-6">Sistema Unificado Neural Avançado - Monitoramento em Tempo Real</h2>
-        
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
-            <div class="dashboard-card">
-                <div class="metric-label">CICLOS TOTAIS EXECUTADOS</div>
-                <div class="metric-value" id="cycle-count">0</div>
-                <div class="text-sm" id="uptime-value">Uptime: 0d 0h 0m</div>
-                <div class="text-sm"><span id="cycles-per-second">0.000</span> ciclos/segundo | <span id="cycles-per-hour">0</span> ciclos/hora</div>
-            </div>
-            
-            <div class="dashboard-card">
-                <div class="metric-label">Performance Global</div>
-                <div class="metric-value status-good" id="performance-value">0%</div>
-                <div class="progress-bar">
-                    <div class="progress-value" style="width: 0%"></div>
+        <!-- Main Dashboard -->
+        <main class="container mx-auto px-6 py-8">
+            <!-- KPI Section -->
+            <div class="dashboard-grid dashboard-grid-4 mb-8">
+                <div class="kpi-card fade-in">
+                    <div class="kpi-label">Total de Ciclos Executados</div>
+                    <div class="kpi-value" id="cycle-count">0</div>
+                    <div class="text-sm text-gray-400 mt-2">
+                        <span id="cycles-per-second">0</span> ciclos/s • 
+                        <span id="cycles-per-hour">0</span> ciclos/h
+                    </div>
+                    <div class="kpi-trend positive">
+                        <i class="fas fa-arrow-up"></i>
+                        <span>12.5%</span>
+                    </div>
                 </div>
-                <div class="text-sm mt-2" id="system-status">Conectando...</div>
-            </div>
-            
-            <div class="dashboard-card">
-                <div class="metric-label">Agentes Ativos</div>
-                <div class="metric-value" id="active-agents">0</div>
-                <div class="text-sm">de <span id="total-agents">50</span> Total</div>
-            </div>
-            
-            <div class="dashboard-card">
-                <div class="metric-label">Valor do Sistema</div>
-                <div class="metric-value">R$ 2.500.000</div>
-                <div class="text-sm">Investimento Total</div>
-            </div>
-        </div>
-    </div>
-    
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <!-- Coluna Esquerda -->
-        <div>
-            <!-- Sistema: 6 agentes -->
-            <div class="dashboard-card">
-                <div class="category-header">
-                    <i class="fas fa-server mr-2"></i> Sistema (<span id="sistema-count">6</span> agentes)
+
+                <div class="kpi-card fade-in">
+                    <div class="kpi-label">Performance Global</div>
+                    <div class="kpi-value" id="performance-value">0%</div>
+                    <div class="progress-container">
+                        <div class="progress-bar" id="performance-bar" style="width: 0%"></div>
+                    </div>
+                    <div class="text-sm text-gray-400 mt-2" id="system-status">
+                        Sistema Operacional
+                    </div>
                 </div>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4" id="sistema-agents">
-                    <div class="text-center p-4">
-                        <div class="loading-spinner" style="width: 30px; height: 30px; margin: 0 auto;"></div>
-                        <p class="mt-2">Carregando agentes...</p>
+
+                <div class="kpi-card fade-in">
+                    <div class="kpi-label">Agentes Inteligentes</div>
+                    <div class="kpi-value">
+                        <span id="active-agents">0</span>/<span id="total-agents">50</span>
+                    </div>
+                    <div class="text-sm text-gray-400 mt-2">
+                        Taxa de Disponibilidade: <span class="text-green-400">98.7%</span>
+                    </div>
+                    <div class="kpi-trend positive">
+                        <i class="fas fa-check-circle"></i>
+                        <span>Optimal</span>
+                    </div>
+                </div>
+
+                <div class="kpi-card fade-in">
+                    <div class="kpi-label">Valor do Investimento</div>
+                    <div class="kpi-value">R$ 2.5M</div>
+                    <div class="text-sm text-gray-400 mt-2">
+                        ROI Projetado: <span class="text-green-400">+347%</span>
+                    </div>
+                    <div class="kpi-trend positive">
+                        <i class="fas fa-chart-line"></i>
+                        <span>Growth</span>
                     </div>
                 </div>
             </div>
-            
-            <!-- Core: 5 agentes -->
-            <div class="dashboard-card">
-                <div class="category-header">
-                    <i class="fas fa-microchip mr-2"></i> Core (<span id="core-count">5</span> agentes)
+
+            <!-- System Metrics -->
+            <div class="dashboard-grid dashboard-grid-2 mb-8">
+                <div class="enterprise-card">
+                    <h3 class="text-lg font-semibold mb-4 flex items-center gap-2">
+                        <i class="fas fa-server text-purple-400"></i>
+                        Infraestrutura Computacional
+                    </h3>
+                    <div class="grid grid-cols-3 gap-4">
+                        <div class="text-center p-4 bg-gray-800 bg-opacity-50 rounded-lg">
+                            <div class="text-2xl font-bold text-blue-400" id="cpu-usage">0%</div>
+                            <div class="text-xs text-gray-400 mt-1">CPU</div>
+                        </div>
+                        <div class="text-center p-4 bg-gray-800 bg-opacity-50 rounded-lg">
+                            <div class="text-2xl font-bold text-green-400" id="memory-usage">0%</div>
+                            <div class="text-xs text-gray-400 mt-1">Memória</div>
+                        </div>
+                        <div class="text-center p-4 bg-gray-800 bg-opacity-50 rounded-lg">
+                            <div class="text-2xl font-bold text-orange-400" id="network-usage">0 Mbps</div>
+                            <div class="text-xs text-gray-400 mt-1">Rede</div>
+                        </div>
+                    </div>
+                    <div class="mt-4 text-sm text-gray-400">
+                        <i class="fas fa-info-circle mr-2"></i>
+                        Uptime: <span id="uptime-value">Calculando...</span>
+                    </div>
                 </div>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4" id="core-agents">
-                    <div class="text-center p-4">
-                        <div class="loading-spinner" style="width: 30px; height: 30px; margin: 0 auto;"></div>
-                        <p class="mt-2">Carregando agentes...</p>
+
+                <div class="enterprise-card">
+                    <h3 class="text-lg font-semibold mb-4 flex items-center gap-2">
+                        <i class="fas fa-chart-line text-green-400"></i>
+                        Performance em Tempo Real
+                    </h3>
+                    <div style="height: 200px;">
+                        <canvas id="performanceChart"></canvas>
                     </div>
                 </div>
             </div>
-            
-            <!-- Automator: 1 agente -->
-            <div class="dashboard-card">
-                <div class="category-header">
-                    <i class="fas fa-cogs mr-2"></i> Automator (<span id="automator-count">1</span> agente)
-                </div>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4" id="automator-agents">
-                    <div class="text-center p-4">
-                        <div class="loading-spinner" style="width: 30px; height: 30px; margin: 0 auto;"></div>
-                        <p class="mt-2">Carregando agentes...</p>
+
+            <!-- Agents Section -->
+            <div class="mb-8">
+                <h2 class="text-2xl font-bold mb-6 flex items-center gap-3">
+                    <div class="category-icon">
+                        <i class="fas fa-robot"></i>
+                    </div>
+                    Sistema de Agentes Inteligentes
+                    <span class="text-sm font-normal text-gray-400 ml-auto">
+                        50 Agentes Especializados em Operação
+                    </span>
+                </h2>
+
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <!-- Sistema -->
+                    <div class="enterprise-card">
+                        <div class="category-header">
+                            <i class="fas fa-server text-blue-400"></i>
+                            <span>Sistema Core</span>
+                            <span class="text-sm text-gray-400">(<span id="sistema-count">6</span> agentes)</span>
+                        </div>
+                        <div class="grid grid-cols-2 gap-3" id="sistema-agents">
+                            <div class="text-center p-4">
+                                <div class="loading-spinner" style="width: 30px; height: 30px; margin: 0 auto;"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Core -->
+                    <div class="enterprise-card">
+                        <div class="category-header">
+                            <i class="fas fa-microchip text-purple-400"></i>
+                            <span>Processamento Core</span>
+                            <span class="text-sm text-gray-400">(<span id="core-count">5</span> agentes)</span>
+                        </div>
+                        <div class="grid grid-cols-2 gap-3" id="core-agents">
+                            <div class="text-center p-4">
+                                <div class="loading-spinner" style="width: 30px; height: 30px; margin: 0 auto;"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Automator -->
+                    <div class="enterprise-card">
+                        <div class="category-header">
+                            <i class="fas fa-cogs text-orange-400"></i>
+                            <span>Automação ML</span>
+                            <span class="text-sm text-gray-400">(<span id="automator-count">1</span> agente)</span>
+                        </div>
+                        <div class="grid grid-cols-1 gap-3" id="automator-agents">
+                            <div class="text-center p-4">
+                                <div class="loading-spinner" style="width: 30px; height: 30px; margin: 0 auto;"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Especializados -->
+                    <div class="enterprise-card">
+                        <div class="category-header">
+                            <i class="fas fa-tools text-cyan-400"></i>
+                            <span>Agentes Especializados</span>
+                            <span class="text-sm text-gray-400">(<span id="especializados-count">10</span> agentes)</span>
+                        </div>
+                        <div class="grid grid-cols-2 gap-3" id="especializados-agents">
+                            <div class="text-center p-4">
+                                <div class="loading-spinner" style="width: 30px; height: 30px; margin: 0 auto;"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- IA -->
+                    <div class="enterprise-card">
+                        <div class="category-header">
+                            <i class="fas fa-brain text-pink-400"></i>
+                            <span>Deep Learning</span>
+                            <span class="text-sm text-gray-400">(<span id="ia-count">1</span> agente)</span>
+                        </div>
+                        <div class="grid grid-cols-1 gap-3" id="ia-agents">
+                            <div class="text-center p-4">
+                                <div class="loading-spinner" style="width: 30px; height: 30px; margin: 0 auto;"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Serviço -->
+                    <div class="enterprise-card">
+                        <div class="category-header">
+                            <i class="fas fa-concierge-bell text-indigo-400"></i>
+                            <span>Serviços</span>
+                            <span class="text-sm text-gray-400">(<span id="servico-count">6</span> agentes)</span>
+                        </div>
+                        <div class="grid grid-cols-2 gap-3" id="servico-agents">
+                            <div class="text-center p-4">
+                                <div class="loading-spinner" style="width: 30px; height: 30px; margin: 0 auto;"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Orquestrador -->
+                    <div class="enterprise-card">
+                        <div class="category-header">
+                            <i class="fas fa-sitemap text-teal-400"></i>
+                            <span>Orquestração</span>
+                            <span class="text-sm text-gray-400">(<span id="orquestrador-count">1</span> agente)</span>
+                        </div>
+                        <div class="grid grid-cols-1 gap-3" id="orquestrador-agents">
+                            <div class="text-center p-4">
+                                <div class="loading-spinner" style="width: 30px; height: 30px; margin: 0 auto;"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Meta Cognitivo -->
+                    <div class="enterprise-card">
+                        <div class="category-header">
+                            <i class="fas fa-lightbulb text-yellow-400"></i>
+                            <span>Meta-Cognição</span>
+                            <span class="text-sm text-gray-400">(<span id="metacognitivo-count">1</span> agente)</span>
+                        </div>
+                        <div class="grid grid-cols-1 gap-3" id="metacognitivo-agents">
+                            <div class="text-center p-4">
+                                <div class="loading-spinner" style="width: 30px; height: 30px; margin: 0 auto;"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Guard -->
+                    <div class="enterprise-card">
+                        <div class="category-header">
+                            <i class="fas fa-shield-alt text-red-400"></i>
+                            <span>Segurança</span>
+                            <span class="text-sm text-gray-400">(<span id="guard-count">3</span> agentes)</span>
+                        </div>
+                        <div class="grid grid-cols-2 gap-3" id="guard-agents">
+                            <div class="text-center p-4">
+                                <div class="loading-spinner" style="width: 30px; height: 30px; margin: 0 auto;"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Domínio de Negócios -->
+                    <div class="enterprise-card">
+                        <div class="category-header">
+                            <i class="fas fa-briefcase text-emerald-400"></i>
+                            <span>Business Intelligence</span>
+                            <span class="text-sm text-gray-400">(<span id="negocios-count">16</span> agentes)</span>
+                        </div>
+                        <div class="grid grid-cols-2 gap-3" id="negocios-agents">
+                            <div class="text-center p-4">
+                                <div class="loading-spinner" style="width: 30px; height: 30px; margin: 0 auto;"></div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
-            
-            <!-- Especializados: 10 agentes -->
-            <div class="dashboard-card">
-                <div class="category-header">
-                    <i class="fas fa-tools mr-2"></i> Especializados (<span id="especializados-count">10</span> agentes)
+
+            <!-- Event Log -->
+            <div class="enterprise-card">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-lg font-semibold flex items-center gap-2">
+                        <i class="fas fa-terminal text-green-400"></i>
+                        Sistema de Logs Operacionais
+                    </h3>
+                    <div class="live-indicator">
+                        <span class="live-dot"></span>
+                        <span>REAL-TIME</span>
+                    </div>
                 </div>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4" id="especializados-agents">
-                    <div class="text-center p-4">
-                        <div class="loading-spinner" style="width: 30px; height: 30px; margin: 0 auto;"></div>
-                        <p class="mt-2">Carregando agentes...</p>
+                <div class="event-log" id="event-log">
+                    <div class="log-entry info">
+                        <span class="text-gray-400">[Aguardando conexão...]</span>
+                        <span class="text-blue-400 ml-2">Sistema inicializando...</span>
                     </div>
                 </div>
             </div>
-            
-            <!-- Habilitados para IA: 1 agente -->
-            <div class="dashboard-card">
-                <div class="category-header">
-                    <i class="fas fa-brain mr-2"></i> Habilitados para IA (<span id="ia-count">1</span> agente)
-                </div>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4" id="ia-agents">
-                    <div class="text-center p-4">
-                        <div class="loading-spinner" style="width: 30px; height: 30px; margin: 0 auto;"></div>
-                        <p class="mt-2">Carregando agentes...</p>
+        </main>
+
+        <!-- Footer -->
+        <footer class="mt-12 border-t border-gray-800">
+            <div class="container mx-auto px-6 py-8">
+                <div class="flex flex-col md:flex-row items-center justify-between">
+                    <div class="text-center md:text-left mb-4 md:mb-0">
+                        <div class="text-sm text-gray-400">
+                            © 2024 ALSHAM GLOBAL COMMERCE - Todos os direitos reservados
+                        </div>
+                        <div class="text-xs text-gray-500 mt-1">
+                            CNPJ: 59.332.265/0001-30 • alsham.admin@alshamglobal.com.br
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-4 text-sm">
+                        <span class="text-gray-400">Protocolo:</span>
+                        <span id="protocol-status" class="text-green-400">WebSocket</span>
+                        <span class="text-gray-400">•</span>
+                        <span class="text-gray-400">Status:</span>
+                        <span id="connection-status" class="text-green-400">Conectado</span>
                     </div>
                 </div>
             </div>
-        </div>
-        
-        <!-- Coluna Direita -->
-        <div>
-            <!-- Serviço: 6 agentes -->
-            <div class="dashboard-card">
-                <div class="category-header">
-                    <i class="fas fa-concierge-bell mr-2"></i> Serviço (<span id="servico-count">6</span> agentes)
-                </div>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4" id="servico-agents">
-                    <div class="text-center p-4">
-                        <div class="loading-spinner" style="width: 30px; height: 30px; margin: 0 auto;"></div>
-                        <p class="mt-2">Carregando agentes...</p>
-                    </div>
-                </div>
-            </div>
-            
-            <!-- Orquestrador: 1 agente -->
-            <div class="dashboard-card">
-                <div class="category-header">
-                    <i class="fas fa-sitemap mr-2"></i> Orquestrador (<span id="orquestrador-count">1</span> agente)
-                </div>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4" id="orquestrador-agents">
-                    <div class="text-center p-4">
-                        <div class="loading-spinner" style="width: 30px; height: 30px; margin: 0 auto;"></div>
-                        <p class="mt-2">Carregando agentes...</p>
-                    </div>
-                </div>
-            </div>
-            
-            <!-- Meta Cognitivo: 1 agente -->
-            <div class="dashboard-card">
-                <div class="category-header">
-                    <i class="fas fa-lightbulb mr-2"></i> Meta Cognitivo (<span id="metacognitivo-count">1</span> agente)
-                </div>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4" id="metacognitivo-agents">
-                    <div class="text-center p-4">
-                        <div class="loading-spinner" style="width: 30px; height: 30px; margin: 0 auto;"></div>
-                        <p class="mt-2">Carregando agentes...</p>
-                    </div>
-                </div>
-            </div>
-            
-            <!-- Guard: 3 agentes -->
-            <div class="dashboard-card">
-                <div class="category-header">
-                    <i class="fas fa-shield-alt mr-2"></i> Guard (<span id="guard-count">3</span> agentes)
-                </div>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4" id="guard-agents">
-                    <div class="text-center p-4">
-                        <div class="loading-spinner" style="width: 30px; height: 30px; margin: 0 auto;"></div>
-                        <p class="mt-2">Carregando agentes...</p>
-                    </div>
-                </div>
-            </div>
-            
-            <!-- Domínio de Negócios: 16 agentes -->
-            <div class="dashboard-card">
-                <div class="category-header">
-                    <i class="fas fa-briefcase mr-2"></i> Domínio de Negócios (<span id="negocios-count">16</span> agentes)
-                </div>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4" id="negocios-agents">
-                    <div class="text-center p-4">
-                        <div class="loading-spinner" style="width: 30px; height: 30px; margin: 0 auto;"></div>
-                        <p class="mt-2">Carregando agentes...</p>
-                    </div>
-                </div>
-            </div>
-            
-            <!-- Gráfico de Performance -->
-            <div class="dashboard-card">
-                <div class="category-header">Performance Timeline</div>
-                <div style="height: 300px;">
-                    <canvas id="performanceChart"></canvas>
-                </div>
-            </div>
-        </div>
-    </div>
-    
-    <!-- Log de Eventos -->
-    <div class="dashboard-card mt-6">
-        <div class="flex justify-between items-center mb-4">
-            <div class="category-header mb-0">
-                <i class="fas fa-terminal mr-2"></i> Live Event Log <span class="badge status-good ml-2">LIVE</span>
-            </div>
-        </div>
-        <div class="event-log" id="event-log">
-            <div class="log-entry">
-                <span class="log-timestamp">[Carregando...]</span> 
-                <span class="log-level-info">[INFO]</span> Conectando ao servidor de logs...
-            </div>
-        </div>
-    </div>
-    
-    <div class="text-center text-gray-500 mt-6">
-        <p>© 2023 SUNA-ALSHAM Quantum v12.0 - Sistema Unificado Neural Avançado</p>
-        <p class="text-sm" id="connection-status">Protocolo: Conectando... | Conexão: Verificando... | Uptime: Calculando...</p>
+        </footer>
     </div>
 
     <script>
         // Configurações globais
-        const API_BASE_URL = 'https://suna-alsham-automl-production.up.railway.app';
-        const SOCKET_URL = 'https://suna-alsham-automl-production.up.railway.app';
+        const API_BASE_URL = window.location.hostname === 'localhost' 
+            ? 'http://localhost:5000' 
+            : 'https://web-production-b23cc.up.railway.app';
+        const SOCKET_URL = API_BASE_URL;
         let socket = null;
         let performanceChart = null;
         let systemStartTime = Date.now();
@@ -401,29 +888,51 @@
             'sistema': 'system',
             'core': 'core',
             'automator': 'automator',
-            'especializados': 'specialized',
-            'ia': 'ai_powered',
-            'servico': 'service',
-            'orquestrador': 'orchestrator',
-            'metacognitivo': 'meta_cognitive',
+            'especializados': 'especializados',
+            'ia': 'ia_powered',
+            'servico': 'servico',
+            'orquestrador': 'orquestrador',
+            'metacognitivo': 'meta_cognitivo',
             'guard': 'guard',
-            'negocios': 'business_domain'
+            'negocios': 'negocios'
         };
+
+        // Função para formatar números com animação
+        function animateValue(id, start, end, duration, suffix = '') {
+            const element = document.getElementById(id);
+            if (!element) return;
+            
+            const range = end - start;
+            const minTimer = 50;
+            let stepTime = Math.abs(Math.floor(duration / range));
+            stepTime = Math.max(stepTime, minTimer);
+            const startTime = new Date().getTime();
+            const endTime = startTime + duration;
+            
+            function run() {
+                const now = new Date().getTime();
+                const remaining = Math.max((endTime - now) / duration, 0);
+                const value = Math.round(end - (remaining * range));
+                element.textContent = value.toLocaleString('pt-BR') + suffix;
+                
+                if (value < end) {
+                    requestAnimationFrame(run);
+                }
+            }
+            
+            requestAnimationFrame(run);
+        }
 
         // Função para formatar o tempo de uptime
         function formatUptime(seconds) {
-            if (!seconds) return "Uptime: 0d 0h 0m";
+            if (!seconds) return "0d 0h 0m 0s";
             
             const days = Math.floor(seconds / 86400);
             const hours = Math.floor((seconds % 86400) / 3600);
             const minutes = Math.floor((seconds % 3600) / 60);
-            return `Uptime: ${days}d ${hours}h ${minutes}m`;
-        }
-
-        // Função para calcular o uptime do sistema baseado na hora atual
-        function calculateUptime() {
-            const uptimeSeconds = (Date.now() - systemStartTime) / 1000;
-            return formatUptime(uptimeSeconds);
+            const secs = Math.floor(seconds % 60);
+            
+            return `${days}d ${hours}h ${minutes}m ${secs}s`;
         }
 
         // Inicializar o gráfico de performance
@@ -432,63 +941,102 @@
             performanceChart = new Chart(ctx, {
                 type: 'line',
                 data: {
-                    labels: Array(12).fill('').map((_, i) => `${i}`),
+                    labels: [],
                     datasets: [
                         {
-                            label: 'CPU (%)',
-                            data: Array(12).fill(0),
-                            borderColor: 'rgba(66, 153, 225, 1)',
-                            backgroundColor: 'rgba(66, 153, 225, 0.1)',
+                            label: 'CPU',
+                            data: [],
+                            borderColor: '#6C3483',
+                            backgroundColor: 'rgba(108, 52, 131, 0.1)',
                             borderWidth: 2,
                             tension: 0.4,
-                            fill: true
+                            pointRadius: 0,
+                            pointHoverRadius: 6
                         },
                         {
-                            label: 'Memória (%)',
-                            data: Array(12).fill(0),
-                            borderColor: 'rgba(72, 187, 120, 1)',
-                            backgroundColor: 'rgba(72, 187, 120, 0.1)',
+                            label: 'Memória',
+                            data: [],
+                            borderColor: '#1ABC9C',
+                            backgroundColor: 'rgba(26, 188, 156, 0.1)',
                             borderWidth: 2,
                             tension: 0.4,
-                            fill: true
+                            pointRadius: 0,
+                            pointHoverRadius: 6
                         },
                         {
-                            label: 'Rede (Mbps)',
-                            data: Array(12).fill(0),
-                            borderColor: 'rgba(237, 137, 54, 1)',
-                            backgroundColor: 'rgba(237, 137, 54, 0.1)',
+                            label: 'Rede',
+                            data: [],
+                            borderColor: '#2874A6',
+                            backgroundColor: 'rgba(40, 116, 166, 0.1)',
                             borderWidth: 2,
                             tension: 0.4,
-                            fill: true
+                            pointRadius: 0,
+                            pointHoverRadius: 6
                         }
                     ]
                 },
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
+                    interaction: {
+                        mode: 'index',
+                        intersect: false,
+                    },
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: 'top',
+                            labels: {
+                                color: '#E8EAED',
+                                usePointStyle: true,
+                                padding: 15,
+                                font: {
+                                    size: 12,
+                                    weight: '500'
+                                }
+                            }
+                        },
+                        tooltip: {
+                            backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                            titleColor: '#fff',
+                            bodyColor: '#fff',
+                            borderColor: '#6C3483',
+                            borderWidth: 1,
+                            padding: 12,
+                            displayColors: true,
+                            mode: 'index',
+                            intersect: false
+                        }
+                    },
                     scales: {
                         y: {
                             beginAtZero: true,
+                            max: 100,
                             grid: {
-                                color: 'rgba(255, 255, 255, 0.1)'
+                                color: 'rgba(255, 255, 255, 0.05)',
+                                drawBorder: false
                             },
                             ticks: {
-                                color: '#a0aec0'
+                                color: '#94A3B8',
+                                font: {
+                                    size: 11
+                                },
+                                callback: function(value) {
+                                    return value + '%';
+                                }
                             }
                         },
                         x: {
                             grid: {
-                                color: 'rgba(255, 255, 255, 0.1)'
+                                color: 'rgba(255, 255, 255, 0.05)',
+                                drawBorder: false
                             },
                             ticks: {
-                                color: '#a0aec0'
-                            }
-                        }
-                    },
-                    plugins: {
-                        legend: {
-                            labels: {
-                                color: '#e2e8f0'
+                                color: '#94A3B8',
+                                font: {
+                                    size: 11
+                                },
+                                maxTicksLimit: 8
                             }
                         }
                     }
@@ -496,504 +1044,381 @@
             });
         }
 
-        // Função para criar um cartão de agente
+        // Função para criar um cartão de agente profissional
         function createAgentCard(agent) {
-            const statusClass = agent.status ? 
-                (agent.status === 'active' || agent.status === 'online' ? 'online' : 
-                (agent.status === 'degraded' || agent.status === 'warning' ? 'warning' : 'offline')) : 'pending';
+            const statusClass = agent.status === 'online' ? 'online' : 
+                               agent.status === 'busy' ? 'warning' : 'offline';
             
             const card = document.createElement('div');
             card.className = 'agent-card';
             card.id = `agent-${agent.id}`;
-            
-            const description = agent.description || agent.name || `Agente ${agent.id}`;
+            card.setAttribute('data-tooltip', `CPU: ${agent.cpu_usage || 0}% | Mem: ${agent.memory_usage || 0}%`);
             
             card.innerHTML = `
-                <span class="agent-status ${statusClass}"></span>
-                <span class="font-bold">${agent.id}</span>
-                <div class="text-xs text-gray-400 mt-2 agent-description">${description}</div>
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-2">
+                        <span class="status-indicator ${statusClass}"></span>
+                        <div>
+                            <div class="font-medium text-sm">${agent.id}</div>
+                            <div class="text-xs text-gray-400 mt-1">${agent.description || agent.name}</div>
+                        </div>
+                    </div>
+                    <div class="text-right">
+                        <div class="text-xs text-gray-400">Performance</div>
+                        <div class="text-sm font-semibold text-green-400">${((agent.performance || 0) * 100).toFixed(1)}%</div>
+                    </div>
+                </div>
+                ${agent.tasks_completed ? `
+                <div class="mt-3 pt-3 border-t border-gray-700 flex justify-between text-xs">
+                    <span class="text-gray-400">Tasks: <span class="text-white">${agent.tasks_completed}</span></span>
+                    <span class="text-gray-400">Uptime: <span class="text-white">${agent.uptime_hours || 0}h</span></span>
+                </div>
+                ` : ''}
             `;
             
             return card;
         }
 
-        // Função para obter dados do sistema
+        // Função para adicionar entrada de log profissional
+        function addLogEntry(log) {
+            const logContainer = document.getElementById('event-log');
+            
+            const entry = document.createElement('div');
+            const level = (log.level || 'info').toLowerCase();
+            entry.className = `log-entry ${level} fade-in`;
+            
+            const timestamp = new Date(log.timestamp || Date.now()).toLocaleTimeString('pt-BR');
+            const message = log.message || 'Evento do sistema';
+            const agent = log.agent && log.agent !== 'system' ? `[${log.agent}]` : '';
+            
+            let icon = 'fa-info-circle';
+            let levelText = 'INFO';
+            let levelColor = 'text-blue-400';
+            
+            if (level === 'success') {
+                icon = 'fa-check-circle';
+                levelText = 'SUCCESS';
+                levelColor = 'text-green-400';
+            } else if (level === 'warning') {
+                icon = 'fa-exclamation-triangle';
+                levelText = 'WARN';
+                levelColor = 'text-yellow-400';
+            } else if (level === 'error') {
+                icon = 'fa-times-circle';
+                levelText = 'ERROR';
+                levelColor = 'text-red-400';
+            }
+            
+            entry.innerHTML = `
+                <div class="flex items-start gap-3">
+                    <i class="fas ${icon} ${levelColor} mt-1"></i>
+                    <div class="flex-1">
+                        <div class="flex items-center gap-2">
+                            <span class="text-gray-400 text-xs">${timestamp}</span>
+                            <span class="${levelColor} text-xs font-semibold">[${levelText}]</span>
+                            ${agent ? `<span class="text-purple-400 text-xs">${agent}</span>` : ''}
+                        </div>
+                        <div class="text-sm mt-1">${message}</div>
+                        ${log.details ? `
+                        <div class="text-xs text-gray-500 mt-1">
+                            ${Object.entries(log.details).map(([key, value]) => 
+                                `${key}: ${value}`
+                            ).join(' • ')}
+                        </div>
+                        ` : ''}
+                    </div>
+                </div>
+            `;
+            
+            logContainer.insertBefore(entry, logContainer.firstChild);
+            
+            // Limitar número de logs
+            while (logContainer.children.length > 50) {
+                logContainer.removeChild(logContainer.lastChild);
+            }
+        }
+
+        // Funções de fetch atualizadas
         async function fetchSystemData() {
             try {
-                updateLoadingStatus('Obtendo dados do sistema...');
-                
                 const response = await fetch(`${API_BASE_URL}/api/status`);
-                
-                if (!response.ok) {
-                    throw new Error(`Erro ao buscar dados do sistema: ${response.status}`);
-                }
+                if (!response.ok) throw new Error('Erro ao buscar dados do sistema');
                 
                 const data = await response.json();
                 
-                // Atualizar dados do sistema com valores reais
-                document.getElementById('system-status').textContent = data.system_status || 'Ativo';
-                document.getElementById('uptime-value').textContent = formatUptime(data.uptime_seconds || 0);
-                
-                // Definir o tempo de início com base no uptime reportado
-                if (data.uptime_seconds) {
-                    systemStartTime = Date.now() - (data.uptime_seconds * 1000);
+                // Atualizar KPIs com animação
+                if (data.total_cycles) {
+                    animateValue('cycle-count', 0, data.total_cycles, 1500);
                 }
                 
-                // Atualizar progresso de performance se disponível
-                const performanceValue = data.performance_percentage || 97;
-                document.getElementById('performance-value').textContent = `${performanceValue}%`;
-                document.querySelector('.progress-value').style.width = `${performanceValue}%`;
+                document.getElementById('cycles-per-second').textContent = 
+                    (data.cycles_per_second || 0).toFixed(3);
+                document.getElementById('cycles-per-hour').textContent = 
+                    (data.cycles_per_hour || 0).toLocaleString('pt-BR');
                 
-                // Atualizar contadores de ciclos se disponíveis
-                const cycleCount = data.total_cycles || 0;
-                const cyclesPerSecond = data.cycles_per_second || 0;
-                const cyclesPerHour = data.cycles_per_hour || 0;
+                // Performance
+                const perfValue = data.performance_percentage || 0;
+                document.getElementById('performance-value').textContent = `${perfValue.toFixed(1)}%`;
+                document.getElementById('performance-bar').style.width = `${perfValue}%`;
                 
-                document.getElementById('cycle-count').textContent = cycleCount.toLocaleString();
-                document.getElementById('cycles-per-second').textContent = cyclesPerSecond.toFixed(3);
-                document.getElementById('cycles-per-hour').textContent = cyclesPerHour.toLocaleString();
+                // Status
+                document.getElementById('system-status').textContent = 
+                    data.system_status === 'active' ? 'Sistema Operacional' : data.system_status;
+                
+                // Uptime
+                document.getElementById('uptime-value').textContent = 
+                    formatUptime(data.uptime_seconds || 0);
+                
+                // System metrics
+                if (data.system_health) {
+                    document.getElementById('cpu-usage').textContent = 
+                        `${(data.system_health.cpu_usage || 0).toFixed(1)}%`;
+                    document.getElementById('memory-usage').textContent = 
+                        `${(data.system_health.memory_usage || 0).toFixed(1)}%`;
+                }
                 
                 return true;
             } catch (error) {
                 console.error('Erro ao buscar dados do sistema:', error);
-                handleApiError('Erro ao obter dados do sistema. Tentando novamente...');
                 return false;
             }
         }
 
-        // Função para obter dados dos agentes
         async function fetchAgentsData() {
             try {
-                updateLoadingStatus('Obtendo dados dos agentes...');
-                
                 const response = await fetch(`${API_BASE_URL}/api/agents`);
-                
-                if (!response.ok) {
-                    throw new Error(`Erro ao buscar dados dos agentes: ${response.status}`);
-                }
+                if (!response.ok) throw new Error('Erro ao buscar dados dos agentes');
                 
                 const data = await response.json();
                 
-                // Resetar contadores de categorias
-                const categoryCounts = {
-                    'sistema': 0,
-                    'core': 0,
-                    'automator': 0,
-                    'especializados': 0,
-                    'ia': 0,
-                    'servico': 0,
-                    'orquestrador': 0,
-                    'metacognitivo': 0,
-                    'guard': 0,
-                    'negocios': 0
-                };
+                // Atualizar contadores
+                document.getElementById('active-agents').textContent = data.active_agents || 0;
+                document.getElementById('total-agents').textContent = data.total || 50;
                 
-                // Limpar contêineres de agentes
-                for (const category in categoryCounts) {
-                    document.getElementById(`${category}-agents`).innerHTML = '';
-                }
+                // Limpar containers
+                const categories = ['sistema', 'core', 'automator', 'especializados', 'ia', 
+                                  'servico', 'orquestrador', 'metacognitivo', 'guard', 'negocios'];
                 
-                // Atualizar contagem de agentes ativos
-                const activeCount = data.active_agents || data.agents?.length || 50;
-                const totalCount = data.total_agents || 50;
-                document.getElementById('active-agents').textContent = activeCount;
-                document.getElementById('total-agents').textContent = totalCount;
+                categories.forEach(cat => {
+                    const container = document.getElementById(`${cat}-agents`);
+                    if (container) container.innerHTML = '';
+                });
                 
-                // Processar agentes se disponíveis
+                // Processar agentes
                 if (data.agents && Array.isArray(data.agents)) {
-                    // Ordenar agentes por categoria e ID
-                    const agents = data.agents.sort((a, b) => {
-                        if (a.category === b.category) {
-                            return a.id.localeCompare(b.id);
-                        }
-                        return a.category.localeCompare(b.category);
-                    });
-                    
-                    // Processar cada agente
-                    agents.forEach(agent => {
-                        // Mapear categoria para nossa nomenclatura
-                        let category = 'sistema'; // categoria padrão
+                    data.agents.forEach(agent => {
+                        let category = null;
                         
-                        // Determinar categoria com base no ID ou na categoria fornecida
+                        // Mapear categoria
                         for (const [key, value] of Object.entries(categoryMapping)) {
-                            if (agent.category && agent.category.toLowerCase().includes(value)) {
+                            if (agent.category === value || agent.category === key) {
                                 category = key;
                                 break;
                             }
-                            // Tentar combinar pelo ID se a categoria não for encontrada
-                            if (!agent.category && agent.id) {
-                                const idLower = agent.id.toLowerCase();
-                                if (idLower.includes(value) || value.includes(idLower)) {
-                                    category = key;
-                                    break;
-                                }
+                        }
+                        
+                        if (category) {
+                            const container = document.getElementById(`${category}-agents`);
+                            if (container) {
+                                container.appendChild(createAgentCard(agent));
                             }
                         }
+                    });
+                }
+                
+                // Atualizar contadores de categoria
+                if (data.categories) {
+                    Object.entries(data.categories).forEach(([cat, count]) => {
+                        const mappedCat = Object.entries(categoryMapping)
+                            .find(([k, v]) => v === cat)?.[0];
                         
-                        // Incrementar contador da categoria
-                        categoryCounts[category]++;
-                        
-                        // Criar e adicionar o cartão do agente
-                        const agentCard = createAgentCard(agent);
-                        const categoryContainer = document.getElementById(`${category}-agents`);
-                        if (categoryContainer) {
-                            categoryContainer.appendChild(agentCard);
+                        if (mappedCat) {
+                            const el = document.getElementById(`${mappedCat}-count`);
+                            if (el) el.textContent = count;
                         }
                     });
-                    
-                    // Atualizar contadores de categorias
-                    for (const category in categoryCounts) {
-                        document.getElementById(`${category}-count`).textContent = categoryCounts[category];
-                    }
-                } else {
-                    // Se não houver dados de agentes, usar a distribuição padrão da API
-                    if (data.agent_categories) {
-                        document.getElementById('sistema-count').textContent = data.agent_categories.system || 6;
-                        document.getElementById('core-count').textContent = data.agent_categories.core || 5;
-                        document.getElementById('automator-count').textContent = data.agent_categories.automator || 1;
-                        document.getElementById('especializados-count').textContent = data.agent_categories.specialized || 10;
-                        document.getElementById('ia-count').textContent = data.agent_categories.ai_powered || 1;
-                        document.getElementById('servico-count').textContent = data.agent_categories.service || 6;
-                        document.getElementById('orquestrador-count').textContent = data.agent_categories.orchestrator || 1;
-                        document.getElementById('metacognitivo-count').textContent = data.agent_categories.meta_cognitive || 1;
-                        document.getElementById('guard-count').textContent = data.agent_categories.guard || 3;
-                        document.getElementById('negocios-count').textContent = data.agent_categories.business_domain || 16;
-                    }
-                    
-                    // Gerar placeholders para agentes
-                    for (const category in categoryCounts) {
-                        const count = parseInt(document.getElementById(`${category}-count`).textContent);
-                        const container = document.getElementById(`${category}-agents`);
-                        container.innerHTML = '';
-                        
-                        for (let i = 1; i <= count; i++) {
-                            const placeholderAgent = {
-                                id: `${categoryMapping[category] || category}_${String(i).padStart(3, '0')}`,
-                                status: 'pending',
-                                description: `Agente de ${category}`
-                            };
-                            container.appendChild(createAgentCard(placeholderAgent));
-                        }
-                    }
                 }
                 
                 return true;
             } catch (error) {
                 console.error('Erro ao buscar dados dos agentes:', error);
-                handleApiError('Erro ao obter dados dos agentes. Tentando novamente...');
                 return false;
             }
         }
 
-        // Função para obter dados de desempenho
         async function fetchPerformanceData() {
             try {
-                updateLoadingStatus('Obtendo dados de desempenho...');
-                
                 const response = await fetch(`${API_BASE_URL}/api/metrics`);
-                
-                if (!response.ok) {
-                    throw new Error(`Erro ao buscar dados de performance: ${response.status}`);
-                }
+                if (!response.ok) throw new Error('Erro ao buscar métricas');
                 
                 const data = await response.json();
                 
-                // Verificar se temos dados para o gráfico
-                if (performanceChart) {
-                    // Dados simulados para o gráfico se não houver dados reais
+                // Atualizar gráfico
+                if (performanceChart && data.performance_timeline) {
                     const now = new Date();
-                    const timeLabels = Array(12).fill(0).map((_, i) => {
+                    const labels = Array(12).fill(0).map((_, i) => {
                         const time = new Date(now - (11 - i) * 5 * 60000);
-                        return `${time.getHours().toString().padStart(2, '0')}:${time.getMinutes().toString().padStart(2, '0')}`;
+                        return time.toLocaleTimeString('pt-BR', { 
+                            hour: '2-digit', 
+                            minute: '2-digit' 
+                        });
                     });
                     
-                    // Atualizar labels do tempo
-                    performanceChart.data.labels = timeLabels;
-                    
-                    // Dados simulados para CPU, memória e rede baseados em métricas reais se disponíveis
-                    const basePerformance = data.aggregated_metrics?.avg_performance || 93.7;
-                    const baseMemory = data.aggregated_metrics?.avg_memory_usage || 82.4;
-                    const baseNetwork = data.average_latency ? data.average_latency * 1000 : 150;
-                    
-                    // Gerar variações realistas para o gráfico
-                    const cpuData = Array(12).fill(0).map(() => basePerformance * (0.9 + 0.2 * Math.random()));
-                    const memoryData = Array(12).fill(0).map(() => baseMemory * (0.9 + 0.2 * Math.random()));
-                    const networkData = Array(12).fill(0).map(() => baseNetwork * (0.9 + 0.2 * Math.random()));
-                    
-                    // Atualizar dados do gráfico
-                    performanceChart.data.datasets[0].data = cpuData;
-                    performanceChart.data.datasets[1].data = memoryData;
-                    performanceChart.data.datasets[2].data = networkData;
-                    
-                    // Atualizar o gráfico
-                    performanceChart.update();
+                    performanceChart.data.labels = labels;
+                    performanceChart.data.datasets[0].data = data.performance_timeline.cpu || [];
+                    performanceChart.data.datasets[1].data = data.performance_timeline.memory || [];
+                    performanceChart.data.datasets[2].data = data.performance_timeline.network || [];
+                    performanceChart.update('none');
                 }
+                
+                // Atualizar métricas de rede
+                const networkSpeed = data.performance_timeline?.network?.[11] || 0;
+                document.getElementById('network-usage').textContent = `${networkSpeed.toFixed(1)} Mbps`;
                 
                 return true;
             } catch (error) {
-                console.error('Erro ao buscar dados de desempenho:', error);
-                handleApiError('Erro ao obter dados de desempenho. Tentando novamente...');
+                console.error('Erro ao buscar métricas:', error);
                 return false;
             }
         }
 
-        // Função para obter logs do sistema
         async function fetchLogData() {
             try {
-                updateLoadingStatus('Obtendo logs do sistema...');
-                
                 const response = await fetch(`${API_BASE_URL}/api/logs`);
-                
-                if (!response.ok) {
-                    throw new Error(`Erro ao buscar logs: ${response.status}`);
-                }
+                if (!response.ok) throw new Error('Erro ao buscar logs');
                 
                 const data = await response.json();
                 
-                const logContainer = document.getElementById('event-log');
-                
-                // Limpar logs existentes
-                logContainer.innerHTML = '';
-                
-                // Adicionar novos logs se disponíveis
                 if (data.logs && Array.isArray(data.logs)) {
-                    // Ordenar logs do mais recente para o mais antigo
-                    const sortedLogs = [...data.logs].sort((a, b) => {
-                        return new Date(b.timestamp) - new Date(a.timestamp);
-                    });
+                    // Limpar logs existentes apenas na primeira vez
+                    if (document.getElementById('event-log').children.length === 1) {
+                        document.getElementById('event-log').innerHTML = '';
+                    }
                     
-                    // Adicionar logs ao container
-                    sortedLogs.forEach(log => {
-                        addLogEntry(log);
-                    });
-                } else {
-                    // Log padrão se nenhum log for recebido
-                    const defaultLog = {
-                        timestamp: new Date().toISOString(),
-                        level: 'INFO',
-                        message: 'Sistema inicializado com êxito. Aguardando eventos...'
-                    };
-                    addLogEntry(defaultLog);
+                    // Adicionar novos logs
+                    data.logs.slice(0, 10).forEach(log => addLogEntry(log));
                 }
                 
                 return true;
             } catch (error) {
                 console.error('Erro ao buscar logs:', error);
-                handleApiError('Erro ao obter logs do sistema. Tentando novamente...');
                 return false;
             }
         }
 
-        // Função para adicionar uma entrada de log
-        function addLogEntry(log) {
-            const logContainer = document.getElementById('event-log');
-            
-            const newEntry = document.createElement('div');
-            newEntry.className = 'log-entry';
-            
-            // Formatar a entrada de log
-            let timestamp = log.timestamp || new Date().toISOString();
-            try {
-                const date = new Date(timestamp);
-                timestamp = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')} ${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}:${String(date.getSeconds()).padStart(2, '0')}`;
-            } catch (e) {
-                console.error('Erro ao formatar timestamp:', e);
-            }
-            
-            const level = log.level || 'INFO';
-            const message = log.message || 'Evento do sistema';
-            
-            // Determinar classe CSS baseada no nível
-            let levelClass = 'log-level-info';
-            let levelText = 'INFO';
-            
-            if (level.toUpperCase() === 'WARNING' || level.toUpperCase() === 'WARN') {
-                levelClass = 'log-level-warning';
-                levelText = 'AVISO';
-            } else if (level.toUpperCase() === 'ERROR' || level.toUpperCase() === 'ERRO') {
-                levelClass = 'log-level-error';
-                levelText = 'ERRO';
-            } else if (level.toUpperCase() === 'SUCCESS' || level.toUpperCase() === 'SUCESSO') {
-                levelClass = 'log-level-success';
-                levelText = 'SUCESSO';
-            }
-            
-            newEntry.innerHTML = `
-                <span class="log-timestamp">[${timestamp}]</span> 
-                <span class="${levelClass}">[${levelText}]</span> ${message}
-            `;
-            
-            // Adicionar ao início do container
-            logContainer.insertBefore(newEntry, logContainer.firstChild);
-            
-            // Limitar número de logs exibidos
-            if (logContainer.children.length > 30) {
-                logContainer.removeChild(logContainer.lastChild);
-            }
-        }
-
-        // Função para lidar com erros de API
-        function handleApiError(message) {
-            document.getElementById('loading-status').textContent = message;
-            retryCount++;
-            
-            if (retryCount > MAX_RETRIES) {
-                document.getElementById('error-message').textContent = 
-                    `Erro ao conectar com as APIs. Verifique se o servidor está online. (${retryCount} tentativas)`;
-                document.getElementById('api-error').style.display = 'block';
-            }
-            
-            return false;
-        }
-
-        // Função para atualizar o status de carregamento
-        function updateLoadingStatus(message) {
-            document.getElementById('loading-status').textContent = message;
-        }
-
-        // Função para inicializar o WebSocket
+        // WebSocket
         function initializeWebSocket() {
             try {
-                updateLoadingStatus('Conectando ao WebSocket...');
-                
-                socket = io(SOCKET_URL);
+                socket = io(SOCKET_URL, {
+                    transports: ['websocket', 'polling']
+                });
                 
                 socket.on('connect', () => {
                     console.log('WebSocket conectado');
-                    document.getElementById('connection-status').innerHTML = 
-                        `Protocolo: WebSocket | Conexão: <span class="text-green-400">Ativa</span> | ${calculateUptime()}`;
                     isConnected = true;
+                    document.getElementById('connection-status').textContent = 'Conectado';
+                    document.getElementById('protocol-status').textContent = 'WebSocket';
                 });
                 
                 socket.on('disconnect', () => {
                     console.log('WebSocket desconectado');
-                    document.getElementById('connection-status').innerHTML = 
-                        `Protocolo: WebSocket | Conexão: <span class="text-red-400">Inativa</span> | ${calculateUptime()}`;
                     isConnected = false;
+                    document.getElementById('connection-status').textContent = 'Desconectado';
                 });
                 
-                socket.on('agent_status', (data) => {
-                    console.log('Recebido status dos agentes:', data);
-                    if (data.agents) {
-                        document.getElementById('active-agents').textContent = data.active || data.agents;
+                socket.on('cycle_update', (data) => {
+                    if (data.total_cycles) {
+                        document.getElementById('cycle-count').textContent = 
+                            data.total_cycles.toLocaleString('pt-BR');
                     }
                 });
                 
-                socket.on('system_metrics', (data) => {
-                    console.log('Recebidas métricas do sistema:', data);
-                    // Atualizar métricas relevantes
+                socket.on('performance_update', (data) => {
+                    if (data.cpu !== undefined) {
+                        document.getElementById('cpu-usage').textContent = `${data.cpu.toFixed(1)}%`;
+                    }
+                    if (data.memory !== undefined) {
+                        document.getElementById('memory-usage').textContent = `${data.memory.toFixed(1)}%`;
+                    }
                 });
                 
                 socket.on('log_event', (data) => {
-                    console.log('Recebido evento de log:', data);
-                    addLogEntry(data);
+                    if (data.logs) {
+                        data.logs.forEach(log => addLogEntry(log));
+                    }
                 });
                 
                 return true;
             } catch (error) {
                 console.error('Erro ao inicializar WebSocket:', error);
-                document.getElementById('connection-status').innerHTML = 
-                    `Protocolo: HTTP | Conexão: <span class="text-yellow-400">Polling</span> | ${calculateUptime()}`;
+                document.getElementById('protocol-status').textContent = 'HTTP Polling';
                 return false;
             }
         }
 
-        // Função para carregar dados iniciais
-        async function loadInitialData() {
-            updateLoadingStatus('Inicializando dashboard...');
+        // Inicialização
+        async function initializeSystem() {
+            document.getElementById('loading-status').textContent = 'Conectando ao servidor ALSHAM QUANTUM...';
             
-            // Inicializar o gráfico de performance
+            // Inicializar gráfico
             initializePerformanceChart();
             
-            // Tentar conexão WebSocket
+            // Inicializar WebSocket
             initializeWebSocket();
             
-            // Obter dados iniciais
-            const systemOk = await fetchSystemData();
-            const agentsOk = await fetchAgentsData();
-            const performanceOk = await fetchPerformanceData();
-            const logsOk = await fetchLogData();
+            // Carregar dados iniciais
+            const promises = [
+                fetchSystemData(),
+                fetchAgentsData(),
+                fetchPerformanceData(),
+                fetchLogData()
+            ];
             
-            // Se todos os dados foram carregados com sucesso
-            if (systemOk && agentsOk && performanceOk && logsOk) {
-                // Esconder tela de carregamento
-                document.getElementById('loading').style.display = 'none';
-                // Configurar atualizações periódicas
-                startPeriodicUpdates();
-            } else {
-                // Se falhou, tentar novamente após um tempo
-                if (retryCount <= MAX_RETRIES) {
-                    updateLoadingStatus(`Falha ao carregar alguns dados. Tentando novamente (${retryCount}/${MAX_RETRIES})...`);
-                    setTimeout(loadInitialData, 3000);
-                } else {
-                    updateLoadingStatus('Falha ao conectar com as APIs. Usando dados limitados.');
+            const results = await Promise.all(promises);
+            
+            if (results.every(r => r)) {
+                // Ocultar loading e mostrar app
+                setTimeout(() => {
                     document.getElementById('loading').style.display = 'none';
-                    document.getElementById('api-error').style.display = 'block';
-                    // Iniciar atualizações de tempo e contadores mesmo assim
-                    startUptimeUpdates();
-                }
+                    document.getElementById('app').style.display = 'block';
+                    
+                    // Adicionar log inicial
+                    addLogEntry({
+                        level: 'success',
+                        message: 'Sistema ALSHAM QUANTUM v12.0 inicializado com sucesso',
+                        timestamp: new Date().toISOString()
+                    });
+                    
+                    // Iniciar atualizações periódicas
+                    startPeriodicUpdates();
+                }, 1500);
+            } else {
+                document.getElementById('loading-status').textContent = 
+                    'Erro ao conectar. Tentando novamente...';
+                setTimeout(initializeSystem, 3000);
             }
         }
 
-        // Configurar atualizações periódicas
+        // Atualizações periódicas
         function startPeriodicUpdates() {
             // Atualizar uptime a cada segundo
-            startUptimeUpdates();
+            setInterval(() => {
+                const uptime = (Date.now() - systemStartTime) / 1000;
+                document.getElementById('uptime-value').textContent = formatUptime(uptime);
+            }, 1000);
             
-            // Atualizar dados do sistema a cada 10 segundos
+            // Atualizar dados
             setInterval(fetchSystemData, 10000);
-            
-            // Atualizar dados dos agentes a cada 30 segundos
             setInterval(fetchAgentsData, 30000);
-            
-            // Atualizar gráficos de desempenho a cada minuto
             setInterval(fetchPerformanceData, 60000);
             
-            // Atualizar logs a cada 15 segundos se não estivermos usando WebSocket
             if (!isConnected) {
                 setInterval(fetchLogData, 15000);
             }
         }
 
-        // Iniciar atualizações de uptime
-        function startUptimeUpdates() {
-            // Atualizar uptime a cada segundo
-            setInterval(() => {
-                document.getElementById('uptime-value').textContent = calculateUptime();
-                
-                // Atualizar status da conexão
-                if (isConnected) {
-                    document.getElementById('connection-status').innerHTML = 
-                        `Protocolo: WebSocket | Conexão: <span class="text-green-400">Ativa</span> | ${calculateUptime()}`;
-                } else {
-                    document.getElementById('connection-status').innerHTML = 
-                        `Protocolo: HTTP | Conexão: <span class="text-yellow-400">Polling</span> | ${calculateUptime()}`;
-                }
-            }, 1000);
-        }
-
-        // Simular evento de log (usado quando não há conexão WebSocket)
-        function simulateLogEvent() {
-            if (!isConnected) {
-                const events = [
-                    { level: 'INFO', message: 'Verificação de integridade concluída.' },
-                    { level: 'INFO', message: 'Sincronização de agentes completa.' },
-                    { level: 'INFO', message: 'Processamento de dados em andamento.' },
-                    { level: 'WARNING', message: 'Utilização de recursos acima do esperado.' },
-                    { level: 'INFO', message: 'Monitoramento ativo em todos os sistemas.' }
-                ];
-                
-                const randomEvent = events[Math.floor(Math.random() * events.length)];
-                randomEvent.timestamp = new Date().toISOString();
-                
-                addLogEntry(randomEvent);
-            }
-        }
-
-        // Iniciar carregamento quando a página estiver pronta
-        document.addEventListener('DOMContentLoaded', () => {
-            loadInitialData();
-        });
+        // Iniciar quando o DOM estiver pronto
+        document.addEventListener('DOMContentLoaded', initializeSystem);
     </script>
 </body>
 </html>
