@@ -3,1452 +3,647 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ALSHAM QUANTUM v12.0 - Premium Enterprise Dashboard</title>
-    
-    <!-- CDN Libraries -->
+    <title>Centro de Comando Empresarial SUNA-ALSHAM v12.0</title>
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Inter:wght@300;400;500;600;700&family=Rajdhani:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
-    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
-
     <style>
-        :root {
-            /* Quantum Theme */
-            --quantum-purple: #6C3483;
-            --cosmic-blue: #1F618D;
-            --photon-gold: #F4D03F;
-            --neutron-gray: #2C3E50;
-            --energy-green: #2ECC71;
-            --plasma-white: #FDFEFE;
-            --void-black: #020C1B;
-            
-            /* Premium Gold Theme */
-            --gold-primary: #FFD700;
-            --gold-secondary: #1A1A1A;
-            --gold-accent: #C9B037;
-            --gold-bg: radial-gradient(circle at 50% 50%, #2C1810, #0A0A0A);
-            
-            /* Diamond Platinum Theme */
-            --platinum-primary: #E5E4E2;
-            --platinum-secondary: #36454F;
-            --platinum-accent: #C0C0C0;
-            --platinum-bg: conic-gradient(from 45deg, #1a1a1a, #2d2d2d, #1a1a1a);
-            
-            /* Neural Red Theme */
-            --red-primary: #DC143C;
-            --red-secondary: #8B0000;
-            --red-accent: #FF6B6B;
-            --red-bg: linear-gradient(135deg, #0C0C0C 0%, #1A0000 50%, #0C0C0C 100%);
-        }
-
-        * {
-            box-sizing: border-box;
-        }
-
         body {
-            font-family: 'Inter', sans-serif;
-            background: linear-gradient(135deg, var(--void-black) 0%, #1a1a2e 50%, var(--neutron-gray) 100%);
-            color: var(--plasma-white);
-            overflow-x: hidden;
-            margin: 0;
-            padding: 0;
-            position: relative;
+            background-color: #0a0e17;
+            color: #e2e8f0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
-
-        /* Quantum Particles Background */
-        .quantum-particles {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            pointer-events: none;
-            z-index: 1;
-            opacity: 0.3;
-        }
-
-        .particle {
-            position: absolute;
-            width: 2px;
-            height: 2px;
-            background: var(--photon-gold);
-            border-radius: 50%;
-            animation: float 20s infinite linear;
-        }
-
-        @keyframes float {
-            0% {
-                transform: translateY(100vh) translateX(0px);
-                opacity: 0;
-            }
-            10% {
-                opacity: 1;
-            }
-            90% {
-                opacity: 1;
-            }
-            100% {
-                transform: translateY(-100px) translateX(100px);
-                opacity: 0;
-            }
-        }
-
-        /* Holographic Effects */
-        .holographic-effect {
-            position: relative;
-            overflow: hidden;
-        }
-
-        .holographic-effect::before {
-            content: '';
-            position: absolute;
-            top: -50%;
-            left: -50%;
-            width: 200%;
-            height: 200%;
-            background: linear-gradient(45deg, 
-                transparent 30%, 
-                rgba(255,255,255,0.1) 50%, 
-                transparent 70%);
-            animation: hologram 3s infinite;
-            pointer-events: none;
-        }
-
-        @keyframes hologram {
-            0% { transform: translateX(-100%) translateY(-100%) rotate(45deg); }
-            100% { transform: translateX(100%) translateY(100%) rotate(45deg); }
-        }
-
-        /* Premium Themes */
-        .theme-quantum {
-            --primary: var(--quantum-purple);
-            --secondary: var(--cosmic-blue);
-            --accent: var(--photon-gold);
-            background: linear-gradient(135deg, var(--void-black) 0%, #1a1a2e 50%, var(--neutron-gray) 100%);
-        }
-
-        .theme-gold {
-            --primary: var(--gold-primary);
-            --secondary: var(--gold-secondary);
-            --accent: var(--gold-accent);
-            background: var(--gold-bg);
-        }
-
-        .theme-platinum {
-            --primary: var(--platinum-primary);
-            --secondary: var(--platinum-secondary);
-            --accent: var(--platinum-accent);
-            background: var(--platinum-bg);
-        }
-
-        .theme-neural-red {
-            --primary: var(--red-primary);
-            --secondary: var(--red-secondary);
-            --accent: var(--red-accent);
-            background: var(--red-bg);
-        }
-
-        /* Glass Effect Premium */
-        .glass-effect {
-            background: rgba(255, 255, 255, 0.05);
-            backdrop-filter: blur(20px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-        }
-
-        .glass-effect-premium {
-            background: linear-gradient(135deg, 
-                rgba(255, 255, 255, 0.1) 0%, 
-                rgba(255, 255, 255, 0.05) 100%);
-            backdrop-filter: blur(30px);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            box-shadow: 
-                0 8px 32px rgba(0, 0, 0, 0.3),
-                inset 0 1px 0 rgba(255, 255, 255, 0.2);
-        }
-
-        /* Quantum Gradient */
-        .quantum-gradient {
-            background: linear-gradient(135deg, var(--primary, var(--quantum-purple)), var(--secondary, var(--cosmic-blue)), var(--accent, var(--photon-gold)));
-        }
-
-        /* Agent Cards Premium */
-        .agent-card {
-            transition: all 0.4s cubic-bezier(0.23, 1, 0.320, 1);
-            cursor: pointer;
-            position: relative;
-            transform-style: preserve-3d;
-        }
-
-        .agent-card:hover {
-            transform: translateY(-10px) rotateX(5deg);
-            box-shadow: 
-                0 20px 40px rgba(108, 52, 131, 0.4),
-                0 0 20px rgba(244, 208, 63, 0.3);
-        }
-
-        /* Heartbeat Animation Premium */
-        .heartbeat {
-            animation: pulse-premium 2s infinite;
-        }
-
-        @keyframes pulse-premium {
-            0% { 
-                opacity: 1; 
-                transform: scale(1);
-                box-shadow: 0 0 0 0 rgba(46, 204, 113, 0.7);
-            }
-            50% { 
-                opacity: 0.7; 
-                transform: scale(1.1);
-                box-shadow: 0 0 0 10px rgba(46, 204, 113, 0);
-            }
-            100% { 
-                opacity: 1; 
-                transform: scale(1);
-                box-shadow: 0 0 0 0 rgba(46, 204, 113, 0);
-            }
-        }
-
-        /* Command Terminal */
-        .command-terminal {
-            background: #000;
-            color: #00ff00;
-            font-family: 'Courier New', monospace;
+        .dashboard-card {
+            background-color: #1a202c;
             border-radius: 8px;
-            padding: 20px;
-            max-height: 300px;
-            overflow-y: auto;
-            position: relative;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.5);
+            padding: 16px;
+            margin-bottom: 20px;
+            border-left: 3px solid #4299e1;
         }
-
-        .command-terminal::before {
-            content: '> ALSHAM QUANTUM TERMINAL v12.0 ACTIVE';
-            display: block;
-            color: #00ffff;
-            margin-bottom: 10px;
+        .status-good {
+            color: #48bb78;
+        }
+        .status-warning {
+            color: #ecc94b;
+        }
+        .status-danger {
+            color: #f56565;
+        }
+        .metric-value {
+            font-size: 2.5rem;
             font-weight: bold;
+            margin: 10px 0;
         }
-
-        .command-line {
-            margin: 5px 0;
-            opacity: 0;
-            animation: typewriter 0.5s forwards;
+        .metric-label {
+            font-size: 0.9rem;
+            color: #a0aec0;
+            text-transform: uppercase;
         }
-
-        @keyframes typewriter {
-            to { opacity: 1; }
-        }
-
-        /* Alert System */
-        .alert-premium {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            z-index: 1000;
-            padding: 15px 20px;
-            border-radius: 10px;
-            backdrop-filter: blur(10px);
-            border: 1px solid;
-            animation: slideInRight 0.5s ease-out;
-        }
-
-        .alert-success {
-            background: rgba(46, 204, 113, 0.2);
-            border-color: #2ECC71;
-            color: #2ECC71;
-        }
-
-        .alert-warning {
-            background: rgba(244, 208, 63, 0.2);
-            border-color: #F4D03F;
-            color: #F4D03F;
-        }
-
-        .alert-error {
-            background: rgba(231, 76, 60, 0.2);
-            border-color: #e74c3c;
-            color: #e74c3c;
-        }
-
-        @keyframes slideInRight {
-            from { transform: translateX(100%); opacity: 0; }
-            to { transform: translateX(0); opacity: 1; }
-        }
-
-        /* Audio Controls */
-        .audio-controls {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            z-index: 1000;
-        }
-
-        .audio-button {
-            width: 50px;
-            height: 50px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, var(--quantum-purple), var(--cosmic-blue));
-            color: white;
-            border: none;
-            cursor: pointer;
+        .agent-card {
+            background-color: #2d3748;
+            border-radius: 6px;
+            padding: 12px;
+            margin-bottom: 10px;
+            border-left: 3px solid #4299e1;
             transition: all 0.3s ease;
-            margin: 5px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
         }
-
-        .audio-button:hover {
-            transform: scale(1.1);
-            box-shadow: 0 0 20px rgba(108, 52, 131, 0.5);
-        }
-
-        /* Widget Grid */
-        .widget-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 20px;
-            margin: 20px 0;
-        }
-
-        .widget {
-            min-height: 200px;
-            border-radius: 15px;
-            padding: 20px;
-            position: relative;
-            overflow: hidden;
-        }
-
-        /* Typography */
-        .orbitron { font-family: 'Orbitron', monospace; }
-        .rajdhani { font-family: 'Rajdhani', sans-serif; }
-
-        /* Status Colors */
-        .status-online { color: var(--energy-green); }
-        .status-warning { color: var(--photon-gold); }
-        .status-error { color: #e74c3c; }
-
-        /* Loading Skeleton Premium */
-        .loading-skeleton {
-            background: linear-gradient(90deg, 
-                rgba(255,255,255,0.1) 25%, 
-                rgba(255,255,255,0.2) 50%, 
-                rgba(255,255,255,0.1) 75%);
-            background-size: 200% 100%;
-            animation: loading-premium 1.5s infinite;
-        }
-
-        @keyframes loading-premium {
-            0% { background-position: 200% 0; }
-            100% { background-position: -200% 0; }
-        }
-
-        /* Animations */
-        .fade-in {
-            animation: fadeIn 0.6s ease-out;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        .slide-in-left {
-            animation: slideInLeft 0.6s ease-out;
-        }
-
-        @keyframes slideInLeft {
-            from { transform: translateX(-100%); opacity: 0; }
-            to { transform: translateX(0); opacity: 1; }
-        }
-
-        /* Neon Glow Effect */
-        .neon-glow {
-            text-shadow: 
-                0 0 5px currentColor,
-                0 0 10px currentColor,
-                0 0 15px currentColor,
-                0 0 20px currentColor;
-        }
-
-        /* Premium Button */
-        .btn-premium {
-            background: linear-gradient(135deg, var(--quantum-purple), var(--cosmic-blue));
-            border: none;
-            color: white;
-            padding: 12px 24px;
-            border-radius: 25px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .btn-premium:hover {
+        .agent-card:hover {
             transform: translateY(-2px);
-            box-shadow: 0 10px 20px rgba(108, 52, 131, 0.3);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
         }
-
-        .btn-premium::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
+        .agent-status {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 8px;
+        }
+        .agent-status.online {
+            background-color: #48bb78;
+        }
+        .agent-status.warning {
+            background-color: #ecc94b;
+        }
+        .agent-status.offline {
+            background-color: #f56565;
+        }
+        .category-header {
+            font-size: 1.25rem;
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #4299e1;
+            border-bottom: 1px solid #4a5568;
+            padding-bottom: 5px;
+        }
+        .event-log {
+            height: 300px;
+            overflow-y: auto;
+            font-family: monospace;
+            font-size: 0.9rem;
+            background-color: #2d3748;
+            padding: 10px;
+            border-radius: 6px;
+        }
+        .log-entry {
+            margin-bottom: 6px;
+            padding-bottom: 6px;
+            border-bottom: 1px dashed #4a5568;
+        }
+        .log-timestamp {
+            color: #a0aec0;
+        }
+        .log-level-info {
+            color: #4299e1;
+        }
+        .log-level-warning {
+            color: #ecc94b;
+        }
+        .log-level-error {
+            color: #f56565;
+        }
+        .progress-bar {
+            background-color: #2d3748;
+            border-radius: 9999px;
+            overflow: hidden;
+            height: 8px;
+            margin-top: 8px;
+        }
+        .progress-value {
             height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
-            transition: left 0.5s;
+            border-radius: 9999px;
+            background-color: #4299e1;
         }
-
-        .btn-premium:hover::before {
-            left: 100%;
+        .badge {
+            background-color: #4a5568;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 600;
         }
-
-        /* Scrollbar Premium */
-        ::-webkit-scrollbar {
-            width: 8px;
-        }
-
-        ::-webkit-scrollbar-track {
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 4px;
-        }
-
-        ::-webkit-scrollbar-thumb {
-            background: linear-gradient(135deg, var(--quantum-purple), var(--cosmic-blue));
-            border-radius: 4px;
-        }
-
-        ::-webkit-scrollbar-thumb:hover {
-            background: linear-gradient(135deg, var(--cosmic-blue), var(--photon-gold));
-        }
-
-        /* Responsive */
-        @media (max-width: 768px) {
-            .widget-grid {
-                grid-template-columns: 1fr;
-            }
-            
-            .audio-controls {
-                bottom: 10px;
-                right: 10px;
-            }
+        .header-bg {
+            background: linear-gradient(135deg, #1a202c 0%, #2d3748 100%);
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
         }
     </style>
 </head>
-<body class="min-h-screen theme-quantum" id="app-body">
-    <!-- Quantum Particles Background -->
-    <div class="quantum-particles" id="particles-container"></div>
-
-    <!-- Audio Controls -->
-    <div class="audio-controls">
-        <button class="audio-button" id="audioToggle" title="Toggle Audio">
-            <i class="fas fa-volume-up" id="audioIcon"></i>
-        </button>
-        <button class="audio-button" id="themeSelector" title="Themes">
-            <i class="fas fa-palette"></i>
-        </button>
-    </div>
-
-    <!-- Theme Selector Modal -->
-    <div id="themeModal" class="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm hidden z-50">
-        <div class="flex items-center justify-center min-h-screen p-4">
-            <div class="glass-effect-premium p-8 rounded-2xl max-w-md w-full">
-                <h3 class="text-xl font-bold mb-4 orbitron">Select Premium Theme</h3>
-                <div class="space-y-3">
-                    <button class="w-full p-3 rounded-lg glass-effect hover:bg-white hover:bg-opacity-10 transition-all" onclick="setTheme('quantum')">
-                        <span class="quantum-gradient px-3 py-1 rounded text-black font-bold">Quantum</span> - Default Premium
-                    </button>
-                    <button class="w-full p-3 rounded-lg glass-effect hover:bg-white hover:bg-opacity-10 transition-all" onclick="setTheme('gold')">
-                        <span style="background: linear-gradient(135deg, #FFD700, #C9B037); color: black;" class="px-3 py-1 rounded font-bold">Gold</span> - Executive Luxury
-                    </button>
-                    <button class="w-full p-3 rounded-lg glass-effect hover:bg-white hover:bg-opacity-10 transition-all" onclick="setTheme('platinum')">
-                        <span style="background: linear-gradient(135deg, #E5E4E2, #C0C0C0); color: black;" class="px-3 py-1 rounded font-bold">Platinum</span> - Diamond Elite
-                    </button>
-                    <button class="w-full p-3 rounded-lg glass-effect hover:bg-white hover:bg-opacity-10 transition-all" onclick="setTheme('neural-red')">
-                        <span style="background: linear-gradient(135deg, #DC143C, #FF6B6B); color: white;" class="px-3 py-1 rounded font-bold">Neural Red</span> - Enterprise Power
-                    </button>
+<body class="p-6">
+    <div class="header-bg">
+        <h1 class="text-4xl font-bold mb-2 text-center">CENTRO DE COMANDO EMPRESARIAL</h1>
+        <h2 class="text-xl text-blue-400 text-center mb-6">Sistema Unificado Neural Avançado - Monitoramento em Tempo Real</h2>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+            <div class="dashboard-card">
+                <div class="metric-label">CICLOS TOTAIS EXECUTADOS</div>
+                <div class="metric-value">78,946</div>
+                <div class="text-sm">Uptime: 1d 3h 47m</div>
+                <div class="text-sm">23.457 ciclos/segundo | 84,445 ciclos/hora</div>
+            </div>
+            
+            <div class="dashboard-card">
+                <div class="metric-label">Performance Global</div>
+                <div class="metric-value status-good">97%</div>
+                <div class="progress-bar">
+                    <div class="progress-value" style="width: 97%"></div>
                 </div>
-                <button class="w-full mt-4 btn-premium" onclick="closeThemeModal()">Close</button>
+                <div class="text-sm mt-2">Sistema Operacional</div>
+            </div>
+            
+            <div class="dashboard-card">
+                <div class="metric-label">Agentes Ativos</div>
+                <div class="metric-value">50</div>
+                <div class="text-sm">de 50 Total</div>
+            </div>
+            
+            <div class="dashboard-card">
+                <div class="metric-label">Valor do Sistema</div>
+                <div class="metric-value">R$ 1.430.000</div>
+                <div class="text-sm">Investimento Total</div>
             </div>
         </div>
     </div>
-
-    <!-- Header -->
-    <header class="glass-effect-premium border-b border-white border-opacity-20 sticky top-0 z-40">
-        <div class="container mx-auto px-6 py-4">
-            <div class="flex items-center justify-between">
-                <div class="flex items-center space-x-4">
-                    <div class="w-12 h-12 quantum-gradient rounded-full flex items-center justify-center holographic-effect">
-                        <i class="fas fa-atom text-white text-xl"></i>
+    
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <!-- Coluna Esquerda -->
+        <div>
+            <!-- Sistema: 6 agentes -->
+            <div class="dashboard-card">
+                <div class="category-header">
+                    <i class="fas fa-server mr-2"></i> Sistema (6 agentes)
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="agent-card">
+                        <span class="agent-status online"></span>
+                        <span class="font-bold">system_core_001</span>
+                        <div class="text-xs text-gray-400 mt-2">Gerenciamento de recursos do sistema</div>
                     </div>
-                    <div>
-                        <h1 class="text-2xl font-bold orbitron neon-glow">ALSHAM QUANTUM v12.0</h1>
-                        <p class="text-sm text-gray-300 rajdhani">Premium Enterprise Dashboard - 25 Agentes Autoevolutivos</p>
+                    <div class="agent-card">
+                        <span class="agent-status online"></span>
+                        <span class="font-bold">system_monitor_001</span>
+                        <div class="text-xs text-gray-400 mt-2">Monitoramento de desempenho</div>
+                    </div>
+                    <div class="agent-card">
+                        <span class="agent-status online"></span>
+                        <span class="font-bold">system_config_001</span>
+                        <div class="text-xs text-gray-400 mt-2">Configuração do sistema</div>
+                    </div>
+                    <div class="agent-card">
+                        <span class="agent-status online"></span>
+                        <span class="font-bold">system_backup_001</span>
+                        <div class="text-xs text-gray-400 mt-2">Backup automático</div>
+                    </div>
+                    <div class="agent-card">
+                        <span class="agent-status online"></span>
+                        <span class="font-bold">system_logging_001</span>
+                        <div class="text-xs text-gray-400 mt-2">Sistema de logs</div>
+                    </div>
+                    <div class="agent-card">
+                        <span class="agent-status online"></span>
+                        <span class="font-bold">system_health_001</span>
+                        <div class="text-xs text-gray-400 mt-2">Verificação de saúde</div>
                     </div>
                 </div>
-                
-                <div class="flex items-center space-x-6">
-                    <div class="text-center">
-                        <div id="system-status" class="status-online text-lg font-bold orbitron heartbeat">ONLINE</div>
-                        <div class="text-xs text-gray-400">Sistema</div>
+            </div>
+            
+            <!-- Core: 5 agentes -->
+            <div class="dashboard-card">
+                <div class="category-header">
+                    <i class="fas fa-microchip mr-2"></i> Core (5 agentes)
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="agent-card">
+                        <span class="agent-status online"></span>
+                        <span class="font-bold">core_processor_001</span>
+                        <div class="text-xs text-gray-400 mt-2">Processamento principal</div>
                     </div>
-                    <div class="text-center">
-                        <div id="active-agents-count" class="text-lg font-bold text-blue-400 orbitron">25</div>
-                        <div class="text-xs text-gray-400">Agentes Ativos</div>
+                    <div class="agent-card">
+                        <span class="agent-status online"></span>
+                        <span class="font-bold">core_data_001</span>
+                        <div class="text-xs text-gray-400 mt-2">Gerenciamento de dados</div>
                     </div>
-                    <div class="text-center">
-                        <div id="neural-coherence" class="text-lg font-bold text-purple-400 orbitron">98.7%</div>
-                        <div class="text-xs text-gray-400">Coerência Neural</div>
+                    <div class="agent-card">
+                        <span class="agent-status online"></span>
+                        <span class="font-bold">core_decision_001</span>
+                        <div class="text-xs text-gray-400 mt-2">Motor de decisões</div>
                     </div>
-                    <button id="refresh-btn" class="btn-premium" onclick="playClickSound()">
-                        <i class="fas fa-sync-alt"></i>
-                    </button>
-                    <button id="command-center-btn" class="btn-premium" onclick="toggleCommandCenter(); playClickSound()">
-                        <i class="fas fa-terminal"></i>
-                    </button>
+                    <div class="agent-card">
+                        <span class="agent-status online"></span>
+                        <span class="font-bold">core_optimizer_001</span>
+                        <div class="text-xs text-gray-400 mt-2">Otimização de recursos</div>
+                    </div>
+                    <div class="agent-card">
+                        <span class="agent-status online"></span>
+                        <span class="font-bold">core_router_001</span>
+                        <div class="text-xs text-gray-400 mt-2">Roteamento de tarefas</div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Automator: 1 agente -->
+            <div class="dashboard-card">
+                <div class="category-header">
+                    <i class="fas fa-cogs mr-2"></i> Automator (1 agente)
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="agent-card">
+                        <span class="agent-status online"></span>
+                        <span class="font-bold">automl_agent_001</span>
+                        <div class="text-xs text-gray-400 mt-2">Automação de Machine Learning</div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Especializados: 10 agentes -->
+            <div class="dashboard-card">
+                <div class="category-header">
+                    <i class="fas fa-tools mr-2"></i> Especializados (10 agentes)
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="agent-card">
+                        <span class="agent-status online"></span>
+                        <span class="font-bold">nlp_processor_001</span>
+                        <div class="text-xs text-gray-400 mt-2">Processamento de linguagem natural</div>
+                    </div>
+                    <div class="agent-card">
+                        <span class="agent-status online"></span>
+                        <span class="font-bold">image_processor_001</span>
+                        <div class="text-xs text-gray-400 mt-2">Processamento de imagens</div>
+                    </div>
+                    <div class="agent-card">
+                        <span class="agent-status online"></span>
+                        <span class="font-bold">audio_processor_001</span>
+                        <div class="text-xs text-gray-400 mt-2">Processamento de áudio</div>
+                    </div>
+                    <div class="agent-card">
+                        <span class="agent-status online"></span>
+                        <span class="font-bold">video_processor_001</span>
+                        <div class="text-xs text-gray-400 mt-2">Processamento de vídeo</div>
+                    </div>
+                    <div class="agent-card">
+                        <span class="agent-status online"></span>
+                        <span class="font-bold">data_mining_001</span>
+                        <div class="text-xs text-gray-400 mt-2">Mineração de dados</div>
+                    </div>
+                    <div class="agent-card">
+                        <span class="agent-status online"></span>
+                        <span class="font-bold">recommendation_001</span>
+                        <div class="text-xs text-gray-400 mt-2">Sistema de recomendação</div>
+                    </div>
+                    <div class="agent-card">
+                        <span class="agent-status online"></span>
+                        <span class="font-bold">forecast_001</span>
+                        <div class="text-xs text-gray-400 mt-2">Previsão de dados</div>
+                    </div>
+                    <div class="agent-card">
+                        <span class="agent-status online"></span>
+                        <span class="font-bold">visualization_001</span>
+                        <div class="text-xs text-gray-400 mt-2">Visualização de dados</div>
+                    </div>
+                    <div class="agent-card">
+                        <span class="agent-status online"></span>
+                        <span class="font-bold">testing_001</span>
+                        <div class="text-xs text-gray-400 mt-2">Testes automatizados</div>
+                    </div>
+                    <div class="agent-card">
+                        <span class="agent-status online"></span>
+                        <span class="font-bold">deployment_001</span>
+                        <div class="text-xs text-gray-400 mt-2">Implantação automatizada</div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Habilitados para IA: 1 agente -->
+            <div class="dashboard-card">
+                <div class="category-header">
+                    <i class="fas fa-brain mr-2"></i> Habilitados para IA (1 agente)
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="agent-card">
+                        <span class="agent-status online"></span>
+                        <span class="font-bold">deep_learning_001</span>
+                        <div class="text-xs text-gray-400 mt-2">Aprendizado profundo</div>
+                    </div>
                 </div>
             </div>
         </div>
-    </header>
-
-    <!-- Command Center -->
-    <div id="command-center" class="fixed top-20 right-4 w-96 glass-effect-premium rounded-xl p-4 z-30 hidden slide-in-left">
-        <div class="flex justify-between items-center mb-3">
-            <h3 class="font-bold orbitron">QUANTUM COMMAND CENTER</h3>
-            <button onclick="toggleCommandCenter()" class="text-gray-400 hover:text-white">
-                <i class="fas fa-times"></i>
-            </button>
-        </div>
-        <div class="command-terminal" id="terminal">
-            <div class="command-line">> System initialized successfully</div>
-            <div class="command-line">> 25 agents online and operational</div>
-            <div class="command-line">> Neural network coherence at 98.7%</div>
-            <div class="command-line">> Quantum encryption active</div>
-        </div>
-        <div class="mt-3 flex space-x-2">
-            <button class="btn-premium text-xs" onclick="executeCommand('system-scan'); playClickSound()">SCAN</button>
-            <button class="btn-premium text-xs" onclick="executeCommand('neural-sync'); playClickSound()">SYNC</button>
-            <button class="btn-premium text-xs" onclick="executeCommand('optimize'); playClickSound()">OPTIMIZE</button>
+        
+        <!-- Coluna Direita -->
+        <div>
+            <!-- Serviço: 6 agentes -->
+            <div class="dashboard-card">
+                <div class="category-header">
+                    <i class="fas fa-concierge-bell mr-2"></i> Serviço (6 agentes)
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="agent-card">
+                        <span class="agent-status online"></span>
+                        <span class="font-bold">api_gateway_001</span>
+                        <div class="text-xs text-gray-400 mt-2">Gateway de API</div>
+                    </div>
+                    <div class="agent-card">
+                        <span class="agent-status online"></span>
+                        <span class="font-bold">web_service_001</span>
+                        <div class="text-xs text-gray-400 mt-2">Serviço web</div>
+                    </div>
+                    <div class="agent-card">
+                        <span class="agent-status online"></span>
+                        <span class="font-bold">database_service_001</span>
+                        <div class="text-xs text-gray-400 mt-2">Serviço de banco de dados</div>
+                    </div>
+                    <div class="agent-card">
+                        <span class="agent-status online"></span>
+                        <span class="font-bold">messaging_service_001</span>
+                        <div class="text-xs text-gray-400 mt-2">Serviço de mensageria</div>
+                    </div>
+                    <div class="agent-card">
+                        <span class="agent-status online"></span>
+                        <span class="font-bold">storage_service_001</span>
+                        <div class="text-xs text-gray-400 mt-2">Serviço de armazenamento</div>
+                    </div>
+                    <div class="agent-card">
+                        <span class="agent-status online"></span>
+                        <span class="font-bold">cache_service_001</span>
+                        <div class="text-xs text-gray-400 mt-2">Serviço de cache</div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Orquestrador: 1 agente -->
+            <div class="dashboard-card">
+                <div class="category-header">
+                    <i class="fas fa-sitemap mr-2"></i> Orquestrador (1 agente)
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="agent-card">
+                        <span class="agent-status online"></span>
+                        <span class="font-bold">workflow_orchestrator_001</span>
+                        <div class="text-xs text-gray-400 mt-2">Orquestração de fluxos de trabalho</div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Meta Cognitivo: 1 agente -->
+            <div class="dashboard-card">
+                <div class="category-header">
+                    <i class="fas fa-lightbulb mr-2"></i> Meta Cognitivo (1 agente)
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="agent-card">
+                        <span class="agent-status online"></span>
+                        <span class="font-bold">meta_learner_001</span>
+                        <div class="text-xs text-gray-400 mt-2">Meta-aprendizado</div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Guard: 3 agentes -->
+            <div class="dashboard-card">
+                <div class="category-header">
+                    <i class="fas fa-shield-alt mr-2"></i> Guard (3 agentes)
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="agent-card">
+                        <span class="agent-status online"></span>
+                        <span class="font-bold">security_guardian_001</span>
+                        <div class="text-xs text-gray-400 mt-2">Guardião de segurança</div>
+                    </div>
+                    <div class="agent-card">
+                        <span class="agent-status online"></span>
+                        <span class="font-bold">security_enhancements_001</span>
+                        <div class="text-xs text-gray-400 mt-2">Melhorias de segurança</div>
+                    </div>
+                    <div class="agent-card">
+                        <span class="agent-status online"></span>
+                        <span class="font-bold">debug_master_001</span>
+                        <div class="text-xs text-gray-400 mt-2">Mestre de depuração</div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Domínio de Negócios: 16 agentes (mostraremos 8 e indicaremos que há mais) -->
+            <div class="dashboard-card">
+                <div class="category-header">
+                    <i class="fas fa-briefcase mr-2"></i> Domínio de Negócios (16 agentes)
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="agent-card">
+                        <span class="agent-status online"></span>
+                        <span class="font-bold">finance_agent_001</span>
+                        <div class="text-xs text-gray-400 mt-2">Análise financeira</div>
+                    </div>
+                    <div class="agent-card">
+                        <span class="agent-status online"></span>
+                        <span class="font-bold">marketing_agent_001</span>
+                        <div class="text-xs text-gray-400 mt-2">Estratégias de marketing</div>
+                    </div>
+                    <div class="agent-card">
+                        <span class="agent-status online"></span>
+                        <span class="font-bold">sales_agent_001</span>
+                        <div class="text-xs text-gray-400 mt-2">Análise de vendas</div>
+                    </div>
+                    <div class="agent-card">
+                        <span class="agent-status online"></span>
+                        <span class="font-bold">hr_agent_001</span>
+                        <div class="text-xs text-gray-400 mt-2">Recursos humanos</div>
+                    </div>
+                    <div class="agent-card">
+                        <span class="agent-status online"></span>
+                        <span class="font-bold">customer_agent_001</span>
+                        <div class="text-xs text-gray-400 mt-2">Atendimento ao cliente</div>
+                    </div>
+                    <div class="agent-card">
+                        <span class="agent-status online"></span>
+                        <span class="font-bold">supply_chain_001</span>
+                        <div class="text-xs text-gray-400 mt-2">Cadeia de suprimentos</div>
+                    </div>
+                    <div class="agent-card">
+                        <span class="agent-status online"></span>
+                        <span class="font-bold">product_agent_001</span>
+                        <div class="text-xs text-gray-400 mt-2">Gestão de produtos</div>
+                    </div>
+                    <div class="agent-card">
+                        <span class="agent-status online"></span>
+                        <span class="font-bold">quality_agent_001</span>
+                        <div class="text-xs text-gray-400 mt-2">Controle de qualidade</div>
+                    </div>
+                </div>
+                <div class="mt-4 text-center">
+                    <button class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition">
+                        Ver todos os 16 agentes de Negócios
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Gráfico de Performance -->
+            <div class="dashboard-card">
+                <div class="category-header">Performance Timeline</div>
+                <div style="height: 300px;">
+                    <canvas id="performanceChart"></canvas>
+                </div>
+            </div>
         </div>
     </div>
-
-    <!-- Main Content -->
-    <main class="container mx-auto px-6 py-8 relative z-10">
-        <!-- Metrics Overview -->
-        <section class="widget-grid fade-in">
-            <div class="widget glass-effect-premium holographic-effect">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <h3 class="text-sm text-gray-400 rajdhani">Mensagens Processadas</h3>
-                        <div id="messages-count" class="text-3xl font-bold text-green-400 orbitron">1,248</div>
-                        <div class="text-xs text-green-300">↑ +15.7% última hora</div>
-                    </div>
-                    <div class="text-4xl text-green-400 heartbeat">
-                        <i class="fas fa-envelope"></i>
-                    </div>
-                </div>
+    
+    <!-- Log de Eventos -->
+    <div class="dashboard-card mt-6">
+        <div class="flex justify-between items-center mb-4">
+            <div class="category-header mb-0">
+                <i class="fas fa-terminal mr-2"></i> Live Event Log <span class="badge status-good ml-2">LIVE</span>
             </div>
-
-            <div class="widget glass-effect-premium holographic-effect">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <h3 class="text-sm text-gray-400 rajdhani">Taxa de Sucesso Neural</h3>
-                        <div id="success-rate" class="text-3xl font-bold text-blue-400 orbitron">100.0%</div>
-                        <div class="text-xs text-blue-300">Perfeito por 847 dias</div>
-                    </div>
-                    <div class="text-4xl text-blue-400 heartbeat">
-                        <i class="fas fa-brain"></i>
-                    </div>
-                </div>
+        </div>
+        <div class="event-log">
+            <div class="log-entry">
+                <span class="log-timestamp">[2023-11-02 10:45:23]</span> 
+                <span class="log-level-info">[INFO]</span> Sistema inicializado com sucesso. 50 agentes ativos.
             </div>
-
-            <div class="widget glass-effect-premium holographic-effect">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <h3 class="text-sm text-gray-400 rajdhani">Latência Quântica</h3>
-                        <div id="avg-latency" class="text-3xl font-bold text-purple-400 orbitron">0.07ms</div>
-                        <div class="text-xs text-purple-300">Velocidade da luz × 0.97</div>
-                    </div>
-                    <div class="text-4xl text-purple-400 heartbeat">
-                        <i class="fas fa-bolt"></i>
-                    </div>
-                </div>
+            <div class="log-entry">
+                <span class="log-timestamp">[2023-11-02 10:45:28]</span> 
+                <span class="log-level-info">[INFO]</span> Conexão com banco de dados estabelecida.
             </div>
-
-            <div class="widget glass-effect-premium holographic-effect">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <h3 class="text-sm text-gray-400 rajdhani">Uptime Quântico</h3>
-                        <div id="system-uptime" class="text-3xl font-bold text-yellow-400 orbitron">99.98%</div>
-                        <div class="text-xs text-yellow-300">2.6 segundos downtime/ano</div>
-                    </div>
-                    <div class="text-4xl text-yellow-400 heartbeat">
-                        <i class="fas fa-infinity"></i>
-                    </div>
-                </div>
+            <div class="log-entry">
+                <span class="log-timestamp">[2023-11-02 10:45:35]</span> 
+                <span class="log-level-info">[INFO]</span> security_guardian_001 iniciou verificação de segurança.
             </div>
-        </section>
-
-        <!-- Agent Categories Filter -->
-        <section class="mb-8 fade-in">
-            <div class="flex flex-wrap gap-3">
-                <button class="filter-btn active btn-premium text-sm" data-category="all" onclick="filterAgents('all'); playClickSound()">
-                    Todos (25) <i class="fas fa-globe ml-1"></i>
-                </button>
-                <button class="filter-btn btn-premium text-sm" data-category="specialized" onclick="filterAgents('specialized'); playClickSound()">
-                    Specialized (4) <i class="fas fa-cog ml-1"></i>
-                </button>
-                <button class="filter-btn btn-premium text-sm" data-category="ai_powered" onclick="filterAgents('ai_powered'); playClickSound()">
-                    AI-Powered (4) <i class="fas fa-robot ml-1"></i>
-                </button>
-                <button class="filter-btn btn-premium text-sm" data-category="core_v3" onclick="filterAgents('core_v3'); playClickSound()">
-                    Core V3 (2) <i class="fas fa-microchip ml-1"></i>
-                </button>
-                <button class="filter-btn btn-premium text-sm" data-category="system" onclick="filterAgents('system'); playClickSound()">
-                    System (8) <i class="fas fa-server ml-1"></i>
-                </button>
-                <button class="filter-btn btn-premium text-sm" data-category="meta_cognitive" onclick="filterAgents('meta_cognitive'); playClickSound()">
-                    Meta-Cognitive (2) <i class="fas fa-brain ml-1"></i>
-                </button>
-                <button class="filter-btn btn-premium text-sm" data-category="service" onclick="filterAgents('service'); playClickSound()">
-                    Service (5) <i class="fas fa-concierge-bell ml-1"></i>
-                </button>
+            <div class="log-entry">
+                <span class="log-timestamp">[2023-11-02 10:46:12]</span> 
+                <span class="log-level-warning">[AVISO]</span> Pico de uso de CPU detectado (78%). Aplicando otimização.
             </div>
-        </section>
-
-        <!-- Agents Grid -->
-        <section class="mb-8 fade-in">
-            <div id="agents-grid" class="widget-grid">
-                <!-- Loading skeletons -->
-                <div class="loading-skeleton h-32 rounded-xl"></div>
-                <div class="loading-skeleton h-32 rounded-xl"></div>
-                <div class="loading-skeleton h-32 rounded-xl"></div>
-                <div class="loading-skeleton h-32 rounded-xl"></div>
+            <div class="log-entry">
+                <span class="log-timestamp">[2023-11-02 10:47:01]</span> 
+                <span class="log-level-info">[INFO]</span> Otimização concluída. Uso de CPU normalizado (42%).
             </div>
-        </section>
-
-        <!-- Advanced Analytics -->
-        <section class="widget-grid fade-in">
-            <div class="widget glass-effect-premium">
-                <h3 class="text-lg font-bold mb-4 orbitron neon-glow">
-                    <i class="fas fa-chart-line mr-2"></i>
-                    Performance Neural
-                </h3>
-                <canvas id="performance-chart" height="200"></canvas>
+            <div class="log-entry">
+                <span class="log-timestamp">[2023-11-02 10:48:17]</span> 
+                <span class="log-level-info">[INFO]</span> Backup automático iniciado pelo system_backup_001.
             </div>
-
-            <div class="widget glass-effect-premium">
-                <h3 class="text-lg font-bold mb-4 orbitron neon-glow">
-                    <i class="fas fa-list-alt mr-2"></i>
-                    Logs Quânticos
-                </h3>
-                <div id="system-logs" class="space-y-2 max-h-64 overflow-y-auto">
-                    <!-- Logs will be populated here -->
-                </div>
+            <div class="log-entry">
+                <span class="log-timestamp">[2023-11-02 10:49:23]</span> 
+                <span class="log-level-info">[INFO]</span> visualization_001 gerou novos relatórios de desempenho.
             </div>
-
-            <div class="widget glass-effect-premium">
-                <h3 class="text-lg font-bold mb-4 orbitron neon-glow">
-                    <i class="fas fa-dna mr-2"></i>
-                    Evolução Automática
-                </h3>
-                <div id="evolution-stats" class="space-y-3">
-                    <div class="flex justify-between">
-                        <span>Ciclos Completados:</span>
-                        <span class="font-bold text-green-400">2,847</span>
-                    </div>
-                    <div class="flex justify-between">
-                        <span>Melhorias Implementadas:</span>
-                        <span class="font-bold text-blue-400">1,256</span>
-                    </div>
-                    <div class="flex justify-between">
-                        <span>Taxa de Sucesso:</span>
-                        <span class="font-bold text-purple-400">97.3%</span>
-                    </div>
-                    <div class="flex justify-between">
-                        <span>Próxima Evolução:</span>
-                        <span class="font-bold text-yellow-400">Em 12min</span>
-                    </div>
-                </div>
+            <div class="log-entry">
+                <span class="log-timestamp">[2023-11-02 10:50:47]</span> 
+                <span class="log-level-info">[INFO]</span> deep_learning_001 concluiu o treinamento do modelo v3.2.
             </div>
-
-            <div class="widget glass-effect-premium">
-                <h3 class="text-lg font-bold mb-4 orbitron neon-glow">
-                    <i class="fas fa-shield-alt mr-2"></i>
-                    Segurança Quântica
-                </h3>
-                <div class="space-y-3">
-                    <div class="flex items-center justify-between">
-                        <span>Encryption Level:</span>
-                        <span class="px-2 py-1 bg-green-500 bg-opacity-20 text-green-400 rounded text-xs">
-                            QUANTUM 2048-bit
-                        </span>
-                    </div>
-                    <div class="flex items-center justify-between">
-                        <span>Intrusion Attempts:</span>
-                        <span class="font-bold text-red-400">0 (Blocked: 47,293)</span>
-                    </div>
-                    <div class="flex items-center justify-between">
-                        <span>Guard Status:</span>
-                        <span class="px-2 py-1 bg-blue-500 bg-opacity-20 text-blue-400 rounded text-xs heartbeat">
-                            VIGILANT
-                        </span>
-                    </div>
-                </div>
+            <div class="log-entry">
+                <span class="log-timestamp">[2023-11-02 10:51:14]</span> 
+                <span class="log-level-warning">[AVISO]</span> Tentativa de acesso não autorizado detectada e bloqueada.
             </div>
-        </section>
-    </main>
-
-    <!-- Agent Details Modal -->
-    <div id="agent-modal" class="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm hidden z-50">
-        <div class="flex items-center justify-center min-h-screen p-4">
-            <div class="glass-effect-premium p-8 rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
-                <div class="flex justify-between items-center mb-6">
-                    <h2 id="modal-title" class="text-2xl font-bold orbitron neon-glow"></h2>
-                    <button id="close-modal" class="text-gray-400 hover:text-white text-2xl" onclick="closeModal(); playClickSound()">
-                        <i class="fas fa-times"></i>
-                    </button>
-                </div>
-                <div id="modal-content">
-                    <!-- Agent details will be populated here -->
-                </div>
+            <div class="log-entry">
+                <span class="log-timestamp">[2023-11-02 10:51:58]</span> 
+                <span class="log-level-info">[INFO]</span> security_enhancements_001 atualizou regras de firewall.
+            </div>
+            <div class="log-entry">
+                <span class="log-timestamp">[2023-11-02 10:52:42]</span> 
+                <span class="log-level-info">[INFO]</span> Todos os 50 agentes reportando status normal.
             </div>
         </div>
     </div>
+    
+    <div class="text-center text-gray-500 mt-6">
+        <p>© 2023 SUNA-ALSHAM Quantum v12.0 - Sistema Unificado Neural Avançado</p>
+        <p class="text-sm">Protocolo: Anomaly Detection | Conexão: Secure | Uptime: 1d 3h 47m</p>
+    </div>
 
-    <!-- Alert Container -->
-    <div id="alert-container" class="fixed top-20 right-4 z-50 space-y-2"></div>
-
-    <!-- JavaScript -->
     <script>
-        // Configuration
-        const CONFIG = {
-            API_BASE_URL: window.location.origin,
-            REFRESH_INTERVAL: 5000,
-            WEBSOCKET_URL: window.location.origin.replace('http', 'ws')
-        };
-
-        // Audio System
-        class AudioSystem {
-            constructor() {
-                this.audioEnabled = true;
-                this.volume = 0.3;
-                this.sounds = {};
-                this.initializeSounds();
-            }
-
-            initializeSounds() {
-                this.sounds = {
-                    click: this.createTone(800, 0.1),
-                    hover: this.createTone(600, 0.05),
-                    success: this.createTone(1000, 0.2),
-                    warning: this.createTone(400, 0.3),
-                    error: this.createTone(200, 0.4),
-                    notification: this.createTone(1200, 0.15)
-                };
-            }
-
-            createTone(frequency, duration) {
-                return () => {
-                    if (!this.audioEnabled) return;
-                    
-                    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-                    const oscillator = audioContext.createOscillator();
-                    const gainNode = audioContext.createGain();
-                    
-                    oscillator.connect(gainNode);
-                    gainNode.connect(audioContext.destination);
-                    
-                    oscillator.frequency.value = frequency;
-                    oscillator.type = 'sine';
-                    
-                    gainNode.gain.setValueAtTime(0, audioContext.currentTime);
-                    gainNode.gain.linearRampToValueAtTime(this.volume, audioContext.currentTime + 0.01);
-                    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + duration);
-                    
-                    oscillator.start(audioContext.currentTime);
-                    oscillator.stop(audioContext.currentTime + duration);
-                };
-            }
-
-            play(soundName) {
-                if (this.sounds[soundName]) {
-                    this.sounds[soundName]();
-                }
-            }
-
-            toggle() {
-                this.audioEnabled = !this.audioEnabled;
-                const icon = document.getElementById('audioIcon');
-                icon.className = this.audioEnabled ? 'fas fa-volume-up' : 'fas fa-volume-mute';
-                
-                this.showAlert(
-                    this.audioEnabled ? 'Audio habilitado' : 'Audio desabilitado', 
-                    'success'
-                );
-            }
-
-            showAlert(message, type = 'success') {
-                const alertContainer = document.getElementById('alert-container');
-                const alert = document.createElement('div');
-                alert.className = `alert-premium alert-${type}`;
-                alert.innerHTML = `
-                    <i class="fas fa-${type === 'success' ? 'check' : type === 'warning' ? 'exclamation-triangle' : 'times'} mr-2"></i>
-                    ${message}
-                `;
-                
-                alertContainer.appendChild(alert);
-                
-                setTimeout(() => {
-                    alert.style.animation = 'slideInRight 0.5s ease-out reverse';
-                    setTimeout(() => alert.remove(), 500);
-                }, 3000);
-            }
-        }
-
-        // Security Utils
-        class SecurityUtils {
-            static sanitize(str) {
-                const div = document.createElement('div');
-                div.textContent = str;
-                return div.innerHTML;
-            }
-        }
-
-        // API Manager - CONECTA COM DADOS REAIS
-        class APIManager {
-            static async fetchWithTimeout(url, options = {}, timeout = 10000) {
-                const controller = new AbortController();
-                const timeoutId = setTimeout(() => controller.abort(), timeout);
-                
-                try {
-                    const response = await fetch(url, {
-                        ...options,
-                        signal: controller.signal
-                    });
-                    clearTimeout(timeoutId);
-                    return response;
-                } catch (error) {
-                    clearTimeout(timeoutId);
-                    throw error;
-                }
-            }
-
-            static async getAgents() {
-                try {
-                    const response = await this.fetchWithTimeout(`${CONFIG.API_BASE_URL}/api/agents`);
-                    return await response.json();
-                } catch (error) {
-                    console.error('Error fetching agents:', error);
-                    return this.getFallbackAgents();
-                }
-            }
-
-            static async getMetrics() {
-                try {
-                    const response = await this.fetchWithTimeout(`${CONFIG.API_BASE_URL}/api/metrics`);
-                    return await response.json();
-                } catch (error) {
-                    console.error('Error fetching metrics:', error);
-                    return this.getFallbackMetrics();
-                }
-            }
-
-            static async getLogs() {
-                try {
-                    const response = await this.fetchWithTimeout(`${CONFIG.API_BASE_URL}/api/logs`);
-                    return await response.json();
-                } catch (error) {
-                    console.error('Error fetching logs:', error);
-                    return { logs: [] };
-                }
-            }
-
-            static getFallbackAgents() {
-                return {
-                    agents: [],
-                    total: 25,
-                    categories: {
-                        specialized: 4,
-                        ai_powered: 4,
-                        core_v3: 2,
-                        system: 8,
-                        meta_cognitive: 2,
-                        service: 5
-                    }
-                };
-            }
-
-            static getFallbackMetrics() {
-                return {
-                    messages_sent: 1248,
-                    messages_delivered: 1248,
-                    success_rate: 100.0,
-                    average_latency: 0.07,
-                    active_agents: 25,
-                    uptime: 99.98
-                };
-            }
-        }
-
-        // WebSocket Manager - TEMPO REAL
-        class WebSocketManager {
-            constructor() {
-                this.socket = null;
-                this.reconnectAttempts = 0;
-                this.maxReconnectAttempts = 5;
-            }
-
-            connect() {
-                try {
-                    this.socket = io(CONFIG.API_BASE_URL);
-                    
-                    this.socket.on('connect', () => {
-                        console.log('WebSocket connected');
-                        this.reconnectAttempts = 0;
-                    });
-
-                    this.socket.on('disconnect', () => {
-                        console.log('WebSocket disconnected');
-                        this.handleReconnect();
-                    });
-
-                    this.socket.on('metrics_update', (data) => {
-                        this.handleMetricsUpdate(data);
-                    });
-
-                } catch (error) {
-                    console.error('WebSocket connection error:', error);
-                }
-            }
-
-            handleReconnect() {
-                if (this.reconnectAttempts < this.maxReconnectAttempts) {
-                    this.reconnectAttempts++;
-                    setTimeout(() => {
-                        console.log(`Reconnecting... Attempt ${this.reconnectAttempts}`);
-                        this.connect();
-                    }, 2000 * this.reconnectAttempts);
-                }
-            }
-
-            handleMetricsUpdate(data) {
-                document.getElementById('active-agents-count').textContent = data.active_agents || 25;
-                
-                if (data.system_health === 'optimal') {
-                    document.getElementById('system-status').textContent = 'ONLINE';
-                    document.getElementById('system-status').className = 'status-online text-lg font-bold orbitron heartbeat';
-                }
-            }
-        }
-
-        // UI Manager - PREMIUM VISUALS
-        class UI {
-            static showLoading(element) {
-                element.innerHTML = '<div class="loading-skeleton h-32 rounded-xl"></div>';
-            }
-
-            static hideLoading() {
-                document.querySelectorAll('.loading-skeleton').forEach(el => el.remove());
-            }
-
-            static updateMetrics(metrics) {
-                document.getElementById('messages-count').textContent = metrics.messages_sent?.toLocaleString() || '1,248';
-                document.getElementById('success-rate').textContent = `${metrics.success_rate || 100.0}%`;
-                document.getElementById('avg-latency').textContent = `${metrics.average_latency || 0.07}ms`;
-                document.getElementById('system-uptime').textContent = `${metrics.uptime || 99.98}%`;
-            }
-
-            static renderAgents(agentsData) {
-                const grid = document.getElementById('agents-grid');
-                
-                if (!agentsData.agents || agentsData.agents.length === 0) {
-                    grid.innerHTML = '<p class="col-span-full text-center text-gray-400">Carregando agentes...</p>';
-                    return;
-                }
-
-                grid.innerHTML = agentsData.agents.map(agent => `
-                    <div class="agent-card glass-effect-premium p-6 rounded-xl holographic-effect" 
-                         data-category="${agent.category}" 
-                         data-agent-id="${agent.id}"
-                         onclick="showAgentModal('${agent.id}'); playClickSound()"
-                         onmouseenter="playHoverSound()">
-                        <div class="flex items-center justify-between mb-4">
-                            <h3 class="font-bold text-lg orbitron">${SecurityUtils.sanitize(agent.name)}</h3>
-                            <div class="heartbeat">
-                                <i class="fas fa-heart text-green-400"></i>
-                            </div>
-                        </div>
-                        
-                        <div class="space-y-3">
-                            <div class="flex justify-between">
-                                <span class="text-gray-400">Performance:</span>
-                                <span class="text-green-400 font-bold">${(agent.performance * 100).toFixed(1)}%</span>
-                            </div>
-                            <div class="flex justify-between">
-                                <span class="text-gray-400">Accuracy:</span>
-                                <span class="text-blue-400 font-bold">${agent.accuracy}%</span>
-                            </div>
-                            <div class="flex justify-between">
-                                <span class="text-gray-400">Cycles:</span>
-                                <span class="text-purple-400 font-bold">${agent.cycles.toLocaleString()}</span>
-                            </div>
-                            <div class="flex justify-between">
-                                <span class="text-gray-400">Memory:</span>
-                                <span class="text-yellow-400 font-bold">${agent.metrics?.memory_usage || 'N/A'}%</span>
-                            </div>
-                        </div>
-                        
-                        <div class="mt-4 flex items-center justify-between">
-                            <span class="px-3 py-1 bg-green-500 bg-opacity-20 text-green-400 rounded-full text-xs orbitron">
-                                ${SecurityUtils.sanitize(agent.status.toUpperCase())}
-                            </span>
-                            <span class="text-xs text-gray-500 rajdhani">
-                                ${SecurityUtils.sanitize(agent.category.replace('_', ' ').toUpperCase())}
-                            </span>
-                        </div>
-                    </div>
-                `).join('');
-
-                // Animate cards
-                gsap.from('.agent-card', {
-                    duration: 0.8,
-                    y: 50,
-                    opacity: 0,
-                    stagger: 0.1,
-                    ease: "power2.out"
-                });
-            }
-
-            static async showAgentModal(agentId) {
-                const modal = document.getElementById('agent-modal');
-                const title = document.getElementById('modal-title');
-                const content = document.getElementById('modal-content');
-
-                try {
-                    const response = await APIManager.fetchWithTimeout(`${CONFIG.API_BASE_URL}/api/agents/${agentId}`);
-                    const agent = await response.json();
-
-                    title.textContent = agent.name;
-                    content.innerHTML = `
-                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                            <div class="glass-effect p-6 rounded-xl">
-                                <h3 class="text-lg font-bold mb-4 orbitron">Informações Gerais</h3>
-                                <div class="space-y-3">
-                                    <div class="flex justify-between">
-                                        <span>ID:</span>
-                                        <span class="font-mono text-blue-400">${SecurityUtils.sanitize(agent.id)}</span>
-                                    </div>
-                                    <div class="flex justify-between">
-                                        <span>Categoria:</span>
-                                        <span class="text-purple-400">${SecurityUtils.sanitize(agent.category.replace('_', ' '))}</span>
-                                    </div>
-                                    <div class="flex justify-between">
-                                        <span>Status:</span>
-                                        <span class="text-green-400 heartbeat">${SecurityUtils.sanitize(agent.status.toUpperCase())}</span>
-                                    </div>
-                                    <div class="flex justify-between">
-                                        <span>Performance:</span>
-                                        <span class="text-green-400 font-bold">${(agent.performance * 100).toFixed(1)}%</span>
-                                    </div>
-                                    <div class="flex justify-between">
-                                        <span>Accuracy:</span>
-                                        <span class="text-blue-400 font-bold">${agent.accuracy}%</span>
-                                    </div>
-                                    <div class="flex justify-between">
-                                        <span>Cycles:</span>
-                                        <span class="text-purple-400 font-bold">${agent.cycles.toLocaleString()}</span>
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <div class="glass-effect p-6 rounded-xl">
-                                <h3 class="text-lg font-bold mb-4 orbitron">Métricas Técnicas</h3>
-                                <div class="space-y-3">
-                                    <div class="flex justify-between">
-                                        <span>Processing Time:</span>
-                                        <span class="text-green-400">${agent.metrics?.processing_time || 'N/A'}ms</span>
-                                    </div>
-                                    <div class="flex justify-between">
-                                        <span>Memory Usage:</span>
-                                        <span class="text-yellow-400">${agent.metrics?.memory_usage || 'N/A'}%</span>
-                                    </div>
-                                    <div class="flex justify-between">
-                                        <span>CPU Utilization:</span>
-                                        <span class="text-blue-400">${(Math.random() * 30 + 20).toFixed(1)}%</span>
-                                    </div>
-                                    <div class="flex justify-between">
-                                        <span>Last Heartbeat:</span>
-                                        <span class="text-xs text-gray-400">${new Date(agent.last_heartbeat).toLocaleString()}</span>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="glass-effect p-6 rounded-xl">
-                                <h3 class="text-lg font-bold mb-4 orbitron">Evolução Neural</h3>
-                                <div class="space-y-3">
-                                    <div class="flex justify-between">
-                                        <span>Learning Rate:</span>
-                                        <span class="text-green-400">${(Math.random() * 0.1 + 0.01).toFixed(3)}</span>
-                                    </div>
-                                    <div class="flex justify-between">
-                                        <span>Neural Connections:</span>
-                                        <span class="text-blue-400">${(Math.random() * 10000 + 50000).toFixed(0)}</span>
-                                    </div>
-                                    <div class="flex justify-between">
-                                        <span>Quantum Coherence:</span>
-                                        <span class="text-purple-400">${(Math.random() * 10 + 90).toFixed(1)}%</span>
-                                    </div>
-                                    <div class="flex justify-between">
-                                        <span>Evolution Score:</span>
-                                        <span class="text-yellow-400 font-bold">${(Math.random() * 1000 + 8000).toFixed(0)}</span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="mt-6 flex space-x-3">
-                            <button class="btn-premium" onclick="restartAgent('${agent.id}'); playClickSound()">
-                                <i class="fas fa-restart mr-2"></i>Restart Agent
-                            </button>
-                            <button class="btn-premium" onclick="optimizeAgent('${agent.id}'); playClickSound()">
-                                <i class="fas fa-cog mr-2"></i>Optimize
-                            </button>
-                            <button class="btn-premium" onclick="evolveAgent('${agent.id}'); playClickSound()">
-                                <i class="fas fa-dna mr-2"></i>Force Evolution
-                            </button>
-                        </div>
-                    `;
-
-                    modal.classList.remove('hidden');
-                    audioSystem.play('success');
-                } catch (error) {
-                    console.error('Error loading agent details:', error);
-                    title.textContent = 'Erro';
-                    content.innerHTML = '<p class="text-red-400">Erro ao carregar detalhes do agente.</p>';
-                    modal.classList.remove('hidden');
-                }
-            }
-
-            static renderLogs(logs) {
-                const container = document.getElementById('system-logs');
-                
-                if (!logs.logs || logs.logs.length === 0) {
-                    container.innerHTML = '<p class="text-gray-400">Carregando logs...</p>';
-                    return;
-                }
-
-                container.innerHTML = logs.logs.map(log => `
-                    <div class="flex items-center space-x-3 p-2 rounded glass-effect">
-                        <span class="text-xs ${this.getLogLevelColor(log.level)} font-bold">${log.level}</span>
-                        <span class="text-xs text-gray-500">${new Date(log.timestamp).toLocaleTimeString()}</span>
-                        <span class="text-sm flex-1">${SecurityUtils.sanitize(log.message)}</span>
-                    </div>
-                `).join('');
-            }
-
-            static getLogLevelColor(level) {
-                switch(level) {
-                    case 'SUCCESS': return 'text-green-400';
-                    case 'WARNING': return 'text-yellow-400';
-                    case 'ERROR': return 'text-red-400';
-                    default: return 'text-blue-400';
-                }
-            }
-
-            static initChart() {
-                const ctx = document.getElementById('performance-chart').getContext('2d');
-                
-                new Chart(ctx, {
-                    type: 'line',
-                    data: {
-                        labels: ['5min', '4min', '3min', '2min', '1min', 'Now'],
-                        datasets: [{
-                            label: 'Performance Neural',
-                            data: [95.2, 96.1, 94.7, 97.3, 95.8, 96.5],
-                            borderColor: 'var(--quantum-purple)',
-                            backgroundColor: 'rgba(108, 52, 131, 0.1)',
-                            tension: 0.4,
-                            fill: true
-                        }, {
-                            label: 'Quantum Coherence',
-                            data: [98.1, 98.7, 97.9, 99.1, 98.4, 98.7],
-                            borderColor: 'var(--photon-gold)',
-                            backgroundColor: 'rgba(244, 208, 63, 0.1)',
-                            tension: 0.4,
-                            fill: true
-                        }]
+        // Performance Chart
+        const ctx = document.getElementById('performanceChart').getContext('2d');
+        const performanceChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: ['6h', '8h', '10h', '12h', '14h', '16h', '18h', '20h', '22h', '00h', '02h', '04h', 'Agora'],
+                datasets: [
+                    {
+                        label: 'CPU (%)',
+                        data: [45, 52, 78, 65, 59, 80, 81, 56, 55, 40, 42, 49, 46],
+                        borderColor: 'rgba(66, 153, 225, 1)',
+                        backgroundColor: 'rgba(66, 153, 225, 0.1)',
+                        borderWidth: 2,
+                        tension: 0.4,
+                        fill: true
                     },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        plugins: {
-                            legend: {
-                                labels: { color: 'white' }
-                            }
+                    {
+                        label: 'Memória (%)',
+                        data: [62, 59, 75, 71, 68, 74, 79, 70, 67, 61, 58, 64, 67],
+                        borderColor: 'rgba(72, 187, 120, 1)',
+                        backgroundColor: 'rgba(72, 187, 120, 0.1)',
+                        borderWidth: 2,
+                        tension: 0.4,
+                        fill: true
+                    },
+                    {
+                        label: 'Rede (Mbps)',
+                        data: [120, 132, 145, 140, 158, 165, 172, 168, 155, 142, 138, 143, 149],
+                        borderColor: 'rgba(237, 137, 54, 1)',
+                        backgroundColor: 'rgba(237, 137, 54, 0.1)',
+                        borderWidth: 2,
+                        tension: 0.4,
+                        fill: true
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        grid: {
+                            color: 'rgba(255, 255, 255, 0.1)'
                         },
-                        scales: {
-                            y: {
-                                ticks: { color: 'white' },
-                                grid: { color: 'rgba(255, 255, 255, 0.1)' }
-                            },
-                            x: {
-                                ticks: { color: 'white' },
-                                grid: { color: 'rgba(255, 255, 255, 0.1)' }
-                            }
+                        ticks: {
+                            color: '#a0aec0'
+                        }
+                    },
+                    x: {
+                        grid: {
+                            color: 'rgba(255, 255, 255, 0.1)'
+                        },
+                        ticks: {
+                            color: '#a0aec0'
                         }
                     }
-                });
-            }
-        }
-
-        // Initialize Audio System
-        const audioSystem = new AudioSystem();
-
-        // Audio Functions
-        function playClickSound() { audioSystem.play('click'); }
-        function playHoverSound() { audioSystem.play('hover'); }
-        function playSuccessSound() { audioSystem.play('success'); }
-        function playWarningSound() { audioSystem.play('warning'); }
-        function playErrorSound() { audioSystem.play('error'); }
-        function playNotificationSound() { audioSystem.play('notification'); }
-
-        // Theme Management
-        function setTheme(themeName) {
-            const body = document.getElementById('app-body');
-            body.className = body.className.replace(/theme-\w+/, `theme-${themeName}`);
-            closeThemeModal();
-            audioSystem.showAlert(`Tema ${themeName} aplicado`, 'success');
-            playSuccessSound();
-        }
-
-        function closeThemeModal() {
-            document.getElementById('themeModal').classList.add('hidden');
-        }
-
-        // Particles System
-        function createParticles() {
-            const container = document.getElementById('particles-container');
-            container.innerHTML = '';
-            
-            for (let i = 0; i < 50; i++) {
-                const particle = document.createElement('div');
-                particle.className = 'particle';
-                particle.style.left = Math.random() * 100 + '%';
-                particle.style.animationDelay = Math.random() * 20 + 's';
-                particle.style.animationDuration = (15 + Math.random() * 10) + 's';
-                container.appendChild(particle);
-            }
-        }
-
-        // Command Center
-        function toggleCommandCenter() {
-            const commandCenter = document.getElementById('command-center');
-            commandCenter.classList.toggle('hidden');
-            playClickSound();
-        }
-
-        function executeCommand(command) {
-            const terminal = document.getElementById('terminal');
-            const commandLine = document.createElement('div');
-            commandLine.className = 'command-line';
-            
-            const responses = {
-                'system-scan': '> System scan complete - All systems optimal',
-                'neural-sync': '> Neural synchronization successful - Coherence at 99.2%',
-                'optimize': '> Quantum optimization executed - Performance improved by 12.7%'
-            };
-            
-            commandLine.textContent = responses[command] || '> Command executed successfully';
-            terminal.appendChild(commandLine);
-            terminal.scrollTop = terminal.scrollHeight;
-            
-            playSuccessSound();
-            audioSystem.showAlert('Comando executado com sucesso', 'success');
-        }
-
-        // Filter Agents
-        function filterAgents(category) {
-            document.querySelectorAll('.filter-btn').forEach(btn => {
-                btn.classList.remove('active');
-            });
-            event.target.classList.add('active');
-
-            const cards = document.querySelectorAll('.agent-card');
-            
-            cards.forEach(card => {
-                const cardCategory = card.dataset.category;
-                if (category === 'all' || cardCategory === category) {
-                    card.style.display = 'block';
-                    gsap.from(card, { duration: 0.3, opacity: 0, y: 20 });
-                } else {
-                    card.style.display = 'none';
-                }
-            });
-            
-            playClickSound();
-        }
-
-        // Show Agent Modal
-        function showAgentModal(agentId) {
-            UI.showAgentModal(agentId);
-        }
-
-        // Close Modal
-        function closeModal() {
-            document.getElementById('agent-modal').classList.add('hidden');
-        }
-
-        // Agent Actions
-        function restartAgent(agentId) {
-            audioSystem.showAlert(`Agent ${agentId} reiniciado com sucesso`, 'success');
-            playSuccessSound();
-        }
-
-        function optimizeAgent(agentId) {
-            audioSystem.showAlert(`Agent ${agentId} otimizado - Performance +5.2%`, 'success');
-            playSuccessSound();
-        }
-
-        function evolveAgent(agentId) {
-            audioSystem.showAlert(`Evolution forçada para ${agentId} - Ciclo 2848 iniciado`, 'warning');
-            playWarningSound();
-        }
-
-        // Dashboard App
-        class DashboardApp {
-            constructor() {
-                this.currentFilter = 'all';
-                this.wsManager = new WebSocketManager();
-                this.refreshInterval = null;
-            }
-
-            async init() {
-                console.log('🚀 ALSHAM QUANTUM v12.0 Premium Dashboard Initialized');
-                
-                this.setupEventListeners();
-                this.wsManager.connect();
-                await this.loadInitialData();
-                this.startAutoRefresh();
-                UI.initChart();
-            }
-
-            setupEventListeners() {
-                // Refresh button
-                document.getElementById('refresh-btn').addEventListener('click', () => {
-                    document.getElementById('refresh-btn').innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
-                    this.loadInitialData().then(() => {
-                        document.getElementById('refresh-btn').innerHTML = '<i class="fas fa-sync-alt"></i>';
-                    });
-                });
-
-                // Audio toggle
-                document.getElementById('audioToggle').addEventListener('click', () => {
-                    audioSystem.toggle();
-                });
-
-                // Theme selector
-                document.getElementById('themeSelector').addEventListener('click', () => {
-                    document.getElementById('themeModal').classList.remove('hidden');
-                    playClickSound();
-                });
-
-                // Close modals on outside click
-                document.getElementById('themeModal').addEventListener('click', (e) => {
-                    if (e.target.id === 'themeModal') closeThemeModal();
-                });
-
-                document.getElementById('agent-modal').addEventListener('click', (e) => {
-                    if (e.target.id === 'agent-modal') closeModal();
-                });
-
-                // Keyboard shortcuts
-                document.addEventListener('keydown', (e) => {
-                    if (e.key === 'Escape') {
-                        closeModal();
-                        closeThemeModal();
+                },
+                plugins: {
+                    legend: {
+                        labels: {
+                            color: '#e2e8f0'
+                        }
                     }
-                    if (e.key === 't' && e.ctrlKey) {
-                        e.preventDefault();
-                        document.getElementById('themeModal').classList.remove('hidden');
-                    }
-                });
-            }
-
-            async loadInitialData() {
-                try {
-                    const [agentsData, metricsData, logsData] = await Promise.all([
-                        APIManager.getAgents(),
-                        APIManager.getMetrics(),
-                        APIManager.getLogs()
-                    ]);
-
-                    UI.hideLoading();
-                    UI.updateMetrics(metricsData);
-                    UI.renderAgents(agentsData);
-                    UI.renderLogs(logsData);
-
-                } catch (error) {
-                    console.error('Error loading initial data:', error);
-                    UI.hideLoading();
                 }
             }
-
-            startAutoRefresh() {
-                this.refreshInterval = setInterval(() => {
-                    this.loadInitialData();
-                }, CONFIG.REFRESH_INTERVAL);
+        });
+        
+        // Simular novos eventos de log
+        function addLogEntry() {
+            const logContainer = document.querySelector('.event-log');
+            const now = new Date();
+            const timestamp = `[${now.getFullYear()}-${(now.getMonth()+1).toString().padStart(2, '0')}-${now.getDate().toString().padStart(2, '0')} ${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}:${now.getSeconds().toString().padStart(2, '0')}]`;
+            
+            const events = [
+                `<span class="log-timestamp">${timestamp}</span> <span class="log-level-info">[INFO]</span> Verificação de integridade concluída. Todos os sistemas operacionais.`,
+                `<span class="log-timestamp">${timestamp}</span> <span class="log-level-info">[INFO]</span> automl_agent_001 otimizou modelo de previsão de vendas.`,
+                `<span class="log-timestamp">${timestamp}</span> <span class="log-level-warning">[AVISO]</span> Uso de memória elevado. Iniciando limpeza de cache.`,
+                `<span class="log-timestamp">${timestamp}</span> <span class="log-level-info">[INFO]</span> Novos dados processados por data_mining_001.`,
+                `<span class="log-timestamp">${timestamp}</span> <span class="log-level-info">[INFO]</span> forecast_001 gerou previsões atualizadas.`
+            ];
+            
+            const newEntry = document.createElement('div');
+            newEntry.className = 'log-entry';
+            newEntry.innerHTML = events[Math.floor(Math.random() * events.length)];
+            
+            logContainer.insertBefore(newEntry, logContainer.firstChild);
+            
+            if (logContainer.children.length > 30) {
+                logContainer.removeChild(logContainer.lastChild);
             }
         }
-
-        // Real-time updates simulation
-        function startRealTimeUpdates() {
-            setInterval(() => {
-                // Update metrics with small variations
-                const messagesElement = document.getElementById('messages-count');
-                const currentCount = parseInt(messagesElement.textContent.replace(/,/g, ''));
-                messagesElement.textContent = (currentCount + Math.floor(Math.random() * 100 + 50)).toLocaleString();
-                
-                // Update neural coherence
-                const coherenceElement = document.getElementById('neural-coherence');
-                const variation = (Math.random() - 0.5) * 0.2;
-                const currentCoherence = parseFloat(coherenceElement.textContent);
-                coherenceElement.textContent = Math.max(97, Math.min(99.9, currentCoherence + variation)).toFixed(1) + '%';
-            }, 5000);
-        }
-
-        // Initialize everything
-        document.addEventListener('DOMContentLoaded', () => {
-            console.log('🚀 ALSHAM QUANTUM v12.0 Premium Dashboard Initialized');
-            
-            createParticles();
-            const dashboard = new DashboardApp();
-            dashboard.init();
-            startRealTimeUpdates();
-            
-            // Welcome message
-            setTimeout(() => {
-                audioSystem.showAlert('Sistema ALSHAM QUANTUM v12.0 inicializado com sucesso', 'success');
-                playSuccessSound();
-            }, 1000);
-            
-            // Add hover effects to all interactive elements
-            document.querySelectorAll('button, .agent-card, .filter-btn').forEach(element => {
-                element.addEventListener('mouseenter', playHoverSound);
-            });
-        });
-
-        // Error handling
-        window.addEventListener('error', (e) => {
-            console.error('Sistema Error:', e.error);
-            audioSystem.showAlert('Erro detectado no sistema', 'error');
-            playErrorSound();
-        });
+        
+        // Adicionar novos logs periodicamente
+        setInterval(addLogEntry, 5000);
     </script>
 </body>
 </html>
