@@ -34,6 +34,7 @@ httpx==0.25.2
 requests==2.31.0
 urllib3==2.0.7
 certifi==2023.11.17
+aiohttp==3.9.1
 
 # ===== SECURITY & AUTHENTICATION =====
 cryptography==41.0.7
@@ -70,6 +71,8 @@ click==8.1.7
 rich==13.7.0
 typer==0.9.0
 pyyaml==6.0.1
+black==23.12.1
+isort==5.13.2
 
 # ===== TESTING (MINIMAL FOR PROD) =====
 pytest==7.4.3
