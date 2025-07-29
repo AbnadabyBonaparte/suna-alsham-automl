@@ -84,7 +84,7 @@ class SecurityGuardianAgent(BaseNetworkAgent):
             SecurityRule(action="execute_shell_command", required_permissions=["admin", "system_control"]),
             SecurityRule(action="deploy", required_permissions=["admin", "deployment"]),
             SecurityRule(action="create_backup", required_permissions=["admin", "backup"]),
-            SecurityRule(action="get_status", allow_all=True),
+            SecurityRule(action="get_status", required_permissions=[], allow_all=True),  # Corrigido: adicionado required_permissions
         ]
 
     def validate_request(self, request_data: Dict[str, Any]) -> Dict[str, Any]:
