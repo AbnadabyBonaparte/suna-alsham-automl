@@ -2,8 +2,7 @@
 """
 Módulo Principal do Sistema SUNA-ALSHAM v2.0
 
-[Fase 2] - Fortalecido com melhor tratamento de erros na inicialização
-e relatórios de status mais detalhados.
+[Versão Corrigida] - Resolve o ImportError ao definir MultiAgentNetwork localmente.
 """
 
 import asyncio
@@ -12,11 +11,35 @@ import time
 from collections import defaultdict
 from typing import Any, Dict, List
 
-# Imports corrigidos para a nova estrutura
-from suna_alsham_core.multi_agent_network import MultiAgentNetwork
+# Imports corrigidos para a nova estrutura.
+# Importamos apenas os componentes básicos da rede, não a própria rede.
+from suna_alsham_core.multi_agent_network import MessageBus, BaseNetworkAgent
 from suna_alsham_core.agent_loader import initialize_all_agents
 
 logger = logging.getLogger(__name__)
+
+
+class MultiAgentNetwork:
+    """
+    Gerencia a rede de agentes e o barramento de mensagens.
+    Esta classe agora vive dentro de system.py para evitar importações circulares.
+    """
+    def __init__(self):
+        self.message_bus = MessageBus()
+        self.agents: Dict[str, BaseNetworkAgent] = {}
+
+    def register_agent(self, agent: BaseNetworkAgent):
+        """Registra um agente na rede."""
+        self.agents[agent.agent_id] = agent
+        logger.debug(f"Agente {agent.agent_id} registrado na rede.")
+
+    def get_network_status(self) -> Dict[str, Any]:
+        """Retorna o status da rede."""
+        return {
+            "active_agents": len(self.agents),
+            "message_bus_metrics": self.message_bus.get_metrics()
+        }
+
 
 class SUNAAlshamSystemV2:
     """A classe principal que gerencia e orquestra o sistema multi-agente."""
@@ -30,7 +53,7 @@ class SUNAAlshamSystemV2:
         self.system_status = "initializing"
         self.initialized = False
         self.start_time = time.time()
-        self.failed_modules: List[str] = [] # Adicionado para rastrear falhas
+        self.failed_modules: List[str] = []
 
     async def initialize_complete_system(self) -> bool:
         """
@@ -38,10 +61,10 @@ class SUNAAlshamSystemV2:
         """
         try:
             logger.info("Inicializando a rede de comunicação (MessageBus)...")
-            # Na Fase 2, o MessageBus agora tem um método start() explícito
             await self.network.message_bus.start()
 
-            logger.info("Carregando todos os 39 agentes do núcleo...")
+            logger.info("Carregando todos os agentes do sistema...")
+            # Passamos a instância da rede para o loader
             load_result = await initialize_all_agents(self.network)
             
             self.all_agents = self.network.agents
@@ -50,11 +73,11 @@ class SUNAAlshamSystemV2:
             self._categorize_agents()
 
             if self.failed_modules:
-                logger.warning(f"{len(self.failed_modules)} módulos de agentes falharam ao carregar. Sistema em modo degradado.")
+                logger.warning(f"{len(self.failed_modules)} módulos falharam ao carregar. Sistema em modo degradado.")
                 self.system_status = "degraded"
             else:
                 self.system_status = "active"
-                
+            
             self.initialized = True
             logger.info(f"Sistema completo inicializado. Status: {self.system_status.upper()}. {self.total_agents} agentes ativos.")
             return True
@@ -89,7 +112,7 @@ class SUNAAlshamSystemV2:
 
     async def execute_system_wide_task(self, task: Dict[str, Any]) -> Dict[str, Any]:
         """
-        [LÓGICA REAL] Envia uma tarefa para o orquestrador e aguarda uma resposta.
+        Envia uma tarefa para o orquestrador e aguarda uma resposta.
         """
         if not self.initialized or "orchestrator_001" not in self.all_agents:
             return {"status": "error", "message": "Orquestrador não está disponível."}
@@ -97,7 +120,8 @@ class SUNAAlshamSystemV2:
         orchestrator = self.all_agents["orchestrator_001"]
         
         try:
-            logger.info(f"Enviando tarefa '{task.get('id')}' para o orquestrador e aguardando resposta...")
+            logger.info(f"Enviando tarefa '{task.get('id')}' para o orquestrador...")
+            # Esta chamada pode precisar de ajuste dependendo da implementação em BaseNetworkAgent
             response_message = await orchestrator.send_request_and_wait(
                 recipient_id="orchestrator_001",
                 content={"request_type": "submit_task", "task": task}
