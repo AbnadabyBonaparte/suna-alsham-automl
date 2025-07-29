@@ -1,177 +1,121 @@
 #!/usr/bin/env python3
 """
-Módulo do Computer Control Agent - SUNA-ALSHAM
+Módulo do Agente de Controle de Computador - SUNA-ALSHAM
 
-[Fase 2] - Fortalecido com lógica real de execução de terminal e uma estrutura
-robusta para futuras automações de browser e SSH.
+[Fase 2] - Fortalecido com lógica real de execução de comandos via
+bibliotecas padrão e preparação para integrações com Selenium/SSH.
 """
-
 import asyncio
 import logging
+import shlex
 import subprocess
-import time
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from enum import Enum
 from typing import Any, Dict, List, Optional
-from uuid import uuid4
 
-# Import corrigido, apontando para o módulo central da rede
+# --- Bloco de Importação Corrigido e Padronizado ---
 from suna_alsham_core.multi_agent_network import (
     AgentMessage,
     AgentType,
     BaseNetworkAgent,
+    MessageType,
     Priority,
 )
 
 logger = logging.getLogger(__name__)
 
+# --- Enums e Dataclasses ---
+class CommandStatus(Enum):
+    SUCCESS = "success"
+    ERROR = "error"
 
-# --- Enums e Dataclasses para Tipagem Forte ---
-
-class AutomationType(Enum):
-    """Tipos de automação que o agente pode executar."""
-    TERMINAL = "terminal"
-    BROWSER = "browser"
-    REMOTE_SSH = "remote_ssh"
-
-
-class ControlStatus(Enum):
-    """Status de uma tarefa de automação."""
-    EXECUTING = "executing"
-    COMPLETED = "completed"
-    FAILED = "failed"
-
+@dataclass
+class CommandResult:
+    """Representa o resultado da execução de um comando no sistema."""
+    command: str
+    status: CommandStatus
+    stdout: str
+    stderr: str
+    return_code: int
 
 # --- Classe Principal do Agente ---
-
 class ComputerControlAgent(BaseNetworkAgent):
     """
-    Agente de controle computacional avançado. Serve como a interface do sistema
-    para interagir com sistemas operacionais, softwares e máquinas remotas.
+    Agente de baixo nível que executa comandos no sistema operacional
+    subjacente. É uma capacidade poderosa que deve ser usada com
+    extremo cuidado e protegida pelo SecurityGuardianAgent.
     """
-
     def __init__(self, agent_id: str, message_bus):
         """Inicializa o ComputerControlAgent."""
+        # O tipo deste agente é AUTOMATOR, que precisa ser definido no AgentType Enum
         super().__init__(agent_id, AgentType.AUTOMATOR, message_bus)
         self.capabilities.extend([
-            "terminal_execution",
-            "browser_automation",
-            "remote_ssh_control",
+            "execute_shell_command",
+            "file_system_manipulation",
+            "ssh_connection" # Capacidade futura
         ])
-        
-        self.active_tasks: Dict[str, Any] = {}
-        self._check_optional_dependencies()
-        
-        logger.info(f"🤖 {self.agent_id} (Controle Computacional) inicializado.")
-
-    def _check_optional_dependencies(self):
-        """Verifica se dependências opcionais como Selenium estão instaladas."""
-        try:
-            import selenium
-            self.has_selenium = True
-            logger.info("  -> Capacidade de automação de Browser: ATIVADA (Selenium encontrado).")
-        except ImportError:
-            self.has_selenium = False
-            logger.warning("  -> Capacidade de automação de Browser: DESATIVADA (Selenium não encontrado).")
-        
-        try:
-            import paramiko
-            self.has_ssh = True
-            logger.info("  -> Capacidade de controle SSH: ATIVADA (Paramiko encontrado).")
-        except ImportError:
-            self.has_ssh = False
-            logger.warning("  -> Capacidade de controle SSH: DESATIVADA (Paramiko não encontrado).")
+        logger.info(f"🤖 {self.agent_id} (Controle de Computador) inicializado.")
 
     async def _internal_handle_message(self, message: AgentMessage):
-        """Processa requisições de automação e controle."""
+        """Processa requisições para executar comandos."""
         if message.message_type != MessageType.REQUEST:
             return
 
         request_type = message.content.get("request_type")
-        if request_type == "execute_automation":
-            result = await self.execute_automation(message.content)
-            await self.message_bus.publish(self.create_response(message, result))
-        else:
-            logger.warning(f"Ação desconhecida para ComputerControlAgent: {request_type}")
-            await self.message_bus.publish(self.create_error_response(message, "Ação de automação desconhecida"))
+        if request_type == "execute_command":
+            result = await self.execute_command(message.content)
+            await self.publish_response(message, result)
 
-    async def execute_automation(self, request_data: Dict[str, Any]) -> Dict[str, Any]:
-        """Ponto de entrada para executar uma tarefa de automação."""
+    async def execute_command(self, request_data: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        [LÓGICA REAL] Executa um comando de shell de forma assíncrona e segura.
+        """
+        command_str = request_data.get("command")
+        timeout = request_data.get("timeout", 60) # Timeout de 60 segundos
+        
+        if not command_str:
+            return {"status": "error", "message": "Nenhum comando fornecido."}
+
+        # Medida de segurança: não permite comandos complexos ou encadeados.
+        if ";" in command_str or "&&" in command_str or "||" in command_str:
+            return {"status": "error", "message": "Comandos complexos ou encadeados não são permitidos."}
+
         try:
-            automation_type = AutomationType(request_data.get("type", "terminal"))
-            parameters = request_data.get("parameters", {})
-            task_id = f"auto_{uuid4().hex[:8]}"
-            self.active_tasks[task_id] = {"status": ControlStatus.EXECUTING, "start_time": time.time()}
-
-            handler = {
-                AutomationType.TERMINAL: self._execute_terminal_task,
-                AutomationType.BROWSER: self._execute_browser_task,
-                AutomationType.REMOTE_SSH: self._execute_ssh_task,
-            }.get(automation_type)
-
-            if handler:
-                result = await handler(parameters)
-            else:
-                result = {"success": False, "error": f"Tipo de automação '{automation_type.value}' não suportado."}
+            # shlex.split lida com a tokenização segura do comando
+            args = shlex.split(command_str)
             
-            self.active_tasks.pop(task_id, None)
-            return {"status": "completed", "task_id": task_id, "result": result}
-        
-        except ValueError:
-            return {"status": "error", "message": "Tipo de automação inválido."}
-        except Exception as e:
-            logger.error(f"❌ Erro executando automação: {e}", exc_info=True)
-            return {"status": "error", "message": str(e)}
+            logger.info(f"Executando comando: {args}")
 
-    async def _execute_terminal_task(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
-        """[LÓGICA REAL] Executa um comando no terminal de forma segura e assíncrona."""
-        command = parameters.get("command", "")
-        if not command:
-            return {"success": False, "error": "Comando não especificado."}
-        
-        logger.info(f"💻 Executando comando no terminal: {command}")
-        try:
-            proc = await asyncio.create_subprocess_shell(
-                command,
+            proc = await asyncio.create_subprocess_exec(
+                *args,
                 stdout=asyncio.subprocess.PIPE,
                 stderr=asyncio.subprocess.PIPE
             )
-            stdout, stderr = await asyncio.wait_for(proc.communicate(), timeout=120) # Timeout de 2 minutos
+
+            stdout, stderr = await asyncio.wait_for(proc.communicate(), timeout=timeout)
+            
+            result = CommandResult(
+                command=command_str,
+                status=CommandStatus.SUCCESS if proc.returncode == 0 else CommandStatus.ERROR,
+                stdout=stdout.decode().strip(),
+                stderr=stderr.decode().strip(),
+                return_code=proc.returncode
+            )
             
             return {
-                "success": proc.returncode == 0,
-                "return_code": proc.returncode,
-                "stdout": stdout.decode('utf-8', errors='ignore'),
-                "stderr": stderr.decode('utf-8', errors='ignore'),
+                "status": "completed",
+                "result": result.__dict__
             }
+
         except asyncio.TimeoutError:
-            logger.error(f"Timeout executando comando: {command}")
-            return {"success": False, "error": "Comando excedeu o tempo limite de 120 segundos."}
+            logger.error(f"Timeout ao executar o comando: '{command_str}'")
+            return {"status": "error", "message": "Comando excedeu o tempo limite."}
         except Exception as e:
-            logger.error(f"Falha ao executar comando '{command}': {e}", exc_info=True)
-            return {"success": False, "error": str(e)}
-
-    async def _execute_browser_task(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
-        """[AUTENTICIDADE] Placeholder para automação de navegador."""
-        if not self.has_selenium:
-            return {"success": False, "error": "Selenium não está instalado. Automação de browser desativada."}
-        
-        logger.info(f"🌐 [Simulação] Executando tarefa de browser: {parameters.get('action')}")
-        await asyncio.sleep(1)
-        return {"success": True, "action": parameters.get('action'), "result": "Ação de browser simulada com sucesso."}
-        
-    async def _execute_ssh_task(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
-        """[AUTENTICIDADE] Placeholder para automação SSH."""
-        if not self.has_ssh:
-            return {"success": False, "error": "Paramiko não está instalado. Automação SSH desativada."}
-            
-        logger.info(f"🔒 [Simulação] Executando tarefa SSH no host: {parameters.get('host')}")
-        await asyncio.sleep(2)
-        return {"success": True, "command": parameters.get('command'), "result": "Comando SSH simulado com sucesso."}
-
+            logger.error(f"Erro ao executar o comando '{command_str}': {e}", exc_info=True)
+            return {"status": "error", "message": str(e)}
 
 def create_computer_control_agent(message_bus) -> List[BaseNetworkAgent]:
-    """Cria o agente de controle computacional."""
+    """Cria o agente de Controle de Computador."""
     agents = []
     logger.info("🤖 Criando ComputerControlAgent...")
     try:
