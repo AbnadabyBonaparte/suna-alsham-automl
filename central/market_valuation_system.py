@@ -226,39 +226,5 @@ class MarketValuationAgent:
         
         return "Parabéns! Valor acima de R$ 100M"
 
-# Integração com o sistema principal
-class MarketValuationIntegration:
-    """Integra o agente de valuation com o sistema ALSHAM"""
-    
-    def __init__(self):
-        self.valuation_agent = MarketValuationAgent()
-        self.update_interval = 3600  # Atualizar a cada hora
-        
-    def update_system_apis(self, api_routes):
-        """Adiciona endpoints de valuation às APIs"""
-        
-        @api_routes.route('/api/valuation')
-        def get_valuation():
-            """Endpoint para obter a avaliação atual"""
-            # Coletar métricas do sistema
-            system_metrics = {
-                "total_agents": len(api_routes.metrics_manager.agent_metrics),
-                "active_agents": sum(1 for a in api_routes.metrics_manager.agent_metrics.values() if a["status"] == "online"),
-                "uptime_seconds": (datetime.now() - api_routes.metrics_manager.start_time).total_seconds(),
-                "tasks_completed": sum(a["tasks_completed"] for a in api_routes.metrics_manager.agent_metrics.values()),
-                "success_rate": 0.98,
-                "operational_efficiency": api_routes.metrics_manager.operational_efficiency
-            }
-            
-            # Calcular valor de mercado
-            valuation = self.valuation_agent.calculate_real_market_value(system_metrics)
-            
-            return jsonify(valuation)
-        
-        @api_routes.route('/api/valuation/insights')
-        def get_valuation_insights():
-            """Endpoint para obter insights da avaliação"""
-            insights = self.valuation_agent.get_valuation_insights()
-            return jsonify(insights)
-        
-        logger.info("APIs de valuation integradas ao sistema")
+# Criar instância global
+valuation_agent = MarketValuationAgent()
