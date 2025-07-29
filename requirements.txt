@@ -42,6 +42,7 @@ bcrypt==4.1.2
 python-jose[cryptography]==3.3.0
 passlib[bcrypt]==1.7.4
 python-multipart==0.0.6
+pyjwt==2.8.0
 
 # ===== PAYMENT GATEWAY (Módulo de Vendas) =====
 stripe==8.5.0
@@ -60,12 +61,10 @@ marshmallow==3.20.1
 matplotlib==3.8.2
 seaborn==0.13.0
 plotly==5.17.0
-# [Fase 3] - Adicionado para automação de vídeo
 moviepy==1.0.3
 Pillow==10.0.1
 
-
-# ===== UTILITIES =====
+# ===== UTILITIES & CODE QUALITY =====
 python-dotenv==1.0.0
 click==8.1.7
 rich==13.7.0
@@ -81,7 +80,6 @@ pytest-asyncio==0.21.1
 # ===== WEB & API =====
 jinja2==3.1.2
 starlette==0.27.0
-python-multipart==0.0.6
 
 # ===== PERFORMANCE OPTIMIZATION =====
 orjson==3.9.10
