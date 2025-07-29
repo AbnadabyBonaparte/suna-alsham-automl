@@ -2,20 +2,29 @@
 """
 Módulo Carregador de Agentes - SUNA-ALSHAM
 
-[Versão Final] - Utiliza carregamento explícito para máxima robustez em produção.
+[Versão Final] - Utiliza carregamento explícito e força o sys.path para robustez.
 """
 import logging
 from typing import Any, Dict, List
 
+# --- INÍCIO DA CORREÇÃO "FORÇA BRUTA" ---
+import sys
+from pathlib import Path
+# Esta linha força a adição da pasta raiz do projeto (que contém 'suna_alsham_core'
+# e 'domain_modules') ao "mapa" do Python.
+project_root = Path(__file__).parent.parent
+sys.path.insert(0, str(project_root.resolve()))
+# --- FIM DA CORREÇÃO ---
+
+
 # --- CARREGAMENTO EXPLÍCITO ---
 # Importamos diretamente cada função de fábrica de agentes.
-# Isso é mais robusto do que a descoberta dinâmica.
+# Agora, com o path corrigido acima, estes imports devem funcionar.
 
 # Módulos do Núcleo
+# NOTA: Se você tiver mais arquivos "create_..._agents" no core, adicione os imports aqui.
+# Por enquanto, vamos assumir que o principal é o core_agents_v3
 from suna_alsham_core.core_agents_v3 import create_core_agents_v3
-# ... (adicione todos os outros create_*_agents do núcleo aqui se eles forem separados)
-# Para simplificar, vamos assumir que a maioria está em core_agents_v3 ou foi refatorada.
-# Se houver outros arquivos no core, adicione os imports aqui.
 
 # Módulos de Domínio
 from domain_modules.analytics.analytics_orchestrator_agent import create_analytics_agents
@@ -34,7 +43,7 @@ async def initialize_all_agents(network: Any) -> Dict[str, Any]:
     
     # Lista explícita de todas as funções de fábrica a serem chamadas
     agent_factories = {
-        "core": [create_core_agents_v3], # Adicione outras do núcleo aqui
+        "core": [create_core_agents_v3], # Adicione outras do núcleo aqui se necessário
         "domain": [create_analytics_agents, create_sales_agents, create_social_media_agents],
     }
 
