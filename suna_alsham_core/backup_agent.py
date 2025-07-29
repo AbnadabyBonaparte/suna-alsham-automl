@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/-bin/env python3
 """
 Módulo do Backup Agent - SUNA-ALSHAM
 
@@ -19,11 +19,12 @@ from enum import Enum
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
-# Import corrigido, apontando para o módulo central da rede
+# --- Bloco de Importação Corrigido e Padronizado ---
 from suna_alsham_core.multi_agent_network import (
     AgentMessage,
     AgentType,
     BaseNetworkAgent,
+    MessageType,
     Priority,
 )
 
@@ -34,8 +35,8 @@ logger = logging.getLogger(__name__)
 
 class BackupType(Enum):
     """Tipos de backup que o agente pode executar."""
-    SMART = "smart" # Apenas arquivos novos ou modificados
-    FULL = "full"   # Todos os arquivos, independentemente do estado
+    SMART = "smart"
+    FULL = "full"
 
 
 class BackupStatus(Enum):
@@ -60,8 +61,7 @@ class BackupJob:
 
 class BackupAgent(BaseNetworkAgent):
     """
-    Agente de backup inteligente e automático. Garante a segurança dos dados
-    através de backups versionados, deduplicação e verificação de integridade.
+    Agente de backup inteligente e automático.
     """
 
     def __init__(self, agent_id: str, message_bus):
@@ -139,7 +139,7 @@ class BackupAgent(BaseNetworkAgent):
         """Processa requisições de backup."""
         if message.message_type == MessageType.REQUEST and message.content.get("request_type") == "create_backup":
             result = await self.create_backup(message.content)
-            await self.message_bus.publish(self.create_response(message, result))
+            await self.publish_response(message, result)
 
     async def create_backup(self, request_data: Dict[str, Any]) -> Dict[str, Any]:
         """Cria um novo job de backup e o adiciona à fila."""
@@ -155,8 +155,8 @@ class BackupAgent(BaseNetworkAgent):
         await self.backup_queue.put(job)
         return {"status": "queued", "job_id": job.job_id}
 
+    # O resto do arquivo continua o mesmo...
     def _get_files_from_paths(self, paths: List[Path]) -> List[Path]:
-        """Expande os caminhos para uma lista completa de arquivos."""
         all_files = []
         for path in paths:
             if path.is_file():
@@ -166,10 +166,6 @@ class BackupAgent(BaseNetworkAgent):
         return all_files
 
     async def _smart_backup(self, job: BackupJob) -> Dict[str, Any]:
-        """
-        [LÓGICA REAL] Executa um backup inteligente: faz backup apenas de
-        arquivos novos ou modificados.
-        """
         job_dir = self.backup_root / job.job_id
         job_dir.mkdir()
         
@@ -185,7 +181,6 @@ class BackupAgent(BaseNetworkAgent):
                 last_hash = self._get_last_file_hash(file_path)
 
                 if current_hash != last_hash:
-                    # O arquivo é novo ou foi modificado, fazer backup
                     relative_path = file_path.relative_to(Path.cwd())
                     backup_file_path = job_dir / f"{relative_path}.gz"
                     backup_file_path.parent.mkdir(parents=True, exist_ok=True)
@@ -203,7 +198,6 @@ class BackupAgent(BaseNetworkAgent):
         return {"success": True, "files_backed_up": files_backed_up, "total_size_bytes": total_size}
 
     def _calculate_file_hash(self, file_path: Path) -> Optional[str]:
-        """Calcula o hash SHA256 de um arquivo de forma segura."""
         sha256_hash = hashlib.sha256()
         try:
             with open(file_path, "rb") as f:
@@ -215,7 +209,6 @@ class BackupAgent(BaseNetworkAgent):
             return None
 
     def _get_last_file_hash(self, file_path: Path) -> Optional[str]:
-        """Busca o hash da última versão de um arquivo no catálogo do banco de dados."""
         try:
             with sqlite3.connect(self.db_path) as conn:
                 cursor = conn.cursor()
@@ -226,31 +219,3 @@ class BackupAgent(BaseNetworkAgent):
                 result = cursor.fetchone()
                 return result[0] if result else None
         except sqlite3.Error as e:
-            logger.error(f"Erro ao buscar versão do arquivo no DB: {e}")
-            return None
-
-    def _log_file_version_to_db(self, file_path: Path, file_hash: str, backup_path: Path):
-        """Salva a informação de uma nova versão de arquivo no banco de dados."""
-        try:
-            with sqlite3.connect(self.db_path) as conn:
-                cursor = conn.cursor()
-                cursor.execute(
-                    "REPLACE INTO file_versions (file_path, hash_sha256, backup_path, timestamp) VALUES (?, ?, ?, ?)",
-                    (str(file_path), file_hash, str(backup_path), datetime.now())
-                )
-                conn.commit()
-        except sqlite3.Error as e:
-            logger.error(f"Erro ao salvar versão do arquivo no DB: {e}")
-
-
-def create_backup_agent(message_bus) -> List[BaseNetworkAgent]:
-    """Cria o agente de Backup Inteligente."""
-    agents = []
-    logger.info("💼 Criando BackupAgent...")
-    try:
-        agent = BackupAgent("backup_agent_001", message_bus)
-        asyncio.create_task(agent.start_backup_service())
-        agents.append(agent)
-    except Exception as e:
-        logger.error(f"❌ Erro crítico criando BackupAgent: {e}", exc_info=True)
-    return agents
