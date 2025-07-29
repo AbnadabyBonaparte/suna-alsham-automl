@@ -1,198 +1,113 @@
 #!/usr/bin/env python3
 """
-Módulo do Logging Agent - O Jornalista Inteligente do SUNA-ALSHAM.
+Módulo do Agente de Logging - SUNA-ALSHAM
 
-[Fase 2] - Fortalecido com integração real ao DatabaseAgent para persistência
-de logs de forma estruturada.
+[Fase 2] - Fortalecido com integração com o DatabaseAgent para persistência
+de logs estruturados, permitindo análises e auditorias futuras.
 """
 
 import asyncio
-import json
 import logging
-import time
-from collections import deque
-from dataclasses import dataclass, field
+from dataclasses import asdict, dataclass, field
 from datetime import datetime
-from enum import Enum
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 
-# Import corrigido, apontando para o módulo central da rede
+# --- Bloco de Importação Corrigido e Padronizado ---
 from suna_alsham_core.multi_agent_network import (
     AgentMessage,
     AgentType,
     BaseNetworkAgent,
+    MessageType,
     Priority,
 )
 
 logger = logging.getLogger(__name__)
 
-
-# --- Enums e Dataclasses para Tipagem Forte ---
-
-class LogLevel(Enum):
-    """Níveis de severidade dos logs."""
-    DEBUG = "DEBUG"
-    INFO = "INFO"
-    WARNING = "WARNING"
-    ERROR = "ERROR"
-    CRITICAL = "CRITICAL"
-
+# --- Dataclasses para Tipagem Forte ---
 
 @dataclass
 class LogEntry:
-    """Representa uma entrada de log estruturada e enriquecida."""
-    entry_id: str
-    timestamp: datetime
-    level: LogLevel
-    source_agent: str
-    message: str
-    metadata: Dict[str, Any] = field(default_factory=dict)
-
+    """Representa uma entrada de log estruturada a ser persistida."""
+    log_id: str
+    timestamp: datetime = field(default_factory=datetime.now)
+    source_agent: str = "unknown"
+    log_level: str = "INFO"
+    message: str = ""
+    payload: Dict[str, Any] = field(default_factory=dict)
 
 # --- Classe Principal do Agente ---
 
 class LoggingAgent(BaseNetworkAgent):
     """
-    Agente especializado em logging inteligente. Transforma logs brutos em
-    dados estruturados e os persiste no banco de dados para análise futura.
+    Agente centralizado de logging. Coleta, estrutura e persiste
+    logs de todo o sistema para análise e auditoria.
     """
 
     def __init__(self, agent_id: str, message_bus):
         """Inicializa o LoggingAgent."""
         super().__init__(agent_id, AgentType.SERVICE, message_bus)
         self.capabilities.extend([
-            "centralized_logging",
+            "structured_logging",
             "log_persistence",
-            "log_querying",
+            "log_querying"
         ])
-        
-        self.log_buffer = deque(maxlen=100) # Buffer para inserção em lote
-        self._db_task = None
+        self.log_queue = asyncio.Queue()
+        self.persistence_task = asyncio.create_task(self._persist_logs_loop())
         
         logger.info(f"📝 {self.agent_id} (Logging) inicializado.")
 
-    async def start_logging_service(self):
-        """Inicia o serviço de background para salvar logs."""
-        if not self._db_task:
-            self._db_task = asyncio.create_task(self._process_log_buffer_loop())
-            logger.info(f"📝 {self.agent_id} iniciou serviço de persistência de logs.")
-
-    async def _process_log_buffer_loop(self):
-        """Loop que periodicamente salva o buffer de logs no banco de dados."""
+    async def _persist_logs_loop(self):
+        """Loop que consome a fila e persiste logs no banco de dados."""
         while True:
             try:
-                await asyncio.sleep(10) # Salva a cada 10 segundos
-                if self.log_buffer:
-                    await self._flush_buffer_to_database()
+                log_entry: LogEntry = await self.log_queue.get()
+                
+                # [LÓGICA REAL] Na Fase 3, esta query será otimizada e
+                # a lógica de gravação em lote será implementada.
+                query = "INSERT INTO system_logs (log_id, timestamp, source_agent, log_level, message, payload) VALUES (?, ?, ?, ?, ?, ?)"
+                params = (
+                    log_entry.log_id,
+                    log_entry.timestamp.isoformat(),
+                    log_entry.source_agent,
+                    log_entry.log_level,
+                    log_entry.message,
+                    str(log_entry.payload) # Simplificado para texto
+                )
+
+                db_request = self.create_message(
+                    recipient_id="database_001",
+                    message_type=MessageType.REQUEST,
+                    content={"request_type": "execute_query", "query": query, "params": params}
+                )
+                await self.message_bus.publish(db_request)
+                
             except asyncio.CancelledError:
-                logger.info("Loop de logging cancelado.")
-                # Tenta salvar o buffer uma última vez antes de sair
-                await self._flush_buffer_to_database()
                 break
             except Exception as e:
-                logger.error(f"❌ Erro no loop de persistência de logs: {e}", exc_info=True)
+                logger.error(f"Erro no loop de persistência de logs: {e}", exc_info=True)
 
     async def _internal_handle_message(self, message: AgentMessage):
         """
-        Processa mensagens recebidas, com foco em notificações para logging.
+        Recebe notificações de log de outros agentes e as enfileira.
         """
-        # O LoggingAgent escuta todas as notificações para logar eventos importantes.
         if message.message_type == MessageType.NOTIFICATION:
-            await self._log_notification_event(message)
-
-    async def _log_notification_event(self, message: AgentMessage):
-        """
-        Cria uma entrada de log estruturada a partir de uma notificação da rede
-        e a adiciona ao buffer para persistência.
-        """
-        log_entry = LogEntry(
-            entry_id=message.id,
-            timestamp=message.timestamp,
-            level=self._map_priority_to_log_level(message.priority),
-            source_agent=message.sender_id,
-            message=f"Notificação: {message.content.get('notification_type', 'geral')}",
-            metadata={
-                "correlation_id": message.correlation_id,
-                "content": message.content,
-            },
-        )
-        self.log_buffer.append(log_entry)
-
-    def _map_priority_to_log_level(self, priority: Priority) -> LogLevel:
-        """Mapeia a prioridade da mensagem para um nível de log."""
-        if priority == Priority.CRITICAL: return LogLevel.CRITICAL
-        if priority == Priority.HIGH: return LogLevel.ERROR
-        if priority == Priority.MEDIUM: return LogLevel.WARNING
-        return LogLevel.INFO
-
-    async def _flush_buffer_to_database(self):
-        """
-        [LÓGICA REAL] Salva todas as entradas de log do buffer no banco de dados
-        usando o `DatabaseAgent`.
-        """
-        if not self.log_buffer:
-            return
-
-        logs_to_insert = list(self.log_buffer)
-        self.log_buffer.clear()
-        
-        logger.info(f"🗄️ Persistindo {len(logs_to_insert)} entradas de log no banco de dados...")
-
-        # [AUTENTICIDADE] Esta é a implementação REAL da integração.
-        # 1. Prepara a query SQL para inserção em lote.
-        query = """
-            INSERT INTO system_logs (entry_id, timestamp, level, source_agent, message, metadata)
-            VALUES (?, ?, ?, ?, ?, ?);
-        """
-        # 2. Prepara os dados para a query.
-        params = [
-            (
-                log.entry_id,
-                log.timestamp.isoformat(),
-                log.level.value,
-                log.source_agent,
-                log.message,
-                json.dumps(log.metadata)
-            )
-            for log in logs_to_insert
-        ]
-
-        try:
-            # 3. Envia a requisição para o DatabaseAgent.
-            # O `send_request_and_wait` é o método fortalecido que criamos na Fase 2.
-            response_message = await self.send_request_and_wait(
-                recipient_id="database_001",
-                content={
-                    "request_type": "execute_query",
-                    "query": query,
-                    "params": params, # `executemany` do aiosqlite espera uma lista de tuplas
-                }
-            )
-
-            if response_message.content.get("status") == "completed":
-                logger.info(f"✅ {response_message.content.get('rows_affected', 0)} logs persistidos com sucesso.")
-            else:
-                logger.error(f"❌ Falha ao persistir logs. Resposta do DatabaseAgent: {response_message.content.get('message')}")
-                # Adiciona os logs de volta ao buffer para tentar novamente
-                self.log_buffer.extend(logs_to_insert)
-
-        except TimeoutError:
-            logger.error("❌ Timeout ao comunicar com o DatabaseAgent para salvar logs.")
-            self.log_buffer.extend(logs_to_insert)
-        except Exception as e:
-            logger.error(f"❌ Erro inesperado ao salvar logs: {e}", exc_info=True)
-            self.log_buffer.extend(logs_to_insert)
-
+            log_content = message.content
+            if "event_type" in log_content: # Filtra para apenas eventos de log
+                log_entry = LogEntry(
+                    log_id=message.message_id,
+                    source_agent=message.sender_id,
+                    log_level=log_content.get("log_level", "INFO"),
+                    message=log_content.get("message", "Evento de log recebido."),
+                    payload=log_content
+                )
+                await self.log_queue.put(log_entry)
 
 def create_logging_agent(message_bus) -> List[BaseNetworkAgent]:
-    """
-    Cria o agente de Logging Inteligente.
-    """
+    """Cria o agente de Logging."""
     agents = []
     logger.info("📝 Criando LoggingAgent...")
     try:
         agent = LoggingAgent("logging_001", message_bus)
-        asyncio.create_task(agent.start_logging_service())
         agents.append(agent)
     except Exception as e:
         logger.error(f"❌ Erro crítico criando LoggingAgent: {e}", exc_info=True)
