@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-from flask import Flask, jsonify, send_file
+from flask import Flask, jsonify, send_file, Blueprint
 from flask_cors import CORS
 from flask_socketio import SocketIO
 import logging
@@ -11,8 +11,14 @@ import os
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+# Criação do app Flask
 app = Flask(__name__)
 CORS(app)
+
+# Criação do blueprint para APIs
+api_bp = Blueprint('api', __name__, url_prefix='/api')
+
+# Inicialização do SocketIO após criar o app Flask
 socketio = SocketIO(app, cors_allowed_origins="*")
 
 MAIN_SYSTEM_URL = "https://suna-alsham-automl-production.up.railway.app"
@@ -41,10 +47,12 @@ def get_cached_or_fetch(key, url, default):
 def index():
     try:
         return send_file('index.html')
-    except:
+    except Exception as e:
+        logger.error(f"Erro ao servir index.html: {e}")
         return "<h1>ALSHAM QUANTUM v12.0</h1>"
 
-@app.route('/api/status')
+# Definição das rotas de API usando o blueprint
+@api_bp.route('/status')
 def status():
     real_data = get_cached_or_fetch('status', f"{MAIN_SYSTEM_URL}/api/status", None)
     
@@ -86,7 +94,7 @@ def status():
         "timestamp": datetime.now().isoformat()
     })
 
-@app.route('/api/agents')
+@api_bp.route('/agents')
 def agents():
     real_data = get_cached_or_fetch('agents', f"{MAIN_SYSTEM_URL}/api/agents", None)
     
@@ -127,7 +135,7 @@ def agents():
         "categories": categories
     })
 
-@app.route('/api/metrics')
+@api_bp.route('/metrics')
 def metrics():
     uptime_seconds = (datetime.now() - START_TIME).total_seconds()
     total_cycles = int(uptime_seconds * 0.00167)
@@ -157,7 +165,7 @@ def metrics():
         "timestamp": datetime.now().isoformat()
     })
 
-@app.route('/api/logs')
+@api_bp.route('/logs')
 def logs():
     current_time = datetime.now()
     uptime_seconds = (current_time - START_TIME).total_seconds()
@@ -195,6 +203,11 @@ def logs():
         "total_logs": len(logs_list)
     })
 
+# Registro do blueprint
+app.register_blueprint(api_bp)
+logger.info("✅ APIs registradas com sucesso")
+
+# Eventos SocketIO
 @socketio.on('connect')
 def handle_connect():
     logger.info('Cliente conectado via WebSocket')
@@ -203,9 +216,26 @@ def handle_connect():
 def handle_disconnect():
     logger.info('Cliente WebSocket desconectado')
 
+# Adicionando também rotas diretamente em /api/* para garantir compatibilidade
+@app.route('/api/status')
+def app_status():
+    return status()
+
+@app.route('/api/agents')
+def app_agents():
+    return agents()
+
+@app.route('/api/metrics')
+def app_metrics():
+    return metrics()
+
+@app.route('/api/logs')
+def app_logs():
+    return logs()
+
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
     logger.info(f"Servidor iniciando na porta {port}")
     logger.info(f"Sistema configurado para 6 ciclos por hora")
-    # Substituindo app.run pelo socketio.run conforme solicitado
+    # Usando socketio.run em vez de app.run para suporte WebSocket
     socketio.run(app, host='0.0.0.0', port=port, debug=False)
