@@ -1,99 +1,100 @@
 #!/usr/bin/env python3
 """
-Módulo dos Agentes com IA - SUNA-ALSHAM
+Módulo dos Agentes com IA (AI-Powered) - SUNA-ALSHAM
 
-[Fase 3] - Implementação real da integração com a API da OpenAI para
-análise e otimização.
+[Versão Modernizada] - Atualizado para usar a biblioteca OpenAI v1.0+
+e com tratamento de erros aprimorado.
 """
 
 import asyncio
 import logging
 import os
-from typing import Any, Dict, List
+import json
+from typing import Any, Dict, List, Optional
 
 # [AUTENTICIDADE] A biblioteca da OpenAI é importada de forma segura.
 try:
-    import openai
+    from openai import AsyncOpenAI
     OPENAI_AVAILABLE = True
 except ImportError:
     OPENAI_AVAILABLE = False
 
-# Import corrigido, apontando para o módulo central da rede
 from suna_alsham_core.multi_agent_network import (
+    AgentMessage,
     AgentType,
     BaseNetworkAgent,
-    AgentMessage,
-    MessageType
+    MessageType,
+    Priority,
 )
 
 logger = logging.getLogger(__name__)
 
-# --- Configuração da API OpenAI ---
-if OPENAI_AVAILABLE:
-    # A chave de API é carregada de forma segura a partir das variáveis de ambiente.
-    openai.api_key = os.getenv("OPENAI_API_KEY")
-
+# --- Classe Principal do Agente ---
 
 class AIAnalyzerAgent(BaseNetworkAgent):
     """
-    Agente especializado em realizar análises complexas utilizando a API da OpenAI.
+    Agente especialista em interagir com modelos de linguagem da OpenAI
+    para análise de texto, geração de conteúdo e outras tarefas de IA.
     """
     def __init__(self, agent_id: str, message_bus):
         """Inicializa o AIAnalyzerAgent."""
         super().__init__(agent_id, AgentType.AI_POWERED, message_bus)
-        self.capabilities.append("ai_analysis")
-        if not OPENAI_AVAILABLE or not openai.api_key:
+        self.capabilities.extend(["natural_language_processing", "text_generation", "sentiment_analysis"])
+        
+        if not OPENAI_AVAILABLE or not os.environ.get("OPENAI_API_KEY"):
             self.status = "degraded"
-            logger.warning(f"Agente {agent_id} operando em modo degradado: OpenAI não configurado.")
-        logger.info(f"✅ {self.agent_id} (Analisador IA) inicializado.")
+            logger.critical("Biblioteca 'openai' ou a chave de API OPENAI_API_KEY não estão disponíveis.")
+            self.client = None
+        else:
+            # --- CORREÇÃO PRINCIPAL: Usa a nova sintaxe da API ---
+            self.client = AsyncOpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
+        
+        logger.info(f"🧠 {self.agent_id} (Analisador IA) modernizado e inicializado.")
 
     async def _internal_handle_message(self, message: AgentMessage):
-        """Processa requisições de análise com IA."""
-        if message.message_type != MessageType.REQUEST: return
+        """Processa requisições de análise de IA."""
+        if self.status == "degraded":
+            await self.publish_error_response(message, "Serviço de IA indisponível.")
+            return
+
+        logger.info(f"🧠 {self.agent_id} analisando dados com IA...")
+        
         try:
-            data_to_analyze = message.content.get("data", {})
-            logger.info(f"🧠 {self.agent_id} analisando dados com IA...")
-
-            if self.status == "degraded":
-                analysis_result = {"error": "Serviço de IA indisponível."}
+            prompt = message.content.get("text", "")
+            
+            # --- CORREÇÃO PRINCIPAL: Nova forma de chamar a API ---
+            chat_completion = await self.client.chat.completions.create(
+                messages=[{"role": "user", "content": prompt}],
+                model="gpt-3.5-turbo",
+            )
+            
+            result_text = chat_completion.choices[0].message.content
+            
+            # Tenta interpretar o resultado como JSON se for uma requisição estruturada
+            if message.content.get("request_type") == "generate_structured_text":
+                result = {"structured_data": json.loads(result_text)}
             else:
-                prompt = f"Analise os seguintes dados e extraia 3 insights chave em formato JSON: {str(data_to_analyze)}"
-                response = await openai.ChatCompletion.acreate(
-                    model="gpt-3.5-turbo", # Modelo mais rápido e econômico para análises gerais
-                    messages=[{"role": "user", "content": prompt}],
-                    temperature=0.5,
-                    max_tokens=500,
-                )
-                analysis_result = response.choices[0].message.content
+                # Para outras requisições, o resultado é o texto ou a intenção
+                # Isso é um pouco simplista e pode ser melhorado
+                intent_key = "intent" if "intent" in message.content.get("request_type", "") else "sentiment"
+                result = {intent_key: result_text.strip().lower()}
 
-            response_msg = self.create_response(message, {"analysis": analysis_result})
-            await self.message_bus.publish(response_msg)
+            response_content = {"status": "completed", "result": result}
+            await self.publish_response(message, response_content)
+
         except Exception as e:
             logger.error(f"❌ Erro na análise com IA: {e}", exc_info=True)
-            await self.message_bus.publish(self.create_error_response(message, str(e)))
+            # --- CORREÇÃO SECUNDÁRIA: Usa o nome correto da função de erro ---
+            await self.publish_error_response(message, str(e))
 
-
-# Outros agentes de IA (AIOptimizerAgent, AIChatAgent) seguiriam a mesma estrutura.
-# Por simplicidade, focamos em implementar a lógica real em um deles primeiro.
 
 def create_ai_agents(message_bus) -> List[BaseNetworkAgent]:
-    """
-    Cria os agentes com capacidades de IA.
-    """
+    """Cria os agentes com IA."""
     agents = []
     logger.info("🤖 Criando agentes com IA (AI-Powered)...")
-    
-    agent_configs = [
-        {"id": "ai_analyzer_001", "class": AIAnalyzerAgent},
-        # {"id": "ai_optimizer_001", "class": AIOptimizerAgent},
-        # {"id": "ai_chat_001", "class": AIChatAgent},
-    ]
-
-    for config in agent_configs:
-        try:
-            agent = config["class"](config["id"], message_bus)
-            agents.append(agent)
-        except Exception as e:
-            logger.error(f"❌ Erro criando agente IA {config['id']}: {e}", exc_info=True)
-
+    try:
+        agent = AIAnalyzerAgent("ai_analyzer_001", message_bus)
+        agents.append(agent)
+    except Exception as e:
+        logger.error(f"❌ Erro criando agente IA: {e}", exc_info=True)
     return agents
