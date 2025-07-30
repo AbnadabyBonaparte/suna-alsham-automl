@@ -2,12 +2,12 @@
 """
 Módulo do Agente da Base de Conhecimento - SUNA-ALSHAM (ALSHAM GLOBAL)
 
-Este agente é um especialista em buscar e recuperar informações de uma
-base de conhecimento (ex: FAQs, tutoriais, documentação). Ele serve
-como a fonte de verdade para outros agentes, como o Chatbot.
+[Versão Fortalecida] - Integra-se com o DatabaseAgent para realizar
+buscas reais por artigos em uma tabela de base de conhecimento.
 """
 
 import logging
+import uuid
 from typing import Any, Dict, List
 
 from suna_alsham_core.multi_agent_network import (
@@ -23,45 +23,83 @@ logger = logging.getLogger(__name__)
 
 class KnowledgeBaseAgent(BaseNetworkAgent):
     """
-    Agente especialista em recuperação de informação.
+    Agente especialista em recuperação de informação de um banco de dados.
     """
 
     def __init__(self, agent_id: str, message_bus):
         """Inicializa o KnowledgeBaseAgent."""
-        super().__init__(
-            agent_id=agent_id,
-            agent_type=AgentType.BUSINESS_DOMAIN,
-            message_bus=message_bus,
-        )
+        super().__init__(agent_id, AgentType.BUSINESS_DOMAIN, message_bus)
         self.capabilities.extend([
             "information_retrieval",
             "document_search",
             "faq_lookup"
         ])
-        logger.info(f"📚 Agente da Base de Conhecimento ({self.agent_id}) inicializado.")
+        self.pending_searches = {}
+        logger.info(f"📚 Agente da Base de Conhecimento ({self.agent_id}) fortalecido e inicializado.")
 
     async def _internal_handle_message(self, message: AgentMessage):
         """
-        [LÓGICA FUTURA] Processa uma requisição para buscar informação.
+        Processa uma requisição para buscar informação ou uma resposta do DatabaseAgent.
         """
         if message.message_type == MessageType.REQUEST and message.content.get("request_type") == "search_article":
-            query = message.content.get("query", "")
-            logger.info(f"Base de Conhecimento recebeu uma busca por: '{query}'")
-            
-            # [LÓGICA FUTURA]
-            # 1. Usar técnicas de busca (ex: embeddings, busca por palavra-chave)
-            #    para encontrar o artigo mais relevante no banco de dados.
-            # 2. Retornar o conteúdo do artigo.
+            await self.handle_search_request(message)
 
-            # Resposta temporária simulada
-            response_content = {
-                "status": "completed_simulated",
-                "found_articles": [
-                    {
-                        "title": "Como resetar sua senha",
-                        "url": "/kb/reset-password",
-                        "relevance_score": 0.92
-                    }
-                ]
-            }
-            await self.publish_response(message, response_content)
+        elif message.message_type == MessageType.RESPONSE:
+            await self.handle_db_response(message)
+
+    async def handle_search_request(self, original_message: AgentMessage):
+        """Recebe uma query e a transforma em uma busca SQL no banco de dados."""
+        query_term = original_message.content.get("query", "")
+        if not query_term:
+            await self.publish_error_response(original_message, "Termo de busca não fornecido.")
+            return
+
+        search_id = str(uuid.uuid4())
+        logger.info(f"Nova busca na KB [ID: {search_id}]. Buscando por artigos com a tag: '{query_term}'")
+
+        self.pending_searches[search_id] = {
+            "original_message": original_message
+        }
+        
+        # Cria a query SQL para buscar artigos pela tag
+        sql_query = "SELECT title, content FROM knowledge_base WHERE tags LIKE ?"
+        # O parâmetro precisa ser formatado para a cláusula LIKE do SQL
+        sql_params = [f"%{query_term}%"]
+
+        request_to_db = self.create_message(
+            recipient_id="database_001",
+            message_type=MessageType.REQUEST,
+            content={
+                "request_type": "execute_query", 
+                "query": sql_query,
+                "params": sql_params
+            },
+            callback_id=search_id
+        )
+        await self.message_bus.publish(request_to_db)
+
+    async def handle_db_response(self, response_message: AgentMessage):
+        """Recebe o resultado da busca do DatabaseAgent e formata a resposta."""
+        search_id = response_message.callback_id
+        if not search_id or search_id not in self.pending_searches:
+            return
+
+        search_context = self.pending_searches.pop(search_id)
+        original_message = search_context["original_message"]
+        
+        db_data = response_message.content.get("data", [])
+        
+        found_articles = []
+        if response_message.content.get("status") == "completed" and db_data:
+            for row in db_data:
+                # Assumindo que a ordem das colunas é title, content
+                if len(row) >= 2:
+                    found_articles.append({"title": row[0], "content": row[1]})
+        
+        logger.info(f"Busca na KB [ID: {search_id}] concluída. {len(found_articles)} artigo(s) encontrado(s).")
+
+        final_response = {
+            "status": "completed",
+            "found_articles": found_articles
+        }
+        await self.publish_response(original_message, final_response)
