@@ -14,11 +14,12 @@ from suna_alsham_core.multi_agent_network import (
     Priority
 )
 
-# --- IMPORTAÇÕES ATUALIZADAS ---
+# --- IMPORTAÇÕES FINAIS DO MÓDULO ---
 from .ticket_manager_agent import TicketManagerAgent
 from .chatbot_agent import ChatbotAgent
 from .satisfaction_analyzer_agent import SatisfactionAnalyzerAgent
-# -----------------------------
+from .knowledge_base_agent import KnowledgeBaseAgent
+# ------------------------------------
 
 logger = logging.getLogger(__name__)
 
@@ -65,14 +66,15 @@ def create_suporte_agents(message_bus) -> List[BaseNetworkAgent]:
     """
     logger.info("🔧 Criando agentes do domínio de Suporte...")
     
-    # --- LISTA DE AGENTES ATUALIZADA ---
+    # --- EQUIPE COMPLETA DE AGENTES DE SUPORTE ---
     agents = [
         SupportOrchestratorAgent("support_orchestrator_001", message_bus),
         TicketManagerAgent("ticket_manager_001", message_bus),
         ChatbotAgent("chatbot_001", message_bus),
-        SatisfactionAnalyzerAgent("satisfaction_analyzer_001", message_bus)
+        SatisfactionAnalyzerAgent("satisfaction_analyzer_001", message_bus),
+        KnowledgeBaseAgent("knowledge_base_001", message_bus)
     ]
-    # ------------------------------------
+    # ---------------------------------------------
     
     logger.info(f"✅ {len(agents)} agentes de Suporte criados.")
     return agents
