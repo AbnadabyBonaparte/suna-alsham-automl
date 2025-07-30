@@ -1,9 +1,6 @@
 #!/usr/bin/env python3
 """
 Módulo do Agente Orquestrador de Suporte - SUNA-ALSHAM (ALSHAM GLOBAL)
-
-Este agente atua como o ponto central de entrada e coordenação para todas
-as tarefas relacionadas ao suporte e atendimento ao cliente.
 """
 
 import logging
@@ -17,6 +14,10 @@ from suna_alsham_core.multi_agent_network import (
     Priority
 )
 
+# --- IMPORTAÇÃO ADICIONADA ---
+from .ticket_manager_agent import TicketManagerAgent
+# -----------------------------
+
 logger = logging.getLogger(__name__)
 
 
@@ -24,7 +25,7 @@ class SupportOrchestratorAgent(BaseNetworkAgent):
     """
     O agente orquestrador para o domínio de Suporte e Atendimento ao Cliente.
     """
-
+    # ... (o resto da classe continua igual) ...
     def __init__(self, agent_id: str, message_bus):
         """Inicializa o SupportOrchestratorAgent."""
         super().__init__(
@@ -59,15 +60,15 @@ class SupportOrchestratorAgent(BaseNetworkAgent):
 def create_suporte_agents(message_bus) -> List[BaseNetworkAgent]:
     """
     Função de fábrica para criar todos os agentes do módulo de Suporte.
-    O agent_loader.py usará esta função para instanciar os agentes.
     """
     logger.info("🔧 Criando agentes do domínio de Suporte...")
     
-    # Por enquanto, criamos apenas o orquestrador.
-    # Os outros agentes serão adicionados a esta lista conforme os criarmos.
+    # --- LISTA DE AGENTES ATUALIZADA ---
     agents = [
-        SupportOrchestratorAgent("support_orchestrator_001", message_bus)
+        SupportOrchestratorAgent("support_orchestrator_001", message_bus),
+        TicketManagerAgent("ticket_manager_001", message_bus)
     ]
+    # ------------------------------------
     
     logger.info(f"✅ {len(agents)} agentes de Suporte criados.")
     return agents
