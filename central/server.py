@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-from flask import Flask, jsonify, send_file, Blueprint
+from flask import Flask, jsonify, send_file, Blueprint, send_from_directory
 from flask_cors import CORS
 from flask_socketio import SocketIO
 import logging
@@ -7,28 +7,33 @@ import requests
 from datetime import datetime
 import time
 import os
+import random
 import eventlet
 
-# Importante: Use eventlet para forçar o uso de seu modo de trabalho
-eventlet.monkey_patch()
+# Esta linha DEVE vir primeiro, antes de qualquer outra importação ou código
+eventlet.monkey_patch(os=True, select=True, socket=True, thread=True, time=True)
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# Criação do app Flask
+# Criação do app Flask SEM configurar rotas ainda
 app = Flask(__name__)
-CORS(app)
+CORS(app, resources={r"/*": {"origins": "*"}})  # CORS mais permissivo para desenvolvimento
 
 # Criação do blueprint para APIs
 api_bp = Blueprint('api', __name__, url_prefix='/api')
 
-# Inicialização do SocketIO com eventlet
+# Inicialização do SocketIO ANTES de registrar quaisquer rotas
+# A ORDEM É CRÍTICA AQUI
 socketio = SocketIO(
     app, 
     cors_allowed_origins="*", 
-    async_mode='eventlet',  # Especificar eventlet como modo assíncrono
+    async_mode='eventlet',
+    path='/socket.io',  # Garantir que o path esteja definido
     logger=True,
-    engineio_logger=True
+    engineio_logger=True,
+    ping_timeout=60,
+    ping_interval=25
 )
 
 MAIN_SYSTEM_URL = "https://suna-alsham-automl-production.up.railway.app"
@@ -61,6 +66,15 @@ def index():
         logger.error(f"Erro ao servir index.html: {e}")
         return "<h1>ALSHAM QUANTUM v12.0</h1>"
 
+# Rota para servir arquivos estáticos (CSS, JS, imagens)
+@app.route('/static/<path:path>')
+def serve_static(path):
+    try:
+        return send_from_directory('static', path)
+    except Exception as e:
+        logger.error(f"Erro ao servir arquivo estático {path}: {e}")
+        return "Arquivo não encontrado", 404
+
 # Definição das rotas de API usando o blueprint
 @api_bp.route('/status')
 def status():
@@ -84,9 +98,9 @@ def status():
         "total_cycles": total_cycles,
         "cycles_per_second": cycles_per_second,
         "cycles_per_hour": 6,
-        "agents_count": 51,
+        "agents_count": 51,  # Atualizado para 51
         "active_agents": 50,
-        "total_agents": 51,
+        "total_agents": 51,  # Atualizado para 51
         "financial_metrics": {
             "initial_investment": 2500000,
             "current_market_value": 2500000 + (total_cycles * 1000),
@@ -133,14 +147,14 @@ def agents():
                 "name": f"{category}_agent_{i+1}",
                 "category": category,
                 "status": "online",
-                "performance": 0.95,
+                "performance": 0.95 + (0.05 * (random.random() - 0.5)),  # Variação de performance
                 "description": f"Agente {category} #{i+1}"
             })
             agent_id += 1
     
     return jsonify({
         "agents": agents_list,
-        "total": 51,
+        "total": 51,  # Atualizado para 51
         "active_agents": 50,
         "categories": categories
     })
@@ -203,7 +217,7 @@ def logs():
         {
             "timestamp": current_time.isoformat(),
             "level": "success",
-            "message": "50 agentes operacionais",
+            "message": "51 agentes operacionais",  # Atualizado para 51
             "agent": "monitor_001"
         }
     ]
@@ -217,75 +231,91 @@ def logs():
 app.register_blueprint(api_bp)
 logger.info("✅ APIs registradas com sucesso")
 
-# Eventos SocketIO
+# Eventos SocketIO - IMPORTANTE: Definir CLARAMENTE estes handlers
 @socketio.on('connect')
 def handle_connect():
-    logger.info('Cliente conectado via WebSocket')
+    logger.info('✅ Cliente conectado via WebSocket')
     # Emitir um evento de teste para confirmar conexão
     socketio.emit('connection_status', {'status': 'connected', 'timestamp': datetime.now().isoformat()})
 
 @socketio.on('disconnect')
 def handle_disconnect():
-    logger.info('Cliente WebSocket desconectado')
+    logger.info('❌ Cliente WebSocket desconectado')
 
-# Iniciar emissão periódica de eventos
+@socketio.on_error()        
+def error_handler(e):
+    logger.error(f'Erro no WebSocket: {e}')
+
+@socketio.on('ping')
+def handle_ping():
+    socketio.emit('pong', {'data': 'pong', 'timestamp': datetime.now().isoformat()})
+
+# Função que será executada em segundo plano para emitir atualizações
 def emit_periodic_updates():
     """Função para emitir atualizações periódicas via WebSocket"""
+    logger.info("✅ Iniciando emissão periódica de atualizações")
     while True:
-        current_time = datetime.now()
-        uptime_seconds = (current_time - START_TIME).total_seconds()
-        total_cycles = int(uptime_seconds * 0.00167)
-        
-        # Emitir atualização de ciclos
-        socketio.emit('cycle_update', {
-            'total_cycles': total_cycles,
-            'cycles_per_second': 0.00167,
-            'cycles_per_hour': 6
-        })
-        
-        # Emitir atualização de performance
-        socketio.emit('performance_update', {
-            'cpu': 45.0 + (5.0 * (time.time() % 2)),  # Simular variação
-            'memory': 65.0 + (3.0 * (time.time() % 3)),
-            'network': 25.0 + (3.0 * (time.time() % 4))
-        })
-        
-        # Emitir log aleatório
-        log_types = ['info', 'success', 'warning']
-        log_messages = [
-            'Monitorando sistema',
-            'Processando dados',
-            'Otimizando performance',
-            'Analisando métricas'
-        ]
-        agent_names = [
-            'system',
-            'monitor_001',
-            'analytics_orchestrator_001',
-            'performance_monitor_001'
-        ]
-        
-        import random
-        log_type = random.choice(log_types)
-        log_message = random.choice(log_messages)
-        agent_name = random.choice(agent_names)
-        
-        socketio.emit('log_event', {
-            'logs': [{
-                'timestamp': current_time.isoformat(),
-                'level': log_type,
-                'message': log_message,
-                'agent': agent_name
-            }]
-        })
-        
-        # Aguardar 5 segundos antes da próxima atualização
-        eventlet.sleep(5)
-
-# Iniciar thread para emissão periódica em segundo plano
-@app.before_first_request
-def before_first_request():
-    eventlet.spawn(emit_periodic_updates)
+        try:
+            current_time = datetime.now()
+            uptime_seconds = (current_time - START_TIME).total_seconds()
+            total_cycles = int(uptime_seconds * 0.00167)
+            
+            # Emitir atualização de ciclos
+            socketio.emit('cycle_update', {
+                'total_cycles': total_cycles,
+                'cycles_per_second': 0.00167,
+                'cycles_per_hour': 6
+            })
+            logger.debug(f"Emitido cycle_update: {total_cycles} ciclos")
+            
+            # Emitir atualização de performance
+            cpu = 45.0 + (5.0 * (time.time() % 2))
+            memory = 65.0 + (3.0 * (time.time() % 3))
+            network = 25.0 + (3.0 * (time.time() % 4))
+            
+            socketio.emit('performance_update', {
+                'cpu': cpu,
+                'memory': memory,
+                'network': network
+            })
+            logger.debug(f"Emitido performance_update: CPU {cpu:.1f}%, MEM {memory:.1f}%")
+            
+            # Emitir log aleatório
+            log_types = ['info', 'success', 'warning']
+            log_messages = [
+                'Monitorando sistema',
+                'Processando dados',
+                'Otimizando performance',
+                'Analisando métricas'
+            ]
+            agent_names = [
+                'system',
+                'monitor_001',
+                'analytics_orchestrator_001',
+                'performance_monitor_001'
+            ]
+            
+            log_type = random.choice(log_types)
+            log_message = random.choice(log_messages)
+            agent_name = random.choice(agent_names)
+            
+            log_data = {
+                'logs': [{
+                    'timestamp': current_time.isoformat(),
+                    'level': log_type,
+                    'message': log_message,
+                    'agent': agent_name
+                }]
+            }
+            
+            socketio.emit('log_event', log_data)
+            logger.debug(f"Emitido log_event: {log_message}")
+            
+            # Aguardar 5 segundos antes da próxima atualização
+            eventlet.sleep(5)
+        except Exception as e:
+            logger.error(f"Erro ao emitir atualizações periódicas: {e}")
+            eventlet.sleep(5)  # Em caso de erro, aguardar e tentar novamente
 
 # Rota de saúde para o Railway
 @app.route('/health')
@@ -296,17 +326,34 @@ def health():
         'timestamp': datetime.now().isoformat()
     })
 
+# Importante: Isso precisa ser configurado ANTES da primeira requisição
+@app.before_first_request
+def before_first_request():
+    logger.info("✅ Iniciando thread para emissões periódicas")
+    eventlet.spawn(emit_periodic_updates)
+
 if __name__ == '__main__':
+    # Configuração do ambiente
     port = int(os.environ.get('PORT', 5000))
-    logger.info(f"Servidor iniciando na porta {port}")
-    logger.info(f"Sistema configurado para 6 ciclos por hora")
-    logger.info(f"WebSocket configurado com modo async: eventlet")
+    debug_mode = os.environ.get('DEBUG', 'False').lower() == 'true'
     
-    # Usar socketio.run com eventlet
+    # Logs de inicialização
+    logger.info("=" * 50)
+    logger.info(f"✅ ALSHAM QUANTUM v12.0 Premium - Inicializando servidor")
+    logger.info(f"✅ Porta: {port}")
+    logger.info(f"✅ Modo Debug: {debug_mode}")
+    logger.info(f"✅ Modo WebSocket: eventlet")
+    logger.info(f"✅ Sistema configurado para 6 ciclos por hora")
+    logger.info(f"✅ Total de 51 agentes configurados")
+    logger.info("=" * 50)
+    
+    # CRÍTICO: Usar socketio.run em vez de app.run
+    # Isso garante que o Socket.IO seja inicializado corretamente
     socketio.run(
         app, 
-        host='0.0.0.0', 
-        port=port, 
-        debug=False,
-        use_reloader=False  # Importante para evitar problemas com eventlet
+        host='0.0.0.0',
+        port=port,
+        debug=debug_mode,
+        use_reloader=False,  # IMPORTANTE: Desativar o reloader para evitar duplicação de threads
+        log_output=True
     )
