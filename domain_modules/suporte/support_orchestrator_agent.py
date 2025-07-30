@@ -14,8 +14,9 @@ from suna_alsham_core.multi_agent_network import (
     Priority
 )
 
-# --- IMPORTAÇÃO ADICIONADA ---
+# --- IMPORTAÇÕES ATUALIZADAS ---
 from .ticket_manager_agent import TicketManagerAgent
+from .chatbot_agent import ChatbotAgent
 # -----------------------------
 
 logger = logging.getLogger(__name__)
@@ -66,7 +67,8 @@ def create_suporte_agents(message_bus) -> List[BaseNetworkAgent]:
     # --- LISTA DE AGENTES ATUALIZADA ---
     agents = [
         SupportOrchestratorAgent("support_orchestrator_001", message_bus),
-        TicketManagerAgent("ticket_manager_001", message_bus)
+        TicketManagerAgent("ticket_manager_001", message_bus),
+        ChatbotAgent("chatbot_001", message_bus)
     ]
     # ------------------------------------
     
