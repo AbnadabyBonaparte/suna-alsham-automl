@@ -2,9 +2,8 @@
 """
 Módulo dos Agentes com IA (AI-Powered) - SUNA-ALSHAM
 
-[Versão Multi-Cérebro] - Evoluído para usar a API do Google Gemini como
-cérebro principal e a API do Anthropic Claude como fallback automático,
-garantindo alta resiliência e a melhor tecnologia disponível.
+[Versão Multi-Cérebro Corrigida] - Corrige um bug na chamada do Gemini e
+mantém o sistema de fallback para o Claude.
 """
 
 import asyncio
@@ -62,7 +61,7 @@ class AIAnalyzerAgent(BaseNetworkAgent):
             except Exception as e:
                  logger.error(f"Falha ao configurar Gemini: {e}")
         else:
-            logger.warning("Cérebro Principal (Gemini) não disponível. Verifique a chave de API ou a biblioteca.")
+            logger.warning("Cérebro Principal (Gemini) não disponível.")
 
         # Configura o Claude (Cérebro de Reserva)
         claude_api_key = os.environ.get("CLAUDE_API_KEY")
@@ -73,11 +72,11 @@ class AIAnalyzerAgent(BaseNetworkAgent):
             except Exception as e:
                 logger.error(f"Falha ao configurar Claude: {e}")
         else:
-            logger.warning("Cérebro de Reserva (Claude) não disponível. Verifique a chave de API ou a biblioteca.")
+            logger.warning("Cérebro de Reserva (Claude) não disponível.")
 
         if not self.gemini_model and not self.claude_client:
             self.status = "degraded"
-            logger.critical("Nenhum cérebro de IA disponível. O AIAnalyzerAgent está offline.")
+            logger.critical("Nenhum cérebro de IA disponível.")
         
         logger.info(f"🧠 {self.agent_id} (Analisador Multi-Cérebro) evoluído e inicializado.")
 
@@ -99,7 +98,9 @@ class AIAnalyzerAgent(BaseNetworkAgent):
                     response = await self.gemini_model.generate_content_async(prompt, generation_config=generation_config)
                     result = {"structured_data": json.loads(response.text)}
                 else:
-                    response = await self.model.generate_content_async(prompt)
+                    # --- CORREÇÃO DO BUG AQUI ---
+                    # Trocado self.model por self.gemini_model
+                    response = await self.gemini_model.generate_content_async(prompt)
                     result_text = response.text.strip().lower()
                     intent_key = "intent" if "intent" in message.content.get("request_type", "") else "sentiment"
                     result = {intent_key: result_text}
