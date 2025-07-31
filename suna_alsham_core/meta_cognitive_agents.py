@@ -26,7 +26,6 @@ class OrchestratorAgent(BaseNetworkAgent):
             if req_type == "execute_complex_task":
                 await self.start_mission_planning(message)
             else:
-                # Se não é estruturado, manda para AIAnalyzer traduzir
                 text = message.content.get("text")
                 if text:
                     await self._translate_free_text(message)
@@ -100,14 +99,12 @@ class OrchestratorAgent(BaseNetworkAgent):
 
         mission = self.pending_missions[mission_id]
 
-        # Tradução de texto livre para JSON de missão
         if mission["state"] == "awaiting_translation":
             data = response_message.content.get("result", {}).get("structured_data", {})
             if not data:
                 await self.publish_error_response(mission["original_message"], "Falha na tradução do texto.")
                 del self.pending_missions[mission_id]
                 return
-            # Reenvia como missão estruturada
             structured = self.create_message(
                 recipient_id=self.agent_id,
                 message_type=MessageType.REQUEST,
@@ -117,7 +114,6 @@ class OrchestratorAgent(BaseNetworkAgent):
             await self._internal_handle_message(structured)
             return
 
-        # Plano de missão
         if mission["state"] == "awaiting_plan":
             plan_json = response_message.content.get("result", {}).get("structured_data", [])
             if not isinstance(plan_json, list) or len(plan_json) == 0:
@@ -130,7 +126,6 @@ class OrchestratorAgent(BaseNetworkAgent):
             await self._execute_next_step(mission_id)
             return
 
-        # Execução de passos
         if mission["state"] == "executing":
             mission["step_results"][f"step_{mission['current_step']+1}_output"] = response_message.content
             mission["current_step"] += 1
