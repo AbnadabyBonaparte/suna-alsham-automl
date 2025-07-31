@@ -58,11 +58,15 @@ class AIAnalyzerAgent(BaseNetworkAgent):
             self.openai_client = AsyncOpenAI(api_key=os.environ["OPENAI_API_KEY"])
             logger.info("Cérebro 1 (OpenAI/GPT) configurado e online.")
 
-        # Configura Google (Gemini)
+        # Configura Google (Gemini) — modelo pode não existir na versão usada
         if GEMINI_AVAILABLE and os.environ.get("GEMINI_API_KEY"):
             genai.configure(api_key=os.environ["GEMINI_API_KEY"])
-            self.gemini_model = genai.GenerativeModel("gemini-pro")
-            logger.info("Cérebro 2 (Google/Gemini) configurado e online.")
+            try:
+                self.gemini_model = genai.GenerativeModel("gemini-pro")
+                logger.info("Cérebro 2 (Google/Gemini) configurado e online.")
+            except Exception as e:
+                logger.error(f"Falha ao inicializar o modelo Gemini: {e}. Desativando este provedor.")
+                self.gemini_model = None
 
         # Configura Anthropic (Claude)
         if CLAUDE_AVAILABLE and os.environ.get("CLAUDE_API_KEY"):
@@ -140,7 +144,6 @@ class AIAnalyzerAgent(BaseNetworkAgent):
                 last_error = e
                 logger.error(f"❌ Erro no cérebro '{provider}': {e}. Tentando o próximo cérebro...")
 
-        # Se nenhum provider funcionou
         logger.critical(f"Falha em todos os provedores de IA. Último erro: {last_error}")
         await self.publish_error_response(
             message,
@@ -159,12 +162,15 @@ class AIAnalyzerAgent(BaseNetworkAgent):
         )
         result_text = chat_completion.choices[0].message.content
         if "generate_structured_text" in content.get("request_type", ""):
-            # tenta converter o resultado inteiro em JSON; se falhar, recorta entre chaves
             try:
                 return {"structured_data": json.loads(result_text)}
             except json.JSONDecodeError:
-                json_str = result_text[result_text.find("{") : result_text.rfind("}") + 1]
-                return {"structured_data": json.loads(json_str)}
+                try:
+                    json_str = result_text[result_text.find("{") : result_text.rfind("}") + 1]
+                    return {"structured_data": json.loads(json_str)}
+                except json.JSONDecodeError:
+                    # falhou novamente, retorna como texto simples
+                    return {"text": result_text}
         return {"text": result_text}
 
     async def _call_gemini(self, content: Dict) -> Dict:
@@ -175,7 +181,6 @@ class AIAnalyzerAgent(BaseNetworkAgent):
 
         response = await self.gemini_model.generate_content_async(prompt)
         if "generate_structured_text" in content.get("request_type", ""):
-            # Assume que a resposta é JSON e faz o parsing diretamente
             return {"structured_data": json.loads(response.text)}
         else:
             return {"text": response.text.strip()}
