@@ -13,10 +13,6 @@ from datetime import datetime
 
 logger = logging.getLogger(__name__)
 
-# ------------------------------
-# TIPOS E ESTRUTURAS DE MENSAGEM
-# ------------------------------
-
 class MessageType(Enum):
     REQUEST = "request"
     RESPONSE = "response"
@@ -54,10 +50,6 @@ class AgentMessage:
     priority: Priority = Priority.NORMAL
     callback_id: Optional[str] = None
 
-# ------------------------------
-# BARRAMENTO DE MENSAGENS
-# ------------------------------
-
 class MessageBus:
     def __init__(self):
         self.queues: Dict[str, asyncio.Queue] = {}
@@ -90,10 +82,6 @@ class MessageBus:
     def get_metrics(self) -> Dict[str, Any]:
         return {"subscribed_agents": len(self.queues)}
 
-# ------------------------------
-# CLASSE BASE DE AGENTES
-# ------------------------------
-
 class BaseNetworkAgent:
     def __init__(self, agent_id: str, agent_type: AgentType, message_bus: MessageBus):
         self.agent_id = agent_id
@@ -117,11 +105,8 @@ class BaseNetworkAgent:
     async def _internal_handle_message(self, message: AgentMessage):
         pass
 
-    def create_message(self, recipient_id: str, message_type: MessageType, content: Dict,
-                       priority: Priority = Priority.NORMAL, callback_id: Optional[str] = None) -> AgentMessage:
-        return AgentMessage(sender_id=self.agent_id, recipient_id=recipient_id,
-                            message_type=message_type, content=content,
-                            priority=priority, callback_id=callback_id)
+    def create_message(self, recipient_id: str, message_type: MessageType, content: Dict, priority: Priority = Priority.NORMAL, callback_id: Optional[str] = None) -> AgentMessage:
+        return AgentMessage(sender_id=self.agent_id, recipient_id=recipient_id, message_type=message_type, content=content, priority=priority, callback_id=callback_id)
 
     async def publish_response(self, original_message: AgentMessage, content: Dict):
         response = self.create_message(
