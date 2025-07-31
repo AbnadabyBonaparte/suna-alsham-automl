@@ -2,8 +2,9 @@
 """
 Módulo dos Agentes com IA (AI-Powered) - SUNA-ALSHAM
 
-[Versão Multi-Cérebro Corrigida] - Corrige um bug na chamada do Gemini e
-mantém o sistema de fallback para o Claude.
+[Versão Cérebro Triplo] - A versão mais avançada. Usa um sistema de
+roteamento inteligente para escolher o melhor LLM (GPT, Gemini, Claude)
+para cada tarefa, com um sistema de fallback triplo para máxima resiliência.
 """
 
 import asyncio
@@ -12,7 +13,13 @@ import os
 import json
 from typing import Any, Dict, List
 
-# --- Importa as bibliotecas dos provedores de IA ---
+# --- Importa as bibliotecas dos três provedores de IA ---
+try:
+    from openai import AsyncOpenAI
+    OPENAI_AVAILABLE = True
+except ImportError:
+    OPENAI_AVAILABLE = False
+
 try:
     import google.generativeai as genai
     GEMINI_AVAILABLE = True
@@ -25,7 +32,6 @@ try:
 except ImportError:
     CLAUDE_AVAILABLE = False
 
-
 from suna_alsham_core.multi_agent_network import (
     AgentMessage,
     AgentType,
@@ -36,116 +42,134 @@ from suna_alsham_core.multi_agent_network import (
 
 logger = logging.getLogger(__name__)
 
-# --- Classe Principal do Agente ---
-
 class AIAnalyzerAgent(BaseNetworkAgent):
     """
-    Agente especialista que interage com múltiplos modelos de linguagem (LLMs)
-    com um sistema de fallback para garantir a continuidade da operação.
+    Agente especialista que atua como um roteador de IA inteligente,
+    selecionando o melhor LLM para a tarefa e usando um sistema de fallback.
     """
     def __init__(self, agent_id: str, message_bus):
         """Inicializa o AIAnalyzerAgent com múltiplos clientes de IA."""
         super().__init__(agent_id, AgentType.AI_POWERED, message_bus)
-        self.capabilities.extend(["multi_llm_interaction", "structured_data_generation", "llm_fallback"])
+        self.capabilities.extend(["intelligent_llm_routing", "multi_llm_fallback"])
         
-        self.gemini_model = None
-        self.claude_client = None
+        self.openai_client, self.gemini_model, self.claude_client = None, None, None
 
-        # Configura o Gemini (Cérebro Principal)
-        gemini_api_key = os.environ.get("GEMINI_API_KEY")
-        if GEMINI_AVAILABLE and gemini_api_key:
-            try:
-                genai.configure(api_key=gemini_api_key)
-                self.gemini_model = genai.GenerativeModel('gemini-pro')
-                logger.info("Cérebro Principal (Gemini) configurado e online.")
-            except Exception as e:
-                 logger.error(f"Falha ao configurar Gemini: {e}")
-        else:
-            logger.warning("Cérebro Principal (Gemini) não disponível.")
+        # Configura OpenAI (GPT)
+        if OPENAI_AVAILABLE and os.environ.get("OPENAI_API_KEY"):
+            self.openai_client = AsyncOpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
+            logger.info("Cérebro 1 (OpenAI/GPT) configurado e online.")
+        
+        # Configura Google (Gemini)
+        if GEMINI_AVAILABLE and os.environ.get("GEMINI_API_KEY"):
+            genai.configure(api_key=os.environ.get("GEMINI_API_KEY"))
+            self.gemini_model = genai.GenerativeModel('gemini-pro')
+            logger.info("Cérebro 2 (Google/Gemini) configurado e online.")
 
-        # Configura o Claude (Cérebro de Reserva)
-        claude_api_key = os.environ.get("CLAUDE_API_KEY")
-        if CLAUDE_AVAILABLE and claude_api_key:
-            try:
-                self.claude_client = AsyncAnthropic(api_key=claude_api_key)
-                logger.info("Cérebro de Reserva (Claude) configurado e online.")
-            except Exception as e:
-                logger.error(f"Falha ao configurar Claude: {e}")
-        else:
-            logger.warning("Cérebro de Reserva (Claude) não disponível.")
+        # Configura Anthropic (Claude)
+        if CLAUDE_AVAILABLE and os.environ.get("CLAUDE_API_KEY"):
+            self.claude_client = AsyncAnthropic(api_key=os.environ.get("CLAUDE_API_KEY"))
+            logger.info("Cérebro 3 (Anthropic/Claude) configurado e online.")
 
-        if not self.gemini_model and not self.claude_client:
+        if not any([self.openai_client, self.gemini_model, self.claude_client]):
             self.status = "degraded"
-            logger.critical("Nenhum cérebro de IA disponível.")
+            logger.critical("Nenhum cérebro de IA disponível. O AIAnalyzerAgent está offline.")
         
-        logger.info(f"🧠 {self.agent_id} (Analisador Multi-Cérebro) evoluído e inicializado.")
+        logger.info(f"🧠 {self.agent_id} (Analisador Cérebro Triplo) evoluído e inicializado.")
+
+    def _select_best_provider_order(self, request_content: Dict) -> List[str]:
+        """Analisa a requisição e retorna a ordem de preferência dos cérebros."""
+        request_type = request_content.get("request_type", "")
+        prompt = request_content.get("text", "")
+
+        if "generate_structured_text" in request_type:
+            logger.info("Tarefa de dados estruturados detectada. Priorizando Gemini.")
+            return ['gemini', 'openai', 'claude']
+        elif len(prompt) > 2000 or "resuma" in prompt.lower():
+            logger.info("Tarefa de texto longo ou resumo detectada. Priorizando Claude.")
+            return ['claude', 'openai', 'gemini']
+        else:
+            logger.info("Tarefa de uso geral detectada. Priorizando OpenAI/GPT.")
+            return ['openai', 'gemini', 'claude']
 
     async def _internal_handle_message(self, message: AgentMessage):
-        """Processa requisições de análise de IA, tentando o Gemini primeiro e o Claude como fallback."""
+        """Processa a requisição usando o roteamento inteligente e o sistema de fallback."""
         if self.status == "degraded":
             await self.publish_error_response(message, "Serviço de IA indisponível.")
             return
 
-        prompt = message.content.get("text", "")
-        is_structured = message.content.get("request_type") == "generate_structured_text"
-
-        # --- TENTATIVA 1: CÉREBRO PRINCIPAL (GEMINI) ---
-        if self.gemini_model:
-            logger.info(f"🧠 {self.agent_id} analisando dados com o Cérebro Principal (Gemini)...")
+        provider_order = self._select_best_provider_order(message.content)
+        
+        for provider in provider_order:
+            logger.info(f"Tentativa 1: Usando o cérebro '{provider}'...")
+            success = False
+            result = {}
+            
             try:
-                if is_structured:
-                    generation_config = genai.types.GenerationConfig(response_mime_type="application/json")
-                    response = await self.gemini_model.generate_content_async(prompt, generation_config=generation_config)
-                    result = {"structured_data": json.loads(response.text)}
-                else:
-                    # --- CORREÇÃO DO BUG AQUI ---
-                    # Trocado self.model por self.gemini_model
-                    response = await self.gemini_model.generate_content_async(prompt)
-                    result_text = response.text.strip().lower()
-                    intent_key = "intent" if "intent" in message.content.get("request_type", "") else "sentiment"
-                    result = {intent_key: result_text}
+                if provider == 'openai' and self.openai_client:
+                    result = await self._call_openai(message.content)
+                    success = True
+                elif provider == 'gemini' and self.gemini_model:
+                    result = await self._call_gemini(message.content)
+                    success = True
+                elif provider == 'claude' and self.claude_client:
+                    result = await self._call_claude(message.content)
+                    success = True
 
-                response_content = {"status": "completed", "result": result, "source": "Gemini"}
-                await self.publish_response(message, response_content)
-                return
+                if success:
+                    response_content = {"status": "completed", "result": result, "source": provider.capitalize()}
+                    await self.publish_response(message, response_content)
+                    return # Missão cumprida!
+
             except Exception as e:
-                logger.error(f"❌ Erro no Cérebro Principal (Gemini): {e}. Ativando fallback para o Cérebro de Reserva...")
+                logger.error(f"❌ Erro no cérebro '{provider}': {e}. Tentando o próximo cérebro...")
+        
+        # Se o loop terminar sem sucesso
+        logger.critical("Falha em todos os provedores de IA. Missão de IA falhou.")
+        await self.publish_error_response(message, "Falha em todos os provedores de IA disponíveis.")
 
-        # --- TENTATIVA 2: CÉREBRO DE RESERVA (CLAUDE) ---
-        if self.claude_client:
-            logger.info(f"🧠 {self.agent_id} analisando dados com o Cérebro de Reserva (Claude)...")
-            try:
-                claude_prompt = f"Human: {prompt}\n\nAssistant:"
-                if is_structured:
-                    claude_prompt += " Por favor, responda apenas com o JSON."
+    async def _call_openai(self, content: Dict) -> Dict:
+        chat_completion = await self.openai_client.chat.completions.create(
+            messages=[{"role": "user", "content": content.get("text", "")}],
+            model="gpt-4", # ou "gpt-3.5-turbo"
+        )
+        result_text = chat_completion.choices[0].message.content
+        if "generate_structured_text" in content.get("request_type", ""):
+            return {"structured_data": json.loads(result_text)}
+        return {"text": result_text}
 
-                response = await self.claude_client.messages.create(
-                    model="claude-3-opus-20240229",
-                    max_tokens=2048,
-                    messages=[{"role": "user", "content": claude_prompt}]
-                )
-                result_text = response.content[0].text
-                
-                if is_structured:
-                    json_str = result_text[result_text.find('{'):result_text.rfind('}')+1]
-                    result = {"structured_data": json.loads(json_str)}
-                else:
-                    result = {"text": result_text.strip()}
-
-                response_content = {"status": "completed", "result": result, "source": "Claude"}
-                await self.publish_response(message, response_content)
-                return
-            except Exception as e:
-                logger.error(f"❌ Erro no Cérebro de Reserva (Claude): {e}. Falha total da IA.")
-                await self.publish_error_response(message, f"Falha em ambos os provedores de IA: {e}")
+    async def _call_gemini(self, content: Dict) -> Dict:
+        prompt = content.get("text", "")
+        if "generate_structured_text" in content.get("request_type", ""):
+            config = genai.types.GenerationConfig(response_mime_type="application/json")
+            response = await self.gemini_model.generate_content_async(prompt, generation_config=config)
+            return {"structured_data": json.loads(response.text)}
         else:
-            await self.publish_error_response(message, "Cérebro Principal falhou e não há Cérebro de Reserva disponível.")
+            response = await self.gemini_model.generate_content_async(prompt)
+            return {"text": response.text.strip()}
+
+    async def _call_claude(self, content: Dict) -> Dict:
+        prompt = content.get("text", "")
+        is_structured = "generate_structured_text" in content.get("request_type", "")
+        claude_prompt = f"Human: {prompt}\n\nAssistant:"
+        if is_structured:
+            claude_prompt += " Por favor, responda apenas com o JSON."
+
+        response = await self.claude_client.messages.create(
+            model="claude-3-opus-20240229",
+            max_tokens=2048,
+            messages=[{"role": "user", "content": claude_prompt}]
+        )
+        result_text = response.content[0].text
+        if is_structured:
+            json_str = result_text[result_text.find('{'):result_text.rfind('}')+1]
+            return {"structured_data": json.loads(json_str)}
+        return {"text": result_text.strip()}
 
 
 def create_ai_agents(message_bus) -> List[BaseNetworkAgent]:
     """Cria os agentes com IA."""
     agents = []
-    logger.info("🤖 Criando agentes com IA (AI-Powered)...")
+    logger.info("🤖 Criando agentes com IA (Cérebro Triplo)...")
     try:
         agent = AIAnalyzerAgent("ai_analyzer_001", message_bus)
         agents.append(agent)
