@@ -99,8 +99,8 @@ class AIAnalyzerAgent(BaseNetworkAgent):
 
         provider_order = self._select_best_provider_order(message.content)
         
-        for provider in provider_order:
-            logger.info(f"Tentativa 1: Usando o cérebro '{provider}'...")
+        for i, provider in enumerate(provider_order):
+            logger.info(f"Tentativa {i+1}/{len(provider_order)}: Usando o cérebro '{provider}'...")
             success = False
             result = {}
             
@@ -128,9 +128,12 @@ class AIAnalyzerAgent(BaseNetworkAgent):
         await self.publish_error_response(message, "Falha em todos os provedores de IA disponíveis.")
 
     async def _call_openai(self, content: Dict) -> Dict:
+        prompt = content.get("text", "")
+        if not prompt: raise ValueError("Prompt para OpenAI não pode ser vazio.")
+        
         chat_completion = await self.openai_client.chat.completions.create(
-            messages=[{"role": "user", "content": content.get("text", "")}],
-            model="gpt-4", # ou "gpt-3.5-turbo"
+            messages=[{"role": "user", "content": prompt}],
+            model="gpt-3.5-turbo", # Alterado para um modelo mais comum
         )
         result_text = chat_completion.choices[0].message.content
         if "generate_structured_text" in content.get("request_type", ""):
@@ -139,6 +142,8 @@ class AIAnalyzerAgent(BaseNetworkAgent):
 
     async def _call_gemini(self, content: Dict) -> Dict:
         prompt = content.get("text", "")
+        if not prompt: raise ValueError("Prompt para Gemini não pode ser vazio.")
+
         if "generate_structured_text" in content.get("request_type", ""):
             config = genai.types.GenerationConfig(response_mime_type="application/json")
             response = await self.gemini_model.generate_content_async(prompt, generation_config=config)
@@ -149,6 +154,8 @@ class AIAnalyzerAgent(BaseNetworkAgent):
 
     async def _call_claude(self, content: Dict) -> Dict:
         prompt = content.get("text", "")
+        if not prompt: raise ValueError("Prompt para Claude não pode ser vazio.")
+
         is_structured = "generate_structured_text" in content.get("request_type", "")
         claude_prompt = f"Human: {prompt}\n\nAssistant:"
         if is_structured:
