@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """
-Módulo dos Agentes Meta-Cognitivos - O Cérebro do SUNA-ALSHAM.
+Módulo dos Agentes Meta-Cognitivos – O Cérebro do SUNA-ALSHAM.
 
-[Versão Final Corrigida] - Completo e pronto para uso em produção.
+Versão Final Completa – Executa planos reais com buscas e e-mails.
 """
 
 import asyncio
@@ -28,7 +28,7 @@ class OrchestratorAgent(BaseNetworkAgent):
         super().__init__(agent_id, AgentType.ORCHESTRATOR, message_bus)
         self.capabilities.extend(["dynamic_planning", "complex_task_orchestration"])
         self.pending_missions: Dict[str, Dict] = {}
-        logger.info(f"👑 {self.agent_id} (Orquestrador Estratégico) inicializado.")
+        logger.info(f"👑 {self.agent_id} inicializado com sucesso.")
 
     async def _internal_handle_message(self, message: AgentMessage):
         if message.message_type == MessageType.REQUEST and message.content.get("request_type") == "execute_complex_task":
@@ -39,11 +39,13 @@ class OrchestratorAgent(BaseNetworkAgent):
     async def start_mission_planning(self, original_message: AgentMessage):
         mission_id = str(uuid.uuid4())
         goal = original_message.content.get("goal", {})
-
         goal_description = goal.get("description")
-        if not goal_description:
-            logger.error(f"Missão [ID: {mission_id}] sem descrição do objetivo. Abortando.")
-            await self.publish_error_response(original_message, "Meta ('goal.description') não fornecida.")
+        goal_steps = goal.get("steps", [])
+
+        if not goal_description or not goal_steps:
+            error_msg = "A meta ou passos ('goal.description'/'goal.steps') estão ausentes ou inválidos."
+            logger.error(f"Missão [ID: {mission_id}] abortada: {error_msg}")
+            await self.publish_error_response(original_message, error_msg)
             return
 
         logger.info(f"Nova missão [ID: {mission_id}] recebida: '{goal_description}'")
@@ -58,32 +60,20 @@ class OrchestratorAgent(BaseNetworkAgent):
         }
 
         prompt = f"""
-        Crie um plano estruturado APENAS EM JSON para a meta:
+        Crie um plano de ação detalhado e completo em formato JSON para realizar a seguinte meta:
+
         "{goal_description}"
 
-        Exemplo do formato correto:
-        [
-          {{
-            "step": 1,
-            "agent_id": "web_search_001",
-            "request_type": "search",
-            "content": {{"query": "..."}}
-          }},
-          {{
-            "step": 2,
-            "agent_id": "ai_analyzer_001",
-            "request_type": "generate_structured_text",
-            "content": {{"text": "..."}}
-          }},
-          {{
-            "step": 3,
-            "agent_id": "notification_001",
-            "request_type": "send_email",
-            "content": {{"recipient": "...", "subject": "...", "body": "..."}}
-          }}
-        ]
+        Os passos necessários são:
+        {json.dumps(goal_steps, ensure_ascii=False)}
 
-        IMPORTANTE: Responda APENAS com JSON válido, sem texto adicional.
+        Use obrigatoriamente os seguintes agentes disponíveis com seus IDs:
+
+        - WebSearchAgent ('web_search_001'): Faz pesquisas reais na web. (request_type: "search", content: {{ "query": "<consulta>" }})
+        - AIAnalyzerAgent ('ai_analyzer_001'): Analisa textos e seleciona informações úteis. (request_type: "analyze", content: {{ "text": "<texto_para_analise>", "instruction": "<instrução>" }})
+        - NotificationAgent ('notification_001'): Envia e-mails. (request_type: "send_email", content: {{ "recipient": "<email>", "subject": "<assunto>", "body": "<conteudo>" }})
+
+        Responda APENAS com o JSON estruturado contendo todos os passos acima.
         """
 
         request_to_ai = self.create_message(
@@ -104,29 +94,31 @@ class OrchestratorAgent(BaseNetworkAgent):
         if mission["state"] == "awaiting_plan":
             plan_json = response_message.content.get("result", {}).get("structured_data", [])
             if not isinstance(plan_json, list) or len(plan_json) == 0:
-                logger.error(f"Missão [ID: {mission_id}] falhou: Plano inválido ou vazio.")
-                await self.publish_error_response(
-                    mission["original_message"],
-                    "Plano de ação inválido ou vazio recebido da IA."
-                )
+                error_msg = f"Plano inválido ou vazio para a missão [ID: {mission_id}]."
+                logger.error(error_msg)
+                await self.publish_error_response(mission["original_message"], error_msg)
                 del self.pending_missions[mission_id]
                 return
 
             mission["plan"] = plan_json
             mission["state"] = "executing"
             mission["current_step"] = 0
-            logger.info(f"Missão [ID: {mission_id}] plano com {len(plan_json)} passos criado.")
+            logger.info(f"Missão [ID: {mission_id}] tem plano com {len(plan_json)} passos.")
             await self._execute_next_step(mission_id)
 
         elif mission["state"] == "executing":
-            mission["step_results"][f"step_{mission['current_step'] + 1}_output"] = response_message.content
+            step_key = f"step_{mission['current_step'] + 1}_output"
+            mission["step_results"][step_key] = response_message.content
 
             mission["current_step"] += 1
             if mission["current_step"] < len(mission["plan"]):
                 await self._execute_next_step(mission_id)
             else:
-                logger.info(f"Missão [ID: {mission_id}] concluída.")
-                await self.publish_response(mission["original_message"], {"status": "completed", "final_result": response_message.content})
+                logger.info(f"Missão [ID: {mission_id}] concluída com sucesso.")
+                await self.publish_response(mission["original_message"], {
+                    "status": "completed",
+                    "final_result": response_message.content
+                })
                 del self.pending_missions[mission_id]
 
     async def _execute_next_step(self, mission_id: str):
@@ -138,7 +130,7 @@ class OrchestratorAgent(BaseNetworkAgent):
             content_str = content_str.replace(f"{{{{{key}}}}}", json.dumps(value))
 
         final_content = json.loads(content_str)
-        final_content["request_type"] = step_info.get("request_type")
+        final_content["request_type"] = step_info["request_type"]
 
         request_to_agent = self.create_message(
             recipient_id=step_info["agent_id"],
@@ -146,14 +138,15 @@ class OrchestratorAgent(BaseNetworkAgent):
             content=final_content,
             callback_id=mission_id,
         )
+        logger.info(f"Executando passo {mission['current_step']+1}: Chamando agente {step_info['agent_id']}")
         await self.message_bus.publish(request_to_agent)
 
 def create_meta_cognitive_agents(message_bus) -> List[BaseNetworkAgent]:
     agents = []
-    logger.info("🧠 Criando agentes Meta-Cognitivos...")
+    logger.info("🧠 Inicializando agentes Meta-Cognitivos...")
     try:
         orchestrator = OrchestratorAgent("orchestrator_001", message_bus)
         agents.append(orchestrator)
     except Exception as e:
-        logger.error(f"❌ Erro ao criar agentes Meta-Cognitivos: {e}", exc_info=True)
+        logger.error(f"❌ Falha ao criar agentes Meta-Cognitivos: {e}", exc_info=True)
     return agents
