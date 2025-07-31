@@ -6,15 +6,14 @@ Módulo Carregador de Agentes - SUNA-ALSHAM
 núcleo e dos domínios para máxima robustez e funcionalidade completa.
 """
 import logging
-from typing import Any, Dict, List
+from typing import Any, Dict
 
-# --- Força o sys.path para garantir que todos os módulos sejam encontrados ---
 import sys
 from pathlib import Path
 project_root = Path(__file__).parent.parent
 sys.path.insert(0, str(project_root.resolve()))
 
-# --- IMPORTAÇÃO EXPLÍCITA DE TODAS AS FÁBRICAS DE AGENTES ---
+# Importação Explícita de Todas as Fábricas de Agentes
 from suna_alsham_core.core_agents_v3 import create_core_agents_v3
 from suna_alsham_core.specialized_agents import create_specialized_agents
 from suna_alsham_core.ai_powered_agents import create_ai_agents
@@ -55,8 +54,7 @@ async def initialize_all_agents(network: Any) -> Dict[str, Any]:
     """
     agents_loaded = 0
     failed_modules = []
-    
-    # Lista completa de todas as funções de fábrica a serem chamadas
+
     agent_factories = {
         "core": [
             create_core_agents_v3, create_specialized_agents, create_ai_agents,
@@ -77,37 +75,22 @@ async def initialize_all_agents(network: Any) -> Dict[str, Any]:
     }
 
     logger.info("--- INICIANDO AUDITORIA DE CARREGAMENTO DE AGENTES ---")
-    
-    # Carrega Agentes do Núcleo
-    for factory in agent_factories["core"]:
-        factory_name = factory.__name__
-        logger.info(f"--> Chamando fábrica de núcleo: {factory_name}...")
-        try:
-            agents = factory(network.message_bus)
-            num_created = len(agents)
-            logger.info(f"<-- SUCESSO: Fábrica '{factory_name}' retornou {num_created} agente(s).")
-            for agent in agents:
-                network.register_agent(agent)
-                agents_loaded += 1
-        except Exception as e:
-            logger.error(f"<-- FALHA: Fábrica '{factory_name}' falhou: {e}", exc_info=True)
-            failed_modules.append(factory_name)
 
-    # Carrega Agentes de Domínio
-    for factory in agent_factories["domain"]:
-        factory_name = factory.__name__
-        logger.info(f"--> Chamando fábrica de domínio: {factory_name}...")
-        try:
-            agents = factory(network.message_bus)
-            num_created = len(agents)
-            logger.info(f"<-- SUCESSO: Fábrica '{factory_name}' retornou {num_created} agente(s).")
-            for agent in agents:
-                network.register_agent(agent)
-                agents_loaded += 1
-        except Exception as e:
-            logger.error(f"<-- FALHA: Fábrica '{factory_name}' falhou: {e}", exc_info=True)
-            failed_modules.append(factory_name)
-            
+    for factory_type, factories in agent_factories.items():
+        for factory in factories:
+            factory_name = factory.__name__
+            logger.info(f"--> Chamando fábrica '{factory_type}': {factory_name}...")
+            try:
+                agents = factory(network.message_bus)
+                num_created = len(agents)
+                logger.info(f"<-- SUCESSO: '{factory_name}' retornou {num_created} agente(s).")
+                for agent in agents:
+                    network.register_agent(agent)
+                    agents_loaded += 1
+            except Exception as e:
+                logger.error(f"<-- FALHA: '{factory_name}' falhou: {e}", exc_info=True)
+                failed_modules.append(factory_name)
+
     logger.info(f"--- FIM DA AUDITORIA. Total: {agents_loaded} agentes carregados. ---")
     return {
         "summary": {"agents_loaded": agents_loaded, "failed_modules_count": len(failed_modules)},
