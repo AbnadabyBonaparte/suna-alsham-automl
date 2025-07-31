@@ -1,23 +1,15 @@
 #!/usr/bin/env python3
 """
-Módulo dos Agentes Meta-Cognitivos - O Cérebro Estratégico do SUNA-ALSHAM.
+Módulo dos Agentes Meta-Cognitivos - O Cérebro do SUNA-ALSHAM.
 
-[Versão Final - Produção Robusta]
-
-Capacidade:
-- Receber qualquer missão complexa.
-- Interpretar claramente a meta.
-- Criar planos inteligentes usando IA.
-- Delegar tarefas dinamicamente para agentes especialistas.
-- Gerenciar resultados intermediários.
-- Garantir tratamento robusto contra falhas e planos inválidos.
+[Versão Final Corrigida] - Completo e pronto para uso em produção.
 """
 
 import asyncio
 import json
 import logging
 import uuid
-from typing import Any, Dict, List
+from typing import Dict, List
 
 from suna_alsham_core.multi_agent_network import (
     AgentMessage,
@@ -30,14 +22,13 @@ logger = logging.getLogger(__name__)
 
 class OrchestratorAgent(BaseNetworkAgent):
     """
-    Agente Orquestrador Estratégico. Cria e executa planos dinâmicos e robustos.
+    Agente Orquestrador Estratégico. Cria e executa planos de ação dinâmicos.
     """
-
     def __init__(self, agent_id: str, message_bus):
         super().__init__(agent_id, AgentType.ORCHESTRATOR, message_bus)
         self.capabilities.extend(["dynamic_planning", "complex_task_orchestration"])
         self.pending_missions: Dict[str, Dict] = {}
-        logger.info(f"👑 {self.agent_id} (Orquestrador Estratégico) evoluído e inicializado.")
+        logger.info(f"👑 {self.agent_id} (Orquestrador Estratégico) inicializado.")
 
     async def _internal_handle_message(self, message: AgentMessage):
         if message.message_type == MessageType.REQUEST and message.content.get("request_type") == "execute_complex_task":
@@ -52,7 +43,7 @@ class OrchestratorAgent(BaseNetworkAgent):
         goal_description = goal.get("description")
         if not goal_description:
             logger.error(f"Missão [ID: {mission_id}] sem descrição do objetivo. Abortando.")
-            await self.publish_error_response(original_message, "A meta ('goal.description') não foi fornecida.")
+            await self.publish_error_response(original_message, "Meta ('goal.description') não fornecida.")
             return
 
         logger.info(f"Nova missão [ID: {mission_id}] recebida: '{goal_description}'")
@@ -67,23 +58,32 @@ class OrchestratorAgent(BaseNetworkAgent):
         }
 
         prompt = f"""
-        Crie um plano de ação detalhado em formato JSON para cumprir a seguinte meta:
+        Crie um plano estruturado APENAS EM JSON para a meta:
         "{goal_description}"
 
-        Agentes disponíveis para delegação:
-        - WebSearchAgent (web_search_001)
-        - AIAnalyzerAgent (ai_analyzer_001)
-        - NotificationAgent (notification_001)
+        Exemplo do formato correto:
+        [
+          {{
+            "step": 1,
+            "agent_id": "web_search_001",
+            "request_type": "search",
+            "content": {{"query": "..."}}
+          }},
+          {{
+            "step": 2,
+            "agent_id": "ai_analyzer_001",
+            "request_type": "generate_structured_text",
+            "content": {{"text": "..."}}
+          }},
+          {{
+            "step": 3,
+            "agent_id": "notification_001",
+            "request_type": "send_email",
+            "content": {{"recipient": "...", "subject": "...", "body": "..."}}
+          }}
+        ]
 
-        Cada passo deve ter a estrutura:
-        {{
-          "step": <número do passo>,
-          "agent_id": "<ID do agente>",
-          "request_type": "<tipo de requisição>",
-          "content": {{<parâmetros da requisição>}}
-        }}
-
-        Responda APENAS com o JSON do plano, nada mais.
+        IMPORTANTE: Responda APENAS com JSON válido, sem texto adicional.
         """
 
         request_to_ai = self.create_message(
@@ -97,16 +97,18 @@ class OrchestratorAgent(BaseNetworkAgent):
     async def continue_mission_execution(self, response_message: AgentMessage):
         mission_id = response_message.callback_id
         if mission_id not in self.pending_missions:
-            logger.error(f"Missão desconhecida recebida: {mission_id}")
             return
 
         mission = self.pending_missions[mission_id]
 
         if mission["state"] == "awaiting_plan":
             plan_json = response_message.content.get("result", {}).get("structured_data", [])
-            if not isinstance(plan_json, list) or not plan_json:
+            if not isinstance(plan_json, list) or len(plan_json) == 0:
                 logger.error(f"Missão [ID: {mission_id}] falhou: Plano inválido ou vazio.")
-                await self.publish_error_response(mission["original_message"], "Plano de ação inválido ou vazio.")
+                await self.publish_error_response(
+                    mission["original_message"],
+                    "Plano de ação inválido ou vazio recebido da IA."
+                )
                 del self.pending_missions[mission_id]
                 return
 
@@ -117,8 +119,7 @@ class OrchestratorAgent(BaseNetworkAgent):
             await self._execute_next_step(mission_id)
 
         elif mission["state"] == "executing":
-            step_num = mission['current_step'] + 1
-            mission["step_results"][f"step_{step_num}_output"] = response_message.content
+            mission["step_results"][f"step_{mission['current_step'] + 1}_output"] = response_message.content
 
             mission["current_step"] += 1
             if mission["current_step"] < len(mission["plan"]):
@@ -130,35 +131,29 @@ class OrchestratorAgent(BaseNetworkAgent):
 
     async def _execute_next_step(self, mission_id: str):
         mission = self.pending_missions[mission_id]
-        try:
-            step_info = mission["plan"][mission["current_step"]]
+        step_info = mission["plan"][mission["current_step"]]
 
-            content_str = json.dumps(step_info.get("content", {}))
-            for key, value in mission["step_results"].items():
-                content_str = content_str.replace(f"{{{{{key}}}}}", json.dumps(value))
+        content_str = json.dumps(step_info.get("content", {}))
+        for key, value in mission["step_results"].items():
+            content_str = content_str.replace(f"{{{{{key}}}}}", json.dumps(value))
 
-            final_content = json.loads(content_str)
-            final_content["request_type"] = step_info.get("request_type")
+        final_content = json.loads(content_str)
+        final_content["request_type"] = step_info.get("request_type")
 
-            request_to_agent = self.create_message(
-                recipient_id=step_info["agent_id"],
-                message_type=MessageType.REQUEST,
-                content=final_content,
-                callback_id=mission_id,
-            )
-            await self.message_bus.publish(request_to_agent)
-        except Exception as e:
-            logger.error(f"Erro executando passo {mission['current_step']+1} da missão [ID: {mission_id}]: {e}", exc_info=True)
-            await self.publish_error_response(mission["original_message"], f"Erro ao executar passo da missão: {e}")
-            del self.pending_missions[mission_id]
-
+        request_to_agent = self.create_message(
+            recipient_id=step_info["agent_id"],
+            message_type=MessageType.REQUEST,
+            content=final_content,
+            callback_id=mission_id,
+        )
+        await self.message_bus.publish(request_to_agent)
 
 def create_meta_cognitive_agents(message_bus) -> List[BaseNetworkAgent]:
     agents = []
-    logger.info("🧠 Inicializando agentes Meta-Cognitivos...")
+    logger.info("🧠 Criando agentes Meta-Cognitivos...")
     try:
         orchestrator = OrchestratorAgent("orchestrator_001", message_bus)
         agents.append(orchestrator)
     except Exception as e:
-        logger.critical(f"Falha crítica ao criar agentes Meta-Cognitivos: {e}", exc_info=True)
+        logger.error(f"❌ Erro ao criar agentes Meta-Cognitivos: {e}", exc_info=True)
     return agents
