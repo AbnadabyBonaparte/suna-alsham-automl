@@ -168,6 +168,18 @@ class OrchestratorAgent(BaseNetworkAgent):
             )
             del self.pending_missions[mission_id]
             return
+        
+        # Validação adicional para o WebSearchAgent
+        if step_info["agent_id"] == "web_search_001" and not final_content.get("query"):
+            logger.error(
+                f"Passo {step_info['step']} gerou uma busca sem 'query'. Abortando."
+            )
+            await self.publish_error_response(
+                mission["original_message"],
+                "O plano de ação gerou uma busca sem definir 'query'; revise a meta ou o plano."
+            )
+            del self.pending_missions[mission_id]
+            return
     
         # Cria a mensagem e a publica
         request_to_agent = self.create_message(
