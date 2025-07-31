@@ -48,7 +48,6 @@ class OrchestratorAgent(BaseNetworkAgent):
         mission_id = str(uuid.uuid4())
         goal = original_message.content.get("goal", {})
         
-        # --- CORREÇÃO DE ROBUSTEZ AQUI ---
         goal_description = goal.get("description")
         if not goal_description:
             logger.error(f"Missão [ID: {mission_id}] recebida sem uma descrição de objetivo ('goal.description'). Abortando.")
@@ -62,7 +61,6 @@ class OrchestratorAgent(BaseNetworkAgent):
             "plan": None, "current_step": -1, "step_results": {}
         }
 
-        # Cria um prompt para o agente de IA gerar o plano
         prompt = f"""
         Você é o cérebro de um sistema de IA. Sua tarefa é criar um plano de ação para atingir uma meta.
         Você tem acesso aos seguintes agentes:
@@ -125,22 +123,58 @@ class OrchestratorAgent(BaseNetworkAgent):
         """Lê o próximo passo do plano e o delega para o agente correto."""
         mission = self.pending_missions[mission_id]
         step_info = mission["plan"][mission["current_step"]]
-        
-        logger.info(f"Missão [ID: {mission_id}]. Executando Passo {step_info['step']}: chamando agente '{step_info['agent_id']}'.")
-
-        content_str = json.dumps(step_info["content"])
-        # Lógica de substituição de placeholder (simplificada)
+    
+        logger.info(
+            f"Missão [ID: {mission_id}]. Executando Passo {step_info['step']}: "
+            f"chamando agente '{step_info['agent_id']}'."
+        )
+    
+        # Garante que sempre temos um dicionário de conteúdo
+        content_dict = step_info.get("content", {})
+        content_str = json.dumps(content_dict)
+    
+        # Substitui placeholders pelos resultados anteriores
         for key, value in mission["step_results"].items():
             placeholder = f"{{{{{key}}}}}"
+            # Esta é uma substituição simples. Uma versão mais robusta usaria uma biblioteca de templating.
+            # E precisaria de uma forma de navegar no JSON do resultado (ex: .results[0].snippet)
             content_str = content_str.replace(placeholder, json.dumps(value))
-        
+    
         final_content = json.loads(content_str)
-
+    
+        # Inclui o request_type no conteúdo para que o agente delegado saiba o que fazer
+        req_type = step_info.get("request_type")
+        if req_type:
+            final_content["request_type"] = req_type
+        else:
+            logger.error(
+                f"Passo {step_info['step']} do plano não contém 'request_type'."
+            )
+            await self.publish_error_response(
+                mission["original_message"],
+                f"O passo {step_info['step']} do plano não define 'request_type'."
+            )
+            del self.pending_missions[mission_id]
+            return
+    
+        # Valida que o AIAnalyzerAgent não receba prompt vazio
+        if step_info["agent_id"] == "ai_analyzer_001" and not final_content.get("text"):
+            logger.error(
+                f"Passo {step_info['step']} gerou um prompt vazio para o AIAnalyzer. Abortando."
+            )
+            await self.publish_error_response(
+                mission["original_message"],
+                "O plano de ação gerou um prompt vazio para o AIAnalyzer; revise a meta ou o plano."
+            )
+            del self.pending_missions[mission_id]
+            return
+    
+        # Cria a mensagem e a publica
         request_to_agent = self.create_message(
             recipient_id=step_info["agent_id"],
             message_type=MessageType.REQUEST,
             content=final_content,
-            callback_id=mission_id
+            callback_id=mission_id,
         )
         await self.message_bus.publish(request_to_agent)
 
