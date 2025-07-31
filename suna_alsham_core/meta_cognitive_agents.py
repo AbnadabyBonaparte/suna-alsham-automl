@@ -2,9 +2,8 @@
 """
 Módulo dos Agentes Meta-Cognitivos - O Cérebro do SUNA-ALSHAM.
 
-[Versão Evoluída] - O OrchestratorAgent agora é um estrategista de IA.
-Ele usa o AIPoweredAgent para criar planos de ação dinâmicos antes de
-orquestrar sua execução, tornando o sistema capaz de lidar com metas abertas.
+[Versão Final Corrigida] - Adiciona validação de robustez para garantir
+que os prompts gerados para a IA nunca sejam vazios.
 """
 
 import asyncio
@@ -49,15 +48,18 @@ class OrchestratorAgent(BaseNetworkAgent):
         mission_id = str(uuid.uuid4())
         goal = original_message.content.get("goal", {})
         
-        logger.info(f"Nova missão [ID: {mission_id}] recebida. Gerando plano de ação para: '{goal.get('description')}'")
+        # --- CORREÇÃO DE ROBUSTEZ AQUI ---
+        goal_description = goal.get("description")
+        if not goal_description:
+            logger.error(f"Missão [ID: {mission_id}] recebida sem uma descrição de objetivo ('goal.description'). Abortando.")
+            await self.publish_error_response(original_message, "A meta da missão ('goal.description') não foi fornecida.")
+            return
+            
+        logger.info(f"Nova missão [ID: {mission_id}] recebida. Gerando plano de ação para: '{goal_description}'")
 
         self.pending_missions[mission_id] = {
-            "original_message": original_message,
-            "state": "awaiting_plan",
-            "goal": goal,
-            "plan": None,
-            "current_step": -1,
-            "step_results": {}
+            "original_message": original_message, "state": "awaiting_plan", "goal": goal,
+            "plan": None, "current_step": -1, "step_results": {}
         }
 
         # Cria um prompt para o agente de IA gerar o plano
@@ -68,13 +70,13 @@ class OrchestratorAgent(BaseNetworkAgent):
         - AIAnalyzerAgent (id: 'ai_analyzer_001'): Pode analisar ou gerar texto. request_type: 'generate_structured_text', content: {{'text': '...'}}
         - NotificationAgent (id: 'notification_001'): Pode enviar e-mails. request_type: 'send_email', content: {{'recipient': '...', 'subject': '...', 'body': '...'}}
 
-        Meta do Usuário: "{goal.get('description')}"
+        Meta do Usuário: "{goal_description}"
 
         Crie um plano de ação em formato JSON. O JSON deve ser uma lista de passos. Cada passo deve ter:
         - 'step': número do passo (começando em 1)
         - 'agent_id': o ID do agente a ser chamado
         - 'request_type': a ação que o agente deve executar
-        - 'content': um dicionário com os parâmetros para a ação. Use placeholders como "{{step_1_output.results[0].snippet}}" para usar o resultado de um passo anterior.
+        - 'content': um dicionário com os parâmetros para a ação. Use placeholders como "{{{{step_1_output.results[0].snippet}}}}" para usar o resultado de um passo anterior.
 
         Responda APENAS com o JSON do plano.
         """
@@ -90,31 +92,32 @@ class OrchestratorAgent(BaseNetworkAgent):
     async def continue_mission_execution(self, response_message: AgentMessage):
         """Gerencia a execução do plano de ação, passo a passo."""
         mission_id = response_message.callback_id
-        if mission_id not in self.pending_missions:
-            return
+        if mission_id not in self.pending_missions: return
 
         mission = self.pending_missions[mission_id]
         
-        # Passo 2: Recebeu o plano de ação da IA. Agora, começa a execução.
         if mission["state"] == "awaiting_plan":
             plan_json = response_message.content.get("result", {}).get("structured_data", [])
+            if not plan_json or not isinstance(plan_json, list):
+                logger.error(f"Missão [ID: {mission_id}] falhou: A IA não retornou um plano válido.")
+                await self.publish_error_response(mission["original_message"], "A IA falhou ao gerar um plano de ação.")
+                del self.pending_missions[mission_id]
+                return
+
             mission["plan"] = plan_json
             mission["state"] = "executing"
             mission["current_step"] = 0
             logger.info(f"Missão [ID: {mission_id}]. Plano de ação gerado pela IA com {len(mission['plan'])} passos.")
             await self._execute_next_step(mission_id)
 
-        # Próximos Passos: Recebeu o resultado de um passo, executa o próximo.
         elif mission["state"] == "executing":
-            # Armazena o resultado do passo anterior
-            mission["step_results"][f"step_{mission['current_step']}_output"] = response_message.content
+            mission["step_results"][f"step_{mission['current_step'] + 1}_output"] = response_message.content
             
             mission["current_step"] += 1
             if mission["current_step"] < len(mission["plan"]):
                 await self._execute_next_step(mission_id)
             else:
                 logger.info(f"Missão [ID: {mission_id}] concluída com sucesso!")
-                # A resposta final poderia ser o resultado do último passo
                 await self.publish_response(mission["original_message"], {"status": "completed", "final_result": response_message.content})
                 del self.pending_missions[mission_id]
 
@@ -125,12 +128,10 @@ class OrchestratorAgent(BaseNetworkAgent):
         
         logger.info(f"Missão [ID: {mission_id}]. Executando Passo {step_info['step']}: chamando agente '{step_info['agent_id']}'.")
 
-        # Substitui placeholders no 'content' com resultados de passos anteriores
         content_str = json.dumps(step_info["content"])
+        # Lógica de substituição de placeholder (simplificada)
         for key, value in mission["step_results"].items():
             placeholder = f"{{{{{key}}}}}"
-            # Esta é uma substituição simples. Uma versão mais robusta usaria uma biblioteca de templating.
-            # E precisaria de uma forma de navegar no JSON do resultado (ex: .results[0].snippet)
             content_str = content_str.replace(placeholder, json.dumps(value))
         
         final_content = json.loads(content_str)
