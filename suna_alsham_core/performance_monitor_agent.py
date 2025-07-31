@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 """
 Módulo do Agente de Monitoramento de Performance - SUNA-ALSHAM
+
+[Versão Final Limpa]
 """
 
 import asyncio
@@ -23,7 +25,6 @@ logger = logging.getLogger(__name__)
 
 @dataclass
 class PerformanceMetrics:
-    """Estrutura para armazenar as métricas de performance coletadas."""
     cpu_usage_percent: float
     memory_usage_percent: float
     memory_usage_mb: float
@@ -33,11 +34,7 @@ class PerformanceMetrics:
     timestamp: float = field(default_factory=time.time)
 
 class PerformanceMonitorAgent(BaseNetworkAgent):
-    """
-    Agente especializado em monitorar a saúde e a performance do sistema.
-    """
     def __init__(self, agent_id: str, message_bus):
-        """Inicializa o PerformanceMonitorAgent."""
         super().__init__(agent_id, AgentType.SYSTEM, message_bus)
         self.capabilities.extend(["performance_monitoring", "metric_collection"])
         self.monitoring_interval_seconds = 60
@@ -46,29 +43,25 @@ class PerformanceMonitorAgent(BaseNetworkAgent):
         logger.info(f"📊 {self.agent_id} (Monitor de Performance) inicializado.")
 
     async def _internal_handle_message(self, message: AgentMessage):
-        """Processa requisições para coletar métricas ou iniciar monitoramento."""
         if message.message_type == MessageType.REQUEST:
             request_type = message.content.get("request_type")
             if request_type == "get_performance_metrics":
                 metrics = self.collect_metrics()
-                response_content = {"status": "completed", "metrics": metrics.__dict__}
-                await self.publish_response(message, response_content)
+                await self.publish_response(message, {"status": "completed", "metrics": metrics.__dict__})
             elif request_type == "start_continuous_monitoring":
                 interval = message.content.get("interval", self.monitoring_interval_seconds)
                 asyncio.create_task(self.run_continuous_monitoring(interval))
                 await self.publish_response(message, {"status": "acknowledged"})
 
     def collect_metrics(self) -> PerformanceMetrics:
-        """Coleta as métricas de performance do sistema."""
         try:
             with self.process.oneshot():
                 cpu_usage = self.process.cpu_percent()
                 memory_info = self.process.memory_info()
                 memory_usage_mb = memory_info.rss / (1024 * 1024)
-            
+
             total_memory_percent = psutil.virtual_memory().percent
             network_metrics = self.message_bus.get_metrics()
-            # A análise externa estava correta em apontar isso. Nossa MessageBus já suporta.
             active_agents = network_metrics.get("subscribed_agents", 0)
             queue_depths = network_metrics.get("queue_depths", {})
             total_queue_depth = sum(queue_depths.values())
@@ -85,9 +78,8 @@ class PerformanceMonitorAgent(BaseNetworkAgent):
         except Exception as e:
             logger.error(f"Erro ao coletar métricas: {e}", exc_info=True)
             return PerformanceMetrics(0, 0, 0, 0, 0, -1.0)
-            
+
     async def run_continuous_monitoring(self, interval: int):
-        """Executa a coleta de métricas em um loop contínuo."""
         logger.info(f"Monitoramento contínuo iniciado com intervalo de {interval} segundos.")
         while self.status == "active":
             metrics = self.collect_metrics()
@@ -100,7 +92,6 @@ class PerformanceMonitorAgent(BaseNetworkAgent):
             await asyncio.sleep(interval)
 
 def create_performance_monitor_agent(message_bus) -> List[BaseNetworkAgent]:
-    """Cria o agente de Monitoramento de Performance."""
     agents = []
     logger.info("📊 Criando PerformanceMonitorAgent...")
     try:
