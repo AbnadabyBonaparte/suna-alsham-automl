@@ -3,7 +3,7 @@
 Módulo do Agente de Busca na Web - SUNA-ALSHAM
 
 [Versão Defensiva] - Adiciona validação de robustez na entrada para
-recusar requisições malformadas imediatamente.
+recusar requisições malformadas imediatamente e eliminar warnings.
 """
 
 import asyncio
@@ -45,26 +45,27 @@ class WebSearchAgent(BaseNetworkAgent):
         logger.info(f"🌐 {self.agent_id} (Busca Web) inicializado.")
 
     async def _internal_handle_message(self, message: AgentMessage):
-        """Processa requisições de busca."""
+        """Processa requisições de busca de forma defensiva."""
         
         # --- VALIDAÇÃO DEFENSIVA ADICIONADA AQUI ---
         if message.message_type != MessageType.REQUEST:
-            return
+            return # Ignora mensagens que não são requisições (ex: heartbeats)
 
         search_action = message.content.get("request_type")
         query = message.content.get("query")
 
         if not search_action:
-            # Não enviamos erro para não poluir o log com heartbeats, apenas ignoramos.
-            logger.debug(f"WebSearchAgent ignorou mensagem sem 'request_type': {message.message_id}")
+            logger.warning(f"WebSearchAgent recebeu requisição sem 'request_type' do agente '{message.sender_id}'. Ignorando.")
+            # Não enviamos erro para não poluir o log, apenas ignoramos a ordem malformada.
             return
         
         if search_action != "search":
-            logger.warning(f"Ação de busca desconhecida: {search_action}")
+            logger.warning(f"Ação de busca desconhecida recebida de '{message.sender_id}': {search_action}")
             await self.publish_error_response(message, f"Ação de busca desconhecida: {search_action}")
             return
             
         if not query:
+            logger.error(f"WebSearchAgent recebeu uma requisição de busca sem 'query' do agente '{message.sender_id}'.")
             await self.publish_error_response(message, "Termo de busca ('query') ausente ou vazio.")
             return
         # --- FIM DA VALIDAÇÃO ---
@@ -76,7 +77,6 @@ class WebSearchAgent(BaseNetworkAgent):
     async def search(self, request_data: Dict[str, Any]) -> Dict[str, Any]:
         """
         [LÓGICA SIMULADA] Simula uma busca no Google.
-        Na Fase 3, esta função usará uma API real de busca.
         """
         query = request_data.get("query")
         logger.info(f"🔎 Buscando na web por: '{query}'...")
