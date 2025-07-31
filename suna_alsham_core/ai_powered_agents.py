@@ -76,8 +76,19 @@ class AIAnalyzerAgent(BaseNetworkAgent):
         logger.info(f"🧠 {self.agent_id} (Analisador Cérebro Triplo) evoluído e inicializado.")
 
     def _select_best_provider_order(self, request_content: Dict) -> List[str]:
-        # ... (código existente) ...
-        pass
+        """Analisa a requisição e retorna a ordem de preferência dos cérebros."""
+        request_type = request_content.get("request_type", "")
+        prompt = request_content.get("text", "")
+
+        if "generate_structured_text" in request_type:
+            logger.info("Tarefa de dados estruturados detectada. Priorizando Gemini.")
+            return ['gemini', 'openai', 'claude']
+        elif len(prompt) > 2000 or "resuma" in prompt.lower():
+            logger.info("Tarefa de texto longo ou resumo detectada. Priorizando Claude.")
+            return ['claude', 'openai', 'gemini']
+        else:
+            logger.info("Tarefa de uso geral detectada. Priorizando OpenAI/GPT.")
+            return ['openai', 'gemini', 'claude']
 
     async def _internal_handle_message(self, message: AgentMessage):
         """Processa a requisição usando o roteamento inteligente e o sistema de fallback."""
@@ -134,8 +145,60 @@ class AIAnalyzerAgent(BaseNetworkAgent):
         logger.critical(f"Falha em todos os provedores de IA. Último erro: {last_error}")
         await self.publish_error_response(message, f"Falha em todos os provedores de IA disponíveis. Último erro: {last_error}")
 
-    # ... (resto do código, como _call_openai, _call_gemini, etc., permanece o mesmo) ...
+    async def _call_openai(self, content: Dict) -> Dict:
+        prompt = content.get("text", "")
+        if not prompt: raise ValueError("Prompt para OpenAI não pode ser vazio.")
+        
+        chat_completion = await self.openai_client.chat.completions.create(
+            messages=[{"role": "user", "content": prompt}],
+            model="gpt-4.1-mini", # Usando o modelo otimizado
+        )
+        result_text = chat_completion.choices[0].message.content
+        if "generate_structured_text" in content.get("request_type", ""):
+            json_str = result_text[result_text.find('{'):result_text.rfind('}')+1]
+            return {"structured_data": json.loads(json_str)}
+        return {"text": result_text}
+
+    async def _call_gemini(self, content: Dict) -> Dict:
+        prompt = content.get("text", "")
+        if not prompt: raise ValueError("Prompt para Gemini não pode ser vazio.")
+
+        if "generate_structured_text" in content.get("request_type", ""):
+            config = genai.types.GenerationConfig(response_mime_type="application/json")
+            response = await self.gemini_model.generate_content_async(prompt, generation_config=config)
+            return {"structured_data": json.loads(response.text)}
+        else:
+            response = await self.gemini_model.generate_content_async(prompt)
+            return {"text": response.text.strip()}
+
+    async def _call_claude(self, content: Dict) -> Dict:
+        prompt = content.get("text", "")
+        if not prompt: raise ValueError("Prompt para Claude não pode ser vazio.")
+
+        is_structured = "generate_structured_text" in content.get("request_type", "")
+        claude_prompt = f"Human: {prompt}\n\nAssistant:"
+        if is_structured:
+            claude_prompt += " Por favor, responda apenas com o JSON."
+
+        response = await self.claude_client.messages.create(
+            model="claude-3-opus-20240229",
+            max_tokens=2048,
+            messages=[{"role": "user", "content": claude_prompt}]
+        )
+        result_text = response.content[0].text
+        if is_structured:
+            json_str = result_text[result_text.find('{'):result_text.rfind('}')+1]
+            return {"structured_data": json.loads(json_str)}
+        return {"text": result_text.strip()}
+
 
 def create_ai_agents(message_bus) -> List[BaseNetworkAgent]:
-    # ... (código existente) ...
-    pass
+    """Cria os agentes com IA."""
+    agents = []
+    logger.info("🤖 Criando agentes com IA (Cérebro Triplo)...")
+    try:
+        agent = AIAnalyzerAgent("ai_analyzer_001", message_bus)
+        agents.append(agent)
+    except Exception as e:
+        logger.error(f"❌ Erro criando agente IA: {e}", exc_info=True)
+    return agents
