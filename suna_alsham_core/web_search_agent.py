@@ -55,8 +55,8 @@ class WebSearchAgent(BaseNetworkAgent):
         query = message.content.get("query")
 
         if not search_action:
-            logger.warning(f"WebSearchAgent recebeu requisição sem 'request_type' do agente '{message.sender_id}'. Ignorando.")
-            # Não enviamos erro para não poluir o log, apenas ignoramos a ordem malformada.
+            # Não enviamos erro para não poluir o log com heartbeats, apenas ignoramos a ordem malformada.
+            logger.debug(f"WebSearchAgent ignorou mensagem sem 'request_type': {message.message_id}")
             return
         
         if search_action != "search":
@@ -65,7 +65,6 @@ class WebSearchAgent(BaseNetworkAgent):
             return
             
         if not query:
-            logger.error(f"WebSearchAgent recebeu uma requisição de busca sem 'query' do agente '{message.sender_id}'.")
             await self.publish_error_response(message, "Termo de busca ('query') ausente ou vazio.")
             return
         # --- FIM DA VALIDAÇÃO ---
