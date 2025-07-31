@@ -2,9 +2,9 @@
 """
 Módulo dos Agentes com IA (AI-Powered) - SUNA-ALSHAM
 
-[Versão Cérebro Triplo] - A versão mais avançada. Usa um sistema de
-roteamento inteligente para escolher o melhor LLM (GPT, Gemini, Claude)
-para cada tarefa, com um sistema de fallback triplo para máxima resiliência.
+[Versão Cérebro Triplo Otimizada] - Usa um sistema de roteamento
+inteligente para escolher o melhor LLM (GPT, Gemini, Claude) para cada
+tarefa, com um sistema de fallback triplo para máxima resiliência.
 """
 
 import asyncio
@@ -99,6 +99,7 @@ class AIAnalyzerAgent(BaseNetworkAgent):
 
         provider_order = self._select_best_provider_order(message.content)
         
+        last_error = None
         for i, provider in enumerate(provider_order):
             logger.info(f"Tentativa {i+1}/{len(provider_order)}: Usando o cérebro '{provider}'...")
             success = False
@@ -121,11 +122,12 @@ class AIAnalyzerAgent(BaseNetworkAgent):
                     return # Missão cumprida!
 
             except Exception as e:
+                last_error = e
                 logger.error(f"❌ Erro no cérebro '{provider}': {e}. Tentando o próximo cérebro...")
         
         # Se o loop terminar sem sucesso
-        logger.critical("Falha em todos os provedores de IA. Missão de IA falhou.")
-        await self.publish_error_response(message, "Falha em todos os provedores de IA disponíveis.")
+        logger.critical(f"Falha em todos os provedores de IA. Último erro: {last_error}")
+        await self.publish_error_response(message, f"Falha em todos os provedores de IA disponíveis. Último erro: {last_error}")
 
     async def _call_openai(self, content: Dict) -> Dict:
         prompt = content.get("text", "")
@@ -133,11 +135,12 @@ class AIAnalyzerAgent(BaseNetworkAgent):
         
         chat_completion = await self.openai_client.chat.completions.create(
             messages=[{"role": "user", "content": prompt}],
-            model="gpt-3.5-turbo", # Alterado para um modelo mais comum
+            model="gpt-4.1-mini", # Usando o modelo otimizado
         )
         result_text = chat_completion.choices[0].message.content
         if "generate_structured_text" in content.get("request_type", ""):
-            return {"structured_data": json.loads(result_text)}
+            json_str = result_text[result_text.find('{'):result_text.rfind('}')+1]
+            return {"structured_data": json.loads(json_str)}
         return {"text": result_text}
 
     async def _call_gemini(self, content: Dict) -> Dict:
