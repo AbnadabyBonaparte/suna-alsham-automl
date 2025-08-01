@@ -1,35 +1,44 @@
 #!/usr/bin/env python3
 """
-Módulo dos Agentes Meta-Cognitivos - O Cérebro do SUNA-ALSHAM.
+Módulo dos Agentes Meta-Cognitivos – O Cérebro do SUNA-ALSHAM.
+
+[Versão Defensiva] – Garante que a função de fábrica sempre retorne
+uma lista, mesmo em caso de erro, para evitar falhas no carregador.
 """
 
 import asyncio
+import json
 import logging
 import uuid
-from typing import Dict, List, Optional
+from typing import Any, Dict, List, Optional
 
 from suna_alsham_core.multi_agent_network import (
     AgentMessage,
     AgentType,
     BaseNetworkAgent,
     MessageType,
+    Priority,
 )
 
 logger = logging.getLogger(__name__)
 
 class OrchestratorAgent(BaseNetworkAgent):
-    """Agente Orquestrador Estratégico."""
+    """
+    Agente Orquestrador Estratégico. Cria e executa planos de ação dinâmicos.
+    """
     def __init__(self, agent_id: str, message_bus):
         super().__init__(agent_id, AgentType.ORCHESTRATOR, message_bus)
         self.capabilities.extend(["dynamic_planning", "complex_task_orchestration"])
         self.pending_missions: Dict[str, Dict] = {}
-        logger.info(f"👑 {self.agent_id} (Orquestrador Estratégico) inicializado.")
+        logger.info(f"👑 {self.agent_id} (Orquestrador Estratégico) evoluído e inicializado.")
 
     async def _internal_handle_message(self, message: AgentMessage):
         pass  # Mantém lógica de orquestração existente
 
 class MetaCognitiveAgent(BaseNetworkAgent):
-    """Agente Meta-Cognitivo - Analisa o sistema como um todo."""
+    """
+    Agente Meta-Cognitivo - Analisa o sistema como um todo.
+    """
     def __init__(self, agent_id: str, message_bus):
         super().__init__(agent_id, AgentType.META_COGNITIVE, message_bus)
         self.capabilities.append("system_analysis")
