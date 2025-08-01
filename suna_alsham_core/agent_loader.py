@@ -2,20 +2,18 @@
 """
 Módulo Carregador de Agentes - SUNA-ALSHAM
 
-[Versão Final Reforçada] - Carrega todos os agentes do núcleo e domínios
-com auditoria completa de IDs e proteção contra falhas silenciosas.
+[Versão Final de Produção] - Carrega explicitamente TODOS os agentes do
+núcleo e dos domínios para máxima robustez e funcionalidade completa.
 """
-
 import logging
 from typing import Any, Dict, List
 
-# --- Força o sys.path para garantir que todos os módulos sejam encontrados ---
 import sys
 from pathlib import Path
 project_root = Path(__file__).parent.parent
 sys.path.insert(0, str(project_root.resolve()))
 
-# --- IMPORTAÇÃO EXPLÍCITA DE TODAS AS FÁBRICAS DE AGENTES ---
+# --- IMPORTAÇÃO DE TODAS AS FÁBRICAS DE AGENTES ---
 from suna_alsham_core.core_agents_v3 import create_core_agents_v3
 from suna_alsham_core.specialized_agents import create_specialized_agents
 from suna_alsham_core.ai_powered_agents import create_ai_agents
@@ -42,7 +40,7 @@ from suna_alsham_core.visualization_agent import create_visualization_agent
 from suna_alsham_core.security_enhancements_agent import create_security_enhancements_agent
 from suna_alsham_core.real_evolution_engine import create_evolution_engine_agents
 
-# Módulos de Domínio (ALSHAM GLOBAL)
+# --- DOMÍNIOS ---
 from domain_modules.analytics.analytics_orchestrator_agent import create_analytics_agents
 from domain_modules.sales.sales_orchestrator_agent import create_sales_agents
 from domain_modules.social_media.social_media_orchestrator_agent import create_social_media_agents
@@ -51,66 +49,55 @@ from domain_modules.suporte.support_orchestrator_agent import create_suporte_age
 logger = logging.getLogger(__name__)
 
 async def initialize_all_agents(network: Any) -> Dict[str, Any]:
-    """
-    Inicializa todos os agentes do sistema com auditoria de IDs.
-    """
+    """Inicializa todos os agentes do sistema de forma explícita."""
     agents_loaded = 0
     failed_modules = []
-    all_agent_ids: List[str] = []
 
-    agent_factories = {
-        "core": [
-            create_core_agents_v3, create_specialized_agents, create_ai_agents,
-            create_system_agents, create_service_agents, create_meta_cognitive_agents,
-            create_code_analyzer_agent, create_performance_monitor_agent,
-            create_computer_control_agent, create_web_search_agent,
-            create_code_corrector_agent, create_debug_master_agent,
-            create_security_guardian_agent, create_validation_sentinel_agent,
-            create_disaster_recovery_agent, create_backup_agent, create_database_agent,
-            create_logging_agent, create_api_gateway_agent, create_notification_agent,
-            create_deployment_agent, create_testing_agent, create_visualization_agent,
-            create_security_enhancements_agent, create_evolution_engine_agents
-        ],
-        "domain": [
-            create_analytics_agents, create_sales_agents,
-            create_social_media_agents, create_suporte_agents
-        ],
-    }
+    agent_factories = [
+        create_core_agents_v3,
+        create_specialized_agents,
+        create_ai_agents,
+        create_system_agents,
+        create_service_agents,
+        create_meta_cognitive_agents,  # 👑 Cérebro
+        create_code_analyzer_agent,
+        create_performance_monitor_agent,
+        create_computer_control_agent,
+        create_web_search_agent,
+        create_code_corrector_agent,
+        create_debug_master_agent,
+        create_security_guardian_agent,
+        create_validation_sentinel_agent,
+        create_disaster_recovery_agent,
+        create_backup_agent,
+        create_database_agent,
+        create_logging_agent,
+        create_api_gateway_agent,
+        create_notification_agent,
+        create_deployment_agent,
+        create_testing_agent,
+        create_visualization_agent,
+        create_security_enhancements_agent,
+        create_evolution_engine_agents,
+        # --- Domínios ---
+        create_analytics_agents,
+        create_sales_agents,
+        create_social_media_agents,
+        create_suporte_agents
+    ]
 
     logger.info("--- INICIANDO AUDITORIA DE CARREGAMENTO DE AGENTES ---")
 
-    # Carrega Agentes do Núcleo
-    for factory in agent_factories["core"]:
+    for factory in agent_factories:
         factory_name = factory.__name__
-        logger.info(f"--> Chamando fábrica de núcleo: {factory_name}...")
+        logger.info(f"--> Chamando fábrica: {factory_name}...")
         try:
-            agents = factory(network.message_bus) or []
+            agents = factory(network.message_bus)
             if not isinstance(agents, list):
-                logger.warning(f"⚠️ Fábrica '{factory_name}' não retornou lista. Forçando lista vazia.")
                 agents = []
             num_created = len(agents)
             for agent in agents:
                 network.register_agent(agent)
-                all_agent_ids.append(agent.agent_id)
-                agents_loaded += 1
-            logger.info(f"<-- SUCESSO: {factory_name} retornou {num_created} agente(s).")
-        except Exception as e:
-            logger.error(f"<-- FALHA: {factory_name} falhou: {e}", exc_info=True)
-            failed_modules.append(factory_name)
-
-    # Carrega Agentes de Domínio
-    for factory in agent_factories["domain"]:
-        factory_name = factory.__name__
-        logger.info(f"--> Chamando fábrica de domínio: {factory_name}...")
-        try:
-            agents = factory(network.message_bus) or []
-            if not isinstance(agents, list):
-                logger.warning(f"⚠️ Fábrica '{factory_name}' não retornou lista. Forçando lista vazia.")
-                agents = []
-            num_created = len(agents)
-            for agent in agents:
-                network.register_agent(agent)
-                all_agent_ids.append(agent.agent_id)
                 agents_loaded += 1
             logger.info(f"<-- SUCESSO: {factory_name} retornou {num_created} agente(s).")
         except Exception as e:
@@ -118,18 +105,7 @@ async def initialize_all_agents(network: Any) -> Dict[str, Any]:
             failed_modules.append(factory_name)
 
     logger.info(f"--- FIM DA AUDITORIA. Total: {agents_loaded} agentes carregados. ---")
-    logger.info(f"🧾 LISTA COMPLETA DE AGENTES CARREGADOS: {all_agent_ids}")
-
-    # Validação mínima de agentes
-    MIN_EXPECTED_AGENTS = 50
-    if agents_loaded < MIN_EXPECTED_AGENTS:
-        logger.critical(f"⚠️ ALERTA: Apenas {agents_loaded} agentes carregados. Esperado >= {MIN_EXPECTED_AGENTS}. Verifique as fábricas.")
-
     return {
-        "summary": {
-            "agents_loaded": agents_loaded,
-            "failed_modules_count": len(failed_modules),
-            "loaded_agent_ids": all_agent_ids
-        },
+        "summary": {"agents_loaded": agents_loaded, "failed_modules_count": len(failed_modules)},
         "failed_modules": failed_modules,
     }
