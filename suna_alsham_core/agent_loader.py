@@ -1,35 +1,48 @@
 #!/usr/bin/env python3
 """
-Módulo Carregador de Agentes – SUNA-ALSHAM
+Módulo Carregador de Agentes - SUNA-ALSHAM
 
-Versão Restaurada – Garante o carregamento de TODOS os agentes (≈55)
-com auditoria de IDs e logs detalhados.
+[Versão Final Reforçada] - Carrega todos os agentes do núcleo e domínios
+com auditoria completa de IDs e proteção contra falhas silenciosas.
 """
 
 import logging
 from typing import Any, Dict, List
 
-# 🔧 Garante path correto para imports
+# --- Força o sys.path para garantir que todos os módulos sejam encontrados ---
 import sys
 from pathlib import Path
 project_root = Path(__file__).parent.parent
 sys.path.insert(0, str(project_root.resolve()))
 
-# 🔗 Importa as fábricas de agentes centrais
-from suna_alsham_core.meta_cognitive_agents import create_meta_cognitive_agents
-from suna_alsham_core.ai_powered_agents import create_ai_agents
-from suna_alsham_core.web_search_agent import create_web_search_agent
-from suna_alsham_core.notification_agent import create_notification_agent
-from suna_alsham_core.api_gateway_agent import create_api_gateway_agent
-
-# Outros módulos centrais
+# --- IMPORTAÇÃO EXPLÍCITA DE TODAS AS FÁBRICAS DE AGENTES ---
 from suna_alsham_core.core_agents_v3 import create_core_agents_v3
 from suna_alsham_core.specialized_agents import create_specialized_agents
+from suna_alsham_core.ai_powered_agents import create_ai_agents
 from suna_alsham_core.system_agents import create_system_agents
 from suna_alsham_core.service_agents import create_service_agents
+from suna_alsham_core.meta_cognitive_agents import create_meta_cognitive_agents
+from suna_alsham_core.code_analyzer_agent import create_code_analyzer_agent
 from suna_alsham_core.performance_monitor_agent import create_performance_monitor_agent
+from suna_alsham_core.computer_control_agent import create_computer_control_agent
+from suna_alsham_core.web_search_agent import create_web_search_agent
+from suna_alsham_core.code_corrector_agent import create_code_corrector_agent
+from suna_alsham_core.debug_agent_creation import create_debug_master_agent
+from suna_alsham_core.security_guardian_agent import create_security_guardian_agent
+from suna_alsham_core.validation_sentinel_agent import create_validation_sentinel_agent
+from suna_alsham_core.disaster_recovery_agent import create_disaster_recovery_agent
+from suna_alsham_core.backup_agent import create_backup_agent
+from suna_alsham_core.database_agent import create_database_agent
+from suna_alsham_core.logging_agent import create_logging_agent
+from suna_alsham_core.api_gateway_agent import create_api_gateway_agent
+from suna_alsham_core.notification_agent import create_notification_agent
+from suna_alsham_core.deployment_agent import create_deployment_agent
+from suna_alsham_core.testing_agent import create_testing_agent
+from suna_alsham_core.visualization_agent import create_visualization_agent
+from suna_alsham_core.security_enhancements_agent import create_security_enhancements_agent
+from suna_alsham_core.real_evolution_engine import create_evolution_engine_agents
 
-# Módulos de domínio
+# Módulos de Domínio (ALSHAM GLOBAL)
 from domain_modules.analytics.analytics_orchestrator_agent import create_analytics_agents
 from domain_modules.sales.sales_orchestrator_agent import create_sales_agents
 from domain_modules.social_media.social_media_orchestrator_agent import create_social_media_agents
@@ -39,55 +52,84 @@ logger = logging.getLogger(__name__)
 
 async def initialize_all_agents(network: Any) -> Dict[str, Any]:
     """
-    Inicializa todos os agentes do sistema e retorna um relatório detalhado.
+    Inicializa todos os agentes do sistema com auditoria de IDs.
     """
     agents_loaded = 0
     failed_modules = []
     all_agent_ids: List[str] = []
 
-    # ✅ Lista completa das fábricas a serem carregadas
-    agent_factories: List = [
-        create_api_gateway_agent,         # 1
-        create_meta_cognitive_agents,     # 1+
-        create_ai_agents,                 # 1
-        create_web_search_agent,          # 1
-        create_notification_agent,        # 1
-        create_core_agents_v3,            # 5
-        create_specialized_agents,        # 2
-        create_system_agents,             # 3+
-        create_service_agents,            # 2+
-        create_performance_monitor_agent, # 1
-        create_analytics_agents,          # 5
-        create_sales_agents,              # 6
-        create_social_media_agents,       # 5
-        create_suporte_agents,            # 5
-    ]
+    agent_factories = {
+        "core": [
+            create_core_agents_v3, create_specialized_agents, create_ai_agents,
+            create_system_agents, create_service_agents, create_meta_cognitive_agents,
+            create_code_analyzer_agent, create_performance_monitor_agent,
+            create_computer_control_agent, create_web_search_agent,
+            create_code_corrector_agent, create_debug_master_agent,
+            create_security_guardian_agent, create_validation_sentinel_agent,
+            create_disaster_recovery_agent, create_backup_agent, create_database_agent,
+            create_logging_agent, create_api_gateway_agent, create_notification_agent,
+            create_deployment_agent, create_testing_agent, create_visualization_agent,
+            create_security_enhancements_agent, create_evolution_engine_agents
+        ],
+        "domain": [
+            create_analytics_agents, create_sales_agents,
+            create_social_media_agents, create_suporte_agents
+        ],
+    }
 
-    logger.info("🔒 --- INICIANDO CARREGAMENTO DE AGENTES ---")
+    logger.info("--- INICIANDO AUDITORIA DE CARREGAMENTO DE AGENTES ---")
 
-    for factory in agent_factories:
-        name = factory.__name__
-        logger.info(f"--> Chamando fábrica: {name}")
+    # Carrega Agentes do Núcleo
+    for factory in agent_factories["core"]:
+        factory_name = factory.__name__
+        logger.info(f"--> Chamando fábrica de núcleo: {factory_name}...")
         try:
-            agents = factory(network.message_bus)
+            agents = factory(network.message_bus) or []
+            if not isinstance(agents, list):
+                logger.warning(f"⚠️ Fábrica '{factory_name}' não retornou lista. Forçando lista vazia.")
+                agents = []
+            num_created = len(agents)
             for agent in agents:
                 network.register_agent(agent)
-                agents_loaded += 1
                 all_agent_ids.append(agent.agent_id)
-            logger.info(f"<-- SUCESSO: {name} criou {len(agents)} agente(s).")
+                agents_loaded += 1
+            logger.info(f"<-- SUCESSO: {factory_name} retornou {num_created} agente(s).")
         except Exception as e:
-            logger.error(f"❌ ERRO em {name}: {e}", exc_info=True)
-            failed_modules.append(name)
+            logger.error(f"<-- FALHA: {factory_name} falhou: {e}", exc_info=True)
+            failed_modules.append(factory_name)
 
-    # ✅ Log detalhado de todos os IDs carregados
-    logger.info(f"📋 Auditoria de agentes: {all_agent_ids}")
-    logger.info(f"🔒 --- FIM DO CARREGAMENTO. Total: {agents_loaded} agentes ativos. ---")
+    # Carrega Agentes de Domínio
+    for factory in agent_factories["domain"]:
+        factory_name = factory.__name__
+        logger.info(f"--> Chamando fábrica de domínio: {factory_name}...")
+        try:
+            agents = factory(network.message_bus) or []
+            if not isinstance(agents, list):
+                logger.warning(f"⚠️ Fábrica '{factory_name}' não retornou lista. Forçando lista vazia.")
+                agents = []
+            num_created = len(agents)
+            for agent in agents:
+                network.register_agent(agent)
+                all_agent_ids.append(agent.agent_id)
+                agents_loaded += 1
+            logger.info(f"<-- SUCESSO: {factory_name} retornou {num_created} agente(s).")
+        except Exception as e:
+            logger.error(f"<-- FALHA: {factory_name} falhou: {e}", exc_info=True)
+            failed_modules.append(factory_name)
+
+    logger.info(f"--- FIM DA AUDITORIA. Total: {agents_loaded} agentes carregados. ---")
+    logger.info(f"🧾 LISTA COMPLETA DE AGENTES CARREGADOS: {all_agent_ids}")
+
+    # Validação mínima de agentes
+    MIN_EXPECTED_AGENTS = 50
+    if agents_loaded < MIN_EXPECTED_AGENTS:
+        logger.critical(f"⚠️ ALERTA: Apenas {agents_loaded} agentes carregados. Esperado >= {MIN_EXPECTED_AGENTS}. Verifique as fábricas.")
 
     return {
         "summary": {
             "agents_loaded": agents_loaded,
-            "failed_modules_count": len(failed_modules)
+            "failed_modules_count": len(failed_modules),
+            "loaded_agent_ids": all_agent_ids
         },
         "failed_modules": failed_modules,
-        "loaded_agent_ids": all_agent_ids,
     }
