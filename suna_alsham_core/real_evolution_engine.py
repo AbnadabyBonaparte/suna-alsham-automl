@@ -60,7 +60,7 @@ class EvolutionEngineAgent(BaseNetworkAgent):
             logger.info("="*50)
             logger.info(f"🧠 [Evolução] Iniciando ciclo de evolução. Versão do Modelo Atual: {self.model_version}")
             
-            if len(self.training_data) < 5: # Mínimo de 5 missões para treinar
+            if len(self.training_data) < 5:
                 logger.warning(f"[Evolução] Ciclo abortado. Pontos de dados insuficientes ({len(self.training_data)}/5).")
                 logger.info("="*50)
                 continue
@@ -85,7 +85,7 @@ class EvolutionEngineAgent(BaseNetworkAgent):
                 if score_change > 0.01:
                     logger.info("✅ [Evolução] Análise: O sistema está a aprender a executar missões de forma mais eficiente.")
                 elif score_change < -0.01:
-                    logger.warning("⚠️ [Evolução] Análise: A performance do modelo diminuiu. A analisar padrões de falha.")
+                    logger.warning("⚠️ [Evolução] Análise: A performance do modelo diminuiu.")
                 else:
                     logger.info("ℹ️ [Evolução] Análise: A performance do modelo está estável.")
 
@@ -102,9 +102,14 @@ class EvolutionEngineAgent(BaseNetworkAgent):
         if message.message_type == MessageType.NOTIFICATION and message.content.get("event_type") == "training_data":
             try:
                 data = message.content.get("data", {})
-                data['timestamp'] = datetime.fromisoformat(data['timestamp'])
+                
+                if 'timestamp' in data and isinstance(data['timestamp'], str):
+                    data['timestamp'] = datetime.fromisoformat(data['timestamp'])
+                
+                # A correção está aqui: o dicionário 'data' já contém todos os campos.
                 data_point = TrainingDataPoint(**data)
                 self.training_data.append(data_point)
+                
             except Exception as e:
                 logger.error(f"Erro ao processar ponto de treino: {e}")
 
