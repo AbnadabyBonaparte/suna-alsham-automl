@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 """
 Ponto de Entrada Único e Oficial do Sistema SUNA-ALSHAM.
-[Versão Final de Produção com Endpoint de Tarefas via API Gateway]
 """
 
 # --- PASSO 1: Configuração de Ambiente ANTES de tudo ---
@@ -19,7 +18,6 @@ logging.basicConfig(
     handlers=[logging.StreamHandler(sys.stdout)],
 )
 logger = logging.getLogger("SUNA_ALSHAM_START")
-logger.info("--- Log de Nível Básico Configurado ---")
 
 # --- PASSO 3: Adiciona o path do projeto no sys.path ---
 sys.path.append(str(Path(__file__).parent.resolve()))
@@ -27,7 +25,6 @@ sys.path.append(str(Path(__file__).parent.resolve()))
 # --- PASSO 4: Imports da Aplicação ---
 import asyncio
 import os
-from datetime import datetime
 from contextlib import asynccontextmanager
 from typing import Any, Dict
 
@@ -52,7 +49,6 @@ system: SUNAAlshamSystemV2 = None
 async def lifespan(app: FastAPI):
     global system
     logger.info("🚀 Iniciando o sistema SUNA-ALSHAM...")
-
     try:
         system = SUNAAlshamSystemV2()
         success = await system.initialize_complete_system()
@@ -64,9 +60,7 @@ async def lifespan(app: FastAPI):
         logger.critical(f"Erro durante inicialização: {e}", exc_info=True)
         system = SUNAAlshamSystemV2()
         system.system_status = "error"
-
     yield
-
     logger.info("🛑 Encerrando sistema...")
     if system and hasattr(system.network.message_bus, "stop"):
         await system.network.message_bus.stop()
@@ -93,28 +87,27 @@ async def root():
         raise HTTPException(status_code=503, detail="Sistema não está pronto.")
     return system.get_system_status()
 
-@app.get("/health", tags=["Status"])
-async def health_check():
-    if system and system.system_status in ["active", "degraded"]:
-        return JSONResponse(status_code=200, content={"status": "healthy"})
-    return JSONResponse(status_code=503, content={"status": "unhealthy"})
-
 @app.post("/submit_task", tags=["Tarefas"])
 async def submit_task(request: Dict[str, Any]):
     if not system or not system.initialized:
         raise HTTPException(status_code=503, detail="Sistema não está inicializado.")
 
     recipient = request.get("recipient_id")
-    content = request.get("content")
+    task_content = request.get("content")
 
-    if not recipient or not content:
+    if not recipient or not task_content:
         raise HTTPException(status_code=400, detail="Campos 'recipient_id' e 'content' são obrigatórios.")
+
+    # --- LINHA DA CORREÇÃO AQUI ---
+    # Garantimos que o 'content' da mensagem seja sempre um dicionário,
+    # alinhando a API com o formato que a rede de agentes espera.
+    formatted_content = {"content": task_content}
 
     message = AgentMessage(
         sender_id="api_gateway",
         recipient_id=recipient,
         message_type=MessageType.REQUEST,
-        content=content,
+        content=formatted_content, # Usamos o conteúdo formatado
     )
 
     await system.network.message_bus.publish(message)
@@ -125,5 +118,4 @@ async def submit_task(request: Dict[str, Any]):
 if __name__ == "__main__":
     host = os.environ.get("HOST", "0.0.0.0")
     port = int(os.environ.get("PORT", 8080))
-    logger.info(f"🌐 Iniciando servidor Uvicorn em http://{host}:{port}")
     uvicorn.run("start:app", host=host, port=port, log_level="info", reload=False)
