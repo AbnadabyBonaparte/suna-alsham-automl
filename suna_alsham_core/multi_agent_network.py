@@ -82,6 +82,8 @@ class BaseNetworkAgent:
         self.message_bus = message_bus
         self.inbox = self.message_bus.subscribe(self.agent_id)
         self.status = "active"
+        # --- LINHA DA CORREÇÃO ADICIONADA AQUI ---
+        self.capabilities: List[str] = []
         self.task = asyncio.create_task(self._run())
 
     async def _run(self):
