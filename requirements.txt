@@ -1,4 +1,4 @@
-# ALSHAM QUANTUM - Dependencies Completas (MATPLOTLIB ADICIONADO)
+# ALSHAM QUANTUM - Dependencies Completas (MATPLOTLIB + SEABORN ADICIONADOS)
 # Sistema Multi-Agente de IA Autônomo
 
 # ===== CORE FRAMEWORK =====
@@ -16,8 +16,9 @@ websockets==12.0
 # ===== WEB SCRAPING =====
 beautifulsoup4==4.12.2
 
-# ===== DATA VISUALIZATION (FALTAVA!) =====
+# ===== DATA VISUALIZATION (COMPLETO!) =====
 matplotlib==3.8.2
+seaborn==0.12.2
 
 # ===== DATABASE & CACHE =====
 sqlalchemy==2.0.23
