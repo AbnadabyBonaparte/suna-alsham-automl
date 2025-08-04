@@ -369,7 +369,7 @@ class AttentionAgent(BaseAgent):
         return True
     
     async def execute(self, task: Dict[str, Any]) -> Dict[str, Any]:
-        return {"status": "completed", "agent": "attention")
+        return {"status": "completed", "agent": "attention"}
     
     async def shutdown(self) -> bool:
         self.status = AgentStatus.INACTIVE
@@ -521,7 +521,67 @@ class IntegrationAgent(BaseAgent):
         return True
     
     async def execute(self, task: Dict[str, Any]) -> Dict[str, Any]:
-        return {"status": "completed", "agent": "integration")
+        return {"status": "completed", "agent": "integration"}
+    
+    async def shutdown(self) -> bool:
+        self.status = AgentStatus.INACTIVE
+        return True
+
+class TranslationAgent(BaseAgent):
+    """Agente de tradução multilíngue"""
+    
+    async def initialize(self) -> bool:
+        self.logger.info("Inicializando Translation Agent...")
+        self.status = AgentStatus.ACTIVE
+        return True
+    
+    async def execute(self, task: Dict[str, Any]) -> Dict[str, Any]:
+        return {"status": "completed", "agent": "translation"}
+    
+    async def shutdown(self) -> bool:
+        self.status = AgentStatus.INACTIVE
+        return True
+
+class VoiceAgent(BaseAgent):
+    """Agente de processamento de voz"""
+    
+    async def initialize(self) -> bool:
+        self.logger.info("Inicializando Voice Agent...")
+        self.status = AgentStatus.ACTIVE
+        return True
+    
+    async def execute(self, task: Dict[str, Any]) -> Dict[str, Any]:
+        return {"status": "completed", "agent": "voice")
+    
+    async def shutdown(self) -> bool:
+        self.status = AgentStatus.INACTIVE
+        return True
+
+class VideoAgent(BaseAgent):
+    """Agente de processamento de vídeo"""
+    
+    async def initialize(self) -> bool:
+        self.logger.info("Inicializando Video Agent...")
+        self.status = AgentStatus.ACTIVE
+        return True
+    
+    async def execute(self, task: Dict[str, Any]) -> Dict[str, Any]:
+        return {"status": "completed", "agent": "video")
+    
+    async def shutdown(self) -> bool:
+        self.status = AgentStatus.INACTIVE
+        return True
+
+class WorkflowAgent(BaseAgent):
+    """Agente de automação de workflows"""
+    
+    async def initialize(self) -> bool:
+        self.logger.info("Inicializando Workflow Agent...")
+        self.status = AgentStatus.ACTIVE
+        return True
+    
+    async def execute(self, task: Dict[str, Any]) -> Dict[str, Any]:
+        return {"status": "completed", "agent": "workflow"}
     
     async def shutdown(self) -> bool:
         self.status = AgentStatus.INACTIVE
@@ -575,7 +635,7 @@ class AgentRegistry:
             ("attention", "Attention Agent", AttentionAgent, "Controle de atenção")
         ]
         
-        # Domain Agents (10)
+        # Domain Agents (14)
         domain_agents = [
             ("analytics", "Analytics Agent", AnalyticsAgent, "Analytics de negócio"),
             ("sales", "Sales Agent", SalesAgent, "Automação de vendas"),
@@ -586,7 +646,12 @@ class AgentRegistry:
             ("research", "Research Agent", ResearchAgent, "Pesquisa e análise"),
             ("automation", "Automation Agent", AutomationAgent, "Automação de processos"),
             ("optimization", "Optimization Agent", OptimizationAgent, "Otimização de performance"),
-            ("integration", "Integration Agent", IntegrationAgent, "Integrações externas")
+            ("integration", "Integration Agent", IntegrationAgent, "Integrações externas"),
+            # OS 4 NOVOS:
+            ("translation", "Translation Agent", TranslationAgent, "Tradução multilíngue"),
+            ("voice", "Voice Agent", VoiceAgent, "Processamento de voz e áudio"),
+            ("video", "Video Agent", VideoAgent, "Processamento de vídeo"),
+            ("workflow", "Workflow Agent", WorkflowAgent, "Automação de workflows complexos")
         ]
         
         # Registrar todos os agentes
