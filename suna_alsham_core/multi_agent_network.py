@@ -19,6 +19,9 @@ class MessageType(Enum):
     RESPONSE = "response"
     NOTIFICATION = "notification"
     ERROR = "error"
+    # --- LINHAS DA CORREÇÃO ADICIONADAS AQUI ---
+    HEARTBEAT = "heartbeat"
+    BROADCAST = "broadcast"
 
 # Prioridade de Mensagem
 class Priority(Enum):
@@ -66,7 +69,13 @@ class MessageBus:
 
     async def publish(self, message: AgentMessage):
         if not self.running: return
-        if message.recipient_id in self.queues:
+        # Lógica para broadcast
+        if message.recipient_id == "broadcast":
+            for agent_id in self.queues:
+                if agent_id != message.sender_id:
+                    await self.queues[agent_id].put(message)
+        # Lógica para mensagem direta
+        elif message.recipient_id in self.queues:
             await self.queues[message.recipient_id].put(message)
 
     def subscribe(self, agent_id: str) -> asyncio.Queue:
@@ -82,7 +91,6 @@ class BaseNetworkAgent:
         self.message_bus = message_bus
         self.inbox = self.message_bus.subscribe(self.agent_id)
         self.status = "active"
-        # --- LINHA DA CORREÇÃO ADICIONADA AQUI ---
         self.capabilities: List[str] = []
         self.task = asyncio.create_task(self._run())
 
