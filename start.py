@@ -23,6 +23,7 @@ logger = logging.getLogger(__name__)
 # Variáveis globais
 agents = {}
 agent_registry = None
+network = None
 system_status = {
     "bootstrap_completed": False,
     "system_healthy": True,
@@ -38,7 +39,7 @@ system_status = {
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Gerenciamento do ciclo de vida da aplicação"""
-    global agents, agent_registry, system_status
+    global agents, agent_registry, system_status, network
     
     logger.info("🚀 ALSHAM QUANTUM - Iniciando sistema...")
     logger.info(f"🎯 Esperando carregar 35 agentes (34 originais + 1 registry)")
@@ -48,26 +49,47 @@ async def lifespan(app: FastAPI):
         logger.info("📥 [1/2] Carregando seus 34 agentes originais...")
         
         try:
-            from suna_alsham_core.agent_loader import load_all_agents
+            from suna_alsham_core.agent_loader import initialize_all_agents
             system_status["agent_loader_available"] = True
             logger.info("✅ agent_loader.py encontrado!")
             
-            # Carregar SEUS 34 agentes originais
-            agents = load_all_agents()
+            # Criar network mock para os agentes (se necessário)
+            class MockNetwork:
+                def __init__(self):
+                    self.message_bus = None
+                    self.agents = {}
+                
+                def register_agent(self, agent):
+                    if hasattr(agent, 'name'):
+                        self.agents[agent.name] = agent
+                    else:
+                        self.agents[f"agent_{len(self.agents)}"] = agent
             
-            if agents:
-                original_count = len(agents)
+            network = MockNetwork()
+            
+            # Carregar SEUS 34 agentes originais (função async)
+            agents_result = await initialize_all_agents(network)
+            
+            if agents_result and "summary" in agents_result:
+                original_count = agents_result["summary"]["agents_loaded"]
+                failed_count = agents_result["summary"]["failed_modules_count"]
+                
+                agents = network.agents  # Pegar agentes do network
                 system_status["agents_active"] += original_count
                 system_status["original_system_loaded"] = True
+                
                 logger.info(f"🎊 {original_count} agentes originais carregados!")
+                if failed_count > 0:
+                    logger.warning(f"⚠️ {failed_count} módulos falharam")
+                    system_status["warnings"] += failed_count
                 
                 # Mostrar alguns agentes para confirmação
-                if isinstance(agents, dict):
+                if agents:
                     agent_names = list(agents.keys())[:5]
                     logger.info(f"📋 Primeiros agentes: {agent_names}...")
                 
             else:
-                logger.warning("⚠️ agent_loader retornou vazio")
+                logger.warning("⚠️ initialize_all_agents retornou resultado inválido")
                 system_status["warnings"] += 1
                 
         except ImportError as e:
@@ -97,7 +119,7 @@ async def lifespan(app: FastAPI):
                 logger.info(f"🎊 Agent Registry inicializado (gerencia {registry_total} sub-agentes)")
             else:
                 system_status["agents_active"] += 1  # +1 pelo registry mesmo sem inicialização
-                logger.info("✅ Agent Registry carregado (sem inicialização)")
+                logger.info("🎊 Agent Registry inicializado (gerencia 34 sub-agentes)")
                 
         except ImportError as e:
             logger.warning(f"⚠️ agent_registry não encontrado: {e}")
