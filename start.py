@@ -93,21 +93,19 @@ async def submit_task(request: Dict[str, Any]):
         raise HTTPException(status_code=503, detail="Sistema não está inicializado.")
 
     recipient = request.get("recipient_id")
-    task_content = request.get("content")
+    task_content = request.get("content") # Aqui, task_content é o dicionário: {"content": "..."}
 
-    if not recipient or not task_content:
-        raise HTTPException(status_code=400, detail="Campos 'recipient_id' e 'content' são obrigatórios.")
+    if not recipient or not task_content or not isinstance(task_content, dict):
+        raise HTTPException(status_code=400, detail="Corpo da requisição inválido. 'recipient_id' é obrigatório e 'content' deve ser um dicionário.")
 
-    # --- LINHA DA CORREÇÃO AQUI ---
-    # Garantimos que o 'content' da mensagem seja sempre um dicionário,
-    # alinhando a API com o formato que a rede de agentes espera.
-    formatted_content = {"content": task_content}
-
+    # --- CORREÇÃO APLICADA AQUI ---
+    # Usamos diretamente o task_content, que já é o dicionário que queremos.
+    # A linha que criava o "aninhamento duplo" foi removida.
     message = AgentMessage(
         sender_id="api_gateway",
         recipient_id=recipient,
         message_type=MessageType.REQUEST,
-        content=formatted_content, # Usamos o conteúdo formatado
+        content=task_content, # Usamos o dicionário original diretamente
     )
 
     await system.network.message_bus.publish(message)
