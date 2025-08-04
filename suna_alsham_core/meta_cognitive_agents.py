@@ -1,15 +1,17 @@
 #!/usr/bin/env python3
 """
 Módulo dos Agentes Meta-Cognitivos – O Cérebro do SUNA-ALSHAM.
-[Versão 2.0 - Passagem de Contexto]
+[Versão 2.1 - Coleta de Dados para Evolução]
 """
 import asyncio
 import json
 import logging
 import re
+from datetime import datetime
 from typing import Dict, List, Optional
 
-# (o resto dos seus imports)
+# Importa o Dataclass de treino do motor de evolução
+from suna_alsham_core.real_evolution_engine import TrainingDataPoint
 from suna_alsham_core.multi_agent_network import (
     AgentMessage,
     AgentType,
@@ -21,20 +23,18 @@ from suna_alsham_core.multi_agent_network import (
 logger = logging.getLogger(__name__)
 
 def _get_value_from_path(data: Dict, path: str):
-    """Navega num dicionário usando um caminho de string como 'result.details'."""
     keys = path.split('.')
     for key in keys:
         if isinstance(data, dict) and key in data:
             data = data[key]
-        else:
-            return None
+        else: return None
     return data
 
 class OrchestratorAgent(BaseNetworkAgent):
     def __init__(self, agent_id: str, message_bus):
         super().__init__(agent_id, AgentType.ORCHESTRATOR, message_bus)
         self.pending_missions: Dict[str, Dict] = {}
-        logger.info(f"👑 {self.agent_id} (Orquestrador Estratégico) V2.0 com passagem de contexto.")
+        logger.info(f"👑 {self.agent_id} (Orquestrador Estratégico) V2.1 com coleta de dados.")
 
     async def _internal_handle_message(self, message: AgentMessage):
         if message.message_type == MessageType.REQUEST:
@@ -44,7 +44,13 @@ class OrchestratorAgent(BaseNetworkAgent):
 
     async def _handle_new_request(self, message: AgentMessage):
         mission_id = message.message_id
-        self.pending_missions[mission_id] = {"original_request": message, "status": "planning", "step_outputs": {}}
+        logger.info(f"👑 [Orquestrador] Nova Missão '{mission_id}' recebida. Iniciando planejamento.")
+        self.pending_missions[mission_id] = {
+            "original_request": message,
+            "status": "planning",
+            "step_outputs": {},
+            "start_time": datetime.now() # Adiciona o tempo de início
+        }
         planning_request = self.create_message(
             recipient_id="ai_analyzer_001", message_type=MessageType.REQUEST,
             content={"content": message.content.get("content")}, callback_id=mission_id
@@ -64,7 +70,8 @@ class OrchestratorAgent(BaseNetworkAgent):
         mission = self.pending_missions[mission_id]
         plan = plan_message.content.get("plan")
         if plan_message.content.get("status") != "success" or not plan:
-            await self._abort_mission(mission_id, f"Falha no planejamento: {plan_message.content.get('message')}")
+            error_msg = f"Falha no planejamento: {plan_message.content.get('message', 'Plano inválido.')}"
+            await self._conclude_mission(mission_id, "failed", error_msg)
             return
         mission["plan"] = plan
         mission["status"] = "executing"
@@ -74,21 +81,20 @@ class OrchestratorAgent(BaseNetworkAgent):
         mission = self.pending_missions[mission_id]
         if mission.get("current_step", -1) != step_index: return
         if step_message.content.get("status") != "success":
-            await self._abort_mission(mission_id, f"Falha no passo {step_index + 1}: {step_message.content.get('message')}")
+            error_msg = f"Falha no passo {step_index + 1}: {step_message.content.get('message')}"
+            await self._conclude_mission(mission_id, "failed", error_msg)
             return
         mission["step_outputs"][step_index + 1] = step_message.content
         mission["current_step"] += 1
         await self._execute_mission_step(mission_id)
 
     def _resolve_context(self, task_content: Dict, step_outputs: Dict) -> Dict:
-        """Substitui os placeholders {{...}} pelos dados dos passos anteriores."""
         resolved_content = json.dumps(task_content)
         placeholders = re.findall(r"\{\{output_step_(\d+)\.([^}]+)\}\}", resolved_content)
         for step_num, path in placeholders:
             step_output = step_outputs.get(int(step_num))
             if step_output:
                 value = _get_value_from_path(step_output, path)
-                # Substitui a string completa, incluindo as aspas
                 placeholder_str = f"\"{{{{output_step_{step_num}.{path}}}}}\""
                 resolved_content = resolved_content.replace(placeholder_str, json.dumps(value))
         return json.loads(resolved_content)
@@ -96,13 +102,12 @@ class OrchestratorAgent(BaseNetworkAgent):
     async def _execute_mission_step(self, mission_id: str):
         if mission_id not in self.pending_missions: return
         mission = self.pending_missions[mission_id]
-        
         if "current_step" not in mission: mission["current_step"] = 0
         step_index = mission["current_step"]
 
         if step_index >= len(mission.get("plan", [])):
-            await self.publish_response(mission["original_request"], {"status": "success", "message": "Missão concluída."})
-            del self.pending_missions[mission_id]
+            success_msg = "Missão concluída com sucesso."
+            await self._conclude_mission(mission_id, "success", success_msg)
             return
 
         step = mission["plan"][step_index]
@@ -114,15 +119,38 @@ class OrchestratorAgent(BaseNetworkAgent):
             )
             await self.message_bus.publish(step_request)
         except Exception as e:
-            await self._abort_mission(mission_id, f"Erro ao executar passo {step_index + 1}: {e}")
+            await self._conclude_mission(mission_id, "failed", f"Erro ao executar passo {step_index + 1}: {e}")
 
-    async def _abort_mission(self, mission_id: str, reason: str):
-        if mission_id in self.pending_missions:
-            mission = self.pending_missions[mission_id]
-            await self.publish_error_response(mission["original_request"], reason)
-            del self.pending_missions[mission_id]
+    # --- NOVAS FUNÇÕES ADICIONADAS ---
+    async def _conclude_mission(self, mission_id: str, final_status: str, message: str):
+        if mission_id not in self.pending_missions: return
+        mission = self.pending_missions[mission_id]
+        response_content = {"status": final_status, "message": message}
+        if final_status == "success":
+            await self.publish_response(mission["original_request"], response_content)
+        else:
+            await self.publish_error_response(mission["original_request"], message)
+        await self._send_training_data(mission, final_status)
+        del self.pending_missions[mission_id]
 
-# (O resto do ficheiro com MetaCognitiveAgent e a fábrica continua igual)
+    async def _send_training_data(self, mission: Dict, final_status: str):
+        duration = (datetime.now() - mission.get("start_time", datetime.now())).total_seconds()
+        reward = 1.0 if final_status == "success" else -1.0
+        data_point = TrainingDataPoint(
+            agent_id="orchestrator_001",
+            state_features={"num_steps": len(mission.get("plan", [])), "duration_seconds": duration},
+            action_taken={"plan_hash": hash(str(mission.get("plan", [])))},
+            outcome_reward=reward
+        )
+        training_message = self.create_message(
+            recipient_id="evolution_engine_001",
+            message_type=MessageType.NOTIFICATION,
+            content={"event_type": "training_data", "data": data_point.__dict__}
+        )
+        await self.message_bus.publish(training_message)
+        logger.info(f"👑 [Orquestrador] Dados de treino da missão enviados para o Evolution Engine.")
+
+# O resto do ficheiro (MetaCognitiveAgent e a fábrica) continua igual
 class MetaCognitiveAgent(BaseNetworkAgent):
     def __init__(self, agent_id: str, message_bus):
         super().__init__(agent_id, AgentType.META_COGNITIVE, message_bus)
