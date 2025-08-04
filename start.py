@@ -1,99 +1,171 @@
-#!/usr/bin/env python3
 """
 ALSHAM QUANTUM - Sistema de Inicialização Principal
-[Quantum Version 2.0] - Startup with Quantum Bootstrap
+Correção crítica da lógica de bootstrap validation
 """
-
-import asyncio
-import logging
 import os
-import signal
 import sys
-from contextlib import asynccontextmanager
-from typing import Any, Dict
-
+import logging
+import asyncio
 import uvicorn
+from contextlib import asynccontextmanager
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
-# Configuração de logging antes de qualquer import
+# Importações do sistema
+from suna_alsham_core.quantum_bootstrap import run_quantum_bootstrap
+from suna_alsham_core.meta_cognitive_agents import QuantumOrchestrator
+from suna_alsham_core.real_evolution_engine import RealEvolutionEngine
+from suna_alsham_core.notification_agent import NotificationAgent
+from suna_alsham_core.ai_powered_agents import AIAnalyzer
+
+# Configuração de logging
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(name)s - [%(levelname)s] - %(message)s',
     datefmt='%Y-%m-%d %H:%M:%S'
 )
-
 logger = logging.getLogger(__name__)
 
-# Imports do sistema
-from suna_alsham_core.quantum_bootstrap import execute_quantum_bootstrap
-from suna_alsham_core.system import SUNAAlshamSystemV2
-
-# Estado global do sistema
-quantum_system: SUNAAlshamSystemV2 = None
-system_ready = False
-bootstrap_report = {}
+# Instâncias globais do sistema
+orchestrator = None
+evolution_engine = None
+notification_agent = None
+ai_analyzer = None
+system_status = {
+    "bootstrap_completed": False,
+    "system_healthy": False,
+    "agents_active": 0,
+    "warnings": 0,
+    "errors": 0
+}
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    """Gerencia ciclo de vida da aplicação com bootstrap quantum."""
-    global quantum_system, system_ready, bootstrap_report
+    """Gerenciamento do ciclo de vida da aplicação"""
+    global orchestrator, evolution_engine, notification_agent, ai_analyzer, system_status
     
     logger.info("🚀 ALSHAM QUANTUM - Iniciando sistema...")
     
     try:
-        # Fase 1: Bootstrap Quantum
-        logger.info("🔧 Executando Bootstrap Quantum...")
-        bootstrap_success = await execute_quantum_bootstrap()
+        # ===== EXECUÇÃO DO BOOTSTRAP QUANTUM =====
+        logger.info("⚡ Executando Bootstrap Quantum...")
+        bootstrap_success = await run_quantum_bootstrap()
         
-        if not bootstrap_success:
-            logger.critical("❌ Bootstrap Quantum falhou! Sistema não pode iniciar.")
+        # ===== LÓGICA CORRIGIDA DE VALIDAÇÃO =====
+        if bootstrap_success:
+            logger.info("✅ Bootstrap Quantum executado com SUCESSO!")
+            system_status["bootstrap_completed"] = True
+            
+            # Inicializar componentes principais
+            try:
+                logger.info("🤖 Inicializando componentes principais...")
+                
+                # Orchestrator
+                logger.info("  🧠 Inicializando Quantum Orchestrator...")
+                orchestrator = QuantumOrchestrator()
+                await orchestrator.initialize()
+                logger.info("    ✅ Quantum Orchestrator ativo")
+                
+                # Evolution Engine
+                logger.info("  🧬 Inicializando Real Evolution Engine...")
+                evolution_engine = RealEvolutionEngine()
+                await evolution_engine.initialize()
+                logger.info("    ✅ Real Evolution Engine ativo")
+                
+                # Notification Agent
+                logger.info("  📧 Inicializando Notification Agent...")
+                notification_agent = NotificationAgent()
+                await notification_agent.initialize()
+                logger.info("    ✅ Notification Agent ativo")
+                
+                # AI Analyzer
+                logger.info("  🤖 Inicializando AI Analyzer...")
+                ai_analyzer = AIAnalyzer()
+                await ai_analyzer.initialize()
+                logger.info("    ✅ AI Analyzer ativo")
+                
+                system_status["agents_active"] = 4
+                system_status["system_healthy"] = True
+                
+                logger.info("🎊 ALSHAM QUANTUM - Sistema 100% OPERACIONAL!")
+                logger.info("🚀 Todos os componentes ativos e funcionando")
+                
+                # Notificação de sucesso
+                if notification_agent:
+                    try:
+                        await notification_agent.send_notification(
+                            "system_startup",
+                            "🎊 ALSHAM QUANTUM ONLINE!\n\n"
+                            "✅ Bootstrap: Sucesso\n"
+                            "✅ Agentes: 4/4 Ativos\n" 
+                            "✅ Sistema: 100% Operacional\n\n"
+                            "🚀 Pronto para receber tarefas!"
+                        )
+                    except Exception as e:
+                        logger.warning(f"⚠️ Notificação de startup falhou: {e}")
+                        system_status["warnings"] += 1
+                
+            except Exception as e:
+                logger.error(f"❌ Erro na inicialização de componentes: {e}")
+                system_status["errors"] += 1
+                # MAS NÃO FAZEMOS SHUTDOWN! Sistema pode funcionar parcialmente
+                logger.warning("⚠️ Sistema continuando com funcionalidade limitada")
+                
+        else:
+            # Bootstrap falhou em validações CRÍTICAS
+            logger.critical("❌ Bootstrap Quantum falhou em validações CRÍTICAS!")
+            logger.critical("🔴 Sistema não pode iniciar sem componentes essenciais")
+            logger.info("🔄 Iniciando shutdown gracioso...")
+            
+            # Só aqui que fazemos shutdown por falha crítica real
             sys.exit(1)
-        
-        # Fase 2: Inicialização do Sistema
-        logger.info("🤖 Inicializando Sistema Multi-Agente...")
-        quantum_system = SUNAAlshamSystemV2()
-        
-        initialization_success = await quantum_system.initialize_complete_system()
-        
-        if not initialization_success:
-            logger.critical("❌ Inicialização do sistema falhou!")
-            sys.exit(1)
-        
-        system_ready = True
-        logger.info("✅ ALSHAM QUANTUM operacional!")
-        
-        yield  # Aplicação rodando
-        
+            
     except Exception as e:
-        logger.critical(f"❌ Erro crítico na inicialização: {e}", exc_info=True)
+        logger.critical(f"💥 Erro crítico na inicialização: {e}")
+        logger.info("🔄 Iniciando shutdown gracioso...")
         sys.exit(1)
     
-    finally:
-        # Shutdown gracioso
-        logger.info("🔄 Iniciando shutdown gracioso...")
-        system_ready = False
+    # Sistema iniciado - yield para manter rodando
+    yield
+    
+    # Shutdown gracioso
+    logger.info("🔄 Iniciando shutdown gracioso do ALSHAM QUANTUM...")
+    
+    try:
+        if orchestrator:
+            await orchestrator.shutdown()
+            logger.info("  ✅ Quantum Orchestrator desligado")
+            
+        if evolution_engine:
+            await evolution_engine.shutdown()
+            logger.info("  ✅ Real Evolution Engine desligado")
+            
+        if notification_agent:
+            await notification_agent.shutdown()
+            logger.info("  ✅ Notification Agent desligado")
+            
+        if ai_analyzer:
+            await ai_analyzer.shutdown()
+            logger.info("  ✅ AI Analyzer desligado")
+            
+        logger.info("✅ ALSHAM QUANTUM - Shutdown completo")
         
-        if quantum_system:
-            try:
-                await quantum_system.network.message_bus.stop()
-                logger.info("✅ Sistema encerrado graciosamente")
-            except Exception as e:
-                logger.error(f"⚠️ Erro no shutdown: {e}")
+    except Exception as e:
+        logger.error(f"❌ Erro durante shutdown: {e}")
 
-# Criação da aplicação FastAPI
+# Criar aplicação FastAPI
 app = FastAPI(
     title="ALSHAM QUANTUM",
-    description="Sistema Multi-Agente de IA com Capacidades Quantum",
+    description="Sistema Multi-Agente de IA Autônomo",
     version="2.0.0",
     lifespan=lifespan
 )
 
-# Configuração CORS
+# Configurar CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=os.environ.get("API_CORS_ORIGINS", "*").split(","),
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -103,204 +175,118 @@ app.add_middleware(
 
 @app.get("/")
 async def root():
-    """Rota raiz com informações do sistema."""
-    if not system_ready:
-        raise HTTPException(status_code=503, detail="Sistema ainda inicializando")
-    
+    """Endpoint raiz com status do sistema"""
     return {
         "system": "ALSHAM QUANTUM",
         "version": "2.0.0",
-        "status": "operational",
-        "capabilities": [
-            "quantum_orchestration",
-            "multi_ai_providers", 
-            "intelligent_recovery",
-            "self_evolution",
-            "quantum_coherence"
-        ],
-        "message": "Sistema Multi-Agente de IA Quantum operacional"
+        "status": "online" if system_status["system_healthy"] else "degraded",
+        "message": "🚀 Sistema Multi-Agente de IA Autônomo",
+        "bootstrap_completed": system_status["bootstrap_completed"],
+        "agents_active": system_status["agents_active"],
+        "warnings": system_status["warnings"],
+        "errors": system_status["errors"]
     }
 
 @app.get("/health")
 async def health_check():
-    """Verificação de saúde detalhada."""
-    if not system_ready or not quantum_system:
-        return JSONResponse(
-            status_code=503,
-            content={
-                "status": "unhealthy",
-                "message": "Sistema não inicializado",
-                "ready": False
-            }
-        )
-    
-    try:
-        system_status = quantum_system.get_system_status()
-        
-        health_status = {
-            "status": "healthy" if system_status["system_status"] == "active" else "degraded",
-            "ready": True,
-            "timestamp": system_status.get("uptime_seconds", 0),
-            "agents": {
-                "total": system_status.get("total_agents", 0),
-                "active": system_status.get("active_agents", 0),
-                "categories": system_status.get("agent_categories", {})
-            },
-            "system": {
-                "status": system_status.get("system_status", "unknown"),
-                "uptime_seconds": system_status.get("uptime_seconds", 0),
-                "failed_modules": system_status.get("failed_modules", [])
-            }
+    """Verificação de saúde detalhada"""
+    return {
+        "status": "healthy" if system_status["system_healthy"] else "unhealthy",
+        "bootstrap_completed": system_status["bootstrap_completed"],
+        "components": {
+            "orchestrator": orchestrator is not None,
+            "evolution_engine": evolution_engine is not None, 
+            "notification_agent": notification_agent is not None,
+            "ai_analyzer": ai_analyzer is not None
+        },
+        "metrics": {
+            "agents_active": system_status["agents_active"],
+            "warnings": system_status["warnings"],
+            "errors": system_status["errors"]
         }
-        
-        return health_status
-        
-    except Exception as e:
-        logger.error(f"Erro na verificação de saúde: {e}")
-        return JSONResponse(
-            status_code=500,
-            content={
-                "status": "error",
-                "message": f"Erro interno: {str(e)}",
-                "ready": False
-            }
-        )
+    }
 
 @app.get("/status")
-async def system_status():
-    """Status completo do sistema."""
-    if not system_ready or not quantum_system:
-        raise HTTPException(status_code=503, detail="Sistema não disponível")
+async def system_status_endpoint():
+    """Status completo do sistema"""
+    if not system_status["bootstrap_completed"]:
+        raise HTTPException(status_code=503, detail="Sistema ainda inicializando")
     
-    try:
-        return quantum_system.get_system_status()
-    except Exception as e:
-        logger.error(f"Erro obtendo status: {e}")
-        raise HTTPException(status_code=500, detail=f"Erro interno: {str(e)}")
-
-@app.get("/metrics")
-async def system_metrics():
-    """Métricas detalhadas do sistema."""
-    if not system_ready or not quantum_system:
-        raise HTTPException(status_code=503, detail="Sistema não disponível")
-    
-    try:
-        base_status = quantum_system.get_system_status()
-        
-        # Adiciona métricas específicas
-        metrics = {
-            **base_status,
-            "quantum_metrics": {
-                "coherence": 0.95,  # Placeholder
-                "evolution_cycles": 0,  # Placeholder
-                "learning_rate": 0.1   # Placeholder
-            }
+    return {
+        "system_name": "ALSHAM QUANTUM",
+        "version": "2.0.0",
+        "operational": system_status["system_healthy"],
+        "bootstrap": {
+            "completed": system_status["bootstrap_completed"],
+            "agents_loaded": 30,  # Do bootstrap
+            "components_active": system_status["agents_active"]
+        },
+        "health": {
+            "overall": "healthy" if system_status["system_healthy"] else "degraded",
+            "warnings": system_status["warnings"],
+            "errors": system_status["errors"]
         }
-        
-        return metrics
-        
-    except Exception as e:
-        logger.error(f"Erro obtendo métricas: {e}")
-        raise HTTPException(status_code=500, detail=f"Erro interno: {str(e)}")
+    }
 
-@app.post("/submit_task")
-async def submit_task(task_data: Dict[str, Any]):
-    """Submete uma tarefa para execução pelo sistema."""
-    if not system_ready or not quantum_system:
-        raise HTTPException(status_code=503, detail="Sistema não disponível")
+@app.post("/execute")
+async def execute_task(task: dict):
+    """Executar tarefa no sistema"""
+    if not system_status["system_healthy"]:
+        raise HTTPException(status_code=503, detail="Sistema não está saudável")
+    
+    if not orchestrator:
+        raise HTTPException(status_code=503, detail="Orchestrator não disponível")
     
     try:
-        content = task_data.get("content") or task_data.get("task") or task_data.get("request")
-        
-        if not content:
-            raise HTTPException(status_code=400, detail="Conteúdo da tarefa não especificado")
-        
-        # Envia tarefa para o API Gateway
-        api_gateway = quantum_system.all_agents.get("api_gateway_001")
-        
-        if not api_gateway:
-            raise HTTPException(status_code=500, detail="API Gateway não disponível")
-        
-        # Simula processamento (implementação real seria mais complexa)
-        await api_gateway.handle_incoming({
-            "content": content,
-            "context": task_data.get("context", {}),
-            "priority": task_data.get("priority", "normal")
-        })
-        
-        return {
-            "status": "accepted",
-            "message": "Tarefa aceita para processamento",
-            "task_preview": content[:100] + "..." if len(content) > 100 else content
-        }
-        
-    except HTTPException:
-        raise
+        result = await orchestrator.execute_task(task)
+        return {"status": "success", "result": result}
     except Exception as e:
-        logger.error(f"Erro processando tarefa: {e}", exc_info=True)
-        raise HTTPException(status_code=500, detail=f"Erro interno: {str(e)}")
+        logger.error(f"Erro na execução de tarefa: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
 
 @app.get("/agents")
 async def list_agents():
-    """Lista todos os agentes ativos no sistema."""
-    if not system_ready or not quantum_system:
-        raise HTTPException(status_code=503, detail="Sistema não disponível")
+    """Listar agentes disponíveis"""
+    if not orchestrator:
+        raise HTTPException(status_code=503, detail="Sistema não inicializado")
     
-    try:
-        agents_info = {}
-        
-        for agent_id, agent in quantum_system.all_agents.items():
-            agents_info[agent_id] = {
-                "type": agent.agent_type.value if hasattr(agent, 'agent_type') else "unknown",
-                "status": agent.status if hasattr(agent, 'status') else "unknown",
-                "capabilities": agent.capabilities if hasattr(agent, 'capabilities') else []
-            }
-        
-        return {
-            "total_agents": len(agents_info),
-            "agents": agents_info,
-            "categories": quantum_system.agent_categories
-        }
-        
-    except Exception as e:
-        logger.error(f"Erro listando agentes: {e}")
-        raise HTTPException(status_code=500, detail=f"Erro interno: {str(e)}")
+    return await orchestrator.list_agents()
 
-# ===== SIGNAL HANDLERS =====
-
-def signal_handler(signum, frame):
-    """Handler para sinais do sistema."""
-    logger.info(f"Sinal {signum} recebido. Iniciando shutdown gracioso...")
-    # O lifespan context manager cuidará do shutdown
-
-signal.signal(signal.SIGTERM, signal_handler)
-signal.signal(signal.SIGINT, signal_handler)
-
-# ===== FUNÇÃO PRINCIPAL =====
-
-def main():
-    """Função principal de inicialização."""
-    # Configurações do servidor
-    port = int(os.environ.get("PORT", 8080))
-    host = os.environ.get("HOST", "0.0.0.0")
-    workers = int(os.environ.get("MAX_WORKERS", 1))
-    
-    # Log de inicialização
-    logger.info(f"🚀 Iniciando ALSHAM QUANTUM na porta {port}")
-    logger.info(f"🌍 Ambiente: {os.environ.get('ENVIRONMENT', 'production')}")
-    logger.info(f"👥 Workers: {workers}")
-    
-    # Inicia o servidor
-    uvicorn.run(
-        "start:app",
-        host=host,
-        port=port,
-        workers=workers,
-        log_level=os.environ.get("LOG_LEVEL", "info").lower(),
-        access_log=True,
-        use_colors=True,
-        loop="asyncio"
-    )
+# ===== INICIALIZAÇÃO PRINCIPAL =====
 
 if __name__ == "__main__":
-    main()
+    # Configurações para diferentes ambientes
+    port = int(os.getenv("PORT", 8000))
+    host = os.getenv("HOST", "0.0.0.0")
+    
+    # Detectar ambiente
+    is_railway = os.getenv("RAILWAY_ENVIRONMENT_NAME") is not None
+    is_production = os.getenv("ENVIRONMENT") == "production"
+    
+    logger.info(f"🚀 Iniciando ALSHAM QUANTUM na porta {port}")
+    if is_railway:
+        logger.info("🚂 Ambiente: Railway")
+    elif is_production:
+        logger.info("🏭 Ambiente: Production")
+    else:
+        logger.info("🔧 Ambiente: Development")
+    
+    # Configurações do uvicorn
+    uvicorn_config = {
+        "app": "start:app",
+        "host": host,
+        "port": port,
+        "log_level": "info",
+        "access_log": True
+    }
+    
+    # Configurações específicas para Railway
+    if is_railway:
+        uvicorn_config.update({
+            "workers": 1,  # Railway funciona melhor com 1 worker
+            "loop": "asyncio",
+            "http": "httptools"
+        })
+    
+    # Rodar servidor
+    uvicorn.run(**uvicorn_config)
