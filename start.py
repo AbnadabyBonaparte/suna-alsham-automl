@@ -53,15 +53,39 @@ async def lifespan(app: FastAPI):
             system_status["agent_loader_available"] = True
             logger.info("✅ agent_loader.py encontrado!")
             
-            # Criar network mock para os agentes (se necessário)
+            # Criar MessageBus funcional para os agentes
+            class MockMessageBus:
+                def __init__(self):
+                    self.subscriptions = {}
+                    self.messages = []
+                
+                def subscribe(self, agent_id):
+                    """Criar inbox para o agente"""
+                    if agent_id not in self.subscriptions:
+                        self.subscriptions[agent_id] = []
+                    return self.subscriptions[agent_id]
+                
+                def publish(self, message, recipient=None):
+                    """Publicar mensagem"""
+                    self.messages.append({"message": message, "recipient": recipient})
+                    if recipient and recipient in self.subscriptions:
+                        self.subscriptions[recipient].append(message)
+                
+                def get_messages(self, agent_id):
+                    """Obter mensagens para um agente"""
+                    return self.subscriptions.get(agent_id, [])
+            
+            # Criar network com MessageBus funcional
             class MockNetwork:
                 def __init__(self):
-                    self.message_bus = None
+                    self.message_bus = MockMessageBus()
                     self.agents = {}
                 
                 def register_agent(self, agent):
                     if hasattr(agent, 'name'):
                         self.agents[agent.name] = agent
+                    elif hasattr(agent, 'agent_id'):
+                        self.agents[agent.agent_id] = agent
                     else:
                         self.agents[f"agent_{len(self.agents)}"] = agent
             
