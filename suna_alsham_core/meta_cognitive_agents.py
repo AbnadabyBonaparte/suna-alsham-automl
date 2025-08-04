@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 Módulo dos Agentes Meta-Cognitivos – O Cérebro do SUNA-ALSHAM.
-[Versão 2.1 - Coleta de Dados para Evolução]
+[Versão 2.2 - Debug Logging]
 """
 import asyncio
 import json
@@ -10,7 +10,6 @@ import re
 from datetime import datetime
 from typing import Dict, List, Optional
 
-# Importa o Dataclass de treino do motor de evolução
 from suna_alsham_core.real_evolution_engine import TrainingDataPoint
 from suna_alsham_core.multi_agent_network import (
     AgentMessage,
@@ -34,9 +33,12 @@ class OrchestratorAgent(BaseNetworkAgent):
     def __init__(self, agent_id: str, message_bus):
         super().__init__(agent_id, AgentType.ORCHESTRATOR, message_bus)
         self.pending_missions: Dict[str, Dict] = {}
-        logger.info(f"👑 {self.agent_id} (Orquestrador Estratégico) V2.1 com coleta de dados.")
+        logger.info(f"👑 {self.agent_id} (Orquestrador Estratégico) V2.2 com debug logging.")
 
     async def _internal_handle_message(self, message: AgentMessage):
+        # Adicionado log de depuração para ver TODAS as mensagens recebidas
+        logger.info(f"👑 [Orquestrador] Mensagem recebida na inbox. Tipo: {message.message_type.value}, Sender: {message.sender_id}")
+        
         if message.message_type == MessageType.REQUEST:
             await self._handle_new_request(message)
         elif message.message_type == MessageType.RESPONSE:
@@ -49,14 +51,23 @@ class OrchestratorAgent(BaseNetworkAgent):
             "original_request": message,
             "status": "planning",
             "step_outputs": {},
-            "start_time": datetime.now() # Adiciona o tempo de início
+            "start_time": datetime.now()
         }
+        
         planning_request = self.create_message(
             recipient_id="ai_analyzer_001", message_type=MessageType.REQUEST,
             content={"content": message.content.get("content")}, callback_id=mission_id
         )
+        
+        # --- LOGS DE DEPURAÇÃO ADICIONADOS ---
+        logger.info(f"👑 [Orquestrador] A preparar para delegar planejamento para 'ai_analyzer_001'...")
+        
         await self.message_bus.publish(planning_request)
+        
+        logger.info(f"👑 [Orquestrador] Planejamento delegado com sucesso para 'ai_analyzer_001'. A aguardar plano.")
+        # ------------------------------------
 
+    # (O resto do ficheiro permanece exatamente igual ao que eu já lhe tinha fornecido)
     async def _handle_response(self, message: AgentMessage):
         if not message.callback_id: return
         if message.callback_id in self.pending_missions:
@@ -121,7 +132,6 @@ class OrchestratorAgent(BaseNetworkAgent):
         except Exception as e:
             await self._conclude_mission(mission_id, "failed", f"Erro ao executar passo {step_index + 1}: {e}")
 
-    # --- NOVAS FUNÇÕES ADICIONADAS ---
     async def _conclude_mission(self, mission_id: str, final_status: str, message: str):
         if mission_id not in self.pending_missions: return
         mission = self.pending_missions[mission_id]
@@ -145,12 +155,11 @@ class OrchestratorAgent(BaseNetworkAgent):
         training_message = self.create_message(
             recipient_id="evolution_engine_001",
             message_type=MessageType.NOTIFICATION,
-            content={"event_type": "training_data", "data": data_point.__dict__}
+            content={"event_type": "training_data", "data": asdict(data_point)}
         )
         await self.message_bus.publish(training_message)
         logger.info(f"👑 [Orquestrador] Dados de treino da missão enviados para o Evolution Engine.")
 
-# O resto do ficheiro (MetaCognitiveAgent e a fábrica) continua igual
 class MetaCognitiveAgent(BaseNetworkAgent):
     def __init__(self, agent_id: str, message_bus):
         super().__init__(agent_id, AgentType.META_COGNITIVE, message_bus)
