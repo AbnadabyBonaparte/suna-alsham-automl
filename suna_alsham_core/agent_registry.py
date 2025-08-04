@@ -292,7 +292,7 @@ class QueueAgent(BaseAgent):
         return True
     
     async def execute(self, task: Dict[str, Any]) -> Dict[str, Any]:
-        return {"status": "completed", "agent": "queue"}
+        return {"status": "completed", "agent": "queue")
     
     async def shutdown(self) -> bool:
         self.status = AgentStatus.INACTIVE
@@ -446,7 +446,7 @@ class MarketingAgent(BaseAgent):
         return True
     
     async def execute(self, task: Dict[str, Any]) -> Dict[str, Any]:
-        return {"status": "completed", "agent": "marketing")
+        return {"status": "completed", "agent": "marketing"}
     
     async def shutdown(self) -> bool:
         self.status = AgentStatus.INACTIVE
@@ -551,7 +551,7 @@ class VoiceAgent(BaseAgent):
         return True
     
     async def execute(self, task: Dict[str, Any]) -> Dict[str, Any]:
-        return {"status": "completed", "agent": "voice")
+        return {"status": "completed", "agent": "voice"}
     
     async def shutdown(self) -> bool:
         self.status = AgentStatus.INACTIVE
@@ -566,7 +566,7 @@ class VideoAgent(BaseAgent):
         return True
     
     async def execute(self, task: Dict[str, Any]) -> Dict[str, Any]:
-        return {"status": "completed", "agent": "video")
+        return {"status": "completed", "agent": "video"}
     
     async def shutdown(self) -> bool:
         self.status = AgentStatus.INACTIVE
@@ -635,7 +635,7 @@ class AgentRegistry:
             ("attention", "Attention Agent", AttentionAgent, "Controle de atenção")
         ]
         
-        # Domain Agents (14)
+        # Domain Agents (14) - CORRIGIDO: parêntesis corretos
         domain_agents = [
             ("analytics", "Analytics Agent", AnalyticsAgent, "Analytics de negócio"),
             ("sales", "Sales Agent", SalesAgent, "Automação de vendas"),
@@ -647,7 +647,6 @@ class AgentRegistry:
             ("automation", "Automation Agent", AutomationAgent, "Automação de processos"),
             ("optimization", "Optimization Agent", OptimizationAgent, "Otimização de performance"),
             ("integration", "Integration Agent", IntegrationAgent, "Integrações externas"),
-            # OS 4 NOVOS:
             ("translation", "Translation Agent", TranslationAgent, "Tradução multilíngue"),
             ("voice", "Voice Agent", VoiceAgent, "Processamento de voz e áudio"),
             ("video", "Video Agent", VideoAgent, "Processamento de vídeo"),
