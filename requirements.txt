@@ -1,4 +1,4 @@
-# ALSHAM QUANTUM - Dependencies Completas (CONFLITOS RESOLVIDOS)
+# ALSHAM QUANTUM - Dependencies Completas (bs4 ADICIONADO)
 # Sistema Multi-Agente de IA Autônomo
 
 # ===== CORE FRAMEWORK =====
@@ -12,6 +12,9 @@ httpx==0.25.2
 aiohttp==3.9.1
 requests==2.31.0
 websockets==12.0
+
+# ===== WEB SCRAPING (FALTAVA!) =====
+beautifulsoup4==4.12.2
 
 # ===== DATABASE & CACHE =====
 sqlalchemy==2.0.23
