@@ -1,4 +1,4 @@
-# ALSHAM QUANTUM - Dependencies Completas
+# ALSHAM QUANTUM - Dependencies Completas (CORRIGIDO)
 # Sistema Multi-Agente de IA Autônomo
 
 # ===== CORE FRAMEWORK =====
@@ -29,11 +29,9 @@ google-cloud-aiplatform==1.38.1
 # ===== MESSAGE BUS & QUEUES =====
 celery==5.3.4
 kombu==5.3.4
-redis==5.0.1
 
 # ===== NOTIFICATIONS =====
-# Email
-smtplib2==0.2.1
+# Email (smtplib é built-in, não precisa instalar)
 email-validator==2.1.0
 
 # SMS & WhatsApp  
@@ -77,9 +75,7 @@ rich==13.7.0
 typer==0.9.0
 
 # ===== ASYNC & CONCURRENCY =====
-asyncio==3.4.3
 aiofiles==23.2.1
-concurrent-futures==3.1.1
 
 # ===== LOGGING =====
 loguru==0.7.2
@@ -88,7 +84,6 @@ structlog==23.2.0
 # ===== TESTING =====
 pytest==7.4.3
 pytest-asyncio==0.21.1
-httpx==0.25.2
 
 # ===== DATA VALIDATION =====
 marshmallow==3.20.1
@@ -102,7 +97,6 @@ pillow==10.1.0
 
 # ===== NETWORKING =====
 dnspython==2.4.2
-ping3==4.0.4
 
 # ===== DEVELOPMENT =====
 black==23.11.0
