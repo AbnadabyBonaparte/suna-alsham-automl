@@ -15,6 +15,17 @@ import numpy as np
 logger = logging.getLogger(__name__)
 
 @dataclass
+class TrainingDataPoint:
+    """Ponto de dados de treinamento - CLASSE FALTANTE"""
+    id: str
+    input_data: Dict[str, Any]
+    output_data: Dict[str, Any]
+    timestamp: datetime
+    quality_score: float = 1.0
+    category: str = "general"
+    metadata: Dict[str, Any] = None
+
+@dataclass
 class EvolutionMetric:
     """Métrica de evolução"""
     name: str
@@ -41,12 +52,13 @@ class RealEvolutionEngine:
         self.name = "Real Evolution Engine"
         self.initialized = False
         self.learning_data: List[LearningData] = []
+        self.training_data: List[TrainingDataPoint] = []  # Novo campo
         self.metrics: List[EvolutionMetric] = []
         self.synthetic_data_enabled = True
         self.auto_learning_enabled = True
         self.data_generation_active = False
-        self.min_data_threshold = 100  # Mínimo de dados para não ficar faminto
-        self.max_data_cache = 1000     # Máximo de dados em cache
+        self.min_data_threshold = 100
+        self.max_data_cache = 1000
         
     async def initialize(self) -> bool:
         """Inicializar Evolution Engine"""
@@ -88,7 +100,7 @@ class RealEvolutionEngine:
                     "category": "system_metrics",
                     "quality_score": random.uniform(0.6, 1.0)
                 }
-                for i in range(50)  # Dados históricos limitados
+                for i in range(50)
             ]
             
             for data in historical_data:
@@ -101,7 +113,20 @@ class RealEvolutionEngine:
                 )
                 self.learning_data.append(learning_data)
             
-            logger.info(f"📥 Carregados {len(historical_data)} dados históricos")
+            # Também gerar alguns TrainingDataPoints
+            for i in range(20):
+                training_point = TrainingDataPoint(
+                    id=f"train_{i:04d}",
+                    input_data={"feature": random.uniform(0, 1)},
+                    output_data={"result": random.uniform(0, 1)},
+                    timestamp=datetime.now() - timedelta(hours=random.randint(1, 24)),
+                    quality_score=random.uniform(0.7, 1.0),
+                    category="training",
+                    metadata={"source": "historical"}
+                )
+                self.training_data.append(training_point)
+            
+            logger.info(f"📥 Carregados {len(historical_data)} dados + {len(self.training_data)} pontos de treinamento")
             
         except Exception as e:
             logger.error(f"❌ Erro ao carregar dados existentes: {e}")
@@ -111,7 +136,6 @@ class RealEvolutionEngine:
         logger.info("🚨 Iniciando alimentação emergencial de dados...")
         
         try:
-            # Gerar dados sintéticos de emergência
             emergency_data_count = self.min_data_threshold - len(self.learning_data)
             
             for i in range(emergency_data_count):
@@ -169,7 +193,7 @@ class RealEvolutionEngine:
             content=content,
             category=category,
             timestamp=datetime.now(),
-            quality_score=random.uniform(0.75, 1.0)  # Dados sintéticos de alta qualidade
+            quality_score=random.uniform(0.75, 1.0)
         )
     
     async def _continuous_data_generation(self):
@@ -181,9 +205,7 @@ class RealEvolutionEngine:
         
         while self.data_generation_active:
             try:
-                # Verificar se precisa de mais dados
                 if len(self.learning_data) < self.max_data_cache:
-                    # Gerar batch de dados
                     batch_size = min(10, self.max_data_cache - len(self.learning_data))
                     
                     for i in range(batch_size):
@@ -193,19 +215,16 @@ class RealEvolutionEngine:
                     
                     logger.debug(f"📊 Gerados {batch_size} dados sintéticos (total: {len(self.learning_data)})")
                 
-                # Limpar dados antigos se necessário
                 if len(self.learning_data) > self.max_data_cache:
-                    # Remover dados mais antigos e de menor qualidade
                     self.learning_data.sort(key=lambda x: (x.timestamp, x.quality_score))
                     self.learning_data = self.learning_data[-self.max_data_cache:]
                     logger.debug(f"🧹 Cache limpo, mantendo {len(self.learning_data)} dados")
                 
-                # Intervalo entre gerações
-                await asyncio.sleep(30)  # Gerar dados a cada 30 segundos
+                await asyncio.sleep(30)
                 
             except Exception as e:
                 logger.error(f"❌ Erro na geração contínua: {e}")
-                await asyncio.sleep(60)  # Aguardar mais tempo em caso de erro
+                await asyncio.sleep(60)
     
     async def _continuous_learning(self):
         """Aprendizado contínuo baseado nos dados"""
@@ -213,17 +232,14 @@ class RealEvolutionEngine:
         
         while self.auto_learning_enabled:
             try:
-                # Analisar dados recentes
                 recent_data = [d for d in self.learning_data 
                              if d.timestamp > datetime.now() - timedelta(minutes=10)]
                 
                 if recent_data:
-                    # Extrair padrões e métricas
                     await self._extract_patterns(recent_data)
                     await self._update_performance_metrics()
                 
-                # Intervalo de aprendizado
-                await asyncio.sleep(60)  # Aprender a cada minuto
+                await asyncio.sleep(60)
                 
             except Exception as e:
                 logger.error(f"❌ Erro no aprendizado contínuo: {e}")
@@ -232,16 +248,14 @@ class RealEvolutionEngine:
     async def _extract_patterns(self, data_batch: List[LearningData]):
         """Extrair padrões dos dados"""
         try:
-            # Análise por categoria
             categories = {}
             for data in data_batch:
                 if data.category not in categories:
                     categories[data.category] = []
                 categories[data.category].append(data)
             
-            # Gerar métricas de padrões
             for category, cat_data in categories.items():
-                if len(cat_data) >= 3:  # Mínimo para análise
+                if len(cat_data) >= 3:
                     avg_quality = sum(d.quality_score for d in cat_data) / len(cat_data)
                     
                     metric = EvolutionMetric(
@@ -259,7 +273,6 @@ class RealEvolutionEngine:
     async def _update_performance_metrics(self):
         """Atualizar métricas de performance"""
         try:
-            # Métrica de saúde dos dados
             total_data = len(self.learning_data)
             recent_data = len([d for d in self.learning_data 
                              if d.timestamp > datetime.now() - timedelta(hours=1)])
@@ -273,7 +286,6 @@ class RealEvolutionEngine:
             )
             self.metrics.append(health_metric)
             
-            # Métrica de dados recentes
             freshness_metric = EvolutionMetric(
                 name="data_freshness",
                 value=recent_data / max(total_data, 1),
@@ -283,9 +295,8 @@ class RealEvolutionEngine:
             )
             self.metrics.append(freshness_metric)
             
-            # Limitar métricas em cache
             if len(self.metrics) > 1000:
-                self.metrics = self.metrics[-500:]  # Manter últimas 500
+                self.metrics = self.metrics[-500:]
             
         except Exception as e:
             logger.error(f"❌ Erro na atualização de métricas: {e}")
@@ -298,7 +309,7 @@ class RealEvolutionEngine:
                 content=data,
                 category=category,
                 timestamp=datetime.now(),
-                quality_score=0.9  # Dados externos têm alta qualidade
+                quality_score=0.9
             )
             
             self.learning_data.append(learning_data)
@@ -307,6 +318,28 @@ class RealEvolutionEngine:
             
         except Exception as e:
             logger.error(f"❌ Erro ao alimentar dados: {e}")
+            return False
+    
+    def add_training_point(self, input_data: Dict[str, Any], output_data: Dict[str, Any], 
+                          category: str = "external") -> bool:
+        """Adicionar ponto de treinamento"""
+        try:
+            training_point = TrainingDataPoint(
+                id=f"train_ext_{datetime.now().strftime('%Y%m%d_%H%M%S')}_{random.randint(1000, 9999)}",
+                input_data=input_data,
+                output_data=output_data,
+                timestamp=datetime.now(),
+                quality_score=0.9,
+                category=category,
+                metadata={"source": "external"}
+            )
+            
+            self.training_data.append(training_point)
+            logger.debug(f"📥 Ponto de treinamento adicionado: {category}")
+            return True
+            
+        except Exception as e:
+            logger.error(f"❌ Erro ao adicionar ponto de treinamento: {e}")
             return False
     
     async def get_evolution_status(self) -> Dict[str, Any]:
@@ -319,6 +352,7 @@ class RealEvolutionEngine:
         return {
             "initialized": self.initialized,
             "data_count": len(self.learning_data),
+            "training_points": len(self.training_data),
             "recent_data_count": recent_data,
             "min_threshold": self.min_data_threshold,
             "is_hungry": len(self.learning_data) < self.min_data_threshold,
@@ -335,7 +369,6 @@ class RealEvolutionEngine:
         if not self.learning_data:
             return {"status": "no_data"}
         
-        # Análise por categoria
         categories = {}
         for data in self.learning_data:
             if data.category not in categories:
@@ -353,15 +386,22 @@ class RealEvolutionEngine:
         
         return {
             "total_data_points": len(self.learning_data),
+            "training_points": len(self.training_data),
             "categories": category_insights,
             "latest_metrics": [asdict(m) for m in self.metrics[-10:]] if self.metrics else [],
             "data_generation_rate": "30 segundos/batch",
             "learning_cycle": "60 segundos"
         }
 
+    async def shutdown(self):
+        """Desligar o Evolution Engine"""
+        self.data_generation_active = False
+        self.auto_learning_enabled = False
+        logger.info("Evolution Engine desligado")
+
 def create_evolution_engine_agents():
     """Factory function para criar o evolution engine"""
     return [RealEvolutionEngine()]
 
-# Instância global para compatibilidade
+# Instância global
 evolution_engine = RealEvolutionEngine()
