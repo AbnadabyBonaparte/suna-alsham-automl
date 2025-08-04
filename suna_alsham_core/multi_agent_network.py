@@ -1,8 +1,6 @@
 #!/usr/bin/env python3
 """
 Módulo da Rede Multi-Agente - Coração do SUNA-ALSHAM
-
-[Versão Corrigida] - Remove importações circulares e garante inicialização limpa.
 """
 
 import asyncio
@@ -15,23 +13,21 @@ from datetime import datetime
 
 logger = logging.getLogger(__name__)
 
-# 🔹 Tipos de Mensagem
+# Tipos de Mensagem
 class MessageType(Enum):
     REQUEST = "request"
     RESPONSE = "response"
     NOTIFICATION = "notification"
-    HEARTBEAT = "heartbeat"
-    BROADCAST = "broadcast"
     ERROR = "error"
 
-# 🔹 Prioridade de Mensagem
+# Prioridade de Mensagem
 class Priority(Enum):
     LOW = 3
     NORMAL = 2
     HIGH = 1
     CRITICAL = 0
 
-# 🔹 Tipos de Agentes
+# Tipos de Agentes
 class AgentType(Enum):
     CORE = "core"
     SPECIALIZED = "specialized"
@@ -44,7 +40,7 @@ class AgentType(Enum):
     GUARD = "guard"
     AUTOMATOR = "automator"
 
-# 🔹 Estrutura da Mensagem de Agentes
+# Estrutura da Mensagem de Agentes
 @dataclass
 class AgentMessage:
     message_id: str = field(default_factory=lambda: str(uuid.uuid4()))
@@ -56,29 +52,21 @@ class AgentMessage:
     priority: Priority = Priority.NORMAL
     callback_id: Optional[str] = None
 
-# 🔹 Barramento de Mensagens
+# Barramento de Mensagens
 class MessageBus:
     def __init__(self):
         self.queues: Dict[str, asyncio.Queue] = {}
         self.running = False
-        logger.info("✅ MessageBus inicializado.")
 
     async def start(self):
         self.running = True
-        logger.info("MessageBus iniciado.")
 
     async def stop(self):
         self.running = False
-        logger.info("MessageBus finalizado.")
 
     async def publish(self, message: AgentMessage):
-        if not self.running:
-            return
-        if message.recipient_id == "broadcast":
-            for agent_id in self.queues:
-                if agent_id != message.sender_id:
-                    await self.queues[agent_id].put(message)
-        elif message.recipient_id in self.queues:
+        if not self.running: return
+        if message.recipient_id in self.queues:
             await self.queues[message.recipient_id].put(message)
 
     def subscribe(self, agent_id: str) -> asyncio.Queue:
@@ -86,13 +74,7 @@ class MessageBus:
             self.queues[agent_id] = asyncio.Queue()
         return self.queues[agent_id]
 
-    def get_metrics(self) -> Dict[str, Any]:
-        return {
-            "subscribed_agents": len(self.queues),
-            "queue_depths": {aid: q.qsize() for aid, q in self.queues.items()}
-        }
-
-# 🔹 Classe Base para Agentes
+# Classe Base para Agentes de Rede
 class BaseNetworkAgent:
     def __init__(self, agent_id: str, agent_type: AgentType, message_bus: MessageBus):
         self.agent_id = agent_id
@@ -100,56 +82,31 @@ class BaseNetworkAgent:
         self.message_bus = message_bus
         self.inbox = self.message_bus.subscribe(self.agent_id)
         self.status = "active"
-        self.capabilities: List[str] = []
         self.task = asyncio.create_task(self._run())
-        logger.debug(f"Agente {self.agent_id} inicializado ({self.agent_type.value}).")
 
     async def _run(self):
         while True:
             try:
                 message = await self.inbox.get()
                 await self._internal_handle_message(message)
+                self.inbox.task_done()
             except asyncio.CancelledError:
                 break
             except Exception as e:
                 logger.error(f"Erro no loop do agente {self.agent_id}: {e}", exc_info=True)
 
     async def _internal_handle_message(self, message: AgentMessage):
-        """Implementado nas subclasses."""
+        """ Deve ser implementado nas subclasses. """
         pass
 
-    def create_message(
-        self,
-        recipient_id: str,
-        message_type: MessageType,
-        content: Dict,
-        priority: Priority = Priority.NORMAL,
-        callback_id: Optional[str] = None
-    ) -> AgentMessage:
-        return AgentMessage(
-            sender_id=self.agent_id,
-            recipient_id=recipient_id,
-            message_type=message_type,
-            content=content,
-            priority=priority,
-            callback_id=callback_id
-        )
+    def create_message(self, recipient_id: str, message_type: MessageType, content: Dict, priority: Priority = Priority.NORMAL, callback_id: Optional[str] = None) -> AgentMessage:
+        return AgentMessage(sender_id=self.agent_id, recipient_id=recipient_id, message_type=message_type, content=content, priority=priority, callback_id=callback_id)
 
     async def publish_response(self, original_message: AgentMessage, content: Dict):
-        response = self.create_message(
-            recipient_id=original_message.sender_id,
-            message_type=MessageType.RESPONSE,
-            content=content,
-            callback_id=original_message.callback_id
-        )
+        response = self.create_message(recipient_id=original_message.sender_id, message_type=MessageType.RESPONSE, content=content, callback_id=original_message.callback_id)
         await self.message_bus.publish(response)
 
     async def publish_error_response(self, original_message: AgentMessage, error_message: str):
         error_content = {"status": "error", "message": error_message}
-        error_response = self.create_message(
-            recipient_id=original_message.sender_id,
-            message_type=MessageType.ERROR,
-            content=error_content,
-            callback_id=original_message.callback_id
-        )
-        await self.message_bus.publish(error_response)
+        response = self.create_message(recipient_id=original_message.sender_id, message_type=MessageType.RESPONSE, content=error_content, callback_id=original_message.callback_id)
+        await self.message_bus.publish(response)
