@@ -1,7 +1,7 @@
-#!/usr/bin/env python3
+#!/usr/-bin/env python3
 """
 Módulo dos Agentes Meta-Cognitivos – O Cérebro do SUNA-ALSHAM.
-[Versão 2.2 - Debug Logging]
+[Versão 2.2 - Correção Final de Import]
 """
 import asyncio
 import json
@@ -9,6 +9,7 @@ import logging
 import re
 from datetime import datetime
 from typing import Dict, List, Optional
+from dataclasses import asdict  # <<< --- ESTA É A LINHA DA CORREÇÃO --- <<<
 
 from suna_alsham_core.real_evolution_engine import TrainingDataPoint
 from suna_alsham_core.multi_agent_network import (
@@ -33,12 +34,10 @@ class OrchestratorAgent(BaseNetworkAgent):
     def __init__(self, agent_id: str, message_bus):
         super().__init__(agent_id, AgentType.ORCHESTRATOR, message_bus)
         self.pending_missions: Dict[str, Dict] = {}
-        logger.info(f"👑 {self.agent_id} (Orquestrador Estratégico) V2.2 com debug logging.")
+        logger.info(f"👑 {self.agent_id} (Orquestrador Estratégico) V2.2 com correção de import.")
 
     async def _internal_handle_message(self, message: AgentMessage):
-        # Adicionado log de depuração para ver TODAS as mensagens recebidas
-        logger.info(f"👑 [Orquestrador] Mensagem recebida na inbox. Tipo: {message.message_type.value}, Sender: {message.sender_id}")
-        
+        logger.debug(f"👑 [Orquestrador] Mensagem recebida na inbox. Tipo: {message.message_type.value}, Sender: {message.sender_id}")
         if message.message_type == MessageType.REQUEST:
             await self._handle_new_request(message)
         elif message.message_type == MessageType.RESPONSE:
@@ -53,21 +52,12 @@ class OrchestratorAgent(BaseNetworkAgent):
             "step_outputs": {},
             "start_time": datetime.now()
         }
-        
         planning_request = self.create_message(
             recipient_id="ai_analyzer_001", message_type=MessageType.REQUEST,
             content={"content": message.content.get("content")}, callback_id=mission_id
         )
-        
-        # --- LOGS DE DEPURAÇÃO ADICIONADOS ---
-        logger.info(f"👑 [Orquestrador] A preparar para delegar planejamento para 'ai_analyzer_001'...")
-        
         await self.message_bus.publish(planning_request)
-        
-        logger.info(f"👑 [Orquestrador] Planejamento delegado com sucesso para 'ai_analyzer_001'. A aguardar plano.")
-        # ------------------------------------
 
-    # (O resto do ficheiro permanece exatamente igual ao que eu já lhe tinha fornecido)
     async def _handle_response(self, message: AgentMessage):
         if not message.callback_id: return
         if message.callback_id in self.pending_missions:
