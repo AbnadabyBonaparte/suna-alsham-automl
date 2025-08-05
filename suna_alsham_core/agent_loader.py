@@ -2,8 +2,8 @@
 """
 Módulo Carregador de Agentes - SUNA-ALSHAM
 
-[Versão Corrigida Completa] - Carrega todos os 55 agentes do sistema
-CORREÇÃO: Parâmetro 'network' agora funciona corretamente
+[Versão Corrigida Completa] - Carrega todos os 56 agentes do sistema
+CORREÇÃO: Adicionado o 56º agente à configuração de carregamento.
 """
 import logging
 from typing import Any, Dict, List
@@ -17,7 +17,7 @@ logger = logging.getLogger(__name__)
 
 async def initialize_all_agents(network) -> Dict[str, Any]:
     """
-    Inicializa todos os agentes do sistema - CONFIGURAÇÃO COMPLETA DOS 55 AGENTES.
+    Inicializa todos os agentes do sistema - CONFIGURAÇÃO COMPLETA DOS 56 AGENTES.
     
     Args:
         network: Instância de MultiAgentNetwork para registrar os agentes
@@ -28,9 +28,9 @@ async def initialize_all_agents(network) -> Dict[str, Any]:
     agents_loaded = 0
     failed_modules = []
 
-    # CONFIGURAÇÃO COMPLETA - TODOS OS 55 AGENTES
+    # CONFIGURAÇÃO COMPLETA - TODOS OS 56 AGENTES
     agent_factories_config = [
-        # ===== NÚCLEO SUNA-ALSHAM (34 AGENTES) =====
+        # ===== NÚCLEO SUNA-ALSHAM (35 AGENTES) =====
         
         # Arquivo: core_agents_v3.py (5 Agentes)
         {"factory_path": "suna_alsham_core.core_agents_v3", "factory_name": "create_core_agents_v3"},
@@ -88,6 +88,10 @@ async def initialize_all_agents(network) -> Dict[str, Any]:
         
         # Arquivo: real_evolution_engine.py (1 Agente)
         {"factory_path": "suna_alsham_core.real_evolution_engine", "factory_name": "create_evolution_engine_agent"},
+
+        # ====> NOVA LINHA ADICIONADA AQUI <====
+        # Arquivo: resource_manager_agent.py (1 Agente)
+        {"factory_path": "suna_alsham_core.resource_manager_agent", "factory_name": "create_resource_manager_agent"},
         
         # Arquivo: security_enhancements_agent.py (1 Agente)
         {"factory_path": "suna_alsham_core.security_enhancements_agent", "factory_name": "create_security_enhancements_agent"},
@@ -122,7 +126,7 @@ async def initialize_all_agents(network) -> Dict[str, Any]:
         {"factory_path": "domain_modules.suporte.support_orchestrator_agent", "factory_name": "create_suporte_agents"},
     ]
 
-    logger.info("--- INICIANDO CARREGAMENTO COMPLETO DE AGENTES (55 ESPERADOS) ---")
+    logger.info("--- INICIANDO CARREGAMENTO COMPLETO DE AGENTES (56 ESPERADOS) ---")
 
     for config in agent_factories_config:
         factory_path = config["factory_path"]
@@ -135,7 +139,6 @@ async def initialize_all_agents(network) -> Dict[str, Any]:
             factory = getattr(module, factory_name)
             
             # Chamar factory com message_bus do network
-            # CORREÇÃO AQUI: Usar network.message_bus em vez de uma variável não definida
             if hasattr(network, 'message_bus'):
                 agents = factory(network.message_bus)
             else:
@@ -143,6 +146,7 @@ async def initialize_all_agents(network) -> Dict[str, Any]:
                 agents = factory(network)
             
             if not isinstance(agents, list):
+                # Se a factory não retornar uma lista (p.ex. erro silencioso), trata como lista vazia
                 agents = []
                 
             num_created = len(agents)
@@ -182,6 +186,7 @@ async def initialize_all_agents(network) -> Dict[str, Any]:
     return {
         "summary": {
             "agents_loaded": agents_loaded, 
+            "expected_agents": len(agent_factories_config), # Ajustado para ser dinâmico
             "failed_modules_count": len(failed_modules)
         },
         "failed_modules": failed_modules,
