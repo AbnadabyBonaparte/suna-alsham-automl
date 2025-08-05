@@ -54,60 +54,94 @@ async def initialize_all_agents(network: Any) -> Dict[str, Any]:
     agents_loaded = 0
     failed_modules = []
 
-    agent_factories = [
-        create_core_agents_v3,
-        create_specialized_agents,
-        create_ai_agents,
-        create_system_agents,
-        create_service_agents,
-        create_meta_cognitive_agents,  # 👑 Cérebro
-        create_code_analyzer_agent,
-        create_performance_monitor_agent,
-        create_computer_control_agent,
-        create_web_search_agent,
-        create_code_corrector_agent,
-        create_debug_master_agent,
-        create_security_guardian_agent,
-        create_validation_sentinel_agent,
-        create_disaster_recovery_agent,
-        create_backup_agent,
-        create_database_agent,
-        create_logging_agent,
-        create_api_gateway_agent,
-        create_notification_agent,
-        create_deployment_agent,
-        create_testing_agent,
-        create_visualization_agent,
-        create_security_enhancements_agent,
-        create_evolution_engine_agents,
-        create_structure_analyzer_agents,
-        # --- Domínios ---
-        create_analytics_agents,
-        create_sales_agents,
-        create_social_media_agents,
-        create_suporte_agents
+    # CONFIGURAÇÃO CORRETA DAS FACTORY FUNCTIONS COM PARÂMETROS
+    agent_factories_config = [
+        # Factories que recebem message_bus
+        {"factory": create_core_agents_v3, "params": [network.message_bus]},
+        {"factory": create_specialized_agents, "params": [network.message_bus]},
+        {"factory": create_ai_agents, "params": [network.message_bus]},
+        {"factory": create_system_agents, "params": [network.message_bus]},
+        {"factory": create_service_agents, "params": [network.message_bus]},
+        {"factory": create_meta_cognitive_agents, "params": [network.message_bus]},
+        
+        # Factories que NÃO recebem parâmetros
+        {"factory": create_code_analyzer_agent, "params": []},
+        {"factory": create_performance_monitor_agent, "params": []},
+        {"factory": create_computer_control_agent, "params": []},
+        {"factory": create_web_search_agent, "params": []},
+        {"factory": create_code_corrector_agent, "params": []},
+        {"factory": create_debug_master_agent, "params": []},
+        {"factory": create_security_guardian_agent, "params": []},
+        {"factory": create_validation_sentinel_agent, "params": []},
+        {"factory": create_disaster_recovery_agent, "params": []},
+        {"factory": create_backup_agent, "params": []},
+        {"factory": create_database_agent, "params": []},
+        {"factory": create_logging_agent, "params": []},
+        {"factory": create_api_gateway_agent, "params": []},
+        {"factory": create_notification_agent, "params": []},
+        {"factory": create_deployment_agent, "params": []},
+        {"factory": create_testing_agent, "params": []},
+        {"factory": create_visualization_agent, "params": []},
+        {"factory": create_security_enhancements_agent, "params": []},
+        {"factory": create_evolution_engine_agents, "params": []},
+        {"factory": create_structure_analyzer_agents, "params": []},
+        
+        # Factories de domínio (recebem message_bus)
+        {"factory": create_analytics_agents, "params": [network.message_bus]},
+        {"factory": create_sales_agents, "params": [network.message_bus]},
+        {"factory": create_social_media_agents, "params": [network.message_bus]},
+        {"factory": create_suporte_agents, "params": [network.message_bus]},
     ]
 
     logger.info("--- INICIANDO AUDITORIA DE CARREGAMENTO DE AGENTES ---")
 
-    for factory in agent_factories:
+    for config in agent_factories_config:
+        factory = config["factory"]
+        params = config["params"]
         factory_name = factory.__name__
+        
         logger.info(f"--> Chamando fábrica: {factory_name}...")
         try:
-            agents = factory(network.message_bus)
+            # Chamar factory com parâmetros corretos
+            if params:
+                agents = factory(*params)
+            else:
+                agents = factory()
+                
             if not isinstance(agents, list):
                 agents = []
+                
             num_created = len(agents)
+            
+            # Registrar cada agente
             for agent in agents:
-                network.register_agent(agent)
-                agents_loaded += 1
+                try:
+                    network.register_agent(agent)
+                    agents_loaded += 1
+                    logger.info(f"    ✅ Agente registrado: {getattr(agent, 'agent_id', 'unknown')}")
+                except Exception as reg_error:
+                    logger.error(f"    ❌ Erro ao registrar agente: {reg_error}")
+                    
             logger.info(f"<-- SUCESSO: {factory_name} retornou {num_created} agente(s).")
+            
         except Exception as e:
             logger.error(f"<-- FALHA: {factory_name} falhou: {e}", exc_info=True)
             failed_modules.append(factory_name)
 
     logger.info(f"--- FIM DA AUDITORIA. Total: {agents_loaded} agentes carregados. ---")
+    
+    # Log detalhado dos resultados
+    if failed_modules:
+        logger.error(f"❌ FACTORY FUNCTIONS QUE FALHARAM ({len(failed_modules)}):")
+        for failed in failed_modules:
+            logger.error(f"    - {failed}")
+    
+    logger.info(f"✅ FACTORY FUNCTIONS EXECUTADAS COM SUCESSO: {len(agent_factories_config) - len(failed_modules)}")
+    logger.info(f"📊 TOTAL DE AGENTES CARREGADOS: {agents_loaded}")
+    
     return {
         "summary": {"agents_loaded": agents_loaded, "failed_modules_count": len(failed_modules)},
         "failed_modules": failed_modules,
+        "total_factories": len(agent_factories_config),
+        "successful_factories": len(agent_factories_config) - len(failed_modules)
     }
