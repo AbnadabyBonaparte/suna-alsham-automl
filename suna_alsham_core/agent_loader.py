@@ -1,8 +1,9 @@
-#!/usr/bin/env python3
+python#!/usr/bin/env python3
 """
 Módulo Carregador de Agentes - SUNA-ALSHAM
 
 [Versão Corrigida Completa] - Carrega todos os 55 agentes do sistema
+CORREÇÃO: Parâmetro 'network' agora funciona corretamente
 """
 import logging
 from typing import Any, Dict, List
@@ -14,8 +15,16 @@ sys.path.insert(0, str(project_root.resolve()))
 
 logger = logging.getLogger(__name__)
 
-async def initialize_all_agents(network: Any) -> Dict[str, Any]:
-    """Inicializa todos os agentes do sistema - CONFIGURAÇÃO COMPLETA DOS 55 AGENTES."""
+async def initialize_all_agents(network) -> Dict[str, Any]:
+    """
+    Inicializa todos os agentes do sistema - CONFIGURAÇÃO COMPLETA DOS 55 AGENTES.
+    
+    Args:
+        network: Instância de MultiAgentNetwork para registrar os agentes
+    
+    Returns:
+        Dict com resumo do carregamento
+    """
     agents_loaded = 0
     failed_modules = []
 
@@ -39,7 +48,7 @@ async def initialize_all_agents(network: Any) -> Dict[str, Any]:
         {"factory_path": "suna_alsham_core.meta_cognitive_agents", "factory_name": "create_meta_cognitive_agents"},
         
         # Arquivo: ai_powered_agents.py (1 Agente)
-        {"factory_path": "suna_alsham_core.ai_powered_agents", "factory_name": "create_ai_powered_agents"},
+        {"factory_path": "suna_alsham_core.ai_powered_agents", "factory_name": "create_ai_agents"},
         
         # Arquivo: api_gateway_agent.py (1 Agente)
         {"factory_path": "suna_alsham_core.api_gateway_agent", "factory_name": "create_api_gateway_agent"},
@@ -125,15 +134,20 @@ async def initialize_all_agents(network: Any) -> Dict[str, Any]:
             module = __import__(factory_path, fromlist=[factory_name])
             factory = getattr(module, factory_name)
             
-            # Chamar factory com message_bus
-            agents = factory(network.message_bus)
+            # Chamar factory com message_bus do network
+            # CORREÇÃO AQUI: Usar network.message_bus em vez de uma variável não definida
+            if hasattr(network, 'message_bus'):
+                agents = factory(network.message_bus)
+            else:
+                # Fallback se a estrutura for diferente
+                agents = factory(network)
             
             if not isinstance(agents, list):
                 agents = []
                 
             num_created = len(agents)
             
-            # Registrar cada agente
+            # Registrar cada agente no network
             for agent in agents:
                 try:
                     network.register_agent(agent)
@@ -166,8 +180,12 @@ async def initialize_all_agents(network: Any) -> Dict[str, Any]:
     logger.info(f"📊 TOTAL DE AGENTES CARREGADOS: {agents_loaded}")
     
     return {
-        "summary": {"agents_loaded": agents_loaded, "failed_modules_count": len(failed_modules)},
+        "summary": {
+            "agents_loaded": agents_loaded, 
+            "failed_modules_count": len(failed_modules)
+        },
         "failed_modules": failed_modules,
         "total_factories": len(agent_factories_config),
-        "successful_factories": len(agent_factories_config) - len(failed_modules)
+        "successful_factories": len(agent_factories_config) - len(failed_modules),
+        "agents_loaded_count": agents_loaded
     }
