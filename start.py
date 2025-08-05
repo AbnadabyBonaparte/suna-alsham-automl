@@ -50,36 +50,18 @@ async def lifespan(app: FastAPI):
         
         try:
             from suna_alsham_core.agent_loader import initialize_all_agents
+            from suna_alsham_core.multi_agent_network import MessageBus  # Import do MessageBus REAL
             system_status["agent_loader_available"] = True
             logger.info("✅ agent_loader.py encontrado!")
             
-            # Criar MessageBus funcional para os agentes
-            class MockMessageBus:
+            # Criar network com MessageBus REAL do sistema
+            class NetworkWithRealMessageBus:
                 def __init__(self):
-                    self.subscriptions = {}
-                    self.messages = []
-                
-                def subscribe(self, agent_id):
-                    """Criar inbox para o agente"""
-                    if agent_id not in self.subscriptions:
-                        self.subscriptions[agent_id] = []
-                    return self.subscriptions[agent_id]
-                
-                def publish(self, message, recipient=None):
-                    """Publicar mensagem"""
-                    self.messages.append({"message": message, "recipient": recipient})
-                    if recipient and recipient in self.subscriptions:
-                        self.subscriptions[recipient].append(message)
-                
-                def get_messages(self, agent_id):
-                    """Obter mensagens para um agente"""
-                    return self.subscriptions.get(agent_id, [])
-            
-            # Criar network com MessageBus funcional
-            class MockNetwork:
-                def __init__(self):
-                    self.message_bus = MockMessageBus()
+                    self.message_bus = MessageBus()  # MessageBus REAL
                     self.agents = {}
+                
+                async def start(self):
+                    await self.message_bus.start()  # Inicializar MessageBus
                 
                 def register_agent(self, agent):
                     if hasattr(agent, 'name'):
@@ -89,7 +71,9 @@ async def lifespan(app: FastAPI):
                     else:
                         self.agents[f"agent_{len(self.agents)}"] = agent
             
-            network = MockNetwork()
+            network = NetworkWithRealMessageBus()
+            await network.start()  # IMPORTANTE: Inicializar MessageBus antes de usar
+            logger.info("✅ MessageBus real inicializado!")
             
             # Carregar SEUS 34 agentes originais (função async)
             agents_result = await initialize_all_agents(network)
@@ -231,6 +215,10 @@ async def lifespan(app: FastAPI):
     logger.info("🔄 Shutdown gracioso do ALSHAM QUANTUM...")
     
     try:
+        if network and hasattr(network, 'message_bus'):
+            await network.message_bus.stop()
+            logger.info("  ✅ MessageBus desligado")
+        
         if agent_registry and hasattr(agent_registry, 'shutdown_all_agents'):
             await agent_registry.shutdown_all_agents()
             logger.info("  ✅ Agent Registry desligado")
