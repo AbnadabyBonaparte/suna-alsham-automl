@@ -28,7 +28,8 @@ class QuantumBootstrap:
         self.warnings_count = 0
         self.errors_count = 0
         self.critical_failures = 0
-        self.detailed_warnings = []  # NOVO: Lista detalhada de warnings
+        self.detailed_warnings = []
+        self.network = None  # NOVO: Referência ao network
         
     async def execute_bootstrap(self) -> bool:
         """Executa o bootstrap usando sistema existente"""
@@ -46,8 +47,8 @@ class QuantumBootstrap:
             # Fase 3: Inicialização de Componentes
             await self._phase_3_component_initialization()
             
-            # Fase 4: Contagem REAL dos agentes (CORREÇÃO PRINCIPAL)
-            await self._phase_4_real_agent_count()
+            # Fase 4: CARREGAMENTO REAL DOS AGENTES (CORREÇÃO PRINCIPAL)
+            await self._phase_4_load_agents()
             
             # Fase 5: Ativação do Sistema
             await self._phase_5_system_activation()
@@ -125,133 +126,33 @@ class QuantumBootstrap:
         """Fase 3: Inicialização de componentes básicos"""
         logger.info("⚙️ [Fase 3/7] Inicialização de Componentes")
         
-        components = [
-            "Message Bus", "Security Manager", "Logging System"
-        ]
-        
-        for component in components:
-            await asyncio.sleep(0.05)
-            logger.info(f"  ✅ {component}: Inicializado")
-        
-        logger.info("✅ [Fase 3/7] Componentes inicializados")
-    
-    async def _phase_4_real_agent_count(self):
-        """
-        Fase 4: CONTAGEM REAL dos agentes usando arquitetura conhecida
-        CORREÇÃO PRINCIPAL: Conta os 56 agentes esperados
-        """
-        logger.info("🤖 [Fase 4/7] Contagem Real de Agentes ALSHAM QUANTUM")
-        
-        # CONTAGEM BASEADA NA ARQUITETURA REAL AUDITADA
-        expected_agents = {
-            "Core System": {
-                "core_agents_v3.py": 5,           # CoreAgent x2, GuardAgent x2, LearnAgent x1
-                "specialized_agents.py": 2,       # TaskDelegator, NewAgentOnboarding  
-                "system_agents.py": 3,            # Monitor, Control, Recovery
-                "service_agents.py": 2,           # Communication, Decision
-                "meta_cognitive_agents.py": 2,    # Orchestrator, MetaCognitive
-                "ai_powered_agents.py": 1,        # AIAnalyzer
-                "api_gateway_agent.py": 1,        # APIGateway
-                "backup_agent.py": 1,             # Backup
-                "code_analyzer_agent.py": 1,      # CodeAnalyzer
-                "code_corrector_agent.py": 1,     # CodeCorrector  
-                "computer_control_agent.py": 1,   # ComputerControl
-                "database_agent.py": 1,           # Database
-                "debug_agent_creation.py": 1,     # DebugMaster
-                "deployment_agent.py": 1,         # Deployment
-                "disaster_recovery_agent.py": 1,  # DisasterRecovery
-                "logging_agent.py": 1,            # Logging
-                "notification_agent.py": 1,       # Notification
-                "performance_monitor_agent.py": 1, # PerformanceMonitor
-                "real_evolution_engine.py": 1,    # EvolutionEngine
-                "security_enhancements_agent.py": 1, # SecurityEnhancements
-                "security_guardian_agent.py": 1,  # SecurityGuardian
-                "testing_agent.py": 1,            # Testing
-                "validation_sentinel_agent.py": 1, # ValidationSentinel
-                "visualization_agent.py": 1,      # Visualization
-                "web_search_agent.py": 1          # WebSearch
-            },
-            "Domain Modules": {
-                "analytics": 5,      # Analytics + 4 specialists
-                "sales": 6,          # Sales + 5 specialists  
-                "social_media": 5,   # SocialMedia + 4 specialists
-                "suporte": 5         # Support + 4 specialists
-            },
-            "Registry": {
-                "agent_registry.py": 1  # Agent Registry
-            }
-        }
-        
-        # Calcular totais esperados
-        core_total = sum(expected_agents["Core System"].values())
-        domain_total = sum(expected_agents["Domain Modules"].values())
-        registry_total = expected_agents["Registry"]["agent_registry.py"]
-        expected_total = core_total + domain_total + registry_total
-        
-        logger.info(f"  📊 Core System esperado: {core_total} agentes")
-        logger.info(f"  📊 Domain Modules esperado: {domain_total} agentes")  
-        logger.info(f"  📊 Registry esperado: {registry_total} agente")
-        logger.info(f"  🎯 TOTAL ESPERADO: {expected_total} agentes")
-        
-        # Tentar contagem real do sistema
+        # CRIAR NETWORK REAL AQUI
         try:
-            # Método 1: Via initialize_all_agents (mais preciso)
-            real_count = await self._count_via_initialize_all_agents()
-            if real_count > 0:
-                self.agents_loaded = real_count
-                self.agents_active = real_count
-                logger.info(f"  ✅ CONTAGEM REAL via initialize_all_agents: {real_count} agentes")
-            else:
-                # Método 2: Via agent_registry (fallback)
-                registry_count = await self._count_via_agent_registry()
-                if registry_count > 0:
-                    self.agents_loaded = registry_count
-                    self.agents_active = registry_count
-                    logger.info(f"  ✅ CONTAGEM REAL via agent_registry: {registry_count} agentes")
-                else:
-                    # Método 3: Assumir arquitetura esperada
-                    self.agents_loaded = expected_total
-                    self.agents_active = expected_total
-                    warning_msg = f"Usando contagem esperada: {expected_total} agentes (contagem dinâmica falhou)"
-                    logger.warning(f"  ⚠️ {warning_msg}")
-                    self.detailed_warnings.append(warning_msg)
-                    self.warnings_count += 1
-            
-            # Verificar se bate com o esperado
-            if self.agents_loaded != expected_total:
-                discrepancy = expected_total - self.agents_loaded
-                if discrepancy > 0:
-                    warning_msg = f"DISCREPÂNCIA: {discrepancy} agentes faltando (esperado {expected_total}, encontrado {self.agents_loaded})"
-                    logger.warning(f"  ⚠️ {warning_msg}")
-                    self.detailed_warnings.append(warning_msg)
-                    self.warnings_count += 1
-                else:
-                    warning_msg = f"DISCREPÂNCIA: {abs(discrepancy)} agentes extras (esperado {expected_total}, encontrado {self.agents_loaded})"
-                    logger.warning(f"  ⚠️ {warning_msg}")
-                    self.detailed_warnings.append(warning_msg)
-                    self.warnings_count += 1
-            else:
-                logger.info(f"  🎊 PERFEITO: Contagem real ({self.agents_loaded}) = Esperado ({expected_total})")
-                
+            await self._initialize_network()
+            logger.info("  ✅ Message Bus: Inicializado")
+            logger.info("  ✅ Security Manager: Inicializado")
+            logger.info("  ✅ Logging System: Inicializado")
         except Exception as e:
-            error_msg = f"Erro na contagem de agentes: {e}"
+            error_msg = f"Erro na inicialização do network: {e}"
             logger.error(f"  ❌ {error_msg}")
             self.detailed_warnings.append(error_msg)
             self.errors_count += 1
-            # Usar contagem esperada como fallback
-            self.agents_loaded = expected_total
-            self.agents_active = expected_total
         
-        logger.info("✅ [Fase 4/7] Verificação de agentes concluída")
+        logger.info("✅ [Fase 3/7] Componentes inicializados")
     
-    async def _count_via_initialize_all_agents(self) -> int:
-        """Conta agentes via initialize_all_agents (método mais preciso)"""
+    async def _initialize_network(self):
+        """Inicializa o network real para carregamento de agentes"""
         try:
-            from suna_alsham_core.agent_loader import initialize_all_agents
+            from suna_alsham_core.multi_agent_network import MultiAgentNetwork
+            self.network = MultiAgentNetwork()
+            await self.network.start()
+            logger.info("🌐 Network Multi-Agente inicializado")
+        except Exception as e:
+            logger.warning(f"⚠️ Erro ao inicializar MultiAgentNetwork: {e}")
+            # Criar network básico como fallback
             from suna_alsham_core.multi_agent_network import MessageBus
             
-            # Criar network temporário para contagem
-            class CountingNetwork:
+            class BasicNetwork:
                 def __init__(self):
                     self.message_bus = MessageBus()
                     self.agents = {}
@@ -259,50 +160,108 @@ class QuantumBootstrap:
                 def register_agent(self, agent):
                     if hasattr(agent, 'agent_id'):
                         self.agents[agent.agent_id] = agent
+                        logger.info(f"    📝 Agente registrado: {agent.agent_id}")
                     else:
-                        self.agents[f"agent_{len(self.agents)}"] = agent
-            
-            counting_network = CountingNetwork()
-            await counting_network.message_bus.start()
-            
-            # Executar inicialização
-            result = await initialize_all_agents(counting_network)
-            
-            await counting_network.message_bus.stop()
-            
-            if result and isinstance(result, dict) and "summary" in result:
-                return result["summary"].get("agents_loaded", 0)
-            elif isinstance(result, int):
-                return result
-            else:
-                return len(counting_network.agents)
+                        agent_id = f"agent_{len(self.agents)}"
+                        self.agents[agent_id] = agent
+                        logger.info(f"    📝 Agente registrado: {agent_id}")
                 
-        except ImportError:
-            logger.debug("initialize_all_agents não disponível")
-            return 0
-        except Exception as e:
-            logger.debug(f"Erro em _count_via_initialize_all_agents: {e}")
-            return 0
+                async def start(self):
+                    await self.message_bus.start()
+                    
+                async def stop(self):
+                    await self.message_bus.stop()
+            
+            self.network = BasicNetwork()
+            await self.network.start()
+            logger.info("🌐 Network básico inicializado como fallback")
     
-    async def _count_via_agent_registry(self) -> int:
-        """Conta agentes via agent_registry (método fallback)"""
+    async def _phase_4_load_agents(self):
+        """
+        Fase 4: CARREGAMENTO REAL dos agentes
+        CORREÇÃO PRINCIPAL: Executa o agent_loader.py corretamente
+        """
+        logger.info("🤖 [Fase 4/7] Carregamento Real de Agentes ALSHAM QUANTUM")
+        
+        # Arquitetura esperada para referência
+        expected_total = 56
+        core_expected = 34
+        domain_expected = 21
+        registry_expected = 1
+        
+        logger.info(f"  📊 Core System esperado: {core_expected} agentes")
+        logger.info(f"  📊 Domain Modules esperado: {domain_expected} agentes")  
+        logger.info(f"  📊 Registry esperado: {registry_expected} agente")
+        logger.info(f"  🎯 TOTAL ESPERADO: {expected_total} agentes")
+        
+        # EXECUTAR AGENT LOADER REAL
         try:
-            from suna_alsham_core.agent_registry import agent_registry
+            logger.info("  🔄 Executando agent_loader.initialize_all_agents()...")
             
-            if hasattr(agent_registry, 'agents') and agent_registry.agents:
-                return len(agent_registry.agents)
-            elif hasattr(agent_registry, 'get_all_agents'):
-                agents = agent_registry.get_all_agents()
-                return len(agents) if agents else 0
-            else:
-                return 0
+            from suna_alsham_core.agent_loader import initialize_all_agents
+            
+            if not self.network:
+                raise Exception("Network não inicializado")
+            
+            # EXECUTAR O CARREGAMENTO REAL
+            result = await initialize_all_agents(self.network)
+            
+            if result and isinstance(result, dict):
+                self.agents_loaded = result["summary"].get("agents_loaded", 0)
+                self.agents_active = self.agents_loaded
+                failed_count = result["summary"].get("failed_modules_count", 0)
                 
-        except ImportError:
-            logger.debug("agent_registry não disponível")
-            return 0
+                logger.info(f"  ✅ CARREGAMENTO CONCLUÍDO: {self.agents_loaded} agentes carregados")
+                
+                if failed_count > 0:
+                    failed_modules = result.get("failed_modules", [])
+                    warning_msg = f"{failed_count} factory functions falharam: {', '.join(failed_modules)}"
+                    logger.warning(f"  ⚠️ {warning_msg}")
+                    self.detailed_warnings.append(warning_msg)
+                    self.warnings_count += 1
+                
+            else:
+                raise Exception("initialize_all_agents retornou resultado inválido")
+            
+            # Verificar discrepância
+            if self.agents_loaded != expected_total:
+                discrepancy = expected_total - self.agents_loaded
+                if discrepancy > 0:
+                    warning_msg = f"DISCREPÂNCIA: {discrepancy} agentes faltando (esperado {expected_total}, carregado {self.agents_loaded})"
+                    logger.warning(f"  ⚠️ {warning_msg}")
+                    self.detailed_warnings.append(warning_msg)
+                    self.warnings_count += 1
+                else:
+                    warning_msg = f"EXCESSO: {abs(discrepancy)} agentes extras (esperado {expected_total}, carregado {self.agents_loaded})"
+                    logger.info(f"  📈 {warning_msg}")
+            else:
+                logger.info(f"  🎊 PERFEITO: {self.agents_loaded} agentes carregados = {expected_total} esperados!")
+                
         except Exception as e:
-            logger.debug(f"Erro em _count_via_agent_registry: {e}")
-            return 0
+            error_msg = f"FALHA CRÍTICA no carregamento de agentes: {e}"
+            logger.error(f"  ❌ {error_msg}")
+            self.detailed_warnings.append(error_msg)
+            self.errors_count += 1
+            
+            # FALLBACK: Contação via registry se disponível
+            try:
+                registry_count = len(self.network.agents) if self.network and hasattr(self.network, 'agents') else 0
+                if registry_count > 0:
+                    self.agents_loaded = registry_count
+                    self.agents_active = registry_count
+                    logger.info(f"  🔄 FALLBACK: {registry_count} agentes via registry")
+                else:
+                    # Último fallback: assumir zero para forçar investigação
+                    self.agents_loaded = 0
+                    self.agents_active = 0
+                    logger.error("  💥 ZERO AGENTES CARREGADOS - INVESTIGAÇÃO NECESSÁRIA")
+                    
+            except Exception as fallback_error:
+                logger.error(f"  💥 Fallback também falhou: {fallback_error}")
+                self.agents_loaded = 0
+                self.agents_active = 0
+        
+        logger.info("✅ [Fase 4/7] Carregamento de agentes concluído")
     
     async def _phase_5_system_activation(self):
         """Fase 5: Ativação do sistema"""
@@ -364,10 +323,10 @@ class QuantumBootstrap:
         if self.agents_loaded > 0:
             logger.info(f"  ✅ Agentes: {self.agents_active}/{self.agents_loaded} ativos")
         else:
-            warning_msg = "Nenhum agente carregado"
-            logger.warning(f"  ⚠️ {warning_msg}")
+            warning_msg = "ZERO agentes carregados - PROBLEMA CRÍTICO"
+            logger.error(f"  ❌ {warning_msg}")
             self.detailed_warnings.append(warning_msg)
-            self.warnings_count += 1
+            self.errors_count += 1
         
         logger.info("✅ [Fase 6/7] Verificação de saúde concluída")
     
