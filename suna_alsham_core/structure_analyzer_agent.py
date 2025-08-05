@@ -1,1508 +1,1031 @@
-#!/usr/bin/env python3
-"""
-Agent Structure Analyzer - Agente Especializado em Análise de Arquitetura
-CORREÇÃO: Integração completa ao sistema de carregamento ALSHAM QUANTUM
-"""
+# suna_alsham_core/structure_analyzer_agent.py - CORREÇÃO COMPLETA
 
-import inspect
-import logging
-import sys
-import ast
-import os
-import importlib
 import asyncio
+import logging
 from typing import Dict, List, Any, Optional, Set, Tuple
+from datetime import datetime, timedelta
 from dataclasses import dataclass, field
-from enum import Enum
-from datetime import datetime
+import json
+import os
 from pathlib import Path
-from collections import defaultdict
-from uuid import uuid4
+import importlib
+import inspect
+from collections import defaultdict, Counter
 
-from suna_alsham_core.multi_agent_network import (
-    BaseNetworkAgent, 
-    AgentType, 
-    MessageType, 
-    Priority, 
-    AgentMessage
-)
-
-logger = logging.getLogger(__name__)
-
-class AnalysisType(Enum):
-    """Tipos de análise estrutural"""
-    AGENT_DISCOVERY = "agent_discovery"
-    ARCHITECTURE_ANALYSIS = "architecture_analysis"
-    DEPENDENCY_MAPPING = "dependency_mapping"
-    CAPABILITY_ASSESSMENT = "capability_assessment"
-    EVOLUTION_TRACKING = "evolution_tracking"
-    HEALTH_CHECK = "health_check"
-    OPTIMIZATION_OPPORTUNITIES = "optimization_opportunities"
-
-class StructureStatus(Enum):
-    """Status da estrutura analisada"""
-    HEALTHY = "healthy"
-    NEEDS_OPTIMIZATION = "needs_optimization"
-    CRITICAL_ISSUES = "critical_issues"
-    EVOLVING = "evolving"
-    DEPRECATED = "deprecated"
+from .base_network_agent import BaseNetworkAgent, AgentType
+from .message_bus import MessageBus
+from .task_queue import TaskQueue
 
 @dataclass
-class AgentInfo:
-    """Informações detalhadas de um agente"""
-    agent_id: str
-    class_name: str
-    module_name: str
-    file_path: str
-    agent_type: str
-    capabilities: List[str]
-    inheritance_chain: List[str]
-    methods: List[str]
-    complexity_score: float
-    last_modified: datetime
-    dependencies: List[str] = field(default_factory=list)
-    issues: List[str] = field(default_factory=list)
+class StructuralMetrics:
+    """Métricas estruturais do sistema"""
+    agent_count: int = 0
+    module_count: int = 0
+    dependency_count: int = 0
+    circular_dependencies: int = 0
+    coverage_percentage: float = 0.0
+    health_score: float = 0.0
+    last_analysis: Optional[datetime] = None
+    issues_found: List[str] = field(default_factory=list)
     recommendations: List[str] = field(default_factory=list)
 
 @dataclass
-class ArchitectureReport:
-    """Relatório completo da arquitetura"""
-    report_id: str
-    total_agents: int
-    agents_by_type: Dict[str, int]
-    dependency_graph: Dict[str, List[str]]
-    capability_matrix: Dict[str, List[str]]
-    health_score: float
-    critical_issues: List[str]
-    optimization_opportunities: List[str]
-    evolution_suggestions: List[str]
-    timestamp: datetime = field(default_factory=datetime.now)
+class DependencyNode:
+    """Nó de dependência no grafo estrutural"""
+    name: str
+    node_type: str  # 'agent', 'module', 'class', 'function'
+    dependencies: Set[str] = field(default_factory=set)
+    dependents: Set[str] = field(default_factory=set)
+    weight: int = 1
+    is_critical: bool = False
+    health_status: str = "unknown"
 
 class StructureAnalyzerAgent(BaseNetworkAgent):
     """
-    Agente especializado em análise e otimização da arquitetura do sistema
-    CORREÇÃO: Integrado completamente ao sistema ALSHAM QUANTUM
+    Agente Analisador de Estrutura do ALSHAM QUANTUM
+    Analisa arquitetura, dependências e saúde estrutural do sistema
     """
     
-    def __init__(self, agent_id: str, message_bus):
-        super().__init__(agent_id, AgentType.SPECIALIZED, message_bus)
-        self.capabilities.extend([
-            'architecture_analysis',
-            'agent_discovery',
-            'dependency_mapping',
-            'capability_assessment',
-            'structure_optimization',
-            'evolution_tracking',
-            'health_monitoring',
-            'pattern_detection',
-            'refactoring_suggestions',
-            'code_analysis',
-            'system_metrics'
-        ])
+    def __init__(self, agent_id: str = "structure_analyzer_001"):
+        super().__init__(
+            agent_id=agent_id,
+            agent_type=AgentType.STRUCTURE_ANALYZER,
+            capabilities=[
+                "architectural_analysis",
+                "dependency_mapping",
+                "system_health_monitoring",
+                "structure_optimization",
+                "capability_assessment",
+                "performance_analysis",
+                "security_assessment",
+                "scalability_analysis"
+            ]
+        )
         
-        # Estado do analisador
-        self.discovered_agents = {}  # agent_id -> AgentInfo
-        self.analysis_history = []
-        self.dependency_graph = defaultdict(set)
-        self.capability_matrix = defaultdict(set)
+        self.metrics = StructuralMetrics()
+        self.dependency_graph: Dict[str, DependencyNode] = {}
+        self.agent_registry: Dict[str, Dict[str, Any]] = {}
+        self.module_registry: Dict[str, Dict[str, Any]] = {}
+        self.analysis_history: List[Dict[str, Any]] = []
+        self.monitoring_active = False
         
-        # Cache e otimizações
-        self.module_cache = {}
-        self.last_scan_time = {}
-        self.architecture_snapshots = []
-        
-        # Configurações
-        self.scan_directories = [
-            'suna_alsham_core',
-            'domain_modules', 
-            '.',
-            './src', 
-            './lib', 
-            './app'
-        ]
-        self.supported_extensions = ['.py']
-        self.analysis_interval = 300  # 5 minutos
-        
-        # Métricas
-        self.analysis_metrics = {
-            'total_scans': 0,
-            'agents_discovered': 0,
-            'issues_found': 0,
-            'optimizations_suggested': 0,
-            'architecture_changes_detected': 0
+        # Configurações de análise
+        self.analysis_depth = "deep"  # shallow, medium, deep
+        self.scan_intervals = {
+            "structure": timedelta(minutes=30),
+            "health": timedelta(minutes=10),
+            "dependencies": timedelta(hours=1)
         }
         
-        # Tasks de background
-        self._monitoring_task = None
-        self._evolution_task = None
-        self._initialized = False
-        
-        logger.info(f"🏗️ {self.agent_id} inicializado com análise arquitetural avançada")
+        logging.info(f"🔍 StructureAnalyzerAgent {agent_id} inicializado")
 
-    async def _internal_handle_message(self, message: AgentMessage):
-        """Processa mensagens recebidas pelo agente"""
-        if message.message_type == MessageType.REQUEST:
-            request_type = message.content.get('request_type')
-            
-            try:
-                if request_type == 'analyze_architecture':
-                    result = await self.analyze_complete_architecture()
-                    await self.publish_response(message, result)
-                    
-                elif request_type == 'discover_agents':
-                    result = await self.discover_all_agents()
-                    await self.publish_response(message, result)
-                    
-                elif request_type == 'map_dependencies':
-                    result = await self.map_agent_dependencies()
-                    await self.publish_response(message, result)
-                    
-                elif request_type == 'assess_capabilities':
-                    result = await self.assess_system_capabilities()
-                    await self.publish_response(message, result)
-                    
-                elif request_type == 'suggest_optimizations':
-                    result = await self.suggest_architecture_optimizations()
-                    await self.publish_response(message, result)
-                    
-                elif request_type == 'get_health_report':
-                    result = await self.generate_health_report()
-                    await self.publish_response(message, result)
-                    
-                elif request_type == 'start_monitoring':
-                    result = await self._handle_start_monitoring()
-                    await self.publish_response(message, result)
-                    
-                elif request_type == 'stop_monitoring':
-                    result = await self._handle_stop_monitoring()
-                    await self.publish_response(message, result)
-                    
-                elif request_type == 'get_metrics':
-                    result = await self._handle_get_metrics()
-                    await self.publish_response(message, result)
-                    
-                else:
-                    logger.debug(f"Tipo de requisição não reconhecido: {request_type}")
-                    await self.publish_response(message, {
-                        "status": "error",
-                        "message": f"Request type '{request_type}' not supported"
-                    })
-                    
-            except Exception as e:
-                logger.error(f"❌ Erro processando requisição {request_type}: {e}")
-                await self.publish_response(message, {
-                    "status": "error",
-                    "message": f"Internal error: {str(e)}"
-                })
-
-    async def _handle_start_monitoring(self) -> Dict[str, Any]:
-        """Inicia monitoramento arquitetural"""
+    async def initialize_agent(self) -> bool:
+        """Inicializa o analisador de estrutura"""
         try:
-            await self.start_architecture_monitoring()
-            return {
-                "status": "completed",
-                "message": "Monitoramento arquitetural iniciado",
-                "monitoring_active": True
-            }
-        except Exception as e:
-            logger.error(f"❌ Erro iniciando monitoramento: {e}")
-            return {
-                "status": "error",
-                "message": f"Erro: {str(e)}"
-            }
-
-    async def _handle_stop_monitoring(self) -> Dict[str, Any]:
-        """Para monitoramento arquitetural"""
-        try:
-            await self.stop_architecture_monitoring()
-            return {
-                "status": "completed",
-                "message": "Monitoramento arquitetural parado",
-                "monitoring_active": False
-            }
-        except Exception as e:
-            logger.error(f"❌ Erro parando monitoramento: {e}")
-            return {
-                "status": "error",
-                "message": f"Erro: {str(e)}"
-            }
-
-    async def _handle_get_metrics(self) -> Dict[str, Any]:
-        """Retorna métricas do analisador"""
-        try:
-            return {
-                "status": "completed",
-                "metrics": self.analysis_metrics,
-                "discovered_agents_count": len(self.discovered_agents),
-                "snapshots_count": len(self.architecture_snapshots),
-                "monitoring_active": self._monitoring_task is not None
-            }
-        except Exception as e:
-            logger.error(f"❌ Erro obtendo métricas: {e}")
-            return {
-                "status": "error",
-                "message": f"Erro: {str(e)}"
-            }
-
-    async def start_architecture_monitoring(self):
-        """Inicia monitoramento contínuo da arquitetura"""
-        if not self._monitoring_task:
-            self._monitoring_task = asyncio.create_task(self._monitoring_loop())
-            self._evolution_task = asyncio.create_task(self._evolution_tracking_loop())
+            # Realizar análise inicial completa
+            await self._perform_initial_analysis()
             
-            # Executar scan inicial
-            if not self._initialized:
-                await self.discover_all_agents()
-                self._initialized = True
+            # Configurar monitoramento contínuo
+            await self._setup_continuous_monitoring()
             
-            logger.info(f"🏗️ {self.agent_id} iniciou monitoramento arquitetural")
-    
-    async def stop_architecture_monitoring(self):
-        """Para monitoramento arquitetural"""
-        if self._monitoring_task:
-            self._monitoring_task.cancel()
-            self._monitoring_task = None
-        if self._evolution_task:
-            self._evolution_task.cancel()
-            self._evolution_task = None
-        logger.info(f"🛑 {self.agent_id} parou monitoramento arquitetural")
-    
-    async def _monitoring_loop(self):
-        """Loop principal de monitoramento"""
-        while True:
-            try:
-                # Verificar mudanças na arquitetura
-                changes_detected = await self._detect_architecture_changes()
-                
-                if changes_detected:
-                    logger.info(f"🔄 Mudanças arquiteturais detectadas: {len(changes_detected)}")
-                    await self._handle_architecture_changes(changes_detected)
-                
-                # Analisar saúde da arquitetura
-                health_issues = await self._analyze_architecture_health()
-                
-                if health_issues:
-                    await self._handle_health_issues(health_issues)
-                
-                await asyncio.sleep(self.analysis_interval)
-                
-            except asyncio.CancelledError:
-                break
-            except Exception as e:
-                logger.error(f"❌ Erro no monitoramento arquitetural: {e}")
-                await asyncio.sleep(30)  # Aguardar antes de tentar novamente
-    
-    async def _evolution_tracking_loop(self):
-        """Loop de tracking de evolução"""
-        while True:
-            try:
-                # Capturar snapshot da arquitetura
-                snapshot = await self._capture_architecture_snapshot()
-                self.architecture_snapshots.append(snapshot)
-                
-                # Manter apenas últimos 20 snapshots
-                if len(self.architecture_snapshots) > 20:
-                    self.architecture_snapshots = self.architecture_snapshots[-20:]
-                
-                # Analisar evolução
-                if len(self.architecture_snapshots) > 3:
-                    evolution_analysis = self._analyze_evolution_trends()
-                    await self._report_evolution_insights(evolution_analysis)
-                
-                await asyncio.sleep(self.analysis_interval * 4)  # A cada 20 minutos
-                
-            except asyncio.CancelledError:
-                break
-            except Exception as e:
-                logger.error(f"❌ Erro no tracking de evolução: {e}")
-                await asyncio.sleep(60)
-    
-    async def discover_all_agents(self) -> Dict[str, Any]:
-        """Descobre todos os agentes no sistema"""
-        try:
-            logger.info(f"🔍 Iniciando descoberta completa de agentes...")
+            # Registrar callbacks de análise
+            await self._register_analysis_callbacks()
             
-            discovered = {}
+            # Inicializar métricas baseline
+            await self._initialize_baseline_metrics()
             
-            # Escanear diretórios
-            for directory in self.scan_directories:
-                if os.path.exists(directory):
-                    agents_in_dir = await self._scan_directory_for_agents(directory)
-                    discovered.update(agents_in_dir)
-            
-            # Analisar agentes ativos no sistema
-            active_agents = await self._analyze_active_agents()
-            
-            # Merge descobertas
-            for agent_id, info in active_agents.items():
-                if agent_id in discovered:
-                    # Merge informações
-                    discovered[agent_id].capabilities.extend(info.get('capabilities', []))
-                    discovered[agent_id].capabilities = list(set(discovered[agent_id].capabilities))  # Remove duplicatas
-                else:
-                    discovered[agent_id] = AgentInfo(
-                        agent_id=agent_id,
-                        class_name=info.get('class_name', 'Unknown'),
-                        module_name='runtime',
-                        file_path='active_system',
-                        agent_type=info.get('type', 'unknown'),
-                        capabilities=info.get('capabilities', []),
-                        inheritance_chain=[],
-                        methods=[],
-                        complexity_score=0.0,
-                        last_modified=datetime.now()
-                    )
-            
-            # Atualizar cache
-            self.discovered_agents = discovered
-            self.analysis_metrics['agents_discovered'] = len(discovered)
-            self.analysis_metrics['total_scans'] += 1
-            
-            logger.info(f"✅ Descoberta completa: {len(discovered)} agentes encontrados")
-            
-            return {
-                'status': 'completed',
-                'total_agents': len(discovered),
-                'agents': {k: self._agent_info_to_dict(v) for k, v in discovered.items()},
-                'discovery_summary': self._generate_discovery_summary(discovered)
-            }
-            
-        except Exception as e:
-            logger.error(f"❌ Erro na descoberta de agentes: {e}")
-            return {'status': 'error', 'message': str(e)}
-    
-    async def _scan_directory_for_agents(self, directory: str) -> Dict[str, AgentInfo]:
-        """Escaneia diretório em busca de agentes"""
-        agents = {}
-        
-        try:
-            for root, dirs, files in os.walk(directory):
-                for file in files:
-                    if any(file.endswith(ext) for ext in self.supported_extensions):
-                        file_path = os.path.join(root, file)
-                        
-                        # Verificar se arquivo foi modificado desde último scan
-                        if self._should_scan_file(file_path):
-                            file_agents = await self._analyze_file_for_agents(file_path)
-                            agents.update(file_agents)
-        except Exception as e:
-            logger.error(f"❌ Erro escaneando diretório {directory}: {e}")
-        
-        return agents
-    
-    def _should_scan_file(self, file_path: str) -> bool:
-        """Verifica se arquivo deve ser escaneado"""
-        try:
-            mtime = os.path.getmtime(file_path)
-            last_scan = self.last_scan_time.get(file_path, 0)
-            
-            if mtime > last_scan:
-                self.last_scan_time[file_path] = mtime
-                return True
-            return False
-        except:
+            logging.info(f"✅ Structure Analyzer {self.agent_id} inicializado com sucesso")
             return True
-    
-    async def _analyze_file_for_agents(self, file_path: str) -> Dict[str, AgentInfo]:
-        """Analisa arquivo específico em busca de agentes"""
-        agents = {}
+            
+        except Exception as e:
+            logging.error(f"❌ Erro na inicialização do Structure Analyzer: {e}")
+            return False
+
+    async def process_message(self, message: Dict[str, Any]) -> Dict[str, Any]:
+        """Processa mensagens de análise estrutural"""
+        try:
+            message_type = message.get("type")
+            
+            if message_type == "analyze_structure":
+                return await self._handle_structure_analysis(message)
+            elif message_type == "dependency_check":
+                return await self._handle_dependency_check(message)
+            elif message_type == "health_assessment":
+                return await self._handle_health_assessment(message)
+            elif message_type == "optimization_request":
+                return await self._handle_optimization_request(message)
+            elif message_type == "capability_audit":
+                return await self._handle_capability_audit(message)
+            elif message_type == "performance_analysis":
+                return await self._handle_performance_analysis(message)
+            elif message_type == "security_scan":
+                return await self._handle_security_scan(message)
+            else:
+                return {
+                    "status": "error",
+                    "message": f"Tipo de mensagem não reconhecido: {message_type}"
+                }
+                
+        except Exception as e:
+            logging.error(f"❌ Erro ao processar mensagem de análise: {e}")
+            return {"status": "error", "message": str(e)}
+
+    async def _perform_initial_analysis(self):
+        """Realiza análise inicial completa do sistema"""
+        logging.info("🔍 Iniciando análise estrutural completa...")
         
+        # Análise de agentes
+        await self._analyze_agent_structure()
+        
+        # Análise de módulos
+        await self._analyze_module_structure()
+        
+        # Análise de dependências
+        await self._analyze_dependencies()
+        
+        # Análise de saúde
+        await self._analyze_system_health()
+        
+        # Calcular métricas
+        await self._calculate_structural_metrics()
+        
+        logging.info("✅ Análise inicial completa")
+
+    async def _analyze_agent_structure(self):
+        """Analisa estrutura dos agentes"""
+        try:
+            # Escanear diretório core
+            core_path = Path("suna_alsham_core")
+            if core_path.exists():
+                await self._scan_directory_for_agents(core_path, "core")
+            
+            # Escanear módulos de domínio
+            domain_path = Path("domain_modules")
+            if domain_path.exists():
+                await self._scan_directory_for_agents(domain_path, "domain")
+            
+            self.metrics.agent_count = len(self.agent_registry)
+            logging.info(f"📊 Agentes analisados: {self.metrics.agent_count}")
+            
+        except Exception as e:
+            logging.error(f"❌ Erro na análise de agentes: {e}")
+
+    async def _scan_directory_for_agents(self, directory: Path, category: str):
+        """Escaneia diretório em busca de agentes"""
+        for file_path in directory.rglob("*.py"):
+            if file_path.name.startswith("__"):
+                continue
+                
+            try:
+                # Analisar arquivo Python
+                agent_info = await self._analyze_python_file(file_path, category)
+                if agent_info:
+                    self.agent_registry[agent_info["name"]] = agent_info
+                    
+            except Exception as e:
+                logging.warning(f"⚠️ Erro ao analisar {file_path}: {e}")
+
+    async def _analyze_python_file(self, file_path: Path, category: str) -> Optional[Dict[str, Any]]:
+        """Analisa arquivo Python em busca de agentes"""
         try:
             with open(file_path, 'r', encoding='utf-8') as f:
                 content = f.read()
             
-            # Parse AST
-            tree = ast.parse(content, filename=file_path)
-            
-            # Encontrar classes que herdam de agentes
-            for node in ast.walk(tree):
-                if isinstance(node, ast.ClassDef):
-                    if self._is_agent_class(node):
-                        agent_info = await self._extract_agent_info(node, file_path, content)
-                        if agent_info:
-                            agents[agent_info.agent_id] = agent_info
-            
-            # Procurar funções create_*_agents
-            create_functions = self._find_create_functions(tree)
-            for func_info in create_functions:
-                # Analisar função para descobrir que agentes ela cria
-                created_agents = await self._analyze_create_function(func_info, file_path)
-                agents.update(created_agents)
-            
+            # Verificar se é um agente
+            if "BaseNetworkAgent" in content or "AgentType" in content:
+                return {
+                    "name": file_path.stem,
+                    "path": str(file_path),
+                    "category": category,
+                    "size": len(content),
+                    "lines": len(content.splitlines()),
+                    "classes": self._extract_classes(content),
+                    "functions": self._extract_functions(content),
+                    "imports": self._extract_imports(content),
+                    "agent_types": self._extract_agent_types(content),
+                    "capabilities": self._extract_capabilities(content),
+                    "last_modified": datetime.fromtimestamp(file_path.stat().st_mtime)
+                }
+                
         except Exception as e:
-            logger.debug(f"Erro analisando {file_path}: {e}")  # Debug level para não poluir logs
+            logging.warning(f"⚠️ Erro ao ler arquivo {file_path}: {e}")
         
-        return agents
-    
-    def _is_agent_class(self, node: ast.ClassDef) -> bool:
-        """Verifica se uma classe é um agente"""
-        # Verificar herança
-        for base in node.bases:
-            if isinstance(base, ast.Name):
-                if 'Agent' in base.id:
-                    return True
-            elif isinstance(base, ast.Attribute):
-                if 'Agent' in base.attr:
-                    return True
-        
-        # Verificar nome da classe
-        if 'Agent' in node.name:
-            return True
-        
-        return False
-    
-    async def _extract_agent_info(self, node: ast.ClassDef, file_path: str, content: str) -> Optional[AgentInfo]:
-        """Extrai informações detalhadas do agente"""
-        try:
-            # Informações básicas
-            class_name = node.name
-            module_name = os.path.basename(file_path).replace('.py', '')
-            
-            # Tentar extrair agent_id do código
-            agent_id = self._extract_agent_id_from_class(node, class_name, module_name)
-            
-            # Extrair herança
-            inheritance_chain = []
-            for base in node.bases:
-                if isinstance(base, ast.Name):
-                    inheritance_chain.append(base.id)
-                elif isinstance(base, ast.Attribute):
-                    inheritance_chain.append(base.attr)
-            
-            # Extrair métodos
-            methods = []
-            capabilities = []
-            
-            for item in node.body:
-                if isinstance(item, ast.FunctionDef):
-                    methods.append(item.name)
-                    
-                    # Procurar por capabilities no __init__
-                    if item.name == '__init__':
-                        capabilities.extend(self._extract_capabilities_from_init(item))
-            
-            # Calcular complexidade
-            complexity = self._calculate_class_complexity(node)
-            
-            # Detectar tipo de agente
-            agent_type = self._detect_agent_type(class_name, capabilities)
-            
-            return AgentInfo(
-                agent_id=agent_id,
-                class_name=class_name,
-                module_name=module_name,
-                file_path=file_path,
-                agent_type=agent_type,
-                capabilities=capabilities,
-                inheritance_chain=inheritance_chain,
-                methods=methods,
-                complexity_score=complexity,
-                last_modified=datetime.fromtimestamp(os.path.getmtime(file_path))
-            )
-            
-        except Exception as e:
-            logger.debug(f"Erro extraindo info do agente: {e}")
-            return None
-
-    def _extract_agent_id_from_class(self, node: ast.ClassDef, class_name: str, module_name: str) -> str:
-        """Extrai agent_id da classe ou gera um baseado no padrão"""
-        # Procurar por agent_id hardcoded na classe
-        for item in node.body:
-            if isinstance(item, ast.Assign):
-                for target in item.targets:
-                    if (isinstance(target, ast.Name) and target.id == 'agent_id'):
-                        if isinstance(item.value, ast.Str):
-                            return item.value.s
-                        elif isinstance(item.value, ast.Constant) and isinstance(item.value.value, str):
-                            return item.value.value
-        
-        # Gerar agent_id baseado no padrão observado
-        base_name = class_name.lower().replace('agent', '')
-        if not base_name:
-            base_name = module_name.replace('_agent', '').replace('agent_', '')
-        
-        return f"{base_name}_001"
-    
-    def _extract_capabilities_from_init(self, init_node: ast.FunctionDef) -> List[str]:
-        """Extrai capabilities do método __init__"""
-        capabilities = []
-        
-        for node in ast.walk(init_node):
-            if isinstance(node, ast.Call):
-                # Procurar por self.capabilities.extend([...])
-                if (isinstance(node.func, ast.Attribute) and 
-                    isinstance(node.func.value, ast.Attribute) and
-                    isinstance(node.func.value.value, ast.Name) and
-                    node.func.value.value.id == 'self' and
-                    node.func.value.attr == 'capabilities' and
-                    node.func.attr == 'extend'):
-                    
-                    for arg in node.args:
-                        if isinstance(arg, ast.List):
-                            for elt in arg.elts:
-                                if isinstance(elt, ast.Str):
-                                    capabilities.append(elt.s)
-                                elif isinstance(elt, ast.Constant) and isinstance(elt.value, str):
-                                    capabilities.append(elt.value)
-            
-            elif isinstance(node, ast.Assign):
-                # Procurar por self.capabilities = [...]
-                for target in node.targets:
-                    if (isinstance(target, ast.Attribute) and 
-                        isinstance(target.value, ast.Name) and 
-                        target.value.id == 'self' and 
-                        target.attr == 'capabilities'):
-                        
-                        if isinstance(node.value, ast.List):
-                            for elt in node.value.elts:
-                                if isinstance(elt, ast.Str):
-                                    capabilities.append(elt.s)
-                                elif isinstance(elt, ast.Constant) and isinstance(elt.value, str):
-                                    capabilities.append(elt.value)
-        
-        return capabilities
-    
-    def _calculate_class_complexity(self, node: ast.ClassDef) -> float:
-        """Calcula complexidade da classe"""
-        complexity = 0
-        
-        # Contar métodos
-        methods = sum(1 for item in node.body if isinstance(item, ast.FunctionDef))
-        complexity += methods * 2
-        
-        # Contar linhas de código
-        lines = node.end_lineno - node.lineno if hasattr(node, 'end_lineno') else 50
-        complexity += lines / 10
-        
-        # Contar decisões (if, for, while)
-        decisions = 0
-        for child in ast.walk(node):
-            if isinstance(child, (ast.If, ast.For, ast.While, ast.Try)):
-                decisions += 1
-        complexity += decisions
-        
-        return complexity
-    
-    def _detect_agent_type(self, class_name: str, capabilities: List[str]) -> str:
-        """Detecta tipo do agente baseado no nome e capabilities"""
-        name_lower = class_name.lower()
-        
-        # Mapeamento por nome
-        type_mappings = {
-            'analyzer': 'analytics',
-            'monitor': 'monitoring', 
-            'control': 'control',
-            'orchestrator': 'orchestration',
-            'cognitive': 'meta_cognitive',
-            'specialized': 'specialized',
-            'core': 'core',
-            'system': 'system',
-            'service': 'service',
-            'gateway': 'gateway',
-            'notification': 'communication',
-            'structure': 'analysis'
-        }
-        
-        for keyword, agent_type in type_mappings.items():
-            if keyword in name_lower:
-                return agent_type
-        
-        # Mapeamento por capabilities
-        cap_str = ' '.join(capabilities).lower()
-        if 'analysis' in cap_str or 'analytics' in cap_str:
-            return 'analytics'
-        elif 'monitoring' in cap_str or 'performance' in cap_str:
-            return 'monitoring'
-        elif 'security' in cap_str or 'guard' in cap_str:
-            return 'security'
-        elif 'optimization' in cap_str:
-            return 'optimizer'
-        
-        return 'general'
-    
-    def _find_create_functions(self, tree: ast.AST) -> List[Dict[str, Any]]:
-        """Encontra funções create_*_agents"""
-        functions = []
-        
-        for node in ast.walk(tree):
-            if isinstance(node, ast.FunctionDef):
-                if node.name.startswith('create_') and 'agent' in node.name.lower():
-                    functions.append({
-                        'name': node.name,
-                        'node': node,
-                        'line': node.lineno
-                    })
-        
-        return functions
-    
-    async def _analyze_create_function(self, func_info: Dict[str, Any], file_path: str) -> Dict[str, AgentInfo]:
-        """Analisa função create_*_agents para descobrir agentes criados"""
-        agents = {}
-        
-        try:
-            # Analisar corpo da função para identificar agentes criados
-            func_node = func_info['node']
-            
-            for node in ast.walk(func_node):
-                if isinstance(node, ast.Call):
-                    # Procurar por chamadas de construtor de agentes
-                    if isinstance(node.func, ast.Name):
-                        class_name = node.func.id
-                        if 'Agent' in class_name:
-                            # Extrair ID do agente dos argumentos
-                            agent_id = self._extract_agent_id_from_call(node)
-                            if agent_id:
-                                agents[agent_id] = AgentInfo(
-                                    agent_id=agent_id,
-                                    class_name=class_name,
-                                    module_name=os.path.basename(file_path).replace('.py', ''),
-                                    file_path=file_path,
-                                    agent_type=self._detect_agent_type(class_name, []),
-                                    capabilities=[],
-                                    inheritance_chain=[],
-                                    methods=[],
-                                    complexity_score=0.0,
-                                    last_modified=datetime.fromtimestamp(os.path.getmtime(file_path))
-                                )
-        
-        except Exception as e:
-            logger.debug(f"Erro analisando função create: {e}")
-        
-        return agents
-    
-    def _extract_agent_id_from_call(self, node: ast.Call) -> Optional[str]:
-        """Extrai ID do agente de uma chamada de construtor"""
-        try:
-            # Procurar primeiro argumento que é string (geralmente o agent_id)
-            for arg in node.args:
-                if isinstance(arg, ast.Str):
-                    return arg.s
-                elif isinstance(arg, ast.Constant) and isinstance(arg.value, str):
-                    return arg.value
-        except:
-            pass
         return None
-    
-    async def _analyze_active_agents(self) -> Dict[str, Dict[str, Any]]:
-        """Analisa agentes atualmente ativos no sistema"""
-        active_agents = {}
-        
+
+    def _extract_classes(self, content: str) -> List[str]:
+        """Extrai classes do conteúdo"""
+        classes = []
+        for line in content.splitlines():
+            line = line.strip()
+            if line.startswith("class ") and ":" in line:
+                class_name = line.split("class ")[1].split("(")[0].split(":")[0].strip()
+                classes.append(class_name)
+        return classes
+
+    def _extract_functions(self, content: str) -> List[str]:
+        """Extrai funções do conteúdo"""
+        functions = []
+        for line in content.splitlines():
+            line = line.strip()
+            if line.startswith("def ") and "(" in line:
+                func_name = line.split("def ")[1].split("(")[0].strip()
+                functions.append(func_name)
+        return functions
+
+    def _extract_imports(self, content: str) -> List[str]:
+        """Extrai imports do conteúdo"""
+        imports = []
+        for line in content.splitlines():
+            line = line.strip()
+            if line.startswith("from ") or line.startswith("import "):
+                imports.append(line)
+        return imports
+
+    def _extract_agent_types(self, content: str) -> List[str]:
+        """Extrai tipos de agente do conteúdo"""
+        agent_types = []
+        for line in content.splitlines():
+            if "AgentType." in line:
+                parts = line.split("AgentType.")
+                for part in parts[1:]:
+                    agent_type = part.split()[0].split(",")[0].split(")")[0]
+                    if agent_type and agent_type not in agent_types:
+                        agent_types.append(agent_type)
+        return agent_types
+
+    def _extract_capabilities(self, content: str) -> List[str]:
+        """Extrai capacidades do conteúdo"""
+        capabilities = []
+        in_capabilities = False
+        for line in content.splitlines():
+            line = line.strip()
+            if "capabilities=[" in line or "capabilities = [" in line:
+                in_capabilities = True
+                # Extrair capacidades da mesma linha
+                if '"' in line:
+                    caps = line.split('[')[1].split(']')[0]
+                    capabilities.extend([c.strip().strip('"\'') for c in caps.split(',')])
+                continue
+            elif in_capabilities:
+                if "]" in line:
+                    in_capabilities = False
+                elif '"' in line or "'" in line:
+                    cap = line.strip().strip('",\'')
+                    if cap:
+                        capabilities.append(cap)
+        return capabilities
+
+    async def _analyze_module_structure(self):
+        """Analisa estrutura dos módulos"""
         try:
-            # Acessar agentes do message_bus
-            if hasattr(self.message_bus, 'queues'):
-                for agent_id in self.message_bus.queues.keys():
-                    if agent_id != self.agent_id:  # Não incluir a si mesmo
-                        # Tentar obter informações do agente
-                        agent_info = {
-                            'class_name': 'ActiveAgent',
-                            'type': 'unknown',
-                            'capabilities': [],
-                            'status': 'active'
-                        }
-                        
-                        # Tentar inferir tipo baseado no ID
-                        agent_info['type'] = self._infer_type_from_id(agent_id)
-                        agent_info['class_name'] = self._infer_class_from_id(agent_id)
-                        
-                        active_agents[agent_id] = agent_info
-        
+            # Analisar módulos Python carregados
+            for module_name, module in self._get_loaded_modules():
+                module_info = {
+                    "name": module_name,
+                    "file": getattr(module, "__file__", "unknown"),
+                    "doc": getattr(module, "__doc__", ""),
+                    "classes": [],
+                    "functions": [],
+                    "attributes": []
+                }
+                
+                # Analisar conteúdo do módulo
+                for attr_name in dir(module):
+                    if not attr_name.startswith("_"):
+                        attr = getattr(module, attr_name)
+                        if inspect.isclass(attr):
+                            module_info["classes"].append(attr_name)
+                        elif inspect.isfunction(attr):
+                            module_info["functions"].append(attr_name)
+                        else:
+                            module_info["attributes"].append(attr_name)
+                
+                self.module_registry[module_name] = module_info
+            
+            self.metrics.module_count = len(self.module_registry)
+            logging.info(f"📊 Módulos analisados: {self.metrics.module_count}")
+            
         except Exception as e:
-            logger.debug(f"Erro analisando agentes ativos: {e}")
-        
-        return active_agents
+            logging.error(f"❌ Erro na análise de módulos: {e}")
 
-    def _infer_type_from_id(self, agent_id: str) -> str:
-        """Infere tipo do agente baseado no ID"""
-        id_lower = agent_id.lower()
+    def _get_loaded_modules(self) -> List[Tuple[str, Any]]:
+        """Obtém módulos carregados relacionados ao sistema"""
+        import sys
+        relevant_modules = []
         
-        type_mappings = {
-            'core': 'core',
-            'guard': 'security',
-            'learn': 'learning',
-            'monitor': 'monitoring',
-            'control': 'control',
-            'orchestrator': 'orchestration',
-            'analyzer': 'analytics',
-            'gateway': 'gateway',
-            'notification': 'communication',
-            'database': 'data',
-            'backup': 'maintenance',
-            'security': 'security',
-            'deployment': 'deployment',
-            'testing': 'testing',
-            'recovery': 'recovery',
-            'performance': 'monitoring',
-            'logging': 'logging',
-            'visualization': 'presentation',
-            'web_search': 'search',
-            'sales': 'business',
-            'analytics': 'analytics',
-            'social_media': 'marketing',
-            'support': 'support',
-            'chatbot': 'conversation',
-            'ticket': 'support'
-        }
+        for module_name, module in sys.modules.items():
+            if any(keyword in module_name.lower() for keyword in 
+                   ["alsham", "suna", "agent", "quantum"]):
+                relevant_modules.append((module_name, module))
         
-        for keyword, agent_type in type_mappings.items():
-            if keyword in id_lower:
-                return agent_type
-        
-        return 'general'
+        return relevant_modules
 
-    def _infer_class_from_id(self, agent_id: str) -> str:
-        """Infere nome da classe baseado no ID"""
-        # Converter agent_id para CamelCase
-        parts = agent_id.replace('_001', '').replace('_002', '').split('_')
-        class_name = ''.join(word.capitalize() for word in parts) + 'Agent'
-        return class_name
-
-    # Métodos de análise arquitetural (simplificados para economia de espaço)
-    async def analyze_complete_architecture(self) -> Dict[str, Any]:
-        """Analisa arquitetura completa do sistema"""
+    async def _analyze_dependencies(self):
+        """Analisa dependências do sistema"""
         try:
-            logger.info(f"🏗️ Iniciando análise completa da arquitetura...")
+            # Construir grafo de dependências
+            for agent_name, agent_info in self.agent_registry.items():
+                node = DependencyNode(
+                    name=agent_name,
+                    node_type="agent"
+                )
+                
+                # Analisar imports como dependências
+                for import_line in agent_info.get("imports", []):
+                    deps = self._parse_import_dependencies(import_line)
+                    node.dependencies.update(deps)
+                
+                self.dependency_graph[agent_name] = node
             
-            # Descobrir todos os agentes se não foi feito ainda
-            if not self.discovered_agents:
-                await self.discover_all_agents()
+            # Calcular dependentes (inverso)
+            for node_name, node in self.dependency_graph.items():
+                for dep in node.dependencies:
+                    if dep in self.dependency_graph:
+                        self.dependency_graph[dep].dependents.add(node_name)
             
-            # Mapear dependências
-            dependency_result = await self.map_agent_dependencies()
+            # Detectar dependências circulares
+            await self._detect_circular_dependencies()
             
-            # Avaliar capabilities
-            capability_result = await self.assess_system_capabilities()
-            
-            # Calcular métricas arquiteturais
-            metrics = self._calculate_architecture_metrics()
-            
-            # Detectar problemas
-            issues = self._detect_architecture_issues()
-            
-            # Sugerir otimizações
-            optimizations = await self.suggest_architecture_optimizations()
-            
-            # Gerar score de saúde
-            health_score = self._calculate_architecture_health_score(metrics, issues)
-            
-            # Criar relatório
-            report = ArchitectureReport(
-                report_id=f"arch_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}",
-                total_agents=len(self.discovered_agents),
-                agents_by_type=self._count_agents_by_type(),
-                dependency_graph=dict(self.dependency_graph),
-                capability_matrix=dict(self.capability_matrix),
-                health_score=health_score,
-                critical_issues=issues.get('critical', []),
-                optimization_opportunities=optimizations.get('opportunities', []),
-                evolution_suggestions=optimizations.get('evolution_suggestions', [])
+            self.metrics.dependency_count = sum(
+                len(node.dependencies) for node in self.dependency_graph.values()
             )
             
-            self.analysis_history.append(report)
-            
-            return {
-                'status': 'completed',
-                'report': self._report_to_dict(report),
-                'metrics': metrics,
-                'recommendations': self._generate_architecture_recommendations(report)
-            }
+            logging.info(f"📊 Dependências analisadas: {self.metrics.dependency_count}")
             
         except Exception as e:
-            logger.error(f"❌ Erro na análise arquitetural: {e}")
-            return {'status': 'error', 'message': str(e)}
+            logging.error(f"❌ Erro na análise de dependências: {e}")
 
-    async def map_agent_dependencies(self) -> Dict[str, Any]:
-        """Mapeia dependências entre agentes"""
-        try:
-            logger.info(f"🔗 Mapeando dependências entre agentes...")
-            
-            dependencies = defaultdict(set)
-            
-            # Analisar imports e comunicações
-            for agent_id, agent_info in self.discovered_agents.items():
-                # Analisar arquivo fonte para dependências
-                if os.path.exists(agent_info.file_path):
-                    file_deps = await self._analyze_file_dependencies(agent_info.file_path)
-                    dependencies[agent_id].update(file_deps)
-                
-                # Analisar dependências de capabilities
-                cap_deps = self._analyze_capability_dependencies(agent_info.capabilities)
-                dependencies[agent_id].update(cap_deps)
-            
-            # Atualizar grafo de dependências
-            self.dependency_graph = dependencies
-            
-            return {
-                'status': 'completed',
-                'dependencies': {k: list(v) for k, v in dependencies.items()},
-                'dependency_count': sum(len(deps) for deps in dependencies.values()),
-                'circular_dependencies': self._detect_circular_dependencies(dependencies)
-            }
-            
-        except Exception as e:
-            logger.error(f"❌ Erro mapeando dependências: {e}")
-            return {'status': 'error', 'message': str(e)}
+    def _parse_import_dependencies(self, import_line: str) -> Set[str]:
+        """Parseia linha de import para extrair dependências"""
+        deps = set()
+        
+        if import_line.startswith("from "):
+            # from module import something
+            module = import_line.split("from ")[1].split(" import")[0].strip()
+            if module.startswith("."):
+                module = module[1:]  # Remove relative import dot
+            deps.add(module)
+        elif import_line.startswith("import "):
+            # import module
+            modules = import_line.split("import ")[1].split(",")
+            for module in modules:
+                module = module.strip().split(" as ")[0].strip()
+                deps.add(module)
+        
+        return deps
 
-    async def _analyze_file_dependencies(self, file_path: str) -> Set[str]:
-        """Analisa dependências de um arquivo"""
-        dependencies = set()
-        
-        try:
-            if os.path.exists(file_path):
-                with open(file_path, 'r', encoding='utf-8') as f:
-                    content = f.read()
-                
-                tree = ast.parse(content)
-                
-                # Analisar imports
-                for node in ast.walk(tree):
-                    if isinstance(node, ast.Import):
-                        for alias in node.names:
-                            if 'agent' in alias.name.lower():
-                                dependencies.add(alias.name)
-                    elif isinstance(node, ast.ImportFrom):
-                        if node.module and 'agent' in node.module.lower():
-                            dependencies.add(node.module)
-        
-        except Exception as e:
-            logger.debug(f"Erro analisando dependências do arquivo: {e}")
-        
-        return dependencies
-
-    def _analyze_capability_dependencies(self, capabilities: List[str]) -> Set[str]:
-        """Analisa dependências baseadas em capabilities"""
-        dependencies = set()
-        
-        # Mapeamento de capabilities que implicam dependências
-        capability_deps = {
-            'orchestration': ['coordination', 'task_distribution'],
-            'meta_cognition': ['learning', 'analysis'],
-            'performance_monitoring': ['metrics_collection', 'alerting'],
-            'security': ['validation', 'threat_detection'],
-            'email_notifications': ['smtp_client'],
-            'database_operations': ['database_connection'],
-            'web_search': ['http_client']
-        }
-        
-        for capability in capabilities:
-            for dep_capability, implied_deps in capability_deps.items():
-                if dep_capability in capability:
-                    dependencies.update(implied_deps)
-        
-        return dependencies
-
-    def _detect_circular_dependencies(self, dependencies: Dict[str, Set[str]]) -> List[List[str]]:
+    async def _detect_circular_dependencies(self):
         """Detecta dependências circulares"""
-        circular = []
-        
-        def dfs(node, path, visited):
-            if node in path:
-                # Encontrou ciclo
-                cycle_start = path.index(node)
-                circular.append(path[cycle_start:] + [node])
-                return
-            
-            if node in visited:
-                return
-            
-            visited.add(node)
-            path.append(node)
-            
-            for neighbor in dependencies.get(node, []):
-                dfs(neighbor, path[:], visited)
-        
         visited = set()
-        for agent_id in dependencies:
-            if agent_id not in visited:
-                dfs(agent_id, [], visited)
+        rec_stack = set()
+        circular_deps = []
         
-        return circular
+        def dfs(node_name: str, path: List[str]) -> bool:
+            if node_name in rec_stack:
+                # Encontrada dependência circular
+                cycle_start = path.index(node_name)
+                cycle = path[cycle_start:] + [node_name]
+                circular_deps.append(cycle)
+                return True
+            
+            if node_name in visited:
+                return False
+            
+            visited.add(node_name)
+            rec_stack.add(node_name)
+            
+            node = self.dependency_graph.get(node_name)
+            if node:
+                for dep in node.dependencies:
+                    if dep in self.dependency_graph:
+                        if dfs(dep, path + [node_name]):
+                            return True
+            
+            rec_stack.remove(node_name)
+            return False
+        
+        # Executar DFS para cada nó
+        for node_name in self.dependency_graph:
+            if node_name not in visited:
+                dfs(node_name, [])
+        
+        self.metrics.circular_dependencies = len(circular_deps)
+        if circular_deps:
+            logging.warning(f"⚠️ {len(circular_deps)} dependências circulares detectadas")
+            for cycle in circular_deps:
+                logging.warning(f"   Ciclo: {' → '.join(cycle)}")
 
-    async def assess_system_capabilities(self) -> Dict[str, Any]:
-        """Avalia capabilities do sistema completo"""
+    async def _analyze_system_health(self):
+        """Analisa saúde geral do sistema"""
         try:
-            logger.info(f"⚡ Avaliando capabilities do sistema...")
+            health_factors = []
             
-            all_capabilities = set()
-            capability_coverage = defaultdict(list)
+            # Fator 1: Cobertura de agentes (esperados vs encontrados)
+            expected_agents = 56
+            found_agents = len(self.agent_registry)
+            coverage = (found_agents / expected_agents) * 100
+            health_factors.append(min(coverage / 100, 1.0))
             
-            # Coletar todas as capabilities
-            for agent_id, agent_info in self.discovered_agents.items():
-                all_capabilities.update(agent_info.capabilities)
-                for capability in agent_info.capabilities:
-                    capability_coverage[capability].append(agent_id)
-            
-            # Atualizar matriz de capabilities
-            self.capability_matrix = capability_coverage
-            
-            # Analisar cobertura
-            redundant_capabilities = {
-                cap: agents for cap, agents in capability_coverage.items() 
-                if len(agents) > 3
-            }
-            
-            missing_capabilities = self._identify_missing_capabilities(all_capabilities)
-            
-            return {
-                'status': 'completed',
-                'total_capabilities': len(all_capabilities),
-                'capabilities': list(all_capabilities),
-                'coverage_matrix': {k: v for k, v in capability_coverage.items()},
-                'redundant_capabilities': redundant_capabilities,
-                'missing_capabilities': missing_capabilities,
-                'capability_distribution': self._analyze_capability_distribution(capability_coverage)
-            }
-            
-        except Exception as e:
-            logger.error(f"❌ Erro avaliando capabilities: {e}")
-            return {'status': 'error', 'message': str(e)}
-
-    def _identify_missing_capabilities(self, current_capabilities: Set[str]) -> List[str]:
-        """Identifica capabilities que deveriam existir mas não existem"""
-        expected_capabilities = {
-            'logging', 'error_handling', 'configuration_management',
-            'health_checking', 'metrics_reporting', 'backup_recovery',
-            'load_balancing', 'caching', 'authentication', 'authorization',
-            'rate_limiting', 'circuit_breaking', 'service_discovery'
-        }
-        
-        return list(expected_capabilities - current_capabilities)
-
-    def _analyze_capability_distribution(self, coverage: Dict[str, List[str]]) -> Dict[str, Any]:
-        """Analisa distribuição de capabilities"""
-        distribution = {
-            'single_agent': 0,
-            'multiple_agents': 0,
-            'highly_redundant': 0
-        }
-        
-        for capability, agents in coverage.items():
-            if len(agents) == 1:
-                distribution['single_agent'] += 1
-            elif len(agents) <= 3:
-                distribution['multiple_agents'] += 1
+            # Fator 2: Dependências saudáveis (sem ciclos)
+            if self.metrics.dependency_count > 0:
+                circular_ratio = self.metrics.circular_dependencies / self.metrics.dependency_count
+                health_factors.append(1.0 - circular_ratio)
             else:
-                distribution['highly_redundant'] += 1
-        
-        return distribution
+                health_factors.append(0.5)  # Neutro se não há dependências
+            
+            # Fator 3: Distribuição de capacidades
+            all_capabilities = []
+            for agent_info in self.agent_registry.values():
+                all_capabilities.extend(agent_info.get("capabilities", []))
+            
+            capability_distribution = len(set(all_capabilities)) / max(len(all_capabilities), 1)
+            health_factors.append(capability_distribution)
+            
+            # Fator 4: Complexidade modular
+            avg_complexity = sum(
+                len(info.get("classes", [])) + len(info.get("functions", []))
+                for info in self.agent_registry.values()
+            ) / max(len(self.agent_registry), 1)
+            
+            # Normalizar complexidade (assumindo 10-50 como faixa saudável)
+            complexity_health = 1.0 - abs(avg_complexity - 30) / 30
+            health_factors.append(max(0.0, complexity_health))
+            
+            # Calcular score de saúde final
+            self.metrics.health_score = sum(health_factors) / len(health_factors)
+            self.metrics.coverage_percentage = coverage
+            
+            logging.info(f"🏥 Saúde do sistema: {self.metrics.health_score:.2%}")
+            
+        except Exception as e:
+            logging.error(f"❌ Erro na análise de saúde: {e}")
 
-    async def suggest_architecture_optimizations(self) -> Dict[str, Any]:
-        """Sugere otimizações para a arquitetura"""
+    async def _calculate_structural_metrics(self):
+        """Calcula métricas estruturais consolidadas"""
+        self.metrics.last_analysis = datetime.now()
+        
+        # Identificar problemas
+        self.metrics.issues_found = []
+        self.metrics.recommendations = []
+        
+        if self.metrics.coverage_percentage < 100:
+            missing = 56 - len(self.agent_registry)
+            self.metrics.issues_found.append(f"Faltam {missing} agentes esperados")
+            self.metrics.recommendations.append("Verificar implementação de agentes faltantes")
+        
+        if self.metrics.circular_dependencies > 0:
+            self.metrics.issues_found.append(f"{self.metrics.circular_dependencies} dependências circulares")
+            self.metrics.recommendations.append("Refatorar dependências circulares")
+        
+        if self.metrics.health_score < 0.8:
+            self.metrics.issues_found.append("Score de saúde abaixo do ideal")
+            self.metrics.recommendations.append("Melhorar arquitetura e distribuição de responsabilidades")
+
+    async def _setup_continuous_monitoring(self):
+        """Configura monitoramento contínuo"""
+        if not self.monitoring_active:
+            self.monitoring_active = True
+            
+            # Agendar análises periódicas
+            asyncio.create_task(self._continuous_health_monitoring())
+            asyncio.create_task(self._continuous_structure_monitoring())
+            
+            logging.info("🔄 Monitoramento contínuo ativado")
+
+    async def _continuous_health_monitoring(self):
+        """Monitoramento contínuo de saúde"""
+        while self.monitoring_active:
+            try:
+                await asyncio.sleep(self.scan_intervals["health"].total_seconds())
+                await self._analyze_system_health()
+                
+                # Notificar se saúde degradou
+                if self.metrics.health_score < 0.7:
+                    await self.message_bus.publish("system.health_alert", {
+                        "health_score": self.metrics.health_score,
+                        "issues": self.metrics.issues_found,
+                        "agent_id": self.agent_id
+                    })
+                    
+            except Exception as e:
+                logging.error(f"❌ Erro no monitoramento de saúde: {e}")
+
+    async def _continuous_structure_monitoring(self):
+        """Monitoramento contínuo de estrutura"""
+        while self.monitoring_active:
+            try:
+                await asyncio.sleep(self.scan_intervals["structure"].total_seconds())
+                
+                # Re-analisar estrutura
+                old_count = self.metrics.agent_count
+                await self._analyze_agent_structure()
+                
+                # Notificar mudanças
+                if self.metrics.agent_count != old_count:
+                    await self.message_bus.publish("system.structure_change", {
+                        "old_count": old_count,
+                        "new_count": self.metrics.agent_count,
+                        "change": self.metrics.agent_count - old_count,
+                        "agent_id": self.agent_id
+                    })
+                    
+            except Exception as e:
+                logging.error(f"❌ Erro no monitoramento estrutural: {e}")
+
+    async def _register_analysis_callbacks(self):
+        """Registra callbacks para eventos de análise"""
+        callbacks = {
+            "structure_analysis_request": self._on_structure_analysis_request,
+            "health_check_request": self._on_health_check_request,
+            "dependency_analysis_request": self._on_dependency_analysis_request
+        }
+        
+        for event, callback in callbacks.items():
+            await self.message_bus.register_callback(f"analysis.{event}", callback)
+
+    async def _initialize_baseline_metrics(self):
+        """Inicializa métricas baseline do sistema"""
+        baseline = {
+            "timestamp": datetime.now().isoformat(),
+            "agent_count": self.metrics.agent_count,
+            "module_count": self.metrics.module_count,
+            "dependency_count": self.metrics.dependency_count,
+            "health_score": self.metrics.health_score,
+            "coverage_percentage": self.metrics.coverage_percentage
+        }
+        
+        self.analysis_history.append(baseline)
+        logging.info("📊 Métricas baseline estabelecidas")
+
+    # Message Handlers
+    async def _handle_structure_analysis(self, message: Dict[str, Any]) -> Dict[str, Any]:
+        """Processa solicitação de análise estrutural"""
         try:
-            logger.info(f"💡 Gerando sugestões de otimização...")
+            analysis_type = message.get("analysis_type", "full")
+            target = message.get("target", "all")
             
-            opportunities = []
-            evolution_suggestions = []
-            
-            # Analisar redundâncias
-            redundancies = self._identify_redundancies()
-            if redundancies:
-                opportunities.extend([
-                    f"Consolidar agentes redundantes do tipo: {', '.join(redundancies[:3])}"
-                ])
-            
-            # Analisar gaps
-            gaps = self._identify_capability_gaps()
-            if gaps:
-                opportunities.extend([
-                    f"Implementar capabilities faltantes: {', '.join(gaps[:3])}"
-                ])
-            
-            # Analisar complexidade
-            complex_agents = self._identify_overly_complex_agents()
-            if complex_agents:
-                opportunities.extend([
-                    f"Refatorar agentes complexos: {', '.join(complex_agents[:3])}"
-                ])
-            
-            # Sugestões de evolução
-            evolution_suggestions.extend([
-                "Implementar padrão de factory unificado para criação de agentes",
-                "Adicionar interface comum para todos os agentes",
-                "Implementar sistema de plugins para capabilities dinâmicas",
-                "Criar registry centralizado com descoberta automática",
-                "Implementar health checks padronizados",
-                "Adicionar sistema de métricas distribuídas"
-            ])
-            
-            self.analysis_metrics['optimizations_suggested'] += len(opportunities)
+            if analysis_type == "full":
+                await self._perform_initial_analysis()
+            elif analysis_type == "agents":
+                await self._analyze_agent_structure()
+            elif analysis_type == "dependencies":
+                await self._analyze_dependencies()
+            elif analysis_type == "health":
+                await self._analyze_system_health()
             
             return {
-                'status': 'completed',
-                'opportunities': opportunities,
-                'evolution_suggestions': evolution_suggestions,
-                'priority_recommendations': self._prioritize_recommendations(opportunities)
+                "status": "success",
+                "analysis_type": analysis_type,
+                "metrics": {
+                    "agent_count": self.metrics.agent_count,
+                    "module_count": self.metrics.module_count,
+                    "dependency_count": self.metrics.dependency_count,
+                    "health_score": self.metrics.health_score,
+                    "coverage_percentage": self.metrics.coverage_percentage,
+                    "issues_found": self.metrics.issues_found,
+                    "recommendations": self.metrics.recommendations
+                },
+                "timestamp": datetime.now().isoformat()
             }
             
         except Exception as e:
-            logger.error(f"❌ Erro gerando otimizações: {e}")
-            return {'status': 'error', 'message': str(e)}
+            return {"status": "error", "message": str(e)}
 
-    def _identify_redundancies(self) -> List[str]:
-        """Identifica agentes redundantes"""
-        redundant = []
-        
-        # Agrupar agentes por tipo e capabilities similares
-        type_groups = defaultdict(list)
-        for agent_id, info in self.discovered_agents.items():
-            type_groups[info.agent_type].append((agent_id, info))
-        
-        for agent_type, agents in type_groups.items():
-            if len(agents) > 4:  # Muitos agentes do mesmo tipo
-                redundant.append(agent_type)
-        
-        return redundant
-
-    def _identify_capability_gaps(self) -> List[str]:
-        """Identifica gaps de capabilities"""
-        current_caps = set()
-        for info in self.discovered_agents.values():
-            current_caps.update(info.capabilities)
-        
-        expected_caps = {
-            'error_recovery', 'performance_optimization', 'resource_management',
-            'scalability_management', 'fault_tolerance', 'distributed_coordination'
-        }
-        
-        return list(expected_caps - current_caps)
-
-    def _identify_overly_complex_agents(self) -> List[str]:
-        """Identifica agentes excessivamente complexos"""
-        complex_agents = []
-        
-        for agent_id, info in self.discovered_agents.items():
-            if info.complexity_score > 50:  # Threshold de complexidade
-                complex_agents.append(agent_id)
-        
-        return complex_agents
-
-    def _prioritize_recommendations(self, opportunities: List[str]) -> List[Dict[str, Any]]:
-        """Prioriza recomendações por impacto"""
-        prioritized = []
-        
-        for opportunity in opportunities:
-            priority = 'medium'
-            impact = 'medium'
+    async def _handle_dependency_check(self, message: Dict[str, Any]) -> Dict[str, Any]:
+        """Processa verificação de dependências"""
+        try:
+            target_agent = message.get("agent_name")
             
-            if 'redundant' in opportunity.lower():
-                priority = 'high'
-                impact = 'high'
-            elif 'complex' in opportunity.lower():
-                priority = 'medium'
-                impact = 'high'
-            elif 'faltantes' in opportunity.lower():
-                priority = 'low'
-                impact = 'medium'
+            if target_agent and target_agent in self.dependency_graph:
+                node = self.dependency_graph[target_agent]
+                return {
+                    "status": "success",
+                    "agent": target_agent,
+                    "dependencies": list(node.dependencies),
+                    "dependents": list(node.dependents),
+                    "is_critical": node.is_critical,
+                    "health_status": node.health_status
+                }
+            else:
+                # Retornar análise geral
+                return {
+                    "status": "success",
+                    "total_dependencies": self.metrics.dependency_count,
+                    "circular_dependencies": self.metrics.circular_dependencies,
+                    "dependency_graph_size": len(self.dependency_graph)
+                }
+                
+        except Exception as e:
+            return {"status": "error", "message": str(e)}
+
+    async def _handle_health_assessment(self, message: Dict[str, Any]) -> Dict[str, Any]:
+        """Processa avaliação de saúde"""
+        try:
+            await self._analyze_system_health()
             
-            prioritized.append({
-                'recommendation': opportunity,
-                'priority': priority,
-                'impact': impact
+            return {
+                "status": "success",
+                "health_score": self.metrics.health_score,
+                "coverage_percentage": self.metrics.coverage_percentage,
+                "issues_found": self.metrics.issues_found,
+                "recommendations": self.metrics.recommendations,
+                "last_analysis": self.metrics.last_analysis.isoformat() if self.metrics.last_analysis else None,
+                "trend": self._calculate_health_trend()
+            }
+            
+        except Exception as e:
+            return {"status": "error", "message": str(e)}
+
+    def _calculate_health_trend(self) -> str:
+        """Calcula tendência de saúde"""
+        if len(self.analysis_history) < 2:
+            return "insufficient_data"
+        
+        current_health = self.metrics.health_score
+        previous_health = self.analysis_history[-2].get("health_score", 0)
+        
+        if current_health > previous_health * 1.05:
+            return "improving"
+        elif current_health < previous_health * 0.95:
+            return "declining"
+        else:
+            return "stable"
+
+    async def _handle_optimization_request(self, message: Dict[str, Any]) -> Dict[str, Any]:
+        """Processa solicitação de otimização"""
+        try:
+            optimization_target = message.get("target", "general")
+            
+            suggestions = []
+            
+            if optimization_target == "dependencies":
+                suggestions.extend(self._generate_dependency_optimizations())
+            elif optimization_target == "performance":
+                suggestions.extend(self._generate_performance_optimizations())
+            elif optimization_target == "architecture":
+                suggestions.extend(self._generate_architecture_optimizations())
+            else:
+                suggestions.extend(self._generate_general_optimizations())
+            
+            return {
+                "status": "success",
+                "optimization_target": optimization_target,
+                "suggestions": suggestions,
+                "priority_actions": [s for s in suggestions if s.get("priority") == "high"]
+            }
+            
+        except Exception as e:
+            return {"status": "error", "message": str(e)}
+
+    def _generate_dependency_optimizations(self) -> List[Dict[str, Any]]:
+        """Gera otimizações de dependências"""
+        suggestions = []
+        
+        if self.metrics.circular_dependencies > 0:
+            suggestions.append({
+                "type": "dependency_optimization",
+                "priority": "high",
+                "description": "Resolver dependências circulares detectadas",
+                "impact": "high",
+                "effort": "medium"
             })
         
-        return sorted(prioritized, key=lambda x: (
-            ['high', 'medium', 'low'].index(x['priority']),
-            ['high', 'medium', 'low'].index(x['impact'])
-        ))
-
-    async def generate_health_report(self) -> Dict[str, Any]:
-        """Gera relatório de saúde da arquitetura"""
-        try:
-            logger.info(f"🏥 Gerando relatório de saúde arquitetural...")
-            
-            # Calcular métricas de saúde
-            health_metrics = {
-                'total_agents': len(self.discovered_agents),
-                'active_agents': len([a for a in self.discovered_agents.values() if 'active' in str(a)]),
-                'average_complexity': sum(a.complexity_score for a in self.discovered_agents.values()) / max(1, len(self.discovered_agents)),
-                'capability_coverage': len(self.capability_matrix),
-                'dependency_complexity': len(self.dependency_graph)
-            }
-            
-            # Detectar problemas de saúde
-            health_issues = self._detect_architecture_issues()
-            
-            # Calcular score geral
-            health_score = self._calculate_architecture_health_score(health_metrics, health_issues)
-            
-            # Determinar status
-            if health_score >= 80:
-                status = StructureStatus.HEALTHY
-            elif health_score >= 60:
-                status = StructureStatus.NEEDS_OPTIMIZATION
-            else:
-                status = StructureStatus.CRITICAL_ISSUES
-            
-            return {
-                'status': 'completed',
-                'health_score': health_score,
-                'overall_status': status.value,
-                'metrics': health_metrics,
-                'issues': health_issues,
-                'recommendations': self._generate_health_recommendations(health_issues)
-            }
-            
-        except Exception as e:
-            logger.error(f"❌ Erro gerando relatório de saúde: {e}")
-            return {'status': 'error', 'message': str(e)}
-
-    # Métodos de cálculo e análise (implementações simplificadas)
-    def _calculate_architecture_metrics(self) -> Dict[str, Any]:
-        """Calcula métricas arquiteturais"""
-        return {
-            'modularity_score': self._calculate_modularity_score(),
-            'coupling_score': self._calculate_coupling_score(),
-            'cohesion_score': self._calculate_cohesion_score(),
-            'complexity_score': self._calculate_overall_complexity(),
-            'maintainability_score': self._calculate_maintainability_score()
-        }
-
-    def _calculate_modularity_score(self) -> float:
-        """Calcula score de modularidade"""
-        type_distribution = self._count_agents_by_type()
-        total_types = len(type_distribution)
-        
-        if total_types >= 8:  # Excelente separação
-            return 95.0
-        elif total_types >= 5:  # Boa separação
-            return 85.0
-        elif total_types >= 3:
-            return 70.0
-        else:
-            return 50.0
-
-    def _calculate_coupling_score(self) -> float:
-        """Calcula score de acoplamento (menor é melhor)"""
-        total_deps = sum(len(deps) for deps in self.dependency_graph.values())
-        total_agents = len(self.discovered_agents)
-        
-        if total_agents == 0:
-            return 100.0
-        
-        avg_deps = total_deps / total_agents
-        
-        if avg_deps <= 2:
-            return 95.0
-        elif avg_deps <= 4:
-            return 80.0
-        elif avg_deps <= 6:
-            return 60.0
-        else:
-            return 40.0
-
-    def _calculate_cohesion_score(self) -> float:
-        """Calcula score de coesão"""
-        cohesion_scores = []
-        
-        type_groups = defaultdict(list)
-        for info in self.discovered_agents.values():
-            type_groups[info.agent_type].append(info.capabilities)
-        
-        for agent_type, caps_list in type_groups.items():
-            if len(caps_list) > 1:
-                # Calcular similaridade entre capabilities
-                all_caps = set()
-                for caps in caps_list:
-                    all_caps.update(caps)
-                
-                common_caps = set(caps_list[0])
-                for caps in caps_list[1:]:
-                    common_caps &= set(caps)
-                
-                if all_caps:
-                    cohesion = len(common_caps) / len(all_caps)
-                    cohesion_scores.append(cohesion)
-        
-        return (sum(cohesion_scores) / len(cohesion_scores) * 100) if cohesion_scores else 70.0
-
-    def _calculate_overall_complexity(self) -> float:
-        """Calcula complexidade geral"""
-        if not self.discovered_agents:
-            return 0.0
-        
-        total_complexity = sum(info.complexity_score for info in self.discovered_agents.values())
-        avg_complexity = total_complexity / len(self.discovered_agents)
-        
-        # Normalizar para 0-100 (invertido, menor complexidade = melhor score)
-        return max(0, min(100, 100 - (avg_complexity / 10)))
-
-    def _calculate_maintainability_score(self) -> float:
-        """Calcula score de manutenibilidade"""
-        factors = []
-        
-        # Fator de documentação
-        avg_methods = sum(len(info.methods) for info in self.discovered_agents.values()) / max(1, len(self.discovered_agents))
-        doc_score = min(100, avg_methods * 8)
-        factors.append(doc_score)
-        
-        # Fator de modularidade
-        factors.append(self._calculate_modularity_score())
-        
-        # Fator de simplicidade
-        factors.append(self._calculate_overall_complexity())
-        
-        return sum(factors) / len(factors) if factors else 60.0
-
-    def _detect_architecture_issues(self) -> Dict[str, List[str]]:
-        """Detecta problemas na arquitetura"""
-        issues = {
-            'critical': [],
-            'high': [],
-            'medium': [],
-            'low': []
-        }
-        
-        # Dependências circulares
-        circular_deps = self._detect_circular_dependencies(self.dependency_graph)
-        if circular_deps:
-            issues['critical'].append(f"Dependências circulares detectadas: {len(circular_deps)}")
-        
-        # Agentes órfãos
-        orphan_agents = self._detect_orphan_agents()
-        if orphan_agents:
-            issues['medium'].extend([f"Agente órfão: {agent}" for agent in orphan_agents[:3]])
-        
-        # Capabilities não cobertas
-        missing_caps = self._identify_capability_gaps()
-        if missing_caps:
-            issues['high'].extend([f"Capability faltante: {cap}" for cap in missing_caps[:3]])
-        
-        # Agentes muito complexos
-        complex_agents = self._identify_overly_complex_agents()
-        if len(complex_agents) > 3:
-            issues['medium'].append(f"Múltiplos agentes com alta complexidade: {len(complex_agents)}")
-        
-        return issues
-
-    def _detect_orphan_agents(self) -> List[str]:
-        """Detecta agentes órfãos"""
-        orphans = []
-        
-        all_referenced = set()
-        for deps in self.dependency_graph.values():
-            all_referenced.update(deps)
-        
-        for agent_id in self.discovered_agents:
-            has_deps = bool(self.dependency_graph.get(agent_id))
-            is_referenced = agent_id in all_referenced
-            
-            if not has_deps and not is_referenced:
-                orphans.append(agent_id)
-        
-        return orphans
-
-    def _calculate_architecture_health_score(self, metrics: Dict[str, Any], issues: Dict[str, List[str]]) -> float:
-        """Calcula score geral de saúde da arquitetura"""
-        base_score = 100.0
-        
-        # Penalizar por problemas
-        base_score -= len(issues.get('critical', [])) * 25
-        base_score -= len(issues.get('high', [])) * 15
-        base_score -= len(issues.get('medium', [])) * 8
-        base_score -= len(issues.get('low', [])) * 2
-        
-        # Considerar métricas arquiteturais
-        metric_scores = [
-            metrics.get('modularity_score', 50),
-            metrics.get('coupling_score', 50),
-            metrics.get('cohesion_score', 50),
-            metrics.get('maintainability_score', 50)
+        # Analisar nós com muitas dependências
+        high_dependency_nodes = [
+            name for name, node in self.dependency_graph.items()
+            if len(node.dependencies) > 10
         ]
         
-        avg_metric_score = sum(metric_scores) / len(metric_scores)
-        base_score = (base_score + avg_metric_score) / 2
+        if high_dependency_nodes:
+            suggestions.append({
+                "type": "dependency_reduction",
+                "priority": "medium",
+                "description": f"Reduzir dependências em: {', '.join(high_dependency_nodes[:3])}",
+                "impact": "medium",
+                "effort": "high"
+            })
         
-        return max(0, min(100, base_score))
+        return suggestions
 
-    def _count_agents_by_type(self) -> Dict[str, int]:
-        """Conta agentes por tipo"""
-        counts = defaultdict(int)
-        for info in self.discovered_agents.values():
-            counts[info.agent_type] += 1
-        return dict(counts)
+    def _generate_performance_optimizations(self) -> List[Dict[str, Any]]:
+        """Gera otimizações de performance"""
+        suggestions = []
+        
+        # Analisar agentes com muitas funções (potencial refatoração)
+        complex_agents = [
+            name for name, info in self.agent_registry.items()
+            if len(info.get("functions", [])) > 20
+        ]
+        
+        if complex_agents:
+            suggestions.append({
+                "type": "complexity_reduction",
+                "priority": "medium",
+                "description": f"Refatorar agentes complexos: {', '.join(complex_agents[:3])}",
+                "impact": "high",
+                "effort": "high"
+            })
+        
+        return suggestions
 
-    def _generate_discovery_summary(self, discovered: Dict[str, AgentInfo]) -> Dict[str, Any]:
-        """Gera resumo da descoberta"""
-        by_module = defaultdict(int)
-        for info in discovered.values():
-            by_module[info.module_name] += 1
+    def _generate_architecture_optimizations(self) -> List[Dict[str, Any]]:
+        """Gera otimizações arquiteturais"""
+        suggestions = []
         
-        all_capabilities = set()
-        for info in discovered.values():
-            all_capabilities.update(info.capabilities)
+        if self.metrics.coverage_percentage < 100:
+            suggestions.append({
+                "type": "completeness",
+                "priority": "high", 
+                "description": "Implementar agentes faltantes para atingir 100% de cobertura",
+                "impact": "high",
+                "effort": "medium"
+            })
         
-        return {
-            'by_type': self._count_agents_by_type(),
-            'by_module': dict(by_module),
-            'total_capabilities': len(all_capabilities),
-            'average_complexity': sum(info.complexity_score for info in discovered.values()) / max(1, len(discovered))
-        }
+        return suggestions
 
-    def _generate_architecture_recommendations(self, report: ArchitectureReport) -> List[str]:
-        """Gera recomendações baseadas no relatório"""
-        recommendations = []
-        
-        if report.health_score < 70:
-            recommendations.append("Arquitetura necessita de refatoração significativa")
-        
-        if report.critical_issues:
-            recommendations.append("Resolver issues críticos imediatamente")
-        
-        if len(report.optimization_opportunities) > 5:
-            recommendations.append("Implementar otimizações gradualmente por prioridade")
-        
-        if report.total_agents > 60:
-            recommendations.append("Considerar divisão em subsistemas menores")
-        elif report.total_agents < 20:
-            recommendations.append("Sistema pode se beneficiar de mais especialização")
-        
-        return recommendations
+    def _generate_general_optimizations(self) -> List[Dict[str, Any]]:
+        """Gera otimizações gerais"""
+        suggestions = []
+        suggestions.extend(self._generate_dependency_optimizations())
+        suggestions.extend(self._generate_performance_optimizations())
+        suggestions.extend(self._generate_architecture_optimizations())
+        return suggestions
 
-    def _generate_health_recommendations(self, issues: Dict[str, List[str]]) -> List[str]:
-        """Gera recomendações de saúde"""
-        recommendations = []
-        
-        if issues.get('critical'):
-            recommendations.append("⚠️ Ação imediata necessária para resolver problemas críticos")
-        
-        if issues.get('high'):
-            recommendations.append("📋 Planejar correções para problemas de alta prioridade")
-        
-        if len(issues.get('medium', [])) > 5:
-            recommendations.append("🔧 Considerar refatoração para resolver problemas médios")
-        
-        if len(issues.get('low', [])) > 10:
-            recommendations.append("📝 Agendar resolução de problemas menores")
-        
-        return recommendations
-
-    # Métodos de detecção de mudanças e evolução
-    async def _detect_architecture_changes(self) -> List[Dict[str, Any]]:
-        """Detecta mudanças na arquitetura"""
-        changes = []
-        
-        # Comparar com snapshot anterior
-        if len(self.architecture_snapshots) > 1:
-            current = self.architecture_snapshots[-1]
-            previous = self.architecture_snapshots[-2]
-            
-            if current['agent_count'] != previous['agent_count']:
-                changes.append({
-                    'type': 'agent_count_change',
-                    'from': previous['agent_count'],
-                    'to': current['agent_count']
-                })
-        
-        return changes
-
-    async def _handle_architecture_changes(self, changes: List[Dict[str, Any]]):
-        """Trata mudanças arquiteturais"""
-        self.analysis_metrics['architecture_changes_detected'] += len(changes)
-        logger.info(f"🔄 Processando {len(changes)} mudanças arquiteturais")
-
-    async def _analyze_architecture_health(self) -> List[Dict[str, Any]]:
-        """Analisa saúde arquitetural"""
-        health_issues = []
-        
-        # Verificar se algum agente tem muitas dependências
-        for agent_id, deps in self.dependency_graph.items():
-            if len(deps) > 10:
-                health_issues.append({
-                    'type': 'high_coupling',
-                    'agent': agent_id,
-                    'dependency_count': len(deps)
-                })
-        
-        return health_issues
-
-    async def _handle_health_issues(self, issues: List[Dict[str, Any]]):
-        """Trata problemas de saúde"""
-        for issue in issues:
-            self.analysis_metrics['issues_found'] += 1
-            logger.warning(f"⚠️ Problema de saúde detectado: {issue['type']}")
-
-    async def _capture_architecture_snapshot(self) -> Dict[str, Any]:
-        """Captura snapshot da arquitetura"""
-        return {
-            'timestamp': datetime.now().isoformat(),
-            'agent_count': len(self.discovered_agents),
-            'dependency_count': sum(len(deps) for deps in self.dependency_graph.values()),
-            'capability_count': len(self.capability_matrix),
-            'type_distribution': self._count_agents_by_type()
-        }
-
-    def _analyze_evolution_trends(self) -> Dict[str, Any]:
-        """Analisa tendências de evolução"""
-        if len(self.architecture_snapshots) < 2:
-            return {}
-        
-        first = self.architecture_snapshots[0]
-        last = self.architecture_snapshots[-1]
-        
-        return {
-            'agent_growth': last['agent_count'] - first['agent_count'],
-            'dependency_growth': last['dependency_count'] - first['dependency_count'],
-            'capability_growth': last['capability_count'] - first['capability_count']
-        }
-
-    async def _report_evolution_insights(self, analysis: Dict[str, Any]):
-        """Reporta insights de evolução"""
-        if analysis:
-            logger.info(f"📈 Evolução da arquitetura: {analysis}")
-
-    # Métodos de conversão e utilitários
-    def _agent_info_to_dict(self, info: AgentInfo) -> Dict[str, Any]:
-        """Converte AgentInfo para dicionário"""
-        return {
-            'agent_id': info.agent_id,
-            'class_name': info.class_name,
-            'module_name': info.module_name,
-            'agent_type': info.agent_type,
-            'capabilities': info.capabilities,
-            'methods': info.methods,
-            'complexity_score': info.complexity_score,
-            'last_modified': info.last_modified.isoformat()
-        }
-
-    def _report_to_dict(self, report: ArchitectureReport) -> Dict[str, Any]:
-        """Converte relatório para dicionário"""
-        return {
-            'report_id': report.report_id,
-            'total_agents': report.total_agents,
-            'agents_by_type': report.agents_by_type,
-            'health_score': report.health_score,
-            'critical_issues': report.critical_issues,
-            'optimization_opportunities': report.optimization_opportunities,
-            'timestamp': report.timestamp.isoformat()
-        }
-
-    async def initialize_agent(self):
-        """Inicialização específica do agente"""
+    async def _handle_capability_audit(self, message: Dict[str, Any]) -> Dict[str, Any]:
+        """Processa auditoria de capacidades"""
         try:
-            # Executar scan inicial
-            await self.discover_all_agents()
+            # Coletar todas as capacidades
+            all_capabilities = []
+            capability_map = defaultdict(list)
             
-            # Iniciar monitoramento se configurado
-            # await self.start_architecture_monitoring()
+            for agent_name, agent_info in self.agent_registry.items():
+                capabilities = agent_info.get("capabilities", [])
+                all_capabilities.extend(capabilities)
+                for cap in capabilities:
+                    capability_map[cap].append(agent_name)
             
-            logger.info(f"✅ {self.agent_id} inicializado completamente")
+            capability_stats = Counter(all_capabilities)
+            
+            return {
+                "status": "success",
+                "total_capabilities": len(set(all_capabilities)),
+                "capability_distribution": dict(capability_stats),
+                "capability_coverage": {
+                    cap: agents for cap, agents in capability_map.items()
+                },
+                "redundant_capabilities": [
+                    cap for cap, count in capability_stats.items() if count > 3
+                ],
+                "unique_capabilities": [
+                    cap for cap, count in capability_stats.items() if count == 1
+                ]
+            }
+            
         except Exception as e:
-            logger.error(f"❌ Erro na inicialização do {self.agent_id}: {e}")
+            return {"status": "error", "message": str(e)}
 
-def create_structure_analyzer_agent(message_bus) -> List[BaseNetworkAgent]:
+    async def _handle_performance_analysis(self, message: Dict[str, Any]) -> Dict[str, Any]:
+        """Processa análise de performance"""
+        try:
+            metrics = message.get("performance_metrics", {})
+            
+            # Analisar métricas de performance
+            analysis = {
+                "response_time_analysis": self._analyze_response_times(metrics),
+                "throughput_analysis": self._analyze_throughput(metrics),
+                "resource_usage_analysis": self._analyze_resource_usage(metrics),
+                "bottleneck_identification": self._identify_bottlenecks(metrics)
+            }
+            
+            return {
+                "status": "success",
+                "performance_analysis": analysis,
+                "recommendations": self._generate_performance_recommendations(analysis)
+            }
+            
+        except Exception as e:
+            return {"status": "error", "message": str(e)}
+
+    def _analyze_response_times(self, metrics: Dict[str, Any]) -> Dict[str, Any]:
+        """Analisa tempos de resposta"""
+        response_times = metrics.get("response_times", {})
+        
+        if not response_times:
+            return {"status": "no_data"}
+        
+        avg_time = sum(response_times.values()) / len(response_times)
+        slow_agents = {k: v for k, v in response_times.items() if v > avg_time * 2}
+        
+        return {
+            "average_time": avg_time,
+            "slow_agents": slow_agents,
+            "fastest_agent": min(response_times, key=response_times.get),
+            "slowest_agent": max(response_times, key=response_times.get)
+        }
+
+    def _analyze_throughput(self, metrics: Dict[str, Any]) -> Dict[str, Any]:
+        """Analisa throughput do sistema"""
+        throughput_data = metrics.get("throughput", {})
+        
+        if not throughput_data:
+            return {"status": "no_data"}
+        
+        return {
+            "total_throughput": sum(throughput_data.values()),
+            "agent_throughput": throughput_data,
+            "high_throughput_agents": {
+                k: v for k, v in throughput_data.items() 
+                if v > sum(throughput_data.values()) / len(throughput_data)
+            }
+        }
+
+    def _analyze_resource_usage(self, metrics: Dict[str, Any]) -> Dict[str, Any]:
+        """Analisa uso de recursos"""
+        resource_data = metrics.get("resource_usage", {})
+        
+        return {
+            "memory_usage": resource_data.get("memory", {}),
+            "cpu_usage": resource_data.get("cpu", {}),
+            "high_resource_agents": self._identify_high_resource_agents(resource_data)
+        }
+
+    def _identify_high_resource_agents(self, resource_data: Dict[str, Any]) -> List[str]:
+        """Identifica agentes com alto uso de recursos"""
+        high_resource = []
+        
+        memory_data = resource_data.get("memory", {})
+        cpu_data = resource_data.get("cpu", {})
+        
+        if memory_data:
+            avg_memory = sum(memory_data.values()) / len(memory_data)
+            high_resource.extend([
+                agent for agent, usage in memory_data.items() 
+                if usage > avg_memory * 2
+            ])
+        
+        if cpu_data:
+            avg_cpu = sum(cpu_data.values()) / len(cpu_data)
+            high_resource.extend([
+                agent for agent, usage in cpu_data.items() 
+                if usage > avg_cpu * 2
+            ])
+        
+        return list(set(high_resource))
+
+    def _identify_bottlenecks(self, metrics: Dict[str, Any]) -> List[Dict[str, Any]]:
+        """Identifica gargalos do sistema"""
+        bottlenecks = []
+        
+        # Analisar dependências como possíveis gargalos
+        for name, node in self.dependency_graph.items():
+            if len(node.dependents) > 5:  # Muitos dependentes
+                bottlenecks.append({
+                    "type": "dependency_bottleneck",
+                    "agent": name,
+                    "dependents": len(node.dependents),
+                    "severity": "high" if len(node.dependents) > 10 else "medium"
+                })
+        
+        return bottlenecks
+
+    def _generate_performance_recommendations(self, analysis: Dict[str, Any]) -> List[Dict[str, Any]]:
+        """Gera recomendações de performance"""
+        recommendations = []
+        
+        # Recomendações baseadas em tempo de resposta
+        response_analysis = analysis.get("response_time_analysis", {})
+        if "slow_agents" in response_analysis and response_analysis["slow_agents"]:
+            recommendations.append({
+                "type": "optimize_slow_agents",
+                "priority": "high",
+                "description": f"Otimizar agentes lentos: {list(response_analysis['slow_agents'].keys())}",
+                "impact": "high"
+            })
+        
+        # Recomendações baseadas em gargalos
+        bottlenecks = analysis.get("bottleneck_identification", [])
+        if bottlenecks:
+            recommendations.append({
+                "type": "resolve_bottlenecks",
+                "priority": "high",
+                "description": f"Resolver gargalos identificados: {len(bottlenecks)} encontrados",
+                "impact": "high"
+            })
+        
+        return recommendations
+
+    async def _handle_security_scan(self, message: Dict[str, Any]) -> Dict[str, Any]:
+        """Processa scan de segurança"""
+        try:
+            scan_type = message.get("scan_type", "basic")
+            
+            security_issues = []
+            
+            # Verificar imports potencialmente perigosos
+            dangerous_imports = ["os", "subprocess", "eval", "exec"]
+            for agent_name, agent_info in self.agent_registry.items():
+                imports = agent_info.get("imports", [])
+                for imp in imports:
+                    for dangerous in dangerous_imports:
+                        if dangerous in imp:
+                            security_issues.append({
+                                "type": "dangerous_import",
+                                "agent": agent_name,
+                                "import": imp,
+                                "severity": "medium"
+                            })
+            
+            # Verificar exposição de credenciais (simulado)
+            for agent_name, agent_info in self.agent_registry.items():
+                if any("password" in func.lower() or "secret" in func.lower() 
+                       for func in agent_info.get("functions", [])):
+                    security_issues.append({
+                        "type": "credential_exposure_risk",
+                        "agent": agent_name,
+                        "severity": "low",
+                        "description": "Funções relacionadas a credenciais detectadas"
+                    })
+            
+            return {
+                "status": "success",
+                "scan_type": scan_type,
+                "security_issues": security_issues,
+                "security_score": max(0, 1.0 - len(security_issues) * 0.1),
+                "recommendations": self._generate_security_recommendations(security_issues)
+            }
+            
+        except Exception as e:
+            return {"status": "error", "message": str(e)}
+
+    def _generate_security_recommendations(self, issues: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+        """Gera recomendações de segurança"""
+        recommendations = []
+        
+        if any(issue["type"] == "dangerous_import" for issue in issues):
+            recommendations.append({
+                "type": "review_imports",
+                "priority": "medium",
+                "description": "Revisar imports potencialmente perigosos",
+                "impact": "security"
+            })
+        
+        if any(issue["type"] == "credential_exposure_risk" for issue in issues):
+            recommendations.append({
+                "type": "secure_credentials",
+                "priority": "high",
+                "description": "Implementar gestão segura de credenciais",
+                "impact": "security"
+            })
+        
+        return recommendations
+
+    # Callback handlers
+    async def _on_structure_analysis_request(self, data: Dict[str, Any]):
+        """Callback para solicitação de análise estrutural"""
+        logging.info(f"📊 Solicitação de análise estrutural recebida: {data}")
+
+    async def _on_health_check_request(self, data: Dict[str, Any]):
+        """Callback para solicitação de check de saúde"""
+        logging.info(f"🏥 Solicitação de check de saúde recebida: {data}")
+
+    async def _on_dependency_analysis_request(self, data: Dict[str, Any]):
+        """Callback para solicitação de análise de dependências"""
+        logging.info(f"🔗 Solicitação de análise de dependências recebida: {data}")
+
+    async def get_agent_status(self) -> Dict[str, Any]:
+        """Retorna status detalhado do analisador de estrutura"""
+        return {
+            "agent_id": self.agent_id,
+            "agent_type": self.agent_type.value,
+            "is_active": self.is_active,
+            "monitoring_active": self.monitoring_active,
+            "metrics": {
+                "agent_count": self.metrics.agent_count,
+                "module_count": self.metrics.module_count,
+                "dependency_count": self.metrics.dependency_count,
+                "circular_dependencies": self.metrics.circular_dependencies,
+                "health_score": self.metrics.health_score,
+                "coverage_percentage": self.metrics.coverage_percentage,
+                "last_analysis": self.metrics.last_analysis.isoformat() if self.metrics.last_analysis else None,
+                "issues_count": len(self.metrics.issues_found),
+                "recommendations_count": len(self.metrics.recommendations)
+            },
+            "analysis_history_size": len(self.analysis_history),
+            "dependency_graph_size": len(self.dependency_graph),
+            "agent_registry_size": len(self.agent_registry),
+            "module_registry_size": len(self.module_registry)
+        }
+
+# Factory function para criar agentes analisadores
+def create_structure_analyzer_agents() -> List[BaseNetworkAgent]:
     """
-    Factory function para criar o Structure Analyzer Agent integrado ao sistema
+    Cria agentes analisadores de estrutura
+    Retorna lista com StructureAnalyzerAgent
     """
-    logger.info("🏗️ Criando Structure Analyzer Agent integrado...")
-    
-    try:
-        agents = [StructureAnalyzerAgent("structure_analyzer_001", message_bus)]
-        
-        # Inicializar agente
-        asyncio.create_task(agents[0].initialize_agent())
-        
-        logger.info(f"✅ {len(agents)} Structure Analyzer Agent criado e integrado ao sistema")
-        return agents
-        
-    except Exception as e:
-        logger.error(f"❌ Erro crítico criando Structure Analyzer Agent: {e}")
-        return []
+    return [StructureAnalyzerAgent("structure_analyzer_001")]
+
+# Instância global para compatibilidade
+structure_analyzer = StructureAnalyzerAgent("structure_analyzer_001")
+
+# Logging final
+logging.info("🔍 StructureAnalyzerAgent criado e pronto para integração no ALSHAM QUANTUM")
