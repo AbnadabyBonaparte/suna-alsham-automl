@@ -1,6 +1,7 @@
+#!/usr/bin/env python3
 """
-ALSHAM QUANTUM - Notification Agent (CORRIGIDO)
-Sistema de notificação multi-provider funcional
+ALSHAM QUANTUM - Notification Agent (INTEGRADO AO SISTEMA)
+Sistema de notificação multi-provider como agente de rede completo
 """
 import os
 import smtplib
@@ -11,6 +12,14 @@ from typing import Dict, Any, Optional, List
 import asyncio
 from dataclasses import dataclass
 
+from suna_alsham_core.multi_agent_network import (
+    AgentMessage,
+    AgentType,
+    BaseNetworkAgent,
+    MessageType,
+    Priority,
+)
+
 logger = logging.getLogger(__name__)
 
 @dataclass
@@ -20,35 +29,195 @@ class NotificationConfig:
     enabled: bool = True
     config: Dict[str, Any] = None
 
-class NotificationAgent:
-    """Agente de notificação corrigido"""
+class NotificationAgent(BaseNetworkAgent):
+    """
+    Agente de notificação integrado ao sistema ALSHAM QUANTUM
+    """
     
-    def __init__(self):
-        self.agent_id = "notification_001"
-        self.name = "Notification Agent"
-        self.providers = {}
-        self.initialized = False
+    def __init__(self, agent_id: str, message_bus):
+        super().__init__(agent_id, AgentType.SERVICE, message_bus)
+        self.capabilities.extend([
+            "email_notifications",
+            "sms_notifications", 
+            "social_notifications",
+            "multi_provider_support",
+            "notification_routing",
+            "delivery_confirmation",
+            "template_management"
+        ])
         
-    async def initialize(self) -> bool:
-        """Inicializar agente de notificação"""
+        self.providers = {}
+        self.notification_history = []
+        self.failed_notifications = []
+        self.templates = {}
+        
+        logger.info(f"📧 {self.agent_id} inicializado como agente de rede completo.")
+
+    async def _post_init_setup(self):
+        """Setup pós-inicialização"""
         try:
-            logger.info("Inicializando Notification Agent...")
-            
             # Configurar provedores disponíveis
             await self._setup_email_providers()
             await self._setup_sms_providers()
             await self._setup_social_providers()
+            await self._setup_default_templates()
             
-            self.initialized = True
-            logger.info("✅ Notification Agent inicializado com sucesso")
-            return True
+            logger.info(f"✅ {self.agent_id} configuração completa - {len(self.providers)} provedores ativos")
             
         except Exception as e:
-            logger.error(f"❌ Erro na inicialização do Notification Agent: {e}")
-            return False
-    
+            logger.error(f"❌ Erro na configuração do {self.agent_id}: {e}")
+
+    async def _internal_handle_message(self, message: AgentMessage):
+        """Processa mensagens recebidas pelo agente"""
+        if message.message_type == MessageType.REQUEST:
+            request_type = message.content.get("request_type")
+            
+            if request_type == "send_notification":
+                result = await self._handle_send_notification(message)
+                await self.publish_response(message, result)
+                
+            elif request_type == "test_providers":
+                result = await self._handle_test_providers(message)
+                await self.publish_response(message, result)
+                
+            elif request_type == "get_notification_status":
+                result = await self._handle_get_status(message)
+                await self.publish_response(message, result)
+                
+            elif request_type == "configure_provider":
+                result = await self._handle_configure_provider(message)
+                await self.publish_response(message, result)
+                
+            else:
+                logger.debug(f"Tipo de requisição não reconhecido: {request_type}")
+
+    async def _handle_send_notification(self, message: AgentMessage) -> Dict[str, Any]:
+        """Processa requisição de envio de notificação"""
+        try:
+            content = message.content
+            notification_type = content.get("notification_type", "email")
+            text_message = content.get("message", "")
+            recipient = content.get("recipient")
+            subject = content.get("subject")
+            template = content.get("template")
+            priority = content.get("priority", "normal")
+            
+            # Usar template se especificado
+            if template and template in self.templates:
+                text_message = self.templates[template].format(**content.get("template_vars", {}))
+            
+            # Enviar notificação
+            success = await self.send_notification(
+                notification_type=notification_type,
+                message=text_message,
+                recipient=recipient,
+                subject=subject
+            )
+            
+            # Registrar no histórico
+            notification_record = {
+                "timestamp": message.timestamp.isoformat(),
+                "type": notification_type,
+                "recipient": recipient,
+                "success": success,
+                "priority": priority
+            }
+            
+            if success:
+                self.notification_history.append(notification_record)
+                logger.info(f"✅ Notificação enviada: {notification_type} para {recipient}")
+            else:
+                self.failed_notifications.append(notification_record)
+                logger.warning(f"❌ Falha no envio: {notification_type} para {recipient}")
+            
+            return {
+                "status": "completed" if success else "failed",
+                "success": success,
+                "notification_type": notification_type,
+                "message": "Notificação enviada com sucesso" if success else "Falha no envio"
+            }
+            
+        except Exception as e:
+            logger.error(f"❌ Erro processando notificação: {e}")
+            return {
+                "status": "error",
+                "success": False,
+                "message": f"Erro interno: {str(e)}"
+            }
+
+    async def _handle_test_providers(self, message: AgentMessage) -> Dict[str, Any]:
+        """Testa todos os provedores disponíveis"""
+        try:
+            test_results = await self.test_notifications()
+            
+            return {
+                "status": "completed",
+                "provider_results": test_results,
+                "providers_available": list(self.providers.keys()),
+                "providers_working": [p for p, result in test_results.items() if result]
+            }
+            
+        except Exception as e:
+            logger.error(f"❌ Erro testando provedores: {e}")
+            return {
+                "status": "error",
+                "message": f"Erro no teste: {str(e)}"
+            }
+
+    async def _handle_get_status(self, message: AgentMessage) -> Dict[str, Any]:
+        """Retorna status do sistema de notificação"""
+        try:
+            status = await self.get_status()
+            status.update({
+                "notifications_sent": len(self.notification_history),
+                "failed_notifications": len(self.failed_notifications),
+                "success_rate": self._calculate_success_rate()
+            })
+            
+            return {
+                "status": "completed",
+                "notification_system_status": status
+            }
+            
+        except Exception as e:
+            logger.error(f"❌ Erro obtendo status: {e}")
+            return {
+                "status": "error", 
+                "message": f"Erro: {str(e)}"
+            }
+
+    async def _handle_configure_provider(self, message: AgentMessage) -> Dict[str, Any]:
+        """Configura um provedor específico"""
+        try:
+            provider_name = message.content.get("provider_name")
+            provider_config = message.content.get("provider_config", {})
+            
+            if provider_name:
+                self.providers[provider_name] = NotificationConfig(
+                    provider=provider_name,
+                    enabled=True,
+                    config=provider_config
+                )
+                
+                return {
+                    "status": "completed",
+                    "message": f"Provedor {provider_name} configurado com sucesso"
+                }
+            else:
+                return {
+                    "status": "error",
+                    "message": "Nome do provedor não especificado"
+                }
+                
+        except Exception as e:
+            logger.error(f"❌ Erro configurando provedor: {e}")
+            return {
+                "status": "error",
+                "message": f"Erro: {str(e)}"
+            }
+
     async def _setup_email_providers(self):
-        """Configurar provedores de email"""
+        """Configura provedores de email"""
         # Gmail
         if os.getenv("GMAIL_USER") and os.getenv("GMAIL_PASSWORD"):
             self.providers["gmail"] = NotificationConfig(
@@ -95,7 +264,7 @@ class NotificationAgent:
             logger.info("  ✅ SMTP Custom configurado")
     
     async def _setup_sms_providers(self):
-        """Configurar provedores de SMS"""
+        """Configura provedores de SMS"""
         if os.getenv("TWILIO_ACCOUNT_SID") and os.getenv("TWILIO_AUTH_TOKEN"):
             self.providers["twilio"] = NotificationConfig(
                 provider="twilio",
@@ -109,7 +278,7 @@ class NotificationAgent:
             logger.info("  ✅ Twilio SMS configurado")
     
     async def _setup_social_providers(self):
-        """Configurar provedores sociais"""
+        """Configura provedores sociais"""
         # Slack
         if os.getenv("SLACK_BOT_TOKEN"):
             self.providers["slack"] = NotificationConfig(
@@ -133,28 +302,39 @@ class NotificationAgent:
                 }
             )
             logger.info("  ✅ Discord configurado")
-    
+
+    async def _setup_default_templates(self):
+        """Configura templates padrão"""
+        self.templates = {
+            "system_alert": "🚨 ALSHAM QUANTUM ALERT: {message}",
+            "agent_notification": "🤖 Agent {agent_id}: {message}",
+            "health_report": "🏥 System Health: {status} - {details}",
+            "error_notification": "❌ ERROR in {component}: {error_message}",
+            "success_notification": "✅ SUCCESS: {message}"
+        }
+
     async def send_notification(self, notification_type: str, message: str, 
                               recipient: Optional[str] = None, 
                               subject: Optional[str] = None) -> bool:
         """Enviar notificação via provider disponível"""
-        if not self.initialized:
-            logger.error("Notification Agent não inicializado")
+        try:
+            # Tentar email primeiro
+            if notification_type in ["email", "all"] and await self._send_email(message, recipient, subject):
+                return True
+            
+            # Fallback para outros providers
+            if notification_type in ["slack", "all"] and await self._send_slack(message):
+                return True
+            
+            if notification_type in ["sms", "all"] and await self._send_sms(message, recipient):
+                return True
+            
+            logger.warning("Nenhum provider de notificação disponível")
             return False
-        
-        # Tentar email primeiro
-        if await self._send_email(message, recipient, subject):
-            return True
-        
-        # Fallback para outros providers
-        if await self._send_slack(message):
-            return True
-        
-        if await self._send_sms(message, recipient):
-            return True
-        
-        logger.warning("Nenhum provider de notificação disponível")
-        return False
+            
+        except Exception as e:
+            logger.error(f"❌ Erro no envio de notificação: {e}")
+            return False
     
     async def _send_email(self, message: str, recipient: Optional[str] = None, 
                          subject: Optional[str] = None) -> bool:
@@ -260,17 +440,34 @@ class NotificationAgent:
     async def get_status(self) -> Dict[str, Any]:
         """Status do sistema de notificação"""
         return {
-            "initialized": self.initialized,
+            "agent_id": self.agent_id,
             "providers_available": list(self.providers.keys()),
             "providers_count": len(self.providers),
             "email_providers": [p for p in self.providers if p in ["gmail", "outlook", "custom_smtp"]],
             "social_providers": [p for p in self.providers if p in ["slack", "discord"]],
-            "sms_providers": [p for p in self.providers if p in ["twilio"]]
+            "sms_providers": [p for p in self.providers if p in ["twilio"]],
+            "templates_available": list(self.templates.keys())
         }
 
-def create_notification_agent():
-    """Factory function para criar o notification agent"""
-    return NotificationAgent()
+    def _calculate_success_rate(self) -> float:
+        """Calcula taxa de sucesso das notificações"""
+        total = len(self.notification_history) + len(self.failed_notifications)
+        if total == 0:
+            return 100.0
+        return (len(self.notification_history) / total) * 100
 
-# Instância global para compatibilidade
-notification_agent = NotificationAgent()
+    async def initialize_agent(self):
+        """Inicialização específica do agente"""
+        await self._post_init_setup()
+
+def create_notification_agent(message_bus) -> List[BaseNetworkAgent]:
+    """Factory function para criar o notification agent integrado ao sistema"""
+    logger.info("📧 Criando Notification Agent integrado...")
+    
+    agents = [NotificationAgent("notification_001", message_bus)]
+    
+    # Inicializar configuração
+    asyncio.create_task(agents[0].initialize_agent())
+    
+    logger.info(f"✅ {len(agents)} Notification Agent criado e integrado ao sistema")
+    return agents
