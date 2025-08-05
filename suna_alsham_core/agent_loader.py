@@ -1,4 +1,4 @@
-python#!/usr/bin/env python3
+#!/usr/bin/env python3
 """
 Módulo Carregador de Agentes - SUNA-ALSHAM
 
