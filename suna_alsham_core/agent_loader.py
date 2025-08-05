@@ -2,7 +2,7 @@
 """
 Módulo Carregador de Agentes - SUNA-ALSHAM
 
-[Versão Corrigida] - Carrega apenas os agentes que existem e funcionam
+[Versão Expandida] - Carrega agentes em etapas seguras
 """
 import logging
 from typing import Any, Dict, List
@@ -19,19 +19,24 @@ async def initialize_all_agents(network: Any) -> Dict[str, Any]:
     agents_loaded = 0
     failed_modules = []
 
-    # CONFIGURAÇÃO APENAS DOS MÓDULOS QUE EXISTEM E FUNCIONAM
+    # CONFIGURAÇÃO EXPANDIDA - ETAPA 1 (10 módulos)
     agent_factories_config = [
-        # Core agents que sabemos que existem
+        # EXISTENTES (5 módulos = ~26 agentes)
         {"factory_path": "suna_alsham_core.core_agents_v3", "factory_name": "create_core_agents_v3", "params": [network.message_bus]},
-        
-        # Domain modules que confirmamos que existem
         {"factory_path": "domain_modules.analytics.analytics_orchestrator_agent", "factory_name": "create_analytics_agents", "params": [network.message_bus]},
         {"factory_path": "domain_modules.sales.sales_orchestrator_agent", "factory_name": "create_sales_agents", "params": [network.message_bus]},
         {"factory_path": "domain_modules.social_media.social_media_orchestrator_agent", "factory_name": "create_social_media_agents", "params": [network.message_bus]},
         {"factory_path": "domain_modules.suporte.support_orchestrator_agent", "factory_name": "create_suporte_agents", "params": [network.message_bus]},
+        
+        # NOVOS - ETAPA 1 (5 módulos = +11 agentes estimados)
+        {"factory_path": "suna_alsham_core.specialized_agents", "factory_name": "create_specialized_agents", "params": [network.message_bus]},
+        {"factory_path": "suna_alsham_core.system_agents", "factory_name": "create_system_agents", "params": [network.message_bus]},
+        {"factory_path": "suna_alsham_core.service_agents", "factory_name": "create_service_agents", "params": [network.message_bus]},
+        {"factory_path": "suna_alsham_core.meta_cognitive_agents", "factory_name": "create_meta_cognitive_agents", "params": [network.message_bus]},
+        {"factory_path": "suna_alsham_core.api_gateway_agent", "factory_name": "create_api_gateway_agent", "params": [network.message_bus]},
     ]
 
-    logger.info("--- INICIANDO CARREGAMENTO SEGURO DE AGENTES ---")
+    logger.info("--- INICIANDO CARREGAMENTO EXPANDIDO DE AGENTES (ETAPA 1) ---")
 
     for config in agent_factories_config:
         factory_path = config["factory_path"]
@@ -73,7 +78,7 @@ async def initialize_all_agents(network: Any) -> Dict[str, Any]:
             logger.error(f"<-- FALHA: {factory_path}.{factory_name} falhou: {e}", exc_info=True)
             failed_modules.append(f"{factory_path}.{factory_name}")
 
-    logger.info(f"--- FIM DO CARREGAMENTO. Total: {agents_loaded} agentes carregados. ---")
+    logger.info(f"--- FIM DO CARREGAMENTO ETAPA 1. Total: {agents_loaded} agentes carregados. ---")
     
     # Log detalhado dos resultados
     if failed_modules:
