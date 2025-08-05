@@ -1,6 +1,6 @@
 """
 ALSHAM QUANTUM - Sistema de Inicialização Principal
-Integração com 35 agentes (34 originais + 1 agent_registry)
+Integração com 56 agentes (55 originais + 1 agent_registry)
 """
 import os
 import sys
@@ -28,7 +28,7 @@ system_status = {
     "bootstrap_completed": False,
     "system_healthy": True,
     "agents_active": 0,
-    "total_agents_expected": 35,  # 34 originais + 1 registry
+    "total_agents_expected": 56,  # 55 originais + 1 registry
     "warnings": 0,
     "errors": 0,
     "agent_loader_available": False,
@@ -42,11 +42,11 @@ async def lifespan(app: FastAPI):
     global agents, agent_registry, system_status, network
     
     logger.info("🚀 ALSHAM QUANTUM - Iniciando sistema...")
-    logger.info(f"🎯 Esperando carregar 35 agentes (34 originais + 1 registry)")
+    logger.info(f"🎯 Esperando carregar 56 agentes (55 originais + 1 registry)")
     
     try:
-        # === CARREGAMENTO DOS 34 AGENTES ORIGINAIS ===
-        logger.info("📥 [1/2] Carregando seus 34 agentes originais...")
+        # === CARREGAMENTO DOS 55 AGENTES ORIGINAIS ===
+        logger.info("📥 [1/2] Carregando seus 55 agentes originais...")
         
         try:
             from suna_alsham_core.agent_loader import initialize_all_agents
@@ -75,7 +75,7 @@ async def lifespan(app: FastAPI):
             await network.start()  # IMPORTANTE: Inicializar MessageBus antes de usar
             logger.info("✅ MessageBus real inicializado!")
             
-            # Carregar SEUS 34 agentes originais (função async)
+            # Carregar SEUS 55 agentes originais (função async)
             agents_result = await initialize_all_agents(network)
             
             if agents_result and "summary" in agents_result:
@@ -109,8 +109,8 @@ async def lifespan(app: FastAPI):
             logger.error(f"❌ Erro ao carregar agentes originais: {e}")
             system_status["errors"] += 1
         
-        # === CARREGAMENTO DO AGENT REGISTRY (35º AGENTE) ===
-        logger.info("📥 [2/2] Carregando agent_registry (35º agente)...")
+        # === CARREGAMENTO DO AGENT REGISTRY (56º AGENTE) ===
+        logger.info("📥 [2/2] Carregando agent_registry (56º agente)...")
         
         try:
             from suna_alsham_core.agent_registry import agent_registry as registry_instance
@@ -127,7 +127,7 @@ async def lifespan(app: FastAPI):
                 logger.info(f"🎊 Agent Registry inicializado (gerencia {registry_total} sub-agentes)")
             else:
                 system_status["agents_active"] += 1  # +1 pelo registry mesmo sem inicialização
-                logger.info("🎊 Agent Registry inicializado (gerencia 34 sub-agentes)")
+                logger.info("🎊 Agent Registry inicializado (gerencia 55 sub-agentes)")
                 
         except ImportError as e:
             logger.warning(f"⚠️ agent_registry não encontrado: {e}")
@@ -196,10 +196,13 @@ async def lifespan(app: FastAPI):
         logger.info(f"⚠️ Warnings: {system_status['warnings']}")
         logger.info(f"❌ Errors: {system_status['errors']}")
         
-        if system_status['agents_active'] >= 30:  # Pelo menos 30 agentes
+        # Avaliação de sucesso corrigida para 56 agentes
+        if system_status['agents_active'] >= 50:  # Pelo menos 50 agentes (89% de sucesso)
             logger.info("🎊 ALSHAM QUANTUM - Sistema OPERACIONAL com sucesso!")
-        else:
+        elif system_status['agents_active'] >= 40:  # Pelo menos 40 agentes (71% de sucesso)
             logger.warning("⚠️ ALSHAM QUANTUM - Sistema PARCIALMENTE operacional")
+        else:
+            logger.error("❌ ALSHAM QUANTUM - Sistema com problemas críticos")
         
         logger.info("📊 ================================================================================")
         
@@ -234,7 +237,7 @@ async def lifespan(app: FastAPI):
 # Criar aplicação FastAPI
 app = FastAPI(
     title="ALSHAM QUANTUM",
-    description="Sistema Multi-Agente de IA Autônomo - 35 Agentes",
+    description="Sistema Multi-Agente de IA Autônomo - 56 Agentes",
     version="2.0.0",
     lifespan=lifespan
 )
@@ -285,7 +288,8 @@ async def health_check():
         },
         "metrics": {
             "warnings": system_status["warnings"],
-            "errors": system_status["errors"]
+            "errors": system_status["errors"],
+            "success_rate": f"{(system_status['agents_active'] / system_status['total_agents_expected'] * 100):.1f}%"
         }
     }
 
@@ -300,7 +304,13 @@ async def system_status_endpoint():
             "total_expected": system_status["total_agents_expected"],
             "active": system_status["agents_active"],
             "original_system": len(agents) if agents else 0,
-            "registry_managed": 1 if system_status["agent_registry_available"] else 0
+            "registry_managed": 1 if system_status["agent_registry_available"] else 0,
+            "success_rate": f"{(system_status['agents_active'] / system_status['total_agents_expected'] * 100):.1f}%"
+        },
+        "breakdown": {
+            "core_system": "34 agentes (Núcleo SUNA-ALSHAM)",
+            "domain_modules": "21 agentes (Analytics, Sales, Social Media, Support)",
+            "registry_addon": "1 agente (Agent Registry criado)"
         },
         "bootstrap": {
             "completed": system_status["bootstrap_completed"],
@@ -316,32 +326,35 @@ async def system_status_endpoint():
 
 @app.get("/agents")
 async def list_agents():
-    """Listar todos os 35 agentes"""
+    """Listar todos os 56 agentes"""
     result = {
         "total_agents": system_status["agents_active"],
         "expected_agents": system_status["total_agents_expected"],
+        "success_rate": f"{(system_status['agents_active'] / system_status['total_agents_expected'] * 100):.1f}%",
         "agents": {}
     }
     
-    # Agentes originais (34)
+    # Agentes originais (55)
     if agents:
         if isinstance(agents, dict):
             result["agents"]["original_agents"] = {
                 "count": len(agents),
+                "description": "55 agentes originais (34 núcleo + 21 domínios)",
                 "agents": list(agents.keys())
             }
         else:
             result["agents"]["original_agents"] = {
                 "count": len(agents) if hasattr(agents, '__len__') else 1,
+                "description": "Agentes originais carregados",
                 "agents": ["loaded_agents"]
             }
     
-    # Agent Registry (35º)
+    # Agent Registry (56º)
     if agent_registry:
         result["agents"]["agent_registry"] = {
             "count": 1,
             "status": "active",
-            "description": "Registry central de agentes"
+            "description": "Registry central de agentes (56º agente criado)"
         }
         
         # Se o registry tem status dos sub-agentes
@@ -368,6 +381,47 @@ async def agent_registry_status():
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Erro ao obter status: {e}")
 
+@app.get("/agents/breakdown")
+async def agents_breakdown():
+    """Breakdown detalhado dos 56 agentes"""
+    return {
+        "total_system": 56,
+        "breakdown": {
+            "core_system": {
+                "count": 34,
+                "description": "Núcleo SUNA-ALSHAM",
+                "modules": [
+                    "core_agents_v3.py (5 agentes)",
+                    "specialized_agents.py (2 agentes)", 
+                    "system_agents.py (3 agentes)",
+                    "service_agents.py (2 agentes)",
+                    "meta_cognitive_agents.py (2 agentes)",
+                    "ai_powered_agents.py (1 agente)",
+                    "+ 18 agentes individuais"
+                ]
+            },
+            "domain_modules": {
+                "count": 21,
+                "description": "Módulos de Domínio",
+                "modules": {
+                    "analytics": "5 agentes",
+                    "sales": "6 agentes", 
+                    "social_media": "5 agentes",
+                    "support": "5 agentes"
+                }
+            },
+            "registry_addon": {
+                "count": 1,
+                "description": "Agent Registry criado para gerenciamento",
+                "file": "suna_alsham_core/agent_registry.py"
+            }
+        },
+        "current_status": {
+            "active": system_status["agents_active"],
+            "success_rate": f"{(system_status['agents_active'] / 56 * 100):.1f}%"
+        }
+    }
+
 # ===== INICIALIZAÇÃO PRINCIPAL =====
 
 if __name__ == "__main__":
@@ -375,7 +429,7 @@ if __name__ == "__main__":
     host = os.getenv("HOST", "0.0.0.0")
     
     logger.info(f"🚀 Iniciando ALSHAM QUANTUM na porta {port}")
-    logger.info(f"🎯 Sistema com 35 agentes (34 originais + 1 registry)")
+    logger.info(f"🎯 Sistema com 56 agentes (55 originais + 1 registry)")
     
     uvicorn_config = {
         "app": "start:app",
