@@ -250,12 +250,12 @@ class QuantumBootstrap:
         return True  # SEMPRE retorna sucesso
 
 # Instância global
-bootstrap = QuantumBootstrap()
+bootstrap_instance = QuantumBootstrap()
 
 # CORREÇÃO: Funções callable corretas
 async def run_quantum_bootstrap() -> bool:
     """Função callable para executar o bootstrap"""
-    return await bootstrap.execute_bootstrap()
+    return await bootstrap_instance.execute_bootstrap()
 
 def bootstrap() -> bool:
     """Função síncrona callable para compatibilidade"""
@@ -264,12 +264,12 @@ def bootstrap() -> bool:
         loop = asyncio.get_event_loop()
         if loop.is_running():
             # Criar task para executar assincronamente
-            task = asyncio.create_task(bootstrap.execute_bootstrap())
+            task = asyncio.create_task(bootstrap_instance.execute_bootstrap())
             # Retornar True imediatamente, o bootstrap rodará em background
             return True
         else:
             # Se não há loop rodando, executar normalmente
-            return asyncio.run(bootstrap.execute_bootstrap())
+            return asyncio.run(bootstrap_instance.execute_bootstrap())
     except Exception as e:
         logger.error(f"Erro na execução do bootstrap: {e}")
         return True  # Mesmo com erro, retornar True para não travar
@@ -278,11 +278,11 @@ def get_bootstrap_status() -> Dict[str, Any]:
     """Status do bootstrap"""
     return {
         "bootstrap_completed": True,
-        "agents_loaded": bootstrap.agents_loaded,
-        "agents_active": bootstrap.agents_active,
-        "warnings": bootstrap.warnings_count,
-        "errors": bootstrap.errors_count,
-        "critical_failures": bootstrap.critical_failures
+        "agents_loaded": bootstrap_instance.agents_loaded,
+        "agents_active": bootstrap_instance.agents_active,
+        "warnings": bootstrap_instance.warnings_count,
+        "errors": bootstrap_instance.errors_count,
+        "critical_failures": bootstrap_instance.critical_failures
     }
 
 # Compatibilidade com diferentes formas de chamada
