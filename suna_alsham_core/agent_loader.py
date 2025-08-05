@@ -39,6 +39,7 @@ from suna_alsham_core.testing_agent import create_testing_agent
 from suna_alsham_core.visualization_agent import create_visualization_agent
 from suna_alsham_core.security_enhancements_agent import create_security_enhancements_agent
 from suna_alsham_core.real_evolution_engine import create_evolution_engine_agents
+from suna_alsham_core.structure_analyzer_agent import create_structure_analyzer_agents
 
 # --- DOMÍNIOS ---
 from domain_modules.analytics.analytics_orchestrator_agent import create_analytics_agents
@@ -79,6 +80,7 @@ async def initialize_all_agents(network: Any) -> Dict[str, Any]:
         create_visualization_agent,
         create_security_enhancements_agent,
         create_evolution_engine_agents,
+        create_structure_analyzer_agents,
         # --- Domínios ---
         create_analytics_agents,
         create_sales_agents,
