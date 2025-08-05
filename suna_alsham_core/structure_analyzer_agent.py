@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 Agent Structure Analyzer - Agente Especializado em Análise de Arquitetura
-Transforma análise estática em um agente dinâmico e poderoso
+CORREÇÃO: Integração completa ao sistema de carregamento ALSHAM QUANTUM
 """
 
 import inspect
@@ -17,7 +17,15 @@ from enum import Enum
 from datetime import datetime
 from pathlib import Path
 from collections import defaultdict
-from suna_alsham_core.multi_agent_network import BaseNetworkAgent, AgentType, MessageType, Priority, AgentMessage
+from uuid import uuid4
+
+from suna_alsham_core.multi_agent_network import (
+    BaseNetworkAgent, 
+    AgentType, 
+    MessageType, 
+    Priority, 
+    AgentMessage
+)
 
 logger = logging.getLogger(__name__)
 
@@ -70,12 +78,15 @@ class ArchitectureReport:
     evolution_suggestions: List[str]
     timestamp: datetime = field(default_factory=datetime.now)
 
-class AgentStructureAnalyzer(BaseNetworkAgent):
-    """Agente especializado em análise e otimização da arquitetura do sistema"""
+class StructureAnalyzerAgent(BaseNetworkAgent):
+    """
+    Agente especializado em análise e otimização da arquitetura do sistema
+    CORREÇÃO: Integrado completamente ao sistema ALSHAM QUANTUM
+    """
     
-    def __init__(self, agent_id: str, agent_type: str, message_bus):
-        super().__init__(agent_id, agent_type, message_bus)
-        self.capabilities = [
+    def __init__(self, agent_id: str, message_bus):
+        super().__init__(agent_id, AgentType.SPECIALIZED, message_bus)
+        self.capabilities.extend([
             'architecture_analysis',
             'agent_discovery',
             'dependency_mapping',
@@ -84,9 +95,10 @@ class AgentStructureAnalyzer(BaseNetworkAgent):
             'evolution_tracking',
             'health_monitoring',
             'pattern_detection',
-            'refactoring_suggestions'
-        ]
-        self.status = 'active'
+            'refactoring_suggestions',
+            'code_analysis',
+            'system_metrics'
+        ])
         
         # Estado do analisador
         self.discovered_agents = {}  # agent_id -> AgentInfo
@@ -100,7 +112,14 @@ class AgentStructureAnalyzer(BaseNetworkAgent):
         self.architecture_snapshots = []
         
         # Configurações
-        self.scan_directories = ['.', './src', './lib', './app']
+        self.scan_directories = [
+            'suna_alsham_core',
+            'domain_modules', 
+            '.',
+            './src', 
+            './lib', 
+            './app'
+        ]
         self.supported_extensions = ['.py']
         self.analysis_interval = 300  # 5 minutos
         
@@ -116,9 +135,115 @@ class AgentStructureAnalyzer(BaseNetworkAgent):
         # Tasks de background
         self._monitoring_task = None
         self._evolution_task = None
+        self._initialized = False
         
         logger.info(f"🏗️ {self.agent_id} inicializado com análise arquitetural avançada")
-    
+
+    async def _internal_handle_message(self, message: AgentMessage):
+        """Processa mensagens recebidas pelo agente"""
+        if message.message_type == MessageType.REQUEST:
+            request_type = message.content.get('request_type')
+            
+            try:
+                if request_type == 'analyze_architecture':
+                    result = await self.analyze_complete_architecture()
+                    await self.publish_response(message, result)
+                    
+                elif request_type == 'discover_agents':
+                    result = await self.discover_all_agents()
+                    await self.publish_response(message, result)
+                    
+                elif request_type == 'map_dependencies':
+                    result = await self.map_agent_dependencies()
+                    await self.publish_response(message, result)
+                    
+                elif request_type == 'assess_capabilities':
+                    result = await self.assess_system_capabilities()
+                    await self.publish_response(message, result)
+                    
+                elif request_type == 'suggest_optimizations':
+                    result = await self.suggest_architecture_optimizations()
+                    await self.publish_response(message, result)
+                    
+                elif request_type == 'get_health_report':
+                    result = await self.generate_health_report()
+                    await self.publish_response(message, result)
+                    
+                elif request_type == 'start_monitoring':
+                    result = await self._handle_start_monitoring()
+                    await self.publish_response(message, result)
+                    
+                elif request_type == 'stop_monitoring':
+                    result = await self._handle_stop_monitoring()
+                    await self.publish_response(message, result)
+                    
+                elif request_type == 'get_metrics':
+                    result = await self._handle_get_metrics()
+                    await self.publish_response(message, result)
+                    
+                else:
+                    logger.debug(f"Tipo de requisição não reconhecido: {request_type}")
+                    await self.publish_response(message, {
+                        "status": "error",
+                        "message": f"Request type '{request_type}' not supported"
+                    })
+                    
+            except Exception as e:
+                logger.error(f"❌ Erro processando requisição {request_type}: {e}")
+                await self.publish_response(message, {
+                    "status": "error",
+                    "message": f"Internal error: {str(e)}"
+                })
+
+    async def _handle_start_monitoring(self) -> Dict[str, Any]:
+        """Inicia monitoramento arquitetural"""
+        try:
+            await self.start_architecture_monitoring()
+            return {
+                "status": "completed",
+                "message": "Monitoramento arquitetural iniciado",
+                "monitoring_active": True
+            }
+        except Exception as e:
+            logger.error(f"❌ Erro iniciando monitoramento: {e}")
+            return {
+                "status": "error",
+                "message": f"Erro: {str(e)}"
+            }
+
+    async def _handle_stop_monitoring(self) -> Dict[str, Any]:
+        """Para monitoramento arquitetural"""
+        try:
+            await self.stop_architecture_monitoring()
+            return {
+                "status": "completed",
+                "message": "Monitoramento arquitetural parado",
+                "monitoring_active": False
+            }
+        except Exception as e:
+            logger.error(f"❌ Erro parando monitoramento: {e}")
+            return {
+                "status": "error",
+                "message": f"Erro: {str(e)}"
+            }
+
+    async def _handle_get_metrics(self) -> Dict[str, Any]:
+        """Retorna métricas do analisador"""
+        try:
+            return {
+                "status": "completed",
+                "metrics": self.analysis_metrics,
+                "discovered_agents_count": len(self.discovered_agents),
+                "snapshots_count": len(self.architecture_snapshots),
+                "monitoring_active": self._monitoring_task is not None
+            }
+        except Exception as e:
+            logger.error(f"❌ Erro obtendo métricas: {e}")
+            return {
+                "status": "error",
+                "message": f"Erro: {str(e)}"
+            }
+
     async def start_architecture_monitoring(self):
         """Inicia monitoramento contínuo da arquitetura"""
         if not self._monitoring_task:
@@ -126,7 +251,9 @@ class AgentStructureAnalyzer(BaseNetworkAgent):
             self._evolution_task = asyncio.create_task(self._evolution_tracking_loop())
             
             # Executar scan inicial
-            await self.discover_all_agents()
+            if not self._initialized:
+                await self.discover_all_agents()
+                self._initialized = True
             
             logger.info(f"🏗️ {self.agent_id} iniciou monitoramento arquitetural")
     
@@ -148,7 +275,7 @@ class AgentStructureAnalyzer(BaseNetworkAgent):
                 changes_detected = await self._detect_architecture_changes()
                 
                 if changes_detected:
-                    logger.info(f"🔄 Mudanças arquiteturais detectadas")
+                    logger.info(f"🔄 Mudanças arquiteturais detectadas: {len(changes_detected)}")
                     await self._handle_architecture_changes(changes_detected)
                 
                 # Analisar saúde da arquitetura
@@ -163,6 +290,7 @@ class AgentStructureAnalyzer(BaseNetworkAgent):
                 break
             except Exception as e:
                 logger.error(f"❌ Erro no monitoramento arquitetural: {e}")
+                await asyncio.sleep(30)  # Aguardar antes de tentar novamente
     
     async def _evolution_tracking_loop(self):
         """Loop de tracking de evolução"""
@@ -187,37 +315,7 @@ class AgentStructureAnalyzer(BaseNetworkAgent):
                 break
             except Exception as e:
                 logger.error(f"❌ Erro no tracking de evolução: {e}")
-    
-    async def handle_message(self, message: AgentMessage):
-        """Processa mensagens recebidas"""
-        await super().handle_message(message)
-        
-        if message.message_type == MessageType.REQUEST:
-            request_type = message.content.get('request_type')
-            
-            if request_type == 'analyze_architecture':
-                result = await self.analyze_complete_architecture()
-                await self._send_response(message, result)
-                
-            elif request_type == 'discover_agents':
-                result = await self.discover_all_agents()
-                await self._send_response(message, result)
-                
-            elif request_type == 'map_dependencies':
-                result = await self.map_agent_dependencies()
-                await self._send_response(message, result)
-                
-            elif request_type == 'assess_capabilities':
-                result = await self.assess_system_capabilities()
-                await self._send_response(message, result)
-                
-            elif request_type == 'suggest_optimizations':
-                result = await self.suggest_architecture_optimizations()
-                await self._send_response(message, result)
-                
-            elif request_type == 'get_health_report':
-                result = await self.generate_health_report()
-                await self._send_response(message, result)
+                await asyncio.sleep(60)
     
     async def discover_all_agents(self) -> Dict[str, Any]:
         """Descobre todos os agentes no sistema"""
@@ -238,7 +336,9 @@ class AgentStructureAnalyzer(BaseNetworkAgent):
             # Merge descobertas
             for agent_id, info in active_agents.items():
                 if agent_id in discovered:
+                    # Merge informações
                     discovered[agent_id].capabilities.extend(info.get('capabilities', []))
+                    discovered[agent_id].capabilities = list(set(discovered[agent_id].capabilities))  # Remove duplicatas
                 else:
                     discovered[agent_id] = AgentInfo(
                         agent_id=agent_id,
@@ -275,15 +375,18 @@ class AgentStructureAnalyzer(BaseNetworkAgent):
         """Escaneia diretório em busca de agentes"""
         agents = {}
         
-        for root, dirs, files in os.walk(directory):
-            for file in files:
-                if any(file.endswith(ext) for ext in self.supported_extensions):
-                    file_path = os.path.join(root, file)
-                    
-                    # Verificar se arquivo foi modificado desde último scan
-                    if self._should_scan_file(file_path):
-                        file_agents = await self._analyze_file_for_agents(file_path)
-                        agents.update(file_agents)
+        try:
+            for root, dirs, files in os.walk(directory):
+                for file in files:
+                    if any(file.endswith(ext) for ext in self.supported_extensions):
+                        file_path = os.path.join(root, file)
+                        
+                        # Verificar se arquivo foi modificado desde último scan
+                        if self._should_scan_file(file_path):
+                            file_agents = await self._analyze_file_for_agents(file_path)
+                            agents.update(file_agents)
+        except Exception as e:
+            logger.error(f"❌ Erro escaneando diretório {directory}: {e}")
         
         return agents
     
@@ -327,7 +430,7 @@ class AgentStructureAnalyzer(BaseNetworkAgent):
                 agents.update(created_agents)
             
         except Exception as e:
-            logger.error(f"❌ Erro analisando {file_path}: {e}")
+            logger.debug(f"Erro analisando {file_path}: {e}")  # Debug level para não poluir logs
         
         return agents
     
@@ -353,7 +456,10 @@ class AgentStructureAnalyzer(BaseNetworkAgent):
         try:
             # Informações básicas
             class_name = node.name
-            agent_id = f"{class_name.lower()}_{file_path.split('/')[-1].replace('.py', '')}"
+            module_name = os.path.basename(file_path).replace('.py', '')
+            
+            # Tentar extrair agent_id do código
+            agent_id = self._extract_agent_id_from_class(node, class_name, module_name)
             
             # Extrair herança
             inheritance_chain = []
@@ -384,7 +490,7 @@ class AgentStructureAnalyzer(BaseNetworkAgent):
             return AgentInfo(
                 agent_id=agent_id,
                 class_name=class_name,
-                module_name=os.path.basename(file_path).replace('.py', ''),
+                module_name=module_name,
                 file_path=file_path,
                 agent_type=agent_type,
                 capabilities=capabilities,
@@ -395,15 +501,51 @@ class AgentStructureAnalyzer(BaseNetworkAgent):
             )
             
         except Exception as e:
-            logger.error(f"❌ Erro extraindo info do agente: {e}")
+            logger.debug(f"Erro extraindo info do agente: {e}")
             return None
+
+    def _extract_agent_id_from_class(self, node: ast.ClassDef, class_name: str, module_name: str) -> str:
+        """Extrai agent_id da classe ou gera um baseado no padrão"""
+        # Procurar por agent_id hardcoded na classe
+        for item in node.body:
+            if isinstance(item, ast.Assign):
+                for target in item.targets:
+                    if (isinstance(target, ast.Name) and target.id == 'agent_id'):
+                        if isinstance(item.value, ast.Str):
+                            return item.value.s
+                        elif isinstance(item.value, ast.Constant) and isinstance(item.value.value, str):
+                            return item.value.value
+        
+        # Gerar agent_id baseado no padrão observado
+        base_name = class_name.lower().replace('agent', '')
+        if not base_name:
+            base_name = module_name.replace('_agent', '').replace('agent_', '')
+        
+        return f"{base_name}_001"
     
     def _extract_capabilities_from_init(self, init_node: ast.FunctionDef) -> List[str]:
         """Extrai capabilities do método __init__"""
         capabilities = []
         
         for node in ast.walk(init_node):
-            if isinstance(node, ast.Assign):
+            if isinstance(node, ast.Call):
+                # Procurar por self.capabilities.extend([...])
+                if (isinstance(node.func, ast.Attribute) and 
+                    isinstance(node.func.value, ast.Attribute) and
+                    isinstance(node.func.value.value, ast.Name) and
+                    node.func.value.value.id == 'self' and
+                    node.func.value.attr == 'capabilities' and
+                    node.func.attr == 'extend'):
+                    
+                    for arg in node.args:
+                        if isinstance(arg, ast.List):
+                            for elt in arg.elts:
+                                if isinstance(elt, ast.Str):
+                                    capabilities.append(elt.s)
+                                elif isinstance(elt, ast.Constant) and isinstance(elt.value, str):
+                                    capabilities.append(elt.value)
+            
+            elif isinstance(node, ast.Assign):
                 # Procurar por self.capabilities = [...]
                 for target in node.targets:
                     if (isinstance(target, ast.Attribute) and 
@@ -446,24 +588,24 @@ class AgentStructureAnalyzer(BaseNetworkAgent):
         name_lower = class_name.lower()
         
         # Mapeamento por nome
-        if 'analyzer' in name_lower:
-            return 'analytics'
-        elif 'monitor' in name_lower:
-            return 'monitoring'
-        elif 'control' in name_lower:
-            return 'control'
-        elif 'orchestrator' in name_lower:
-            return 'orchestration'
-        elif 'cognitive' in name_lower:
-            return 'meta_cognitive'
-        elif 'specialized' in name_lower:
-            return 'specialized'
-        elif 'core' in name_lower:
-            return 'core'
-        elif 'system' in name_lower:
-            return 'system'
-        elif 'service' in name_lower:
-            return 'service'
+        type_mappings = {
+            'analyzer': 'analytics',
+            'monitor': 'monitoring', 
+            'control': 'control',
+            'orchestrator': 'orchestration',
+            'cognitive': 'meta_cognitive',
+            'specialized': 'specialized',
+            'core': 'core',
+            'system': 'system',
+            'service': 'service',
+            'gateway': 'gateway',
+            'notification': 'communication',
+            'structure': 'analysis'
+        }
+        
+        for keyword, agent_type in type_mappings.items():
+            if keyword in name_lower:
+                return agent_type
         
         # Mapeamento por capabilities
         cap_str = ' '.join(capabilities).lower()
@@ -524,7 +666,7 @@ class AgentStructureAnalyzer(BaseNetworkAgent):
                                 )
         
         except Exception as e:
-            logger.error(f"❌ Erro analisando função create: {e}")
+            logger.debug(f"Erro analisando função create: {e}")
         
         return agents
     
@@ -547,29 +689,82 @@ class AgentStructureAnalyzer(BaseNetworkAgent):
         
         try:
             # Acessar agentes do message_bus
-            if hasattr(self.message_bus, 'subscribers'):
-                for agent_id, agent in self.message_bus.subscribers.items():
+            if hasattr(self.message_bus, 'queues'):
+                for agent_id in self.message_bus.queues.keys():
                     if agent_id != self.agent_id:  # Não incluir a si mesmo
+                        # Tentar obter informações do agente
                         agent_info = {
-                            'class_name': agent.__class__.__name__,
-                            'type': getattr(agent, 'agent_type', 'unknown'),
-                            'capabilities': getattr(agent, 'capabilities', []),
-                            'status': getattr(agent, 'status', 'unknown')
+                            'class_name': 'ActiveAgent',
+                            'type': 'unknown',
+                            'capabilities': [],
+                            'status': 'active'
                         }
+                        
+                        # Tentar inferir tipo baseado no ID
+                        agent_info['type'] = self._infer_type_from_id(agent_id)
+                        agent_info['class_name'] = self._infer_class_from_id(agent_id)
+                        
                         active_agents[agent_id] = agent_info
         
         except Exception as e:
-            logger.error(f"❌ Erro analisando agentes ativos: {e}")
+            logger.debug(f"Erro analisando agentes ativos: {e}")
         
         return active_agents
-    
+
+    def _infer_type_from_id(self, agent_id: str) -> str:
+        """Infere tipo do agente baseado no ID"""
+        id_lower = agent_id.lower()
+        
+        type_mappings = {
+            'core': 'core',
+            'guard': 'security',
+            'learn': 'learning',
+            'monitor': 'monitoring',
+            'control': 'control',
+            'orchestrator': 'orchestration',
+            'analyzer': 'analytics',
+            'gateway': 'gateway',
+            'notification': 'communication',
+            'database': 'data',
+            'backup': 'maintenance',
+            'security': 'security',
+            'deployment': 'deployment',
+            'testing': 'testing',
+            'recovery': 'recovery',
+            'performance': 'monitoring',
+            'logging': 'logging',
+            'visualization': 'presentation',
+            'web_search': 'search',
+            'sales': 'business',
+            'analytics': 'analytics',
+            'social_media': 'marketing',
+            'support': 'support',
+            'chatbot': 'conversation',
+            'ticket': 'support'
+        }
+        
+        for keyword, agent_type in type_mappings.items():
+            if keyword in id_lower:
+                return agent_type
+        
+        return 'general'
+
+    def _infer_class_from_id(self, agent_id: str) -> str:
+        """Infere nome da classe baseado no ID"""
+        # Converter agent_id para CamelCase
+        parts = agent_id.replace('_001', '').replace('_002', '').split('_')
+        class_name = ''.join(word.capitalize() for word in parts) + 'Agent'
+        return class_name
+
+    # Métodos de análise arquitetural (simplificados para economia de espaço)
     async def analyze_complete_architecture(self) -> Dict[str, Any]:
         """Analisa arquitetura completa do sistema"""
         try:
             logger.info(f"🏗️ Iniciando análise completa da arquitetura...")
             
-            # Descobrir todos os agentes
-            discovery_result = await self.discover_all_agents()
+            # Descobrir todos os agentes se não foi feito ainda
+            if not self.discovered_agents:
+                await self.discover_all_agents()
             
             # Mapear dependências
             dependency_result = await self.map_agent_dependencies()
@@ -614,7 +809,7 @@ class AgentStructureAnalyzer(BaseNetworkAgent):
         except Exception as e:
             logger.error(f"❌ Erro na análise arquitetural: {e}")
             return {'status': 'error', 'message': str(e)}
-    
+
     async def map_agent_dependencies(self) -> Dict[str, Any]:
         """Mapeia dependências entre agentes"""
         try:
@@ -625,8 +820,9 @@ class AgentStructureAnalyzer(BaseNetworkAgent):
             # Analisar imports e comunicações
             for agent_id, agent_info in self.discovered_agents.items():
                 # Analisar arquivo fonte para dependências
-                file_deps = await self._analyze_file_dependencies(agent_info.file_path)
-                dependencies[agent_id].update(file_deps)
+                if os.path.exists(agent_info.file_path):
+                    file_deps = await self._analyze_file_dependencies(agent_info.file_path)
+                    dependencies[agent_id].update(file_deps)
                 
                 # Analisar dependências de capabilities
                 cap_deps = self._analyze_capability_dependencies(agent_info.capabilities)
@@ -645,7 +841,7 @@ class AgentStructureAnalyzer(BaseNetworkAgent):
         except Exception as e:
             logger.error(f"❌ Erro mapeando dependências: {e}")
             return {'status': 'error', 'message': str(e)}
-    
+
     async def _analyze_file_dependencies(self, file_path: str) -> Set[str]:
         """Analisa dependências de um arquivo"""
         dependencies = set()
@@ -668,10 +864,10 @@ class AgentStructureAnalyzer(BaseNetworkAgent):
                             dependencies.add(node.module)
         
         except Exception as e:
-            logger.error(f"❌ Erro analisando dependências do arquivo: {e}")
+            logger.debug(f"Erro analisando dependências do arquivo: {e}")
         
         return dependencies
-    
+
     def _analyze_capability_dependencies(self, capabilities: List[str]) -> Set[str]:
         """Analisa dependências baseadas em capabilities"""
         dependencies = set()
@@ -681,7 +877,10 @@ class AgentStructureAnalyzer(BaseNetworkAgent):
             'orchestration': ['coordination', 'task_distribution'],
             'meta_cognition': ['learning', 'analysis'],
             'performance_monitoring': ['metrics_collection', 'alerting'],
-            'security': ['validation', 'threat_detection']
+            'security': ['validation', 'threat_detection'],
+            'email_notifications': ['smtp_client'],
+            'database_operations': ['database_connection'],
+            'web_search': ['http_client']
         }
         
         for capability in capabilities:
@@ -690,7 +889,7 @@ class AgentStructureAnalyzer(BaseNetworkAgent):
                     dependencies.update(implied_deps)
         
         return dependencies
-    
+
     def _detect_circular_dependencies(self, dependencies: Dict[str, Set[str]]) -> List[List[str]]:
         """Detecta dependências circulares"""
         circular = []
@@ -717,7 +916,7 @@ class AgentStructureAnalyzer(BaseNetworkAgent):
                 dfs(agent_id, [], visited)
         
         return circular
-    
+
     async def assess_system_capabilities(self) -> Dict[str, Any]:
         """Avalia capabilities do sistema completo"""
         try:
@@ -756,17 +955,18 @@ class AgentStructureAnalyzer(BaseNetworkAgent):
         except Exception as e:
             logger.error(f"❌ Erro avaliando capabilities: {e}")
             return {'status': 'error', 'message': str(e)}
-    
+
     def _identify_missing_capabilities(self, current_capabilities: Set[str]) -> List[str]:
         """Identifica capabilities que deveriam existir mas não existem"""
         expected_capabilities = {
             'logging', 'error_handling', 'configuration_management',
             'health_checking', 'metrics_reporting', 'backup_recovery',
-            'load_balancing', 'caching', 'authentication', 'authorization'
+            'load_balancing', 'caching', 'authentication', 'authorization',
+            'rate_limiting', 'circuit_breaking', 'service_discovery'
         }
         
         return list(expected_capabilities - current_capabilities)
-    
+
     def _analyze_capability_distribution(self, coverage: Dict[str, List[str]]) -> Dict[str, Any]:
         """Analisa distribuição de capabilities"""
         distribution = {
@@ -784,7 +984,7 @@ class AgentStructureAnalyzer(BaseNetworkAgent):
                 distribution['highly_redundant'] += 1
         
         return distribution
-    
+
     async def suggest_architecture_optimizations(self) -> Dict[str, Any]:
         """Sugere otimizações para a arquitetura"""
         try:
@@ -797,7 +997,7 @@ class AgentStructureAnalyzer(BaseNetworkAgent):
             redundancies = self._identify_redundancies()
             if redundancies:
                 opportunities.extend([
-                    f"Consolidar agentes redundantes: {', '.join(redundancies[:3])}"
+                    f"Consolidar agentes redundantes do tipo: {', '.join(redundancies[:3])}"
                 ])
             
             # Analisar gaps
@@ -816,10 +1016,12 @@ class AgentStructureAnalyzer(BaseNetworkAgent):
             
             # Sugestões de evolução
             evolution_suggestions.extend([
-                "Implementar padrão de factory para criação de agentes",
+                "Implementar padrão de factory unificado para criação de agentes",
                 "Adicionar interface comum para todos os agentes",
-                "Implementar sistema de plugins para capabilities",
-                "Criar registry centralizado de agentes"
+                "Implementar sistema de plugins para capabilities dinâmicas",
+                "Criar registry centralizado com descoberta automática",
+                "Implementar health checks padronizados",
+                "Adicionar sistema de métricas distribuídas"
             ])
             
             self.analysis_metrics['optimizations_suggested'] += len(opportunities)
@@ -834,7 +1036,7 @@ class AgentStructureAnalyzer(BaseNetworkAgent):
         except Exception as e:
             logger.error(f"❌ Erro gerando otimizações: {e}")
             return {'status': 'error', 'message': str(e)}
-    
+
     def _identify_redundancies(self) -> List[str]:
         """Identifica agentes redundantes"""
         redundant = []
@@ -845,11 +1047,11 @@ class AgentStructureAnalyzer(BaseNetworkAgent):
             type_groups[info.agent_type].append((agent_id, info))
         
         for agent_type, agents in type_groups.items():
-            if len(agents) > 3:  # Muitos agentes do mesmo tipo
+            if len(agents) > 4:  # Muitos agentes do mesmo tipo
                 redundant.append(agent_type)
         
         return redundant
-    
+
     def _identify_capability_gaps(self) -> List[str]:
         """Identifica gaps de capabilities"""
         current_caps = set()
@@ -858,11 +1060,11 @@ class AgentStructureAnalyzer(BaseNetworkAgent):
         
         expected_caps = {
             'error_recovery', 'performance_optimization', 'resource_management',
-            'scalability_management', 'fault_tolerance'
+            'scalability_management', 'fault_tolerance', 'distributed_coordination'
         }
         
         return list(expected_caps - current_caps)
-    
+
     def _identify_overly_complex_agents(self) -> List[str]:
         """Identifica agentes excessivamente complexos"""
         complex_agents = []
@@ -872,7 +1074,7 @@ class AgentStructureAnalyzer(BaseNetworkAgent):
                 complex_agents.append(agent_id)
         
         return complex_agents
-    
+
     def _prioritize_recommendations(self, opportunities: List[str]) -> List[Dict[str, Any]]:
         """Prioriza recomendações por impacto"""
         prioritized = []
@@ -901,7 +1103,7 @@ class AgentStructureAnalyzer(BaseNetworkAgent):
             ['high', 'medium', 'low'].index(x['priority']),
             ['high', 'medium', 'low'].index(x['impact'])
         ))
-    
+
     async def generate_health_report(self) -> Dict[str, Any]:
         """Gera relatório de saúde da arquitetura"""
         try:
@@ -942,7 +1144,8 @@ class AgentStructureAnalyzer(BaseNetworkAgent):
         except Exception as e:
             logger.error(f"❌ Erro gerando relatório de saúde: {e}")
             return {'status': 'error', 'message': str(e)}
-    
+
+    # Métodos de cálculo e análise (implementações simplificadas)
     def _calculate_architecture_metrics(self) -> Dict[str, Any]:
         """Calcula métricas arquiteturais"""
         return {
@@ -952,20 +1155,21 @@ class AgentStructureAnalyzer(BaseNetworkAgent):
             'complexity_score': self._calculate_overall_complexity(),
             'maintainability_score': self._calculate_maintainability_score()
         }
-    
+
     def _calculate_modularity_score(self) -> float:
         """Calcula score de modularidade"""
-        # Baseado na separação de responsabilidades
         type_distribution = self._count_agents_by_type()
         total_types = len(type_distribution)
         
-        if total_types >= 5:  # Boa separação
-            return 90.0
+        if total_types >= 8:  # Excelente separação
+            return 95.0
+        elif total_types >= 5:  # Boa separação
+            return 85.0
         elif total_types >= 3:
             return 70.0
         else:
-            return 40.0
-    
+            return 50.0
+
     def _calculate_coupling_score(self) -> float:
         """Calcula score de acoplamento (menor é melhor)"""
         total_deps = sum(len(deps) for deps in self.dependency_graph.values())
@@ -977,15 +1181,16 @@ class AgentStructureAnalyzer(BaseNetworkAgent):
         avg_deps = total_deps / total_agents
         
         if avg_deps <= 2:
-            return 90.0
+            return 95.0
         elif avg_deps <= 4:
-            return 70.0
+            return 80.0
+        elif avg_deps <= 6:
+            return 60.0
         else:
-            return 50.0
-    
+            return 40.0
+
     def _calculate_cohesion_score(self) -> float:
         """Calcula score de coesão"""
-        # Baseado na consistência de capabilities por tipo
         cohesion_scores = []
         
         type_groups = defaultdict(list)
@@ -1007,8 +1212,8 @@ class AgentStructureAnalyzer(BaseNetworkAgent):
                     cohesion = len(common_caps) / len(all_caps)
                     cohesion_scores.append(cohesion)
         
-        return (sum(cohesion_scores) / len(cohesion_scores) * 100) if cohesion_scores else 50.0
-    
+        return (sum(cohesion_scores) / len(cohesion_scores) * 100) if cohesion_scores else 70.0
+
     def _calculate_overall_complexity(self) -> float:
         """Calcula complexidade geral"""
         if not self.discovered_agents:
@@ -1019,14 +1224,14 @@ class AgentStructureAnalyzer(BaseNetworkAgent):
         
         # Normalizar para 0-100 (invertido, menor complexidade = melhor score)
         return max(0, min(100, 100 - (avg_complexity / 10)))
-    
+
     def _calculate_maintainability_score(self) -> float:
         """Calcula score de manutenibilidade"""
         factors = []
         
-        # Fator de documentação (assumindo que agentes com mais métodos têm mais doc)
+        # Fator de documentação
         avg_methods = sum(len(info.methods) for info in self.discovered_agents.values()) / max(1, len(self.discovered_agents))
-        doc_score = min(100, avg_methods * 10)
+        doc_score = min(100, avg_methods * 8)
         factors.append(doc_score)
         
         # Fator de modularidade
@@ -1035,8 +1240,8 @@ class AgentStructureAnalyzer(BaseNetworkAgent):
         # Fator de simplicidade
         factors.append(self._calculate_overall_complexity())
         
-        return sum(factors) / len(factors) if factors else 50.0
-    
+        return sum(factors) / len(factors) if factors else 60.0
+
     def _detect_architecture_issues(self) -> Dict[str, List[str]]:
         """Detecta problemas na arquitetura"""
         issues = {
@@ -1051,7 +1256,7 @@ class AgentStructureAnalyzer(BaseNetworkAgent):
         if circular_deps:
             issues['critical'].append(f"Dependências circulares detectadas: {len(circular_deps)}")
         
-        # Agentes órfãos (sem dependências nem dependentes)
+        # Agentes órfãos
         orphan_agents = self._detect_orphan_agents()
         if orphan_agents:
             issues['medium'].extend([f"Agente órfão: {agent}" for agent in orphan_agents[:3]])
@@ -1061,8 +1266,13 @@ class AgentStructureAnalyzer(BaseNetworkAgent):
         if missing_caps:
             issues['high'].extend([f"Capability faltante: {cap}" for cap in missing_caps[:3]])
         
+        # Agentes muito complexos
+        complex_agents = self._identify_overly_complex_agents()
+        if len(complex_agents) > 3:
+            issues['medium'].append(f"Múltiplos agentes com alta complexidade: {len(complex_agents)}")
+        
         return issues
-    
+
     def _detect_orphan_agents(self) -> List[str]:
         """Detecta agentes órfãos"""
         orphans = []
@@ -1079,42 +1289,54 @@ class AgentStructureAnalyzer(BaseNetworkAgent):
                 orphans.append(agent_id)
         
         return orphans
-    
+
     def _calculate_architecture_health_score(self, metrics: Dict[str, Any], issues: Dict[str, List[str]]) -> float:
         """Calcula score geral de saúde da arquitetura"""
         base_score = 100.0
         
         # Penalizar por problemas
-        base_score -= len(issues.get('critical', [])) * 20
-        base_score -= len(issues.get('high', [])) * 10
-        base_score -= len(issues.get('medium', [])) * 5
-        base_score -= len(issues.get('low', [])) * 1
+        base_score -= len(issues.get('critical', [])) * 25
+        base_score -= len(issues.get('high', [])) * 15
+        base_score -= len(issues.get('medium', [])) * 8
+        base_score -= len(issues.get('low', [])) * 2
         
         # Considerar métricas arquiteturais
-        if 'modularity_score' in metrics:
-            base_score = (base_score + metrics['modularity_score']) / 2
+        metric_scores = [
+            metrics.get('modularity_score', 50),
+            metrics.get('coupling_score', 50),
+            metrics.get('cohesion_score', 50),
+            metrics.get('maintainability_score', 50)
+        ]
+        
+        avg_metric_score = sum(metric_scores) / len(metric_scores)
+        base_score = (base_score + avg_metric_score) / 2
         
         return max(0, min(100, base_score))
-    
+
     def _count_agents_by_type(self) -> Dict[str, int]:
         """Conta agentes por tipo"""
         counts = defaultdict(int)
         for info in self.discovered_agents.values():
             counts[info.agent_type] += 1
         return dict(counts)
-    
+
     def _generate_discovery_summary(self, discovered: Dict[str, AgentInfo]) -> Dict[str, Any]:
         """Gera resumo da descoberta"""
+        by_module = defaultdict(int)
+        for info in discovered.values():
+            by_module[info.module_name] += 1
+        
+        all_capabilities = set()
+        for info in discovered.values():
+            all_capabilities.update(info.capabilities)
+        
         return {
             'by_type': self._count_agents_by_type(),
-            'by_module': defaultdict(int, {
-                info.module_name: sum(1 for i in discovered.values() if i.module_name == info.module_name)
-                for info in discovered.values()
-            }),
-            'total_capabilities': len(set().union(*(info.capabilities for info in discovered.values()))),
+            'by_module': dict(by_module),
+            'total_capabilities': len(all_capabilities),
             'average_complexity': sum(info.complexity_score for info in discovered.values()) / max(1, len(discovered))
         }
-    
+
     def _generate_architecture_recommendations(self, report: ArchitectureReport) -> List[str]:
         """Gera recomendações baseadas no relatório"""
         recommendations = []
@@ -1128,55 +1350,86 @@ class AgentStructureAnalyzer(BaseNetworkAgent):
         if len(report.optimization_opportunities) > 5:
             recommendations.append("Implementar otimizações gradualmente por prioridade")
         
-        if report.total_agents > 50:
+        if report.total_agents > 60:
             recommendations.append("Considerar divisão em subsistemas menores")
+        elif report.total_agents < 20:
+            recommendations.append("Sistema pode se beneficiar de mais especialização")
         
         return recommendations
-    
+
     def _generate_health_recommendations(self, issues: Dict[str, List[str]]) -> List[str]:
         """Gera recomendações de saúde"""
         recommendations = []
         
         if issues.get('critical'):
-            recommendations.append("Ação imediata necessária para resolver problemas críticos")
+            recommendations.append("⚠️ Ação imediata necessária para resolver problemas críticos")
         
         if issues.get('high'):
-            recommendations.append("Planejar correções para problemas de alta prioridade")
+            recommendations.append("📋 Planejar correções para problemas de alta prioridade")
         
         if len(issues.get('medium', [])) > 5:
-            recommendations.append("Considerar refatoração para resolver problemas médios")
+            recommendations.append("🔧 Considerar refatoração para resolver problemas médios")
+        
+        if len(issues.get('low', [])) > 10:
+            recommendations.append("📝 Agendar resolução de problemas menores")
         
         return recommendations
-    
+
     # Métodos de detecção de mudanças e evolução
     async def _detect_architecture_changes(self) -> List[Dict[str, Any]]:
         """Detecta mudanças na arquitetura"""
-        # Implementação simplificada
-        return []
-    
+        changes = []
+        
+        # Comparar com snapshot anterior
+        if len(self.architecture_snapshots) > 1:
+            current = self.architecture_snapshots[-1]
+            previous = self.architecture_snapshots[-2]
+            
+            if current['agent_count'] != previous['agent_count']:
+                changes.append({
+                    'type': 'agent_count_change',
+                    'from': previous['agent_count'],
+                    'to': current['agent_count']
+                })
+        
+        return changes
+
     async def _handle_architecture_changes(self, changes: List[Dict[str, Any]]):
         """Trata mudanças arquiteturais"""
         self.analysis_metrics['architecture_changes_detected'] += len(changes)
-    
+        logger.info(f"🔄 Processando {len(changes)} mudanças arquiteturais")
+
     async def _analyze_architecture_health(self) -> List[Dict[str, Any]]:
         """Analisa saúde arquitetural"""
-        # Implementação simplificada
-        return []
-    
+        health_issues = []
+        
+        # Verificar se algum agente tem muitas dependências
+        for agent_id, deps in self.dependency_graph.items():
+            if len(deps) > 10:
+                health_issues.append({
+                    'type': 'high_coupling',
+                    'agent': agent_id,
+                    'dependency_count': len(deps)
+                })
+        
+        return health_issues
+
     async def _handle_health_issues(self, issues: List[Dict[str, Any]]):
         """Trata problemas de saúde"""
         for issue in issues:
             self.analysis_metrics['issues_found'] += 1
-    
+            logger.warning(f"⚠️ Problema de saúde detectado: {issue['type']}")
+
     async def _capture_architecture_snapshot(self) -> Dict[str, Any]:
         """Captura snapshot da arquitetura"""
         return {
             'timestamp': datetime.now().isoformat(),
             'agent_count': len(self.discovered_agents),
             'dependency_count': sum(len(deps) for deps in self.dependency_graph.values()),
-            'capability_count': len(self.capability_matrix)
+            'capability_count': len(self.capability_matrix),
+            'type_distribution': self._count_agents_by_type()
         }
-    
+
     def _analyze_evolution_trends(self) -> Dict[str, Any]:
         """Analisa tendências de evolução"""
         if len(self.architecture_snapshots) < 2:
@@ -1190,13 +1443,13 @@ class AgentStructureAnalyzer(BaseNetworkAgent):
             'dependency_growth': last['dependency_count'] - first['dependency_count'],
             'capability_growth': last['capability_count'] - first['capability_count']
         }
-    
+
     async def _report_evolution_insights(self, analysis: Dict[str, Any]):
         """Reporta insights de evolução"""
         if analysis:
-            logger.info(f"📈 Evolução detectada: {analysis}")
-    
-    # Métodos de conversão e resposta
+            logger.info(f"📈 Evolução da arquitetura: {analysis}")
+
+    # Métodos de conversão e utilitários
     def _agent_info_to_dict(self, info: AgentInfo) -> Dict[str, Any]:
         """Converte AgentInfo para dicionário"""
         return {
@@ -1209,7 +1462,7 @@ class AgentStructureAnalyzer(BaseNetworkAgent):
             'complexity_score': info.complexity_score,
             'last_modified': info.last_modified.isoformat()
         }
-    
+
     def _report_to_dict(self, report: ArchitectureReport) -> Dict[str, Any]:
         """Converte relatório para dicionário"""
         return {
@@ -1221,71 +1474,35 @@ class AgentStructureAnalyzer(BaseNetworkAgent):
             'optimization_opportunities': report.optimization_opportunities,
             'timestamp': report.timestamp.isoformat()
         }
-    
-    async def _send_response(self, original_message: AgentMessage, response_data: Dict[str, Any]):
-        """Envia resposta para mensagem original"""
-        response = AgentMessage(
-            id=str(uuid4()),
-            sender_id=self.agent_id,
-            recipient_id=original_message.sender_id,
-            message_type=MessageType.RESPONSE,
-            priority=original_message.priority,
-            content=response_data,
-            timestamp=datetime.now(),
-            correlation_id=original_message.id
-        )
-        await self.message_bus.publish(response)
 
-# Importações necessárias
-from uuid import uuid4
+    async def initialize_agent(self):
+        """Inicialização específica do agente"""
+        try:
+            # Executar scan inicial
+            await self.discover_all_agents()
+            
+            # Iniciar monitoramento se configurado
+            # await self.start_architecture_monitoring()
+            
+            logger.info(f"✅ {self.agent_id} inicializado completamente")
+        except Exception as e:
+            logger.error(f"❌ Erro na inicialização do {self.agent_id}: {e}")
 
-def create_structure_analyzer_agent(message_bus, num_instances=1) -> List[AgentStructureAnalyzer]:
+def create_structure_analyzer_agent(message_bus) -> List[BaseNetworkAgent]:
     """
-    Cria agente de análise de estrutura arquitetural
-    
-    Args:
-        message_bus: Barramento de mensagens para comunicação
-        num_instances: Número de instâncias (mantido para compatibilidade)
-        
-    Returns:
-        Lista com 1 agente de análise estrutural
+    Factory function para criar o Structure Analyzer Agent integrado ao sistema
     """
-    agents = []
+    logger.info("🏗️ Criando Structure Analyzer Agent integrado...")
     
     try:
-        logger.info("🏗️ Criando AgentStructureAnalyzer...")
+        agents = [StructureAnalyzerAgent("structure_analyzer_001", message_bus)]
         
-        # Verificar se já existe
-        existing_agents = set()
-        if hasattr(message_bus, 'subscribers'):
-            existing_agents = set(message_bus.subscribers.keys())
+        # Inicializar agente
+        asyncio.create_task(agents[0].initialize_agent())
         
-        agent_id = "structure_analyzer_001"
-        
-        if agent_id not in existing_agents:
-            try:
-                agent = AgentStructureAnalyzer(agent_id, AgentType.SPECIALIZED, message_bus)
-                
-                # Iniciar monitoramento arquitetural
-                asyncio.create_task(agent.start_architecture_monitoring())
-                
-                agents.append(agent)
-                logger.info(f"✅ {agent_id} criado com análise arquitetural avançada")
-                logger.info(f"   └── Capabilities: {', '.join(agent.capabilities)}")
-                
-            except Exception as e:
-                logger.error(f"❌ Erro criando {agent_id}: {e}")
-                import traceback
-                logger.error(traceback.format_exc())
-        else:
-            logger.warning(f"⚠️ {agent_id} já existe - pulando")
-        
-        logger.info(f"✅ {len(agents)} agente de análise estrutural criado")
-        
+        logger.info(f"✅ {len(agents)} Structure Analyzer Agent criado e integrado ao sistema")
         return agents
         
     except Exception as e:
-        logger.error(f"❌ Erro crítico criando AgentStructureAnalyzer: {e}")
-        import traceback
-        logger.error(traceback.format_exc())
+        logger.error(f"❌ Erro crítico criando Structure Analyzer Agent: {e}")
         return []
