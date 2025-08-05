@@ -1,3 +1,5 @@
+# Forçando a invalidação do cache de build - v1
+
 # ===== FASE 1: Builder =====
 FROM python:3.11-slim-bullseye AS builder
 
