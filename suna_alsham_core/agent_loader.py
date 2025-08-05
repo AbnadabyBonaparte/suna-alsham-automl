@@ -1,3 +1,4 @@
+# Forçando a atualização para o deploy
 #!/usr/bin/env python3
 """
 Módulo Carregador de Agentes - SUNA-ALSHAM
