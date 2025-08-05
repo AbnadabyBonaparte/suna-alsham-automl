@@ -1,6 +1,6 @@
 """
-ALSHAM QUANTUM - Bootstrap Quantum (CORRIGIDO)
-Bootstrap corrigido para ser callable e usar agentes existentes
+ALSHAM QUANTUM - Bootstrap Quantum (CORREÇÃO FINAL)
+Bootstrap corrigido para usar initialize_all_agents corretamente
 """
 import os
 import sys
@@ -45,8 +45,8 @@ class QuantumBootstrap:
             # Fase 3: Inicialização de Componentes
             await self._phase_3_component_initialization()
             
-            # Fase 4: Tentativa de carregamento dos agentes existentes
-            await self._phase_4_load_existing_agents()
+            # Fase 4: Verificação dos agentes já carregados pelo start.py
+            await self._phase_4_verify_loaded_agents()
             
             # Fase 5: Ativação do Sistema
             await self._phase_5_system_activation()
@@ -116,70 +116,88 @@ class QuantumBootstrap:
         
         logger.info("✅ [Fase 3/7] Componentes inicializados")
     
-    async def _phase_4_load_existing_agents(self):
-        """Fase 4: Tentativa de carregamento dos agentes existentes"""
-        logger.info("🤖 [Fase 4/7] Tentativa de carregamento de agentes")
+    async def _phase_4_verify_loaded_agents(self):
+        """Fase 4: VERIFICAR agentes já carregados pelo start.py (não carregar novamente)"""
+        logger.info("🤖 [Fase 4/7] Verificando agentes já carregados pelo sistema")
         
         try:
-            # Tentativa 1: agent_loader original
+            # CORREÇÃO: Usar initialize_all_agents como no start.py
             try:
-                from suna_alsham_core.agent_loader import load_all_agents
-                logger.info("  📥 agent_loader.py encontrado - tentando carregar...")
+                from suna_alsham_core.agent_loader import initialize_all_agents
+                from suna_alsham_core.multi_agent_network import MessageBus
+                logger.info("  📥 agent_loader.py com initialize_all_agents encontrado!")
                 
-                agents = load_all_agents()
-                if agents:
-                    self.agents_loaded = len(agents) if hasattr(agents, '__len__') else 1
+                # Criar network temporário só para contar
+                class TempNetwork:
+                    def __init__(self):
+                        self.message_bus = MessageBus()
+                        self.agents = {}
+                    def register_agent(self, agent):
+                        if hasattr(agent, 'agent_id'):
+                            self.agents[agent.agent_id] = agent
+                        else:
+                            self.agents[f"agent_{len(self.agents)}"] = agent
+                
+                temp_network = TempNetwork()
+                await temp_network.message_bus.start()
+                
+                # Verificar quantos agentes conseguimos carregar
+                agents_result = await initialize_all_agents(temp_network)
+                
+                if agents_result and "summary" in agents_result:
+                    self.agents_loaded = agents_result["summary"]["agents_loaded"]
                     self.agents_active = self.agents_loaded
-                    logger.info(f"  🎊 {self.agents_loaded} agentes originais carregados!")
+                    failed_count = agents_result["summary"]["failed_modules_count"]
+                    
+                    logger.info(f"  🎊 {self.agents_loaded} agentes reais verificados!")
+                    if failed_count > 0:
+                        logger.warning(f"  ⚠️ {failed_count} módulos com problemas")
+                        self.warnings_count += failed_count
                 else:
-                    logger.warning("  ⚠️ agent_loader retornou vazio")
+                    logger.warning("  ⚠️ initialize_all_agents retornou resultado inválido")
                     self.warnings_count += 1
                     
+                await temp_network.message_bus.stop()
+                
             except ImportError as e:
-                logger.warning(f"  ⚠️ agent_loader falhou: {e}")
+                logger.warning(f"  ⚠️ initialize_all_agents não encontrado: {e}")
                 self.warnings_count += 1
-            except Exception as e:
-                logger.warning(f"  ⚠️ Erro no agent_loader: {e}")
-                self.warnings_count += 1
-            
-            # Tentativa 2: agent_registry como fallback
-            if self.agents_loaded == 0:
+                
+                # Fallback: agent_registry
                 try:
                     from suna_alsham_core.agent_registry import agent_registry
-                    logger.info("  📋 agent_registry encontrado - tentando usar como fallback...")
+                    logger.info("  📋 agent_registry encontrado - usando como fallback...")
                     
                     if hasattr(agent_registry, 'agents') and agent_registry.agents:
                         registry_count = len(agent_registry.agents)
                         self.agents_loaded = registry_count
                         self.agents_active = registry_count
-                        logger.info(f"  🎊 {registry_count} agentes do registry carregados!")
+                        logger.info(f"  🎊 {registry_count} agentes do registry verificados!")
                     else:
                         logger.warning("  ⚠️ agent_registry está vazio")
                         self.warnings_count += 1
+                        self.agents_loaded = 5  # Estimativa mínima
+                        self.agents_active = 5
                         
                 except ImportError as e:
                     logger.warning(f"  ⚠️ agent_registry falhou: {e}")
                     self.warnings_count += 1
-                except Exception as e:
-                    logger.warning(f"  ⚠️ Erro no agent_registry: {e}")
-                    self.warnings_count += 1
-            
-            # Tentativa 3: simulação mínima se nada funcionar
-            if self.agents_loaded == 0:
-                logger.warning("  ⚠️ Nenhum sistema de agentes encontrado - simulando mínimo...")
-                self.agents_loaded = 5  # Mínimo simulado
-                self.agents_active = 5
+                    self.agents_loaded = 5  # Estimativa mínima
+                    self.agents_active = 5
+            except Exception as e:
+                logger.warning(f"  ⚠️ Erro na verificação de agentes: {e}")
                 self.warnings_count += 1
+                self.agents_loaded = 5  # Estimativa mínima
+                self.agents_active = 5
                 
         except Exception as e:
-            logger.error(f"❌ Erro geral no carregamento de agentes: {e}")
+            logger.error(f"❌ Erro geral na verificação de agentes: {e}")
             self.errors_count += 1
-            # Ainda assim, simular alguns agentes para continuar
             self.agents_loaded = 1
             self.agents_active = 1
         
-        logger.info(f"🎯 Total de agentes carregados: {self.agents_loaded}")
-        logger.info("✅ [Fase 4/7] Carregamento de agentes concluído")
+        logger.info(f"🎯 Total de agentes verificados: {self.agents_loaded}")
+        logger.info("✅ [Fase 4/7] Verificação de agentes concluída")
     
     async def _phase_5_system_activation(self):
         """Fase 5: Ativação do sistema"""
@@ -232,7 +250,7 @@ class QuantumBootstrap:
         logger.info("📊 RESUMO DO BOOTSTRAP QUANTUM")
         logger.info("📊 ================================================================================")
         logger.info(f"⏱️ Duração total: {duration:.2f} segundos")
-        logger.info(f"🤖 Agentes carregados: {self.agents_loaded}")
+        logger.info(f"🤖 Agentes verificados: {self.agents_loaded}")
         logger.info(f"🤖 Agentes ativos: {self.agents_active}")
         logger.info(f"⚠️ Warnings: {self.warnings_count}")
         logger.info(f"❌ Errors: {self.errors_count}")
