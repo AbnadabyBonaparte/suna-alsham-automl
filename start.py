@@ -425,12 +425,25 @@ async def agents_breakdown():
 # ===== INICIALIZAÇÃO PRINCIPAL =====
 
 if __name__ == "__main__":
-    port = int(os.getenv("PORT", 8000))
+    # Robust port/host parsing
+    try:
+        port_env = os.getenv("PORT", "8000")
+        port = int(port_env)
+        if not (1 <= port <= 65535):
+            raise ValueError(f"Porta inválida: {port}")
+    except Exception as e:
+        logger.error(f"Porta inválida em PORT: {e}. Usando 8000.")
+        port = 8000
+
     host = os.getenv("HOST", "0.0.0.0")
-    
-    logger.info(f"🚀 Iniciando ALSHAM QUANTUM na porta {port}")
+    if not host:
+        host = "0.0.0.0"
+
+    logger.info("==============================")
+    logger.info(f"🚀 Iniciando ALSHAM QUANTUM na porta {port} (host: {host})")
     logger.info(f"🎯 Sistema com 56 agentes (55 originais + 1 registry)")
-    
+    logger.info("==============================")
+
     uvicorn_config = {
         "app": "start:app",
         "host": host,
@@ -439,5 +452,21 @@ if __name__ == "__main__":
         "access_log": True,
         "workers": 1
     }
-    
-    uvicorn.run(**uvicorn_config)
+
+    try:
+        uvicorn.run(**uvicorn_config)
+    except KeyboardInterrupt:
+        logger.info("🛑 Interrompido por KeyboardInterrupt. Encerrando ALSHAM QUANTUM...")
+    except Exception as e:
+        logger.error(f"❌ Erro ao iniciar Uvicorn: {e}")
+        # Fallback: tentar iniciar com Gunicorn se disponível
+        try:
+            import subprocess
+            logger.info("Tentando fallback para Gunicorn/UvicornWorker...")
+            subprocess.run([
+                "gunicorn", "start:app", "-k", "uvicorn.workers.UvicornWorker",
+                "--bind", f"{host}:{port}", "--workers", "1"
+            ], check=True)
+        except Exception as gunicorn_e:
+            logger.error(f"❌ Fallback Gunicorn também falhou: {gunicorn_e}")
+            logger.error("ALSHAM QUANTUM não pôde ser iniciado. Verifique logs e dependências.")
