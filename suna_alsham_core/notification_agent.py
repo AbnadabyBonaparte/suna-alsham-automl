@@ -460,14 +460,28 @@ class NotificationAgent(BaseNetworkAgent):
         """Inicialização específica do agente"""
         await self._post_init_setup()
 
-def create_notification_agent(message_bus) -> List[BaseNetworkAgent]:
-    """Factory function para criar o notification agent integrado ao sistema"""
-    logger.info("📧 Criando Notification Agent integrado...")
-    
-    agents = [NotificationAgent("notification_001", message_bus)]
-    
-    # Inicializar configuração
-    asyncio.create_task(agents[0].initialize_agent())
-    
-    logger.info(f"✅ {len(agents)} Notification Agent criado e integrado ao sistema")
+def create_notification_agent(message_bus: Any) -> List[BaseNetworkAgent]:
+    """
+    Factory function to create and initialize the NotificationAgent(s) for the ALSHAM QUANTUM system.
+
+    This function instantiates the NotificationAgent, starts its async initialization,
+    and returns it in a list for registration in the agent registry. Handles errors robustly
+    and logs all relevant events for diagnostics and observability.
+
+    Args:
+        message_bus (Any): The message bus or communication channel for agent messaging.
+
+    Returns:
+        List[BaseNetworkAgent]: A list containing the initialized NotificationAgent instance(s).
+    """
+    agents: List[BaseNetworkAgent] = []
+    logger.info("📧 [Factory] Criando NotificationAgent integrado ao sistema...")
+    try:
+        agent = NotificationAgent("notification_001", message_bus)
+        agents.append(agent)
+        # Inicializar configuração assíncrona
+        asyncio.create_task(agent.initialize_agent())
+        logger.info(f"✅ NotificationAgent criado e integrado ao sistema: {agent.agent_id}")
+    except Exception as e:
+        logger.critical(f"❌ Erro crítico ao criar NotificationAgent: {e}", exc_info=True)
     return agents
