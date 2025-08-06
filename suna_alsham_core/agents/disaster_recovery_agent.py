@@ -158,9 +158,9 @@ class DisasterRecoveryAgent(BaseNetworkAgent):
             
     # O resto das funções (restore_system, _execute_recovery_plan) não precisavam de correção.
 
-def create_disaster_recovery_agent(message_bus: Any) -> List[BaseNetworkAgent]:
+def create_agents(message_bus: Any) -> List[BaseNetworkAgent]:
     """
-    Factory function to create and initialize the DisasterRecoveryAgent(s) for the ALSHAM QUANTUM system.
+    Factory function to create and initialize DisasterRecoveryAgent(s) for the ALSHAM QUANTUM system.
 
     This function instantiates the DisasterRecoveryAgent, logs all relevant events for diagnostics,
     and returns it in a list for registration in the agent registry. Handles errors robustly
