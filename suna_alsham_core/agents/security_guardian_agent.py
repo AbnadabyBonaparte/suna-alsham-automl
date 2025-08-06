@@ -823,28 +823,29 @@ class SecurityGuardianAgent(BaseNetworkAgent):
         }
 
 
-def create_security_guardian_agent(agent_id: str = "security_guardian", message_bus: MessageBus = None) -> SecurityGuardianAgent:
-    """
-    Factory function to create and initialize the SecurityGuardianAgent for the ALSHAM QUANTUM system.
 
-    This function instantiates the SecurityGuardianAgent, logs all relevant events for diagnostics,
-    and returns the instance for registration in the agent registry. Handles errors robustly
-    and ensures the agent is ready for operation.
+def create_agents(message_bus: Any) -> List[BaseNetworkAgent]:
+    """
+    Função fábrica para criar e inicializar o(s) SecurityGuardianAgent(s) do sistema ALSHAM QUANTUM.
+
+    Esta função instancia o SecurityGuardianAgent, registra todos os eventos relevantes para diagnóstico
+    e retorna em uma lista para registro no agent registry. Lida com erros de forma robusta
+    e garante que o agente esteja pronto para operação.
 
     Args:
-        agent_id (str): The unique identifier for the Security Guardian Agent. Default is "security_guardian".
-        message_bus (MessageBus, optional): The message bus or communication channel for agent messaging.
+        message_bus (Any): O barramento de mensagens ou canal de comunicação para mensagens entre agentes.
 
     Returns:
-        SecurityGuardianAgent: The initialized SecurityGuardianAgent instance.
+        List[BaseNetworkAgent]: Uma lista contendo a(s) instância(s) inicializada(s) de SecurityGuardianAgent.
     """
+    agents: List[BaseNetworkAgent] = []
     try:
-        agent = SecurityGuardianAgent(agent_id, message_bus)
+        agent = SecurityGuardianAgent("security_guardian", message_bus)
+        agents.append(agent)
         logging.info(f"🛡️ SecurityGuardianAgent criado e registrado: {agent.agent_id}")
-        return agent
     except Exception as e:
         logging.critical(f"❌ Erro crítico ao criar SecurityGuardianAgent: {e}", exc_info=True)
-        raise
+    return agents
 
 # Export for dynamic loading
 __all__ = ['SecurityGuardianAgent', 'create_security_guardian_agent', 'SecurityLevel', 'ThreatLevel', 'AuthMethod']
