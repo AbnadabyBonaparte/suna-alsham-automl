@@ -1,5 +1,5 @@
-# ALSHAM QUANTUM - Requirements Mínimo para Deploy Online
-# Versão leve sem GPU/CUDA
+# ALSHAM QUANTUM - Requirements Mínimo Funcional
+# Versão sem conflitos e sem GPU/CUDA
 
 # Core essencial
 fastapi==0.104.1
@@ -11,30 +11,44 @@ python-multipart==0.0.6
 aiohttp==3.9.1
 httpx==0.25.2
 requests==2.31.0
+websockets==12.0
 
 # Database
 sqlalchemy==2.0.23
 redis==5.0.1
 psycopg2-binary==2.9.9
+asyncpg==0.29.0
 
-# IA Providers (versões leves)
+# IA Provider principal
 openai==1.6.1
 
-# Data
+# Data Processing
 pandas==2.1.4
 numpy==1.25.2
+matplotlib==3.8.2
+
+# Message Queue
+celery==5.3.4
+kombu==5.3.4
+
+# Security
+cryptography==41.0.7
+bcrypt==4.1.2
+python-jose[cryptography]==3.3.0
 
 # Monitoring
 psutil==5.9.6
+prometheus-client==0.19.0
 
 # Utilities
 python-dotenv==1.0.0
 click==8.1.7
 aiofiles==23.2.1
+beautifulsoup4==4.12.2
 
 # Logging
 loguru==0.7.2
 
-# Railway/Heroku
+# Deploy
 gunicorn==21.2.0
 python-json-logger==2.0.7
