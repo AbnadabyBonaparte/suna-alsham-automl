@@ -87,6 +87,70 @@ agent_modules = [
     "domain_modules.support.satisfaction_analyzer_agent",
 ]
 
+# Mapeamento realista de quantos agentes cada módulo deveria carregar
+expected_agents_per_module = {
+    # Core agents
+    "suna_alsham_core.agents.core_agents_v3": 2,
+    "suna_alsham_core.agents.specialized_agents": 2,
+    "suna_alsham_core.agents.system_agents": 3,
+    "suna_alsham_core.agents.service_agents": 2,
+    "suna_alsham_core.agents.meta_cognitive_agents": 2,
+    "suna_alsham_core.agents.ai_powered_agents": 1,
+    
+    # Individual agents
+    "suna_alsham_core.agents.agent_registry": 1,
+    "suna_alsham_core.agents.api_gateway_agent": 1,
+    "suna_alsham_core.agents.backup_agent": 1,
+    "suna_alsham_core.agents.code_analyzer_agent": 1,
+    "suna_alsham_core.agents.code_corrector_agent": 1,
+    "suna_alsham_core.agents.computer_control_agent": 1,
+    "suna_alsham_core.agents.database_agent": 1,
+    "suna_alsham_core.agents.debug_agent_creation": 1,
+    "suna_alsham_core.agents.deployment_agent": 1,
+    "suna_alsham_core.agents.disaster_recovery_agent": 1,
+    "suna_alsham_core.agents.logging_agent": 1,
+    "suna_alsham_core.agents.multi_agent_network": 1,
+    "suna_alsham_core.agents.notification_agent": 1,
+    "suna_alsham_core.agents.performance_monitor_agent": 1,
+    "suna_alsham_core.agents.real_evolution_engine": 1,
+    "suna_alsham_core.agents.security_enhancements_agent": 1,
+    "suna_alsham_core.agents.security_guardian_agent": 1,
+    "suna_alsham_core.agents.structure_analyzer_agent": 1,
+    "suna_alsham_core.agents.testing_agent": 1,
+    "suna_alsham_core.agents.validation_sentinel_agent": 1,
+    "suna_alsham_core.agents.visualization_agent": 1,
+    "suna_alsham_core.agents.web_search_agent": 1,
+    
+    # Analytics domain
+    "domain_modules.analytics.analytics_orchestrator_agent": 1,
+    "domain_modules.analytics.data_collector_agent": 1,
+    "domain_modules.analytics.data_processing_agent": 1,
+    "domain_modules.analytics.predictive_analysis_agent": 1,
+    "domain_modules.analytics.reporting_visualization_agent": 1,
+    
+    # Sales domain
+    "domain_modules.sales.sales_orchestrator_agent": 1,
+    "domain_modules.sales.sales_funnel_agent": 1,
+    "domain_modules.sales.pricing_optimizer_agent": 1,
+    "domain_modules.sales.payment_processing_agent": 1,
+    "domain_modules.sales.customer_success_agent": 1,
+    "domain_modules.sales.revenue_optimization_agent": 1,
+    
+    # Social Media domain
+    "domain_modules.social_media.social_media_orchestrator_agent": 1,
+    "domain_modules.social_media.content_creator_agent": 1,
+    "domain_modules.social_media.video_automation_agent": 1,
+    "domain_modules.social_media.engagement_maximizer_agent": 1,
+    "domain_modules.social_media.influencer_network_agent": 1,
+    
+    # Support domain
+    "domain_modules.support.support_orchestrator_agent": 1,
+    "domain_modules.support.chatbot_agent": 1,
+    "domain_modules.support.ticket_manager_agent": 1,
+    "domain_modules.support.knowledge_base_agent": 1,
+    "domain_modules.support.satisfaction_analyzer_agent": 1,
+}
+
 async def initialize_all_agents(network: Any) -> Dict[str, Any]:
     """
     Inicializa todos os agentes listados em agent_modules e os registra na rede fornecida.
@@ -154,7 +218,9 @@ async def initialize_all_agents(network: Any) -> Dict[str, Any]:
                     
                     if module_agent_count > 0:
                         agents_by_module[module_name] = module_agent_count
-                        logger.info(f"  ✅ {module_agent_count} agente(s) carregado(s) de {module_name}")
+                        expected = expected_agents_per_module.get(module_name, 1)
+                        status = "✅" if module_agent_count >= expected else "⚠️"
+                        logger.info(f"  {status} {module_agent_count}/{expected} agente(s) carregado(s) de {module_name}")
                     else:
                         failed_modules.append(module_name)
                         detailed_failures[module_name] = "Nenhum agente foi registrado"
@@ -177,9 +243,17 @@ async def initialize_all_agents(network: Any) -> Dict[str, Any]:
     unique_failed_modules = list(set(failed_modules))
     success_rate = ((total_modules - len(unique_failed_modules)) / total_modules * 100) if total_modules > 0 else 0
     
+    # Calcula dinamicamente o número esperado de agentes usando o mapeamento realista
+    try:
+        expected_agents = sum(expected_agents_per_module.get(mod, 1) for mod in agent_modules)
+    except Exception as exc:
+        logger.warning(f"Não foi possível calcular o número esperado de agentes dinamicamente: {exc}")
+        expected_agents = 59  # fallback seguro
+    
     summary = {
         "total_modules_attempted": total_modules,
         "agents_loaded": agents_loaded,
+        "agents_expected": expected_agents,
         "modules_successful": len(agents_by_module),
         "modules_failed": len(unique_failed_modules),
         "success_rate": f"{success_rate:.1f}%",
@@ -193,7 +267,7 @@ async def initialize_all_agents(network: Any) -> Dict[str, Any]:
     logger.info("=" * 80)
     logger.info("📊 RESUMO DO CARREGAMENTO DE AGENTES")
     logger.info("=" * 80)
-    logger.info(f"✅ Agentes carregados com sucesso: {agents_loaded}")
+    logger.info(f"✅ Agentes carregados com sucesso: {agents_loaded}/{expected_agents}")
     logger.info(f"📦 Módulos bem-sucedidos: {len(agents_by_module)}/{total_modules}")
     logger.info(f"📈 Taxa de sucesso: {success_rate:.1f}%")
     
@@ -206,14 +280,30 @@ async def initialize_all_agents(network: Any) -> Dict[str, Any]:
     
     logger.info("=" * 80)
     
-    # Alerta se menos de 50% dos agentes esperados foram carregados
-    expected_agents = 59  # 38 core + 21 domain
-    if agents_loaded < expected_agents * 0.5:
-        logger.critical(f"🔴 ATENÇÃO: Apenas {agents_loaded}/{expected_agents} agentes carregados!")
-        logger.critical("🔴 Sistema pode não funcionar corretamente!")
-    elif agents_loaded < expected_agents * 0.8:
-        logger.warning(f"⚠️ {agents_loaded}/{expected_agents} agentes carregados - Sistema parcialmente operacional")
-    else:
-        logger.info(f"✅ {agents_loaded}/{expected_agents} agentes carregados - Sistema operacional!")
+    # Protege contra divisão por zero
+    if expected_agents == 0:
+        logger.critical("🔴 Nenhum agente esperado definido! Verifique a configuração dos módulos.")
+        expected_agents = 1
     
+    # Mensagens de status conforme a proporção de agentes carregados
+    percent_loaded = (agents_loaded / expected_agents) * 100
+    if percent_loaded < 50:
+        logger.critical(f"🔴 ATENÇÃO: Apenas {percent_loaded:.1f}% dos agentes carregados! Sistema pode não funcionar corretamente!")
+    elif percent_loaded < 80:
+        logger.warning(f"⚠️ {percent_loaded:.1f}% dos agentes carregados - Sistema parcialmente operacional")
+    else:
+        logger.info(f"✅ {percent_loaded:.1f}% dos agentes carregados - Sistema operacional!")
+    
+    # Detalhamento adicional se houver discrepâncias
+    if agents_loaded != expected_agents:
+        logger.info("📋 Análise de discrepâncias por módulo:")
+        for module in agent_modules:
+            expected = expected_agents_per_module.get(module, 1)
+            actual = agents_by_module.get(module, 0)
+            if actual != expected:
+                emoji = "❌" if actual == 0 else "⚠️"
+                logger.info(f"  {emoji} {module}: {actual}/{expected}")
+    
+    logger.info("=" * 80)
+    logger.info("Resumo detalhado disponível em 'summary' para diagnósticos automatizados.")
     return summary
