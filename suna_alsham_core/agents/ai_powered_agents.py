@@ -655,3 +655,15 @@ def create_ai_agents(message_bus) -> List[BaseNetworkAgent]:
     except Exception as e:
         logger.error(f"❌ Erro crítico criando QuantumAIAnalyzerAgent: {e}", exc_info=True)
     return agents
+
+def create_agents():
+    """Função esperada pelo sistema de bootstrap para carregamento automático."""
+    agents = []
+    logger.info("🧠 Criando QuantumAIAnalyzerAgent...")
+    try:
+        agent = QuantumAIAnalyzerAgent("ai_analyzer_001", message_bus=None)
+        agents.append(agent)
+        logger.info("✅ QuantumAIAnalyzerAgent criado com sucesso.")
+    except Exception as e:
+        logger.error(f"❌ Erro crítico criando QuantumAIAnalyzerAgent: {e}", exc_info=True)
+    return agents
