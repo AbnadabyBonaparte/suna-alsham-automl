@@ -460,9 +460,9 @@ class NotificationAgent(BaseNetworkAgent):
         """Inicialização específica do agente"""
         await self._post_init_setup()
 
-def create_notification_agent(message_bus: Any) -> List[BaseNetworkAgent]:
+def create_agents(message_bus: Any) -> List[BaseNetworkAgent]:
     """
-    Factory function to create and initialize the NotificationAgent(s) for the ALSHAM QUANTUM system.
+    Factory function to create and initialize NotificationAgent(s) for the ALSHAM QUANTUM system.
 
     This function instantiates the NotificationAgent, starts its async initialization,
     and returns it in a list for registration in the agent registry. Handles errors robustly
