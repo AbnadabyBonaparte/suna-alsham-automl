@@ -82,20 +82,33 @@ class ChatbotAgent(BaseNetworkAgent):
         )
         await self.message_bus.publish(request_to_ai)
 
-    async def continue_conversation_flow(self, response_message: AgentMessage):
-        """Passos 2 e 3: Processa as respostas dos agentes de apoio."""
-        conv_id = response_message.callback_id
+    async def continue_conversation_flow(self, response_message: AgentMessage) -> None:
+        """
+        Handles the continuation of a conversation by processing responses from support agents.
+
+        This method validates the conversation context, checks the current state,
+        logs all relevant events, and routes the conversation to the next step or finalizes it.
+        Robust error handling is provided for diagnostics and production reliability.
+
+        Args:
+            response_message (AgentMessage): The message containing the response from a support agent.
+
+        Returns:
+            None
+        """
+        conv_id: str = response_message.callback_id
         if not conv_id or conv_id not in self.pending_conversations:
+            logger.warning(f"[ChatbotAgent] Resposta recebida para conversa desconhecida ou já finalizada: {conv_id}")
             return
 
-        conversation = self.pending_conversations[conv_id]
-        
+        conversation: Dict[str, Any] = self.pending_conversations[conv_id]
+
         # Passo 2: Resposta da IA com a intenção do usuário
         if conversation["state"] == "awaiting_intent":
-            intent = response_message.content.get("result", {}).get("intent", "unknown")
-            logger.info(f"Conversa [ID: {conv_id}]. Intenção detectada: {intent}. Buscando na base de conhecimento.")
-            
-            conversation["state"] = "awaiting_kb_article" # Atualiza o estado
+            intent: str = response_message.content.get("result", {}).get("intent", "unknown")
+            logger.info(f"[ChatbotAgent] Conversa [ID: {conv_id}]. Intenção detectada: {intent}. Buscando na base de conhecimento.")
+
+            conversation["state"] = "awaiting_kb_article"  # Atualiza o estado
 
             # Passo 2.5: Com a intenção, busca a resposta na base de conhecimento
             request_to_kb = self.create_message(
@@ -108,21 +121,21 @@ class ChatbotAgent(BaseNetworkAgent):
 
         # Passo 3: Resposta da Base de Conhecimento com o artigo
         elif conversation["state"] == "awaiting_kb_article":
-            articles = response_message.content.get("found_articles", [])
-            
-            if articles:
-                answer = articles[0].get("content", "Não encontrei um passo a passo, mas sei que a resposta está na nossa base de conhecimento.")
-            else:
-                answer = "Desculpe, não consegui encontrar uma resposta para sua pergunta. Vou transferir para um atendente humano."
+            articles: List[Dict[str, Any]] = response_message.content.get("found_articles", [])
 
-            logger.info(f"Conversa [ID: {conv_id}]. Resposta encontrada. Enviando ao usuário.")
+            if articles:
+                answer: str = articles[0].get("content", "Não encontrei um passo a passo, mas sei que a resposta está na nossa base de conhecimento.")
+            else:
+                answer: str = "Desculpe, não consegui encontrar uma resposta para sua pergunta. Vou transferir para um atendente humano."
+
+            logger.info(f"[ChatbotAgent] Conversa [ID: {conv_id}]. Resposta encontrada. Enviando ao usuário.")
 
             # Passo 4: Enviar a resposta final ao solicitante original
-            final_response = {
+            final_response: Dict[str, Any] = {
                 "status": "completed",
                 "response_text": answer
             }
             await self.publish_response(conversation["original_message"], final_response)
-            
+
             # Limpa a conversa da memória
             del self.pending_conversations[conv_id]
