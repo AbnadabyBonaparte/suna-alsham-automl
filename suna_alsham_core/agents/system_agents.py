@@ -238,12 +238,10 @@ class RecoveryAgent(BaseNetworkAgent):
         return True
 
 
-# --- Fábrica exigida pelo bootstrap ---
-
-def create_agents() -> List[BaseNetworkAgent]:
+def create_system_agents(message_bus) -> List[BaseNetworkAgent]:
     """
-    Função de bootstrap obrigatória para carregamento automático dos agentes de sistema.
-    Cria e inicializa os agentes MonitorAgent, ControlAgent e RecoveryAgent.
+    Função auxiliar para criar os agentes de sistema.
+    :param message_bus: Barramento de mensagens do sistema.
     :return: Lista de instâncias de agentes de sistema criados.
     """
     logger.info("⚙️ Criando agentes de sistema (Monitor, Control, Recovery)...")
@@ -255,10 +253,22 @@ def create_agents() -> List[BaseNetworkAgent]:
     ]
     for config in agent_configs:
         try:
-            agent = config["class"](config["id"], None)
+            agent = config["class"](config["id"], message_bus)
             agents.append(agent)
             logger.info(f"✅ Agente de sistema {config['id']} criado com sucesso.")
         except Exception as e:
             logger.error(f"❌ Erro criando agente de sistema {config['id']}: {e}", exc_info=True)
     logger.info(f"⚙️ Total de agentes de sistema criados: {len(agents)}")
     return agents
+
+
+# --- FACTORY FUNCTION OBRIGATÓRIA PARA O BOOTSTRAP ---
+
+def create_agents(message_bus) -> List[BaseNetworkAgent]:
+    """
+    Função obrigatória de bootstrap para carregamento automático dos agentes de sistema.
+    Deve ser exportada no módulo principal para integração plug-and-play.
+    :param message_bus: Barramento de mensagens do sistema recebido do agent_loader.
+    :return: Lista de agentes de sistema criados.
+    """
+    return create_system_agents(message_bus)
