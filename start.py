@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 """
 ALSHAM QUANTUM - Sistema de Inicialização Principal
 Integração com 56 agentes (55 originais + 1 agent_registry)
@@ -78,9 +79,10 @@ async def lifespan(app: FastAPI):
             # Carregar SEUS 55 agentes originais (função async)
             agents_result = await initialize_all_agents(network)
             
-            if agents_result and "summary" in agents_result:
-                original_count = agents_result["summary"]["agents_loaded"]
-                failed_count = agents_result["summary"]["failed_modules_count"]
+            # CORREÇÃO: agent_loader retorna o summary diretamente, não aninhado
+            if agents_result:
+                original_count = agents_result.get("agents_loaded", 0)
+                failed_count = agents_result.get("modules_failed", 0)
                 
                 agents = network.agents  # Pegar agentes do network
                 system_status["agents_active"] += original_count
