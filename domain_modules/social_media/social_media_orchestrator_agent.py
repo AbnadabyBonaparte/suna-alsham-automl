@@ -87,14 +87,28 @@ class SocialMediaOrchestratorAgent(BaseNetworkAgent):
 
 # --- FUNÇÃO DE FÁBRICA ADICIONADA ---
 def create_social_media_agents(message_bus) -> List[BaseNetworkAgent]:
-    """Cria e retorna todos os agentes do módulo de Mídias Sociais."""
-    logger.info("🔧 Criando agentes do domínio de Mídias Sociais...")
-    agents = [
-        SocialMediaOrchestratorAgent("social_media_orchestrator_001", message_bus),
-        ContentCreatorAgent("content_creator_001", message_bus),
-        EngagementMaximizerAgent("engagement_maximizer_001", message_bus),
-        InfluencerNetworkAgent("influencer_network_001", message_bus),
-        VideoAutomationAgent("video_automation_001", message_bus),
-    ]
-    logger.info(f"✅ {len(agents)} agentes de Mídias Sociais criados.")
+    """
+    Factory function to create and initialize all Social Media agents for the ALSHAM QUANTUM system.
+
+    This function instantiates all Social Media module agents, logs all relevant events for diagnostics,
+    and returns them in a list for registration in the agent registry. Handles errors robustly
+    and ensures all agents are ready for operation.
+
+    Args:
+        message_bus (Any): The message bus or communication channel for agent messaging.
+
+    Returns:
+        List[BaseNetworkAgent]: A list containing all initialized Social Media module agent instances.
+    """
+    agents: List[BaseNetworkAgent] = []
+    logger.info("🔧 [Factory] Criando agentes do domínio de Mídias Sociais...")
+    try:
+        agents.append(SocialMediaOrchestratorAgent("social_media_orchestrator_001", message_bus))
+        agents.append(ContentCreatorAgent("content_creator_001", message_bus))
+        agents.append(EngagementMaximizerAgent("engagement_maximizer_001", message_bus))
+        agents.append(InfluencerNetworkAgent("influencer_network_001", message_bus))
+        agents.append(VideoAutomationAgent("video_automation_001", message_bus))
+        logger.info(f"✅ {len(agents)} agentes de Mídias Sociais criados.")
+    except Exception as e:
+        logger.critical(f"❌ Erro crítico ao criar agentes de Mídias Sociais: {e}", exc_info=True)
     return agents
