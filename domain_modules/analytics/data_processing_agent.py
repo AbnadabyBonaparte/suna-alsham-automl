@@ -51,27 +51,38 @@ class DataProcessingAgent(BaseNetworkAgent):
         if message.message_type == MessageType.REQUEST and message.content.get("request_type") == "process_data":
             await self.handle_process_data_request(message)
 
-    async def handle_process_data_request(self, message: AgentMessage):
+    async def handle_process_data_request(self, message: AgentMessage) -> None:
         """
-        Executa um pipeline de processamento de dados usando Pandas.
+        Executes a robust data processing pipeline using Pandas, applying cleaning and transformation steps.
+
+        This method validates the input data and processing steps, applies each transformation in sequence,
+        logs all relevant events, and returns a preview of the processed data. Handles errors robustly for
+        production reliability and diagnostics.
+
+        Args:
+            message (AgentMessage): The incoming message containing raw data and processing steps.
+
+        Returns:
+            None
         """
-        raw_data = message.content.get("data", [])
-        processing_steps = message.content.get("steps", [])
+        raw_data: List[dict] = message.content.get("data", [])
+        processing_steps: List[Any] = message.content.get("steps", [])
 
         if not raw_data:
+            logger.warning("Requisição de processamento sem dados fornecidos. Abortando.")
             await self.publish_error_response(message, "Nenhum dado fornecido para processamento.")
             return
-        
         if not processing_steps:
+            logger.warning("Requisição de processamento sem passos especificados. Abortando.")
             await self.publish_error_response(message, "Nenhum passo de processamento foi especificado.")
             return
 
-        logger.info(f"Iniciando processamento de {len(raw_data)} registros com os passos: {processing_steps}")
+        logger.info(f"[DataProcessingAgent] Iniciando processamento de {len(raw_data)} registros com os passos: {processing_steps}")
 
         try:
             # 1. Converte os dados brutos para um DataFrame do Pandas
             df = pd.DataFrame(raw_data)
-            original_rows = len(df)
+            original_rows: int = len(df)
 
             # 2. Executa os passos de processamento em sequência
             for step in processing_steps:
@@ -83,23 +94,26 @@ class DataProcessingAgent(BaseNetworkAgent):
                 elif step_name == "handle_missing_values":
                     # Exemplo: preenche valores nulos com uma string ou a média
                     fill_value = step_config.get("fill_value", 'N/A')
-                    subset = step_config.get("subset") # colunas específicas
+                    subset = step_config.get("subset")  # colunas específicas
                     df.fillna(value=fill_value, subset=subset, inplace=True)
                 elif step_name == "convert_data_types":
                     # Exemplo: {"name": "convert_data_types", "column": "price", "type": "float"}
                     column = step_config.get("column")
                     target_type = step_config.get("type")
                     if column and target_type:
-                        df[column] = df[column].astype(target_type)
+                        try:
+                            df[column] = df[column].astype(target_type)
+                        except Exception as conv_err:
+                            logger.warning(f"Falha ao converter coluna '{column}' para tipo '{target_type}': {conv_err}")
                 # Outros passos podem ser adicionados aqui (ex: normalização, etc.)
-            
-            processed_rows = len(df)
-            logger.info(f"Processamento concluído. Registros originais: {original_rows}, Registros processados: {processed_rows}.")
+
+            processed_rows: int = len(df)
+            logger.info(f"[DataProcessingAgent] Processamento concluído. Registros originais: {original_rows}, Registros processados: {processed_rows}.")
 
             # 3. Converte o DataFrame limpo de volta para o formato de dicionário
-            processed_data = df.to_dict(orient='records')
-            
-            response_content = {
+            processed_data: List[dict] = df.to_dict(orient='records')
+
+            response_content: Dict[str, Any] = {
                 "status": "completed",
                 "original_rows": original_rows,
                 "processed_rows": processed_rows,
@@ -109,5 +123,5 @@ class DataProcessingAgent(BaseNetworkAgent):
             await self.publish_response(message, response_content)
 
         except Exception as e:
-            logger.error(f"Erro ao processar dados: {e}", exc_info=True)
+            logger.critical(f"[DataProcessingAgent] Erro ao processar dados: {e}", exc_info=True)
             await self.publish_error_response(message, f"Ocorreu um erro interno durante o processamento dos dados: {e}")
