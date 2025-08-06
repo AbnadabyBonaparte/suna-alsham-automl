@@ -91,12 +91,26 @@ class PerformanceMonitorAgent(BaseNetworkAgent):
             await self.message_bus.publish(log_message)
             await asyncio.sleep(interval)
 
-def create_performance_monitor_agent(message_bus) -> List[BaseNetworkAgent]:
-    agents = []
-    logger.info("📊 Criando PerformanceMonitorAgent...")
+def create_performance_monitor_agent(message_bus: Any) -> List[BaseNetworkAgent]:
+    """
+    Factory function to create and initialize the PerformanceMonitorAgent(s) for the ALSHAM QUANTUM system.
+
+    This function instantiates the PerformanceMonitorAgent, logs all relevant events for diagnostics,
+    and returns it in a list for registration in the agent registry. Handles errors robustly
+    and ensures the agent is ready for operation.
+
+    Args:
+        message_bus (Any): The message bus or communication channel for agent messaging.
+
+    Returns:
+        List[BaseNetworkAgent]: A list containing the initialized PerformanceMonitorAgent instance(s).
+    """
+    agents: List[BaseNetworkAgent] = []
+    logger.info("📊 [Factory] Criando PerformanceMonitorAgent...")
     try:
         agent = PerformanceMonitorAgent("performance_monitor_001", message_bus)
         agents.append(agent)
+        logger.info(f"📊 PerformanceMonitorAgent criado com sucesso: {agent.agent_id}")
     except Exception as e:
-        logger.error(f"❌ Erro crítico criando PerformanceMonitorAgent: {e}", exc_info=True)
+        logger.critical(f"❌ Erro crítico ao criar PerformanceMonitorAgent: {e}", exc_info=True)
     return agents
