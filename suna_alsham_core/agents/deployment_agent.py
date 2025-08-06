@@ -274,9 +274,9 @@ class DeploymentAgent(BaseNetworkAgent):
                 ]
             }
 
-def create_deployment_agent(message_bus: Any) -> List[BaseNetworkAgent]:
+def create_agents(message_bus: Any) -> List[BaseNetworkAgent]:
     """
-    Factory function to create and initialize the DeploymentAgent(s) for the ALSHAM QUANTUM system.
+    Factory function to create and initialize DeploymentAgent(s) for the ALSHAM QUANTUM system.
 
     This function instantiates the DeploymentAgent, logs all relevant events for diagnostics,
     and returns it in a list for registration in the agent registry. Handles errors robustly
