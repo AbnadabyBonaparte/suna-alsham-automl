@@ -128,13 +128,26 @@ class DebugMasterAgent(BaseNetworkAgent):
         return {"file": "unknown", "line": 0, "function": "unknown"}
 
 
-def create_debug_master_agent(message_bus) -> List[BaseNetworkAgent]:
-    """Cria o agente Debug Master."""
-    agents = []
-    logger.info("🐛 Criando DebugMasterAgent...")
+def create_debug_master_agent(message_bus: Any) -> List[BaseNetworkAgent]:
+    """
+    Factory function to create and initialize the DebugMasterAgent(s) for the ALSHAM QUANTUM system.
+
+    This function instantiates the DebugMasterAgent, logs all relevant events for diagnostics,
+    and returns it in a list for registration in the agent registry. Handles errors robustly
+    and ensures the agent is ready for operation.
+
+    Args:
+        message_bus (Any): The message bus or communication channel for agent messaging.
+
+    Returns:
+        List[BaseNetworkAgent]: A list containing the initialized DebugMasterAgent instance(s).
+    """
+    agents: List[BaseNetworkAgent] = []
+    logger.info("🐛 [Factory] Criando DebugMasterAgent...")
     try:
         agent = DebugMasterAgent("debug_master_001", message_bus)
         agents.append(agent)
+        logger.info(f"🐛 DebugMasterAgent criado com sucesso: {agent.agent_id}")
     except Exception as e:
-        logger.error(f"❌ Erro crítico criando DebugMasterAgent: {e}", exc_info=True)
+        logger.critical(f"❌ Erro crítico ao criar DebugMasterAgent: {e}", exc_info=True)
     return agents
