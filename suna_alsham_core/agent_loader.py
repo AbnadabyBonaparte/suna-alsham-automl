@@ -1,15 +1,16 @@
-# Forçando a atualização para o deploy
 #!/usr/bin/env python3
 """
 Módulo Carregador de Agentes - SUNA-ALSHAM
 
-[Versão Corrigida Completa] - Carrega todos os 56 agentes do sistema
-CORREÇÃO: Adicionado o 56º agente e corrigido NameError.
+[Versão com LOG DEBUG ATIVO] - Carrega todos os 56 agentes do sistema
+Inclui traceback detalhado para detectar falhas como 'name 'python' is not defined'.
 """
+
 import logging
 from typing import Any, Dict, List
 import sys
 from pathlib import Path
+import traceback  # NOVO
 
 project_root = Path(__file__).parent.parent
 sys.path.insert(0, str(project_root.resolve()))
@@ -17,19 +18,9 @@ sys.path.insert(0, str(project_root.resolve()))
 logger = logging.getLogger(__name__)
 
 async def initialize_all_agents(network) -> Dict[str, Any]:
-    """
-    Inicializa todos os agentes do sistema - CONFIGURAÇÃO COMPLETA DOS 56 AGENTES.
-    
-    Args:
-        network: Instância de MultiAgentNetwork para registrar os agentes
-    
-    Returns:
-        Dict com resumo do carregamento
-    """
     agents_loaded = 0
     failed_modules = []
 
-    # CONFIGURAÇÃO COMPLETA - TODOS OS 56 AGENTES
     agent_factories_config = [
         # ===== NÚCLEO SUNA-ALSHAM (35 AGENTES) =====
         {"factory_path": "suna_alsham_core.core_agents_v3", "factory_name": "create_core_agents_v3"},
@@ -58,14 +49,14 @@ async def initialize_all_agents(network) -> Dict[str, Any]:
         {"factory_path": "suna_alsham_core.validation_sentinel_agent", "factory_name": "create_validation_sentinel_agent"},
         {"factory_path": "suna_alsham_core.visualization_agent", "factory_name": "create_visualization_agent"},
         {"factory_path": "suna_alsham_core.web_search_agent", "factory_name": "create_web_search_agent"},
-        # ===== MÓDULOS DE DOMÍNIO ALSHAM GLOBAL (21 AGENTES) =====
+        # ===== MÓDULOS DE DOMÍNIO (21 AGENTES) =====
         {"factory_path": "domain_modules.analytics.analytics_orchestrator_agent", "factory_name": "create_analytics_agents"},
         {"factory_path": "domain_modules.sales.sales_orchestrator_agent", "factory_name": "create_sales_agents"},
         {"factory_path": "domain_modules.social_media.social_media_orchestrator_agent", "factory_name": "create_social_media_agents"},
         {"factory_path": "domain_modules.suporte.support_orchestrator_agent", "factory_name": "create_suporte_agents"},
     ]
 
-    logger.info("--- INICIANDO CARREGAMENTO COMPLETO DE AGENTES (56 ESPERADOS) ---")
+    logger.info("--- INICIANDO CARREGAMENTO DE AGENTES (DEBUG MODE) ---")
 
     for config in agent_factories_config:
         factory_path = config["factory_path"]
@@ -75,17 +66,16 @@ async def initialize_all_agents(network) -> Dict[str, Any]:
         try:
             module = __import__(factory_path, fromlist=[factory_name])
             factory = getattr(module, factory_name)
-            
+
             if hasattr(network, 'message_bus'):
                 agents = factory(network.message_bus)
             else:
                 agents = factory(network)
-            
+
             if not isinstance(agents, list):
                 agents = []
                 
             num_created = len(agents)
-            
             for agent in agents:
                 try:
                     network.register_agent(agent)
@@ -95,31 +85,33 @@ async def initialize_all_agents(network) -> Dict[str, Any]:
                     logger.error(f"    ❌ Erro ao registrar agente: {reg_error}")
                     
             logger.info(f"<-- SUCESSO: {factory_name} criou {num_created} agente(s).")
-            
+
         except ImportError as e:
             logger.error(f"<-- IMPORT ERROR: {factory_path} não encontrado: {e}")
             failed_modules.append(f"{factory_path} (ImportError)")
         except AttributeError as e:
-            logger.error(f"<-- ATTR ERROR: Função {factory_name} não encontrada: {e}")
+            logger.error(f"<-- ATTR ERROR: {factory_path}.{factory_name} não encontrada: {e}")
             failed_modules.append(f"{factory_path}.{factory_name} (AttributeError)")
         except Exception as e:
-            logger.error(f"<-- FALHA: {factory_path}.{factory_name} falhou: {e}", exc_info=True)
-            failed_modules.append(f"{factory_path}.{factory_name}")
+            logger.error(f"<-- FALHA: {factory_path}.{factory_name} falhou: {e}")
+            logger.error("STACK TRACE:")
+            logger.error(traceback.format_exc())
+            failed_modules.append(f"{factory_path}.{factory_name} (RuntimeError)")
 
     logger.info(f"--- FIM DO CARREGAMENTO. Total: {agents_loaded} agentes carregados. ---")
     
     if failed_modules:
-        logger.error(f"❌ MÓDULOS QUE FALHARAM ({len(failed_modules)}):")
+        logger.error(f"❌ MÓDULOS COM ERROS ({len(failed_modules)}):")
         for failed in failed_modules:
             logger.error(f"    - {failed}")
     
-    logger.info(f"✅ MÓDULOS EXECUTADOS COM SUCESSO: {len(agent_factories_config) - len(failed_modules)}")
-    logger.info(f"📊 TOTAL DE AGENTES CARREGADOS: {agents_loaded}")
+    logger.info(f"✅ MÓDULOS OK: {len(agent_factories_config) - len(failed_modules)}")
+    logger.info(f"📊 AGENTES CARREGADOS: {agents_loaded}")
     
     return {
         "summary": {
-            "agents_loaded": agents_loaded, 
-            "expected_agents": len(agent_factories_config), # Ajustado para ser dinâmico
+            "agents_loaded": agents_loaded,
+            "expected_agents": len(agent_factories_config),
             "failed_modules_count": len(failed_modules)
         },
         "failed_modules": failed_modules,
