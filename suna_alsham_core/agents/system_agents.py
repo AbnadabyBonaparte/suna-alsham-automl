@@ -238,11 +238,19 @@ class RecoveryAgent(BaseNetworkAgent):
         return True
 
 
-def create_system_agents(message_bus) -> List[BaseNetworkAgent]:
+def create_agents(message_bus: Any) -> List[BaseNetworkAgent]:
     """
-    Função auxiliar para criar os agentes de sistema.
-    :param message_bus: Barramento de mensagens do sistema.
-    :return: Lista de instâncias de agentes de sistema criados.
+    Função fábrica para criar e inicializar os agentes de sistema do ALSHAM QUANTUM.
+
+    Esta função instancia os agentes MonitorAgent, ControlAgent e RecoveryAgent, registra todos os eventos relevantes para diagnóstico
+    e retorna em uma lista para registro no agent registry. Lida com erros de forma robusta
+    e garante que os agentes estejam prontos para operação.
+
+    Args:
+        message_bus (Any): O barramento de mensagens ou canal de comunicação para mensagens entre agentes.
+
+    Returns:
+        List[BaseNetworkAgent]: Uma lista contendo as instâncias inicializadas dos agentes de sistema.
     """
     logger.info("⚙️ Criando agentes de sistema (Monitor, Control, Recovery)...")
     agents: List[BaseNetworkAgent] = []
@@ -260,15 +268,3 @@ def create_system_agents(message_bus) -> List[BaseNetworkAgent]:
             logger.error(f"❌ Erro criando agente de sistema {config['id']}: {e}", exc_info=True)
     logger.info(f"⚙️ Total de agentes de sistema criados: {len(agents)}")
     return agents
-
-
-# --- FACTORY FUNCTION OBRIGATÓRIA PARA O BOOTSTRAP ---
-
-def create_agents(message_bus) -> List[BaseNetworkAgent]:
-    """
-    Função obrigatória de bootstrap para carregamento automático dos agentes de sistema.
-    Deve ser exportada no módulo principal para integração plug-and-play.
-    :param message_bus: Barramento de mensagens do sistema recebido do agent_loader.
-    :return: Lista de agentes de sistema criados.
-    """
-    return create_system_agents(message_bus)
