@@ -114,26 +114,17 @@ class ComputerControlAgent(BaseNetworkAgent):
             logger.error(f"Erro ao executar o comando '{command_str}': {e}", exc_info=True)
             return {"status": "error", "message": str(e)}
 
-def create_computer_control_agent(message_bus: Any) -> List[BaseNetworkAgent]:
+def create_agents(message_bus) -> List[BaseNetworkAgent]:
     """
-    Factory function to create and initialize the ComputerControlAgent(s) for the ALSHAM QUANTUM system.
-
-    This function instantiates the ComputerControlAgent, logs all relevant events for diagnostics,
-    and returns it in a list for registration in the agent registry. Handles errors robustly
-    and ensures the agent is ready for operation.
-
-    Args:
-        message_bus (Any): The message bus or communication channel for agent messaging.
-
-    Returns:
-        List[BaseNetworkAgent]: A list containing the initialized ComputerControlAgent instance(s).
+    Factory function padrão para integração com agent_loader.
+    Cria e retorna todos os agentes Computer Control deste módulo.
     """
     agents: List[BaseNetworkAgent] = []
-    logger.info("🤖 [Factory] Creating ComputerControlAgent...")
+    logger.info("🤖 Criando ComputerControlAgent...")
     try:
         agent = ComputerControlAgent("computer_control_001", message_bus)
         agents.append(agent)
-        logger.info(f"🤖 ComputerControlAgent created successfully: {agent.agent_id}")
+        logger.info(f"🤖 ComputerControlAgent criado com sucesso: {agent.agent_id}")
     except Exception as e:
-        logger.critical(f"❌ Critical error creating ComputerControlAgent: {e}", exc_info=True)
+        logger.critical(f"❌ Erro crítico ao criar ComputerControlAgent: {e}", exc_info=True)
     return agents
