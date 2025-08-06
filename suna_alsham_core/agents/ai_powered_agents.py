@@ -645,17 +645,34 @@ class QuantumAIAnalyzerAgent(BaseNetworkAgent):
         }
 
 def create_ai_agents(message_bus) -> List[BaseNetworkAgent]:
-    """Cria os agentes de IA Quantum."""
-    agents = []
-    logger.info("🧠 Criando QuantumAIAnalyzerAgent...")
+    """
+    Factory function to create and return all Quantum AI agents for the system.
+    This function is intended for use by the agent_loader/bootstrap system.
+
+    Args:
+        message_bus: The message bus instance for agent communication.
+
+    Returns:
+        List[BaseNetworkAgent]: List of instantiated Quantum AI agents.
+    """
+    agents: List[BaseNetworkAgent] = []
+    logger.info("🧠 Creating QuantumAIAnalyzerAgent...")
     try:
         agent = QuantumAIAnalyzerAgent("ai_analyzer_001", message_bus)
         agents.append(agent)
-        logger.info("✅ QuantumAIAnalyzerAgent criado com sucesso.")
+        logger.info("✅ QuantumAIAnalyzerAgent created successfully.")
     except Exception as e:
-        logger.error(f"❌ Erro crítico criando QuantumAIAnalyzerAgent: {e}", exc_info=True)
+        logger.critical(f"❌ Critical error creating QuantumAIAnalyzerAgent: {e}", exc_info=True)
     return agents
 
 def create_agents(message_bus):
-    """Função esperada pelo sistema de bootstrap para carregamento automático."""
+    """
+    Entry point expected by the agent_loader/bootstrap system for automatic agent loading.
+
+    Args:
+        message_bus: The message bus instance for agent communication.
+
+    Returns:
+        List[BaseNetworkAgent]: List of instantiated Quantum AI agents.
+    """
     return create_ai_agents(message_bus)
