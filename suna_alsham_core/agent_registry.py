@@ -79,21 +79,27 @@ class MockAgent(BaseAgent):
 
 # ===== REGISTRY PRINCIPAL =====
 
+
 class AgentRegistry:
-    """Registry central simplificado"""
-    
-    def __init__(self):
+    """
+    Registry central de agentes do ALSHAM QUANTUM.
+    Gerencia instâncias, status e operações de todos os agentes do sistema.
+    Implementa singleton global para acesso centralizado.
+    """
+
+    def __init__(self) -> None:
         self.agents: Dict[str, AgentInfo] = {}
         self._initialize_mock_agents()
-        
-    def _initialize_mock_agents(self):
-        """Inicializar agentes mock para não dar erro"""
-        
-        # 34 agentes mock simples
+
+    def _initialize_mock_agents(self) -> None:
+        """
+        Inicializa 34 agentes mock, um para cada tipo e domínio, para garantir que o registry nunca fique vazio.
+        Facilita testes, integração e evita erros de lookup.
+        """
         agent_names = [
             # Specialized (5)
             "data_analysis", "document_processor", "image_processor", "web_scraping", "code_generator",
-            # System (5)  
+            # System (5)
             "logging", "security", "monitoring", "backup", "configuration",
             # Service (5)
             "database", "cache", "file_storage", "network", "queue",
@@ -104,8 +110,6 @@ class AgentRegistry:
             "research", "automation", "optimization", "integration", "translation",
             "voice", "video", "workflow"
         ]
-        
-        # Criar agentes mock
         for i, agent_name in enumerate(agent_names):
             if i < 5:
                 agent_type = AgentType.SPECIALIZED
@@ -117,7 +121,6 @@ class AgentRegistry:
                 agent_type = AgentType.META_COGNITIVE
             else:
                 agent_type = AgentType.DOMAIN
-            
             self.agents[agent_name] = AgentInfo(
                 id=agent_name,
                 name=f"{agent_name.replace('_', ' ').title()} Agent",
@@ -125,11 +128,13 @@ class AgentRegistry:
                 description=f"Mock agent for {agent_name}",
                 instance=MockAgent(agent_name, f"{agent_name}_agent")
             )
-    
+
     async def initialize_all_agents(self) -> Dict[str, int]:
-        """Inicializar todos os agentes"""
+        """
+        Inicializa todos os agentes registrados, atualizando status e contando por tipo.
+        :return: Dicionário com contagem de agentes ativos por tipo.
+        """
         counters = {agent_type.value: 0 for agent_type in AgentType}
-        
         for agent_info in self.agents.values():
             try:
                 agent_info.status = AgentStatus.INITIALIZING
@@ -137,31 +142,38 @@ class AgentRegistry:
                 if success:
                     agent_info.status = AgentStatus.ACTIVE
                     counters[agent_info.type.value] += 1
+                    logger.info(f"✅ {agent_info.name} inicializado com sucesso.")
+                else:
+                    agent_info.status = AgentStatus.ERROR
+                    logger.warning(f"⚠️ {agent_info.name} falhou ao inicializar.")
             except Exception as e:
                 agent_info.status = AgentStatus.ERROR
-                logger.error(f"Erro na inicialização do agente {agent_info.name}: {e}")
-        
+                logger.error(f"Erro na inicialização do agente {agent_info.name}: {e}", exc_info=True)
         return counters
-    
-    async def shutdown_all_agents(self):
-        """Desligar todos os agentes"""
+
+    async def shutdown_all_agents(self) -> None:
+        """
+        Desliga todos os agentes ativos registrados, atualizando status.
+        """
         for agent_info in self.agents.values():
             if agent_info.instance and agent_info.status == AgentStatus.ACTIVE:
                 try:
                     await agent_info.instance.shutdown()
                     agent_info.status = AgentStatus.INACTIVE
+                    logger.info(f"🔻 {agent_info.name} desligado com sucesso.")
                 except Exception as e:
-                    logger.error(f"Erro ao desligar agente {agent_info.name}: {e}")
-    
+                    logger.error(f"Erro ao desligar agente {agent_info.name}: {e}", exc_info=True)
+
     def get_system_status(self) -> Dict[str, Any]:
-        """Status do sistema"""
+        """
+        Retorna o status geral do sistema, incluindo totais por status e tipo.
+        :return: Dicionário com totais e breakdown dos agentes.
+        """
         status_counts = {status.value: 0 for status in AgentStatus}
         type_counts = {agent_type.value: 0 for agent_type in AgentType}
-        
         for agent_info in self.agents.values():
             status_counts[agent_info.status.value] += 1
             type_counts[agent_info.type.value] += 1
-        
         return {
             "total_agents": len(self.agents),
             "by_status": status_counts,
