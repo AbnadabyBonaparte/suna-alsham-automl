@@ -278,3 +278,15 @@ def create_specialized_agents(message_bus: Any) -> List[BaseNetworkAgent]:
 
     logger.info(f"🛠️ Total de agentes especializados criados: {len(agents)}")
     return agents
+
+
+# --- FACTORY FUNCTION OBRIGATÓRIA PARA O BOOTSTRAP ---
+
+def create_agents(message_bus) -> List[BaseNetworkAgent]:
+    """
+    Função obrigatória de bootstrap para carregamento automático dos agentes especializados.
+    Deve ser exportada no módulo principal para integração plug-and-play.
+    :param message_bus: Barramento de mensagens do sistema recebido do agent_loader.
+    :return: Lista de agentes especializados criados.
+    """
+    return create_specialized_agents(message_bus)
