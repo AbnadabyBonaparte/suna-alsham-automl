@@ -143,11 +143,11 @@ def create_debug_master_agent(message_bus: Any) -> List[BaseNetworkAgent]:
         List[BaseNetworkAgent]: A list containing the initialized DebugMasterAgent instance(s).
     """
     agents: List[BaseNetworkAgent] = []
-    logger.info("🐛 [Factory] Criando DebugMasterAgent...")
+    logger.info("🐛 [Factory] Creating DebugMasterAgent...")
     try:
         agent = DebugMasterAgent("debug_master_001", message_bus)
         agents.append(agent)
-        logger.info(f"🐛 DebugMasterAgent criado com sucesso: {agent.agent_id}")
+        logger.info(f"🐛 DebugMasterAgent created successfully: {agent.agent_id}")
     except Exception as e:
-        logger.critical(f"❌ Erro crítico ao criar DebugMasterAgent: {e}", exc_info=True)
+        logger.critical(f"❌ Critical error creating DebugMasterAgent: {e}", exc_info=True)
     return agents
