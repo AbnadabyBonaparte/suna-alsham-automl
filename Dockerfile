@@ -2,6 +2,7 @@
 
 # ===== FASE 1: Builder =====
 FROM python:3.11-slim-bullseye AS builder
+ARG CACHE_BUSTER
 
 # Define variáveis de ambiente para otimizar o Python no Docker
 ENV PYTHONUNBUFFERED=1 \
