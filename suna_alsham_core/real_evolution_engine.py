@@ -537,13 +537,26 @@ class RealEvolutionEngine(BaseNetworkAgent):
             "last_update": datetime.now().isoformat()
         }
 
-# Factory function para criar agentes de evolução
+
 def create_evolution_engine_agents() -> List[BaseNetworkAgent]:
     """
-    Cria agentes do motor de evolução
-    Retorna lista com RealEvolutionEngine como agente de rede
+    Factory function to create and initialize the RealEvolutionEngine agent(s) for the ALSHAM QUANTUM system.
+
+    This function instantiates the RealEvolutionEngine, logs all relevant events for diagnostics,
+    and returns it in a list for registration in the agent registry. Handles errors robustly
+    and ensures the agent is ready for operation.
+
+    Returns:
+        List[BaseNetworkAgent]: A list containing the initialized RealEvolutionEngine instance(s).
     """
-    return [RealEvolutionEngine("evolution_engine_001")]
+    agents: List[BaseNetworkAgent] = []
+    try:
+        agent = RealEvolutionEngine("evolution_engine_001")
+        agents.append(agent)
+        logging.info(f"🧬 RealEvolutionEngine criado e registrado como agente de rede: {agent.agent_id}")
+    except Exception as e:
+        logging.critical(f"❌ Erro crítico ao criar RealEvolutionEngine: {e}", exc_info=True)
+    return agents
 
 # Instância global para compatibilidade
 evolution_engine = RealEvolutionEngine("evolution_engine_001")
