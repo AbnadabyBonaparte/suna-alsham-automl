@@ -110,28 +110,38 @@ class EngagementMaximizerAgent(BaseNetworkAgent):
         await self.message_bus.publish(request_to_analyzer)
         logger.info(f"Requisição de análise de sentimento enviada para ai_analyzer_001 com task_id: {task_id}")
 
-    async def _handle_response(self, response_message: AgentMessage):
+    async def _handle_response(self, response_message: AgentMessage) -> None:
         """
-        Processa a resposta recebida do AIAnalyzerAgent.
+        Handles the response received from the AIAnalyzerAgent for sentiment analysis.
+
+        This method validates the task context, checks the completion status,
+        logs all relevant events, and takes the appropriate engagement action based on sentiment.
+        Robust error handling is provided for diagnostics and production reliability.
+
+        Args:
+            response_message (AgentMessage): The message containing the sentiment analysis response.
+
+        Returns:
+            None
         """
-        task_id = response_message.callback_id
+        task_id: str = response_message.callback_id
         if task_id not in self.pending_tasks:
-            logger.warning(f"Recebida resposta para uma tarefa desconhecida ou já concluída: {task_id}")
+            logger.warning(f"[EngagementMaximizerAgent] Recebida resposta para uma tarefa desconhecida ou já concluída: {task_id}")
             return
 
-        task_context = self.pending_tasks.pop(task_id)
-        original_message = task_context["original_message"]
-        
+        task_context: Dict[str, Any] = self.pending_tasks.pop(task_id)
+        original_message: AgentMessage = task_context["original_message"]
+
         if response_message.content.get("status") != "completed":
-            logger.error(f"Análise de sentimento falhou para a tarefa {task_id}.")
+            logger.error(f"[EngagementMaximizerAgent] Análise de sentimento falhou para a tarefa {task_id}.")
             await self.publish_error_response(original_message, "Falha na análise de sentimento.")
             return
 
-        sentiment = response_message.content.get("result", {}).get("sentiment", "neutral")
-        logger.info(f"Sentimento recebido para a tarefa {task_id}: {sentiment.upper()}")
+        sentiment: str = response_message.content.get("result", {}).get("sentiment", "neutral")
+        logger.info(f"[EngagementMaximizerAgent] Sentimento recebido para a tarefa {task_id}: {sentiment.upper()}")
 
-        # 4. Tomar uma ação com base no sentimento
-        action_taken = None
+        # Tomar uma ação com base no sentimento
+        action_taken: str = None
         if sentiment == "positive":
             await self._like_post(task_context["post_id"], task_context["comment_id"])
             action_taken = "liked"
@@ -139,14 +149,14 @@ class EngagementMaximizerAgent(BaseNetworkAgent):
             # [LÓGICA FUTURA] Delegar para um agente de resposta
             action_taken = "marked_for_reply"
 
-        # 5. Enviar a resposta final para o solicitante original
-        final_response_content = {
+        # Enviar a resposta final para o solicitante original
+        final_response_content: Dict[str, Any] = {
             "status": "completed",
             "action_taken": action_taken,
             "sentiment_detected": sentiment,
             "comment_id": task_context["comment_id"]
         }
-        final_response = self.create_response(original_message, final_response_content)
+        final_response: AgentMessage = self.create_response(original_message, final_response_content)
         await self.message_bus.publish(final_response)
 
     async def _like_post(self, post_id: str, comment_id: str):
