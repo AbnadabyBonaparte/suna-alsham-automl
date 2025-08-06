@@ -4,10 +4,8 @@ ALSHAM QUANTUM - Sistema de Inicialização Principal
 Integração com 56 agentes (55 originais + 1 agent_registry)
 """
 import os
-import sys
 import logging
 import asyncio
-import uvicorn
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
@@ -44,86 +42,65 @@ async def lifespan(app: FastAPI):
     logger.info(f"🎯 Esperando carregar 56 agentes (55 originais + 1 registry)")
     
     try:
-        # === CARREGAMENTO DOS 55 AGENTES ORIGINAIS ===
-        logger.info("📥 [1/2] Carregando seus 55 agentes originais...")
-        try:
-            from suna_alsham_core.agent_loader import initialize_all_agents
-            from suna_alsham_core.multi_agent_network import MessageBus
-            system_status["agent_loader_available"] = True
-            logger.info("✅ agent_loader.py encontrado!")
-            
-            class NetworkWithRealMessageBus:
-                def __init__(self):
-                    self.message_bus = MessageBus()
-                    self.agents = {}
-                
-                async def start(self):
-                    await self.message_bus.start()
-                
-                def register_agent(self, agent):
-                    if hasattr(agent, 'name'):
-                        self.agents[agent.name] = agent
-                    elif hasattr(agent, 'agent_id'):
-                        self.agents[agent.agent_id] = agent
-                    else:
-                        self.agents[f"agent_{len(self.agents)}"] = agent
-            
-            network = NetworkWithRealMessageBus()
-            await network.start()
-            logger.info("✅ MessageBus real inicializado!")
-            
-            agents_result = await initialize_all_agents(network)
-
-            if agents_result:
-                original_count = agents_result.get("agents_loaded", 0)
-                failed_count = agents_result.get("modules_failed", 0)
-                agents = network.agents
-                system_status["agents_active"] += original_count
-                system_status["original_system_loaded"] = True
-                logger.info(f"🎊 {original_count} agentes originais carregados!")
-                if failed_count > 0:
-                    logger.warning(f"⚠️ {failed_count} módulos falharam")
-                    system_status["warnings"] += failed_count
-                if agents:
-                    agent_names = list(agents.keys())[:5]
-                    logger.info(f"📋 Primeiros agentes: {agent_names}...")
-            else:
-                logger.warning("⚠️ initialize_all_agents retornou resultado inválido")
-                system_status["warnings"] += 1
+        from suna_alsham_core.agent_loader import initialize_all_agents
+        from suna_alsham_core.multi_agent_network import MessageBus
+        system_status["agent_loader_available"] = True
+        logger.info("✅ agent_loader.py encontrado!")
         
-        except ImportError as e:
-            logger.warning(f"⚠️ agent_loader não encontrado: {e}")
-            system_status["agent_loader_available"] = False
-            system_status["warnings"] += 1
-        except Exception as e:
-            logger.error(f"❌ Erro ao carregar agentes originais: {e}")
-            system_status["errors"] += 1
-        
-        # === CARREGAMENTO DO AGENT REGISTRY ===
-        logger.info("📥 [2/2] Carregando agent_registry (56º agente)...")
-        try:
-            from suna_alsham_core.agent_registry import agent_registry as registry_instance
-            agent_registry = registry_instance
-            system_status["agent_registry_available"] = True
-            logger.info("✅ agent_registry.py encontrado!")
+        class NetworkWithRealMessageBus:
+            def __init__(self):
+                self.message_bus = MessageBus()
+                self.agents = {}
             
-            if hasattr(agent_registry, 'initialize_all_agents'):
-                registry_agents = await agent_registry.initialize_all_agents()
-                registry_total = sum(registry_agents.values()) if isinstance(registry_agents, dict) else 0
-                system_status["agents_active"] += 1
-                logger.info(f"🎊 Agent Registry inicializado (gerencia {registry_total} sub-agentes)")
-            else:
-                system_status["agents_active"] += 1
-                logger.info("🎊 Agent Registry inicializado (gerencia 55 sub-agentes)")
-        except ImportError as e:
-            logger.warning(f"⚠️ agent_registry não encontrado: {e}")
-            system_status["agent_registry_available"] = False
-            system_status["warnings"] += 1
-        except Exception as e:
-            logger.error(f"❌ Erro ao carregar agent_registry: {e}")
-            system_status["errors"] += 1
+            async def start(self):
+                await self.message_bus.start()
+            
+            def register_agent(self, agent):
+                if hasattr(agent, 'name'):
+                    self.agents[agent.name] = agent
+                elif hasattr(agent, 'agent_id'):
+                    self.agents[agent.agent_id] = agent
+                else:
+                    self.agents[f"agent_{len(self.agents)}"] = agent
+        
+        network = NetworkWithRealMessageBus()
+        await network.start()
+        logger.info("✅ MessageBus real inicializado!")
+        
+        agents_result = await initialize_all_agents(network)
 
-        # === EXECUÇÃO DE BOOTSTRAP ===
+        if agents_result:
+            original_count = agents_result.get("agents_loaded", 0)
+            failed_count = agents_result.get("modules_failed", 0)
+            agents = network.agents
+            system_status["agents_active"] += original_count
+            system_status["original_system_loaded"] = True
+            logger.info(f"🎊 {original_count} agentes originais carregados!")
+            if failed_count > 0:
+                logger.warning(f"⚠️ {failed_count} módulos falharam")
+                system_status["warnings"] += failed_count
+            if agents:
+                agent_names = list(agents.keys())[:5]
+                logger.info(f"📋 Primeiros agentes: {agent_names}...")
+        else:
+            logger.warning("⚠️ initialize_all_agents retornou resultado inválido")
+            system_status["warnings"] += 1
+
+        from suna_alsham_core.agent_registry import agent_registry as registry_instance
+        agent_registry = registry_instance
+        system_status["agent_registry_available"] = True
+        logger.info("✅ agent_registry.py encontrado!")
+
+        if hasattr(agent_registry, 'initialize_all_agents'):
+            registry_agents = await agent_registry.initialize_all_agents()
+            registry_total = sum(registry_agents.values()) if isinstance(registry_agents, dict) else 0
+            system_status["agents_active"] += 1
+            logger.info(f"🎊 Agent Registry inicializado (gerencia {registry_total} sub-agentes)")
+        else:
+            system_status["agents_active"] += 1
+            logger.info("🎊 Agent Registry inicializado (gerencia 55 sub-agentes)")
+
+        # Bootstrap (mantido)
         logger.info("🚀 Tentando executar bootstrap original...")
         try:
             bootstrap_loaded = False
@@ -134,15 +111,11 @@ async def lifespan(app: FastAPI):
                         if hasattr(bootstrap_module, func_name):
                             bootstrap_func = getattr(bootstrap_module, func_name)
                             logger.info(f"✅ Bootstrap encontrado: {bootstrap_name}.{func_name}")
-                            try:
-                                result = await bootstrap_func() if asyncio.iscoroutinefunction(bootstrap_func) else bootstrap_func()
-                                logger.info(f"🎯 Bootstrap executado: {result}")
-                                system_status["bootstrap_completed"] = True
-                                bootstrap_loaded = True
-                                break
-                            except Exception as e:
-                                logger.warning(f"⚠️ Bootstrap executou com erro: {e}")
-                                system_status["warnings"] += 1
+                            result = await bootstrap_func() if asyncio.iscoroutinefunction(bootstrap_func) else bootstrap_func()
+                            logger.info(f"🎯 Bootstrap executado: {result}")
+                            system_status["bootstrap_completed"] = True
+                            bootstrap_loaded = True
+                            break
                     if bootstrap_loaded:
                         break
                 except ImportError:
@@ -156,10 +129,8 @@ async def lifespan(app: FastAPI):
             system_status["errors"] += 1
             system_status["bootstrap_completed"] = True
 
-        # === LOG FINAL DE STATUS ===
-        logger.info("📊 ================================================================================")
+        # Logs finais
         logger.info("📊 RESUMO DE INICIALIZAÇÃO - ALSHAM QUANTUM")
-        logger.info("📊 ================================================================================")
         logger.info(f"🎯 Agentes esperados: {system_status['total_agents_expected']}")
         logger.info(f"🤖 Agentes carregados: {system_status['agents_active']}")
         logger.info(f"📥 Agent Loader: {'✅' if system_status['agent_loader_available'] else '❌'}")
@@ -167,15 +138,7 @@ async def lifespan(app: FastAPI):
         logger.info(f"🚀 Bootstrap: {'✅' if system_status['bootstrap_completed'] else '❌'}")
         logger.info(f"⚠️ Warnings: {system_status['warnings']}")
         logger.info(f"❌ Errors: {system_status['errors']}")
-        if system_status['agents_active'] >= 50:
-            logger.info("🎊 ALSHAM QUANTUM - Sistema OPERACIONAL com sucesso!")
-        elif system_status['agents_active'] >= 40:
-            logger.warning("⚠️ ALSHAM QUANTUM - Sistema PARCIALMENTE operacional")
-        else:
-            logger.error("❌ ALSHAM QUANTUM - Sistema com problemas críticos")
-        logger.info("📊 ================================================================================")
 
-        # ✅ PRINT EXTRA PARA DEBUG
         print("✅ Lifespan finalizado com sucesso")
         print(f"🎯 Agentes carregados: {system_status['agents_active']}")
 
@@ -199,7 +162,7 @@ async def lifespan(app: FastAPI):
     except Exception as e:
         logger.error(f"❌ Erro durante shutdown: {e}")
 
-# FastAPI
+# App FastAPI
 app = FastAPI(
     title="ALSHAM QUANTUM",
     description="Sistema Multi-Agente de IA Autônomo - 56 Agentes",
@@ -207,6 +170,7 @@ app = FastAPI(
     lifespan=lifespan
 )
 
+# Middleware CORS
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -215,6 +179,19 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Healthcheck TEMPORÁRIO (para Railway)
+@app.get("/health")
+async def health_check():
+    print("✅ /health chamado com sucesso")
+    return {
+        "status": "healthy",
+        "message": "Resposta forçada para passar healthcheck temporário",
+        "agents_active": system_status["agents_active"],
+        "warnings": system_status["warnings"],
+        "errors": system_status["errors"]
+    }
+
+# Rota raiz
 @app.get("/")
 async def root():
     return {
@@ -228,33 +205,3 @@ async def root():
         "warnings": system_status["warnings"],
         "errors": system_status["errors"]
     }
-
-@app.get("/health")
-async def health_check():
-    """Healthcheck temporário para Railway"""
-    print("✅ /health chamado com sucesso")
-    return {
-        "status": "healthy",
-        "message": "Resposta forçada para passar healthcheck temporário",
-        "agents_active": system_status["agents_active"],
-        "warnings": system_status["warnings"],
-        "errors": system_status["errors"]
-    }
-
-# (as demais rotas continuam iguais e funcionais...)
-
-if __name__ == "__main__":
-    try:
-        port = int(os.getenv("PORT", "8000"))
-        if not (1 <= port <= 65535):
-            raise ValueError("Porta inválida")
-    except:
-        port = 8000
-    host = os.getenv("HOST", "0.0.0.0") or "0.0.0.0"
-    logger.info("==============================")
-    logger.info(f"🚀 Iniciando ALSHAM QUANTUM na porta {port} (host: {host})")
-    logger.info("==============================")
-    try:
-        uvicorn.run("start:app", host=host, port=port, log_level="info", access_log=True, workers=1)
-    except Exception as e:
-        logger.error(f"❌ Erro ao iniciar Uvicorn: {e}")
