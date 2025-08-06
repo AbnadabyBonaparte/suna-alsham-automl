@@ -15,7 +15,20 @@ from datetime import datetime, timedelta
 from enum import Enum
 from typing import Any, Dict, List, Optional, Set, Tuple
 
-from suna_alsham_core.real_evolution_engine import TrainingDataPoint
+# Temporariamente definindo TrainingDataPoint localmente até o módulo real_evolution_engine estar disponível
+@dataclass
+class TrainingDataPoint:
+    """Ponto de dados para treinamento do Evolution Engine."""
+    agent_id: str
+    state_features: Dict[str, Any]
+    action_taken: Dict[str, Any]
+    outcome_reward: float
+    context_metadata: Dict[str, Any] = field(default_factory=dict)
+    timestamp: datetime = field(default_factory=datetime.now)
+
+# Import comentado até o módulo estar disponível
+# from suna_alsham_core.real_evolution_engine import TrainingDataPoint
+
 from suna_alsham_core.multi_agent_network import (
     AgentMessage,
     AgentType,
@@ -904,30 +917,27 @@ class QuantumMetaCognitiveAgent(BaseNetworkAgent):
         # Implementação futura para introspecção sistêmica
         pass
 
-def create_meta_cognitive_agents(message_bus: Any) -> List[BaseNetworkAgent]:
-    """
-    Função de bootstrap para criação dos agentes Meta-Cognitivos Quantum.
-    Deve ser exportada no módulo principal para integração plug-and-play.
-    Cria e inicializa o QuantumOrchestratorAgent e o QuantumMetaCognitiveAgent.
-    :param message_bus: Barramento de mensagens do sistema.
-    :return: Lista de instâncias de agentes meta-cognitivos criados.
-    """
+def create_meta_cognitive_agents(message_bus) -> List[BaseNetworkAgent]:
+    """Cria os agentes Meta-Cognitivos Quantum."""
     agents: List[BaseNetworkAgent] = []
-
+    
     try:
         # Orquestrador Quantum
         orchestrator = QuantumOrchestratorAgent("orchestrator_001", message_bus)
         agents.append(orchestrator)
-
+        
         # Meta-Cognitivo Quantum
         meta_agent = QuantumMetaCognitiveAgent("metacognitive_001", message_bus)
-        # Inicia meta-cognição em background
         asyncio.create_task(meta_agent.start_meta_cognition())
         agents.append(meta_agent)
-
-        logger.info(f"✅ {len(agents)} agentes Meta-Cognitivos Quantum criados com sucesso.")
-
+        
+        logger.info("✅ Agentes Meta-Cognitivos Quantum criados com sucesso.")
+        
     except Exception as e:
         logger.critical(f"❌ Erro CRÍTICO criando agentes Meta-Cognitivos Quantum: {e}", exc_info=True)
-
+    
     return agents
+
+def create_agents(message_bus):
+    """Factory function obrigatória para o bootstrap."""
+    return create_meta_cognitive_agents(message_bus)
