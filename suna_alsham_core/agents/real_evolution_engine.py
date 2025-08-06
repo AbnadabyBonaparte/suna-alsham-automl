@@ -538,16 +538,20 @@ class RealEvolutionEngine(BaseNetworkAgent):
         }
 
 
-def create_evolution_engine_agents() -> List[BaseNetworkAgent]:
-    """
-    Factory function to create and initialize the RealEvolutionEngine agent(s) for the ALSHAM QUANTUM system.
 
-    This function instantiates the RealEvolutionEngine, logs all relevant events for diagnostics,
-    and returns it in a list for registration in the agent registry. Handles errors robustly
-    and ensures the agent is ready for operation.
+def create_agents(message_bus: Any) -> List[BaseNetworkAgent]:
+    """
+    Função fábrica para criar e inicializar o(s) RealEvolutionEngine(s) do sistema ALSHAM QUANTUM.
+
+    Esta função instancia o RealEvolutionEngine, registra todos os eventos relevantes para diagnóstico
+    e retorna em uma lista para registro no agent registry. Lida com erros de forma robusta
+    e garante que o agente esteja pronto para operação.
+
+    Args:
+        message_bus (Any): O barramento de mensagens ou canal de comunicação para mensagens entre agentes (não utilizado neste agente).
 
     Returns:
-        List[BaseNetworkAgent]: A list containing the initialized RealEvolutionEngine instance(s).
+        List[BaseNetworkAgent]: Uma lista contendo a(s) instância(s) inicializada(s) de RealEvolutionEngine.
     """
     agents: List[BaseNetworkAgent] = []
     try:
