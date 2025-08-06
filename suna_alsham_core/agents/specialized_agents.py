@@ -253,11 +253,28 @@ class NewAgentOnboardingAgent(BaseNetworkAgent):
             self.onboarding_task.cancel()
 
 
-def create_specialized_agents(message_bus) -> List[BaseNetworkAgent]:
+def create_specialized_agents(message_bus: Any) -> List[BaseNetworkAgent]:
+    """
+    Função de bootstrap para criação dos agentes especializados do sistema.
+    Cria e inicializa os agentes TaskDelegatorAgent e NewAgentOnboardingAgent.
+    :param message_bus: Barramento de mensagens do sistema.
+    :return: Lista de instâncias de agentes especializados criados.
+    """
+    agents: List[BaseNetworkAgent] = []
     logger.info("🛠️ Criando agentes Especializados...")
-    agents = [
-        TaskDelegatorAgent("task_delegator_001", message_bus),
-        NewAgentOnboardingAgent("onboarding_001", message_bus),
+
+    agent_configs = [
+        {"id": "task_delegator_001", "class": TaskDelegatorAgent},
+        {"id": "onboarding_001", "class": NewAgentOnboardingAgent},
     ]
-    logger.info(f"✅ {len(agents)} agentes Especializados criados com otimizações.")
+
+    for config in agent_configs:
+        try:
+            agent = config["class"](config["id"], message_bus)
+            agents.append(agent)
+            logger.info(f"✅ Agente especializado {config['id']} criado com sucesso.")
+        except Exception as e:
+            logger.error(f"❌ Erro criando agente especializado {config['id']}: {e}", exc_info=True)
+
+    logger.info(f"🛠️ Total de agentes especializados criados: {len(agents)}")
     return agents
