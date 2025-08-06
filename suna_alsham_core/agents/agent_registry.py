@@ -1,7 +1,9 @@
 """
-ALSHAM QUANTUM - Registry Central de Agentes (SINTAXE CORRIGIDA)
-Gerenciamento completo dos 34 agentes do registry
+ALSHAM QUANTUM - Registry Central de Agentes
+Registry profissional e padronizado para gerenciamento de todos os agentes do sistema.
+Inclui integração com agent_loader via factory create_agents.
 """
+
 import logging
 import asyncio
 from typing import Dict, List, Any, Optional
@@ -12,15 +14,19 @@ from abc import ABC, abstractmethod
 logger = logging.getLogger(__name__)
 
 class AgentType(Enum):
-    """Tipos de agentes no sistema"""
+    """
+    Tipos de agentes no sistema ALSHAM QUANTUM.
+    """
     SPECIALIZED = "specialized"
-    SYSTEM = "system" 
+    SYSTEM = "system"
     SERVICE = "service"
     META_COGNITIVE = "meta_cognitive"
     DOMAIN = "domain"
 
 class AgentStatus(Enum):
-    """Status dos agentes"""
+    """
+    Status possíveis de um agente no sistema.
+    """
     INACTIVE = "inactive"
     INITIALIZING = "initializing"
     ACTIVE = "active"
@@ -29,7 +35,9 @@ class AgentStatus(Enum):
 
 @dataclass
 class AgentInfo:
-    """Informações de um agente"""
+    """
+    Estrutura de dados para armazenar informações e instância de um agente.
+    """
     id: str
     name: str
     type: AgentType
@@ -38,46 +46,50 @@ class AgentInfo:
     instance: Optional[Any] = None
 
 class BaseAgent(ABC):
-    """Classe base para todos os agentes"""
-    
-    def __init__(self, agent_id: str, name: str):
-        self.agent_id = agent_id
-        self.name = name
-        self.status = AgentStatus.INACTIVE
+    """
+    Classe base abstrata para todos os agentes do sistema.
+    Fornece interface padrão para inicialização, execução e desligamento.
+    """
+    def __init__(self, agent_id: str, name: str) -> None:
+        self.agent_id: str = agent_id
+        self.name: str = name
+        self.status: AgentStatus = AgentStatus.INACTIVE
         self.logger = logging.getLogger(f"agent.{agent_id}")
-    
+
     @abstractmethod
     async def initialize(self) -> bool:
-        """Inicializar o agente"""
+        """Inicializa o agente. Deve ser implementado pelas subclasses."""
         pass
-    
+
     @abstractmethod
     async def execute(self, task: Dict[str, Any]) -> Dict[str, Any]:
-        """Executar uma tarefa"""
+        """Executa uma tarefa. Deve ser implementado pelas subclasses."""
         pass
-    
+
     @abstractmethod
     async def shutdown(self) -> bool:
-        """Desligar o agente"""
+        """Desliga o agente. Deve ser implementado pelas subclasses."""
         pass
 
 # ===== AGENTES SIMPLIFICADOS =====
 
 class MockAgent(BaseAgent):
-    """Agente mock para registry"""
-    
+    """
+    Agente mock para testes e fallback do registry.
+    """
     async def initialize(self) -> bool:
         self.status = AgentStatus.ACTIVE
         return True
-    
+
     async def execute(self, task: Dict[str, Any]) -> Dict[str, Any]:
         return {"status": "completed", "agent": self.agent_id}
-    
+
     async def shutdown(self) -> bool:
         self.status = AgentStatus.INACTIVE
         return True
 
 # ===== REGISTRY PRINCIPAL =====
+
 
 
 class AgentRegistry:
@@ -86,7 +98,6 @@ class AgentRegistry:
     Gerencia instâncias, status e operações de todos os agentes do sistema.
     Implementa singleton global para acesso centralizado.
     """
-
     def __init__(self) -> None:
         self.agents: Dict[str, AgentInfo] = {}
         self._initialize_mock_agents()
@@ -134,7 +145,7 @@ class AgentRegistry:
         Inicializa todos os agentes registrados, atualizando status e contando por tipo.
         :return: Dicionário com contagem de agentes ativos por tipo.
         """
-        counters = {agent_type.value: 0 for agent_type in AgentType}
+        counters: Dict[str, int] = {agent_type.value: 0 for agent_type in AgentType}
         for agent_info in self.agents.values():
             try:
                 agent_info.status = AgentStatus.INITIALIZING
@@ -169,8 +180,8 @@ class AgentRegistry:
         Retorna o status geral do sistema, incluindo totais por status e tipo.
         :return: Dicionário com totais e breakdown dos agentes.
         """
-        status_counts = {status.value: 0 for status in AgentStatus}
-        type_counts = {agent_type.value: 0 for agent_type in AgentType}
+        status_counts: Dict[str, int] = {status.value: 0 for status in AgentStatus}
+        type_counts: Dict[str, int] = {agent_type.value: 0 for agent_type in AgentType}
         for agent_info in self.agents.values():
             status_counts[agent_info.status.value] += 1
             type_counts[agent_info.type.value] += 1
@@ -180,6 +191,17 @@ class AgentRegistry:
             "by_type": type_counts,
             "active_agents": status_counts.get("active", 0)
         }
+
+# Instância global
+agent_registry = AgentRegistry()
+
+# Factory para integração com agent_loader
+def create_agents(message_bus: Any) -> List[BaseAgent]:
+    """
+    Factory function para integração com agent_loader.
+    Retorna uma lista com a instância global do registry como agente único.
+    """
+    return [agent_registry]
 
 # Instância global
 agent_registry = AgentRegistry()
