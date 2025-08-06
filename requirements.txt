@@ -1,105 +1,40 @@
-# ALSHAM QUANTUM - Requirements Otimizado
-# Sistema Multi-Agente de IA Autônomo
-# Versão sem conflitos e com CPU-only para PyTorch
+# ALSHAM QUANTUM - Requirements Mínimo para Deploy Online
+# Versão leve sem GPU/CUDA
 
-# ===== CORE FRAMEWORK =====
+# Core essencial
 fastapi==0.104.1
 uvicorn[standard]==0.24.0
 pydantic==2.5.0
 python-multipart==0.0.6
 
-# ===== WEB & API =====
-httpx==0.25.2
+# Web
 aiohttp==3.9.1
+httpx==0.25.2
 requests==2.31.0
-websockets==12.0
 
-# ===== WEB SCRAPING =====
-beautifulsoup4==4.12.2
-
-# ===== DATA VISUALIZATION =====
-matplotlib==3.8.2
-seaborn==0.12.2
-
-# ===== DATABASE & CACHE =====
+# Database
 sqlalchemy==2.0.23
-alembic==1.13.1
 redis==5.0.1
 psycopg2-binary==2.9.9
-asyncpg==0.29.0
 
-# ===== AI PROVIDERS (Versões fixas para evitar conflitos) =====
+# IA Providers (versões leves)
 openai==1.6.1
-anthropic==0.7.7
-google-generativeai==0.3.2
 
-# ===== MESSAGE BUS & QUEUES =====
-celery==5.3.4
-kombu==5.3.4
-
-# ===== NOTIFICATIONS =====
-email-validator==2.1.0
-twilio==8.10.3
-requests-oauthlib==1.3.1
-slack-sdk==3.26.1
-discord.py==2.3.2
-python-telegram-bot==20.7
-
-# ===== DATA PROCESSING =====
+# Data
 pandas==2.1.4
 numpy==1.25.2
-scikit-learn==1.3.2
 
-# ===== ML & AI (CPU-only versions) =====
-# PyTorch CPU-only (muito mais leve)
---index-url https://download.pytorch.org/whl/cpu
-torch==2.5.1+cpu
-torchvision==0.20.1+cpu
-
-# Transformers sem CUDA
-transformers==4.36.0
-sentence-transformers==2.2.0
-
-# ===== LANGCHAIN (versões específicas) =====
-langchain==0.0.350
-langchain-openai==0.0.2
-langchain-anthropic==0.0.1
-
-# ===== MONITORING =====
+# Monitoring
 psutil==5.9.6
-prometheus-client==0.19.0
 
-# ===== SECURITY =====
-cryptography==41.0.7
-bcrypt==4.1.2
-python-jose[cryptography]==3.3.0
-passlib[bcrypt]==1.7.4
-
-# ===== UTILITIES =====
+# Utilities
 python-dotenv==1.0.0
 click==8.1.7
-rich==13.7.0
-
-# ===== ASYNC & FILES =====
 aiofiles==23.2.1
 
-# ===== LOGGING =====
+# Logging
 loguru==0.7.2
-structlog==23.2.0
 
-# ===== TESTING =====
-pytest==7.4.3
-pytest-asyncio==0.21.1
-
-# ===== FILE PROCESSING =====
-pillow==10.1.0
-PyPDF2==3.0.1
-python-docx==1.1.0
-openpyxl==3.1.2
-
-# ===== DEVELOPMENT =====
-black==23.11.0
-
-# ===== RAILWAY SPECIFIC =====
+# Railway/Heroku
 gunicorn==21.2.0
 python-json-logger==2.0.7
