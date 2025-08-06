@@ -149,13 +149,26 @@ class CodeAnalyzerAgent(BaseNetworkAgent):
         return 100.0
 
 
-def create_code_analyzer_agent(message_bus) -> List[BaseNetworkAgent]:
-    """Cria o agente Analisador de Código."""
-    agents = []
-    logger.info("🔍 Criando CodeAnalyzerAgent...")
+def create_code_analyzer_agent(message_bus: Any) -> List[BaseNetworkAgent]:
+    """
+    Factory function to create and initialize the CodeAnalyzerAgent(s) for the ALSHAM QUANTUM system.
+
+    This function instantiates the CodeAnalyzerAgent, logs all relevant events for diagnostics,
+    and returns it in a list for registration in the agent registry. Handles errors robustly
+    and ensures the agent is ready for operation.
+
+    Args:
+        message_bus (Any): The message bus or communication channel for agent messaging.
+
+    Returns:
+        List[BaseNetworkAgent]: A list containing the initialized CodeAnalyzerAgent instance(s).
+    """
+    agents: List[BaseNetworkAgent] = []
+    logger.info("🔍 [Factory] Criando CodeAnalyzerAgent...")
     try:
         agent = CodeAnalyzerAgent("code_analyzer_001", message_bus)
         agents.append(agent)
+        logger.info(f"🔍 CodeAnalyzerAgent criado com sucesso: {agent.agent_id}")
     except Exception as e:
-        logger.error(f"❌ Erro crítico criando CodeAnalyzerAgent: {e}", exc_info=True)
+        logger.critical(f"❌ Erro crítico ao criar CodeAnalyzerAgent: {e}", exc_info=True)
     return agents
