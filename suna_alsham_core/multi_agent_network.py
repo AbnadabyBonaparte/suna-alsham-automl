@@ -176,11 +176,51 @@ class BaseNetworkAgent:
         """ Deve ser implementado nas subclasses. """
         pass
 
-    def create_message(self, recipient_id: str, message_type: MessageType, content: Dict, priority: Priority = Priority.NORMAL, callback_id: Optional[str] = None) -> AgentMessage:
-        return AgentMessage(sender_id=self.agent_id, recipient_id=recipient_id, message_type=message_type, content=content, priority=priority, callback_id=callback_id)
+    def create_message(
+        self,
+        recipient_id: str,
+        message_type: MessageType,
+        content: Dict[str, Any],
+        priority: Priority = Priority.NORMAL,
+        callback_id: Optional[str] = None
+    ) -> AgentMessage:
+        """
+        Cria uma mensagem estruturada para comunicação entre agentes.
 
-    def create_response(self, original_message: AgentMessage, content: Dict) -> AgentMessage:
-        """Cria uma mensagem de resposta baseada na mensagem original"""
+        Args:
+            recipient_id (str): ID do agente destinatário.
+            message_type (MessageType): Tipo da mensagem (REQUEST, RESPONSE, etc).
+            content (Dict[str, Any]): Conteúdo da mensagem.
+            priority (Priority, opcional): Prioridade da mensagem. Default: NORMAL.
+            callback_id (Optional[str], opcional): ID de callback para rastreamento de respostas.
+
+        Returns:
+            AgentMessage: Instância de mensagem pronta para envio.
+        """
+        return AgentMessage(
+            sender_id=self.agent_id,
+            recipient_id=recipient_id,
+            message_type=message_type,
+            content=content,
+            priority=priority,
+            callback_id=callback_id
+        )
+
+    def create_response(
+        self,
+        original_message: AgentMessage,
+        content: Dict[str, Any]
+    ) -> AgentMessage:
+        """
+        Cria uma mensagem de resposta baseada em uma mensagem original recebida.
+
+        Args:
+            original_message (AgentMessage): Mensagem original recebida.
+            content (Dict[str, Any]): Conteúdo da resposta.
+
+        Returns:
+            AgentMessage: Mensagem de resposta pronta para envio.
+        """
         return self.create_message(
             recipient_id=original_message.sender_id,
             message_type=MessageType.RESPONSE,
@@ -188,16 +228,43 @@ class BaseNetworkAgent:
             callback_id=original_message.callback_id
         )
 
-    async def publish_response(self, original_message: AgentMessage, content: Dict):
+    async def publish_response(
+        self,
+        original_message: AgentMessage,
+        content: Dict[str, Any]
+    ) -> None:
+        """
+        Publica uma resposta a partir de uma mensagem original.
+
+        Args:
+            original_message (AgentMessage): Mensagem original recebida.
+            content (Dict[str, Any]): Conteúdo da resposta.
+        """
         response = self.create_response(original_message, content)
         await self.message_bus.publish(response)
 
-    async def publish_error_response(self, original_message: AgentMessage, error_message: str):
+    async def publish_error_response(
+        self,
+        original_message: AgentMessage,
+        error_message: str
+    ) -> None:
+        """
+        Publica uma resposta de erro padronizada a partir de uma mensagem original.
+
+        Args:
+            original_message (AgentMessage): Mensagem original recebida.
+            error_message (str): Mensagem de erro a ser enviada.
+        """
         error_content = {"status": "error", "message": error_message}
         response = self.create_response(original_message, error_content)
         await self.message_bus.publish(response)
 
     @property
     def timestamp(self) -> str:
-        """Timestamp atual para logs e identificação"""
+        """
+        Retorna o timestamp atual no formato YYYYMMDD_HHMMSS para logs e identificação.
+
+        Returns:
+            str: Timestamp formatado.
+        """
         return datetime.now().strftime("%Y%m%d_%H%M%S")
