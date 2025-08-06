@@ -71,27 +71,39 @@ class VideoAutomationAgent(BaseNetworkAgent):
         if message.message_type == MessageType.REQUEST and message.content.get("request_type") == "create_video_from_images":
             await self.handle_create_video_request(message)
 
-    async def handle_create_video_request(self, message: AgentMessage):
+    async def handle_create_video_request(self, message: AgentMessage) -> None:
         """
-        Lida com a lógica de criar um vídeo a partir de uma lista de imagens.
+        Handles the logic for creating a video from a list of images and optional audio.
+
+        This method validates the input, loads images, creates a video clip using MoviePy,
+        adds background audio if provided, writes the final video file, and returns the result.
+        Robust error handling and logging are provided for diagnostics and production reliability.
+
+        Args:
+            message (AgentMessage): The incoming message containing image paths, audio path, and other options.
+
+        Returns:
+            None
         """
-        image_paths = message.content.get("image_paths", [])
-        audio_path = message.content.get("audio_path")
-        duration_per_image = message.content.get("duration_per_image", 3) # segundos
-        output_filename = message.content.get("output_filename", f"video_{self.timestamp}.mp4")
+        image_paths: List[str] = message.content.get("image_paths", [])
+        audio_path: str = message.content.get("audio_path")
+        duration_per_image: int = message.content.get("duration_per_image", 3)  # segundos
+        output_filename: str = message.content.get("output_filename", f"video_{self.timestamp}.mp4")
 
         if not image_paths:
+            logger.warning("[VideoAutomationAgent] Nenhuma imagem fornecida para a criação do vídeo.")
             await self.publish_error_response(message, "Nenhuma imagem fornecida para a criação do vídeo.")
             return
 
-        logger.info(f"Iniciando criação de vídeo '{output_filename}' com {len(image_paths)} imagens.")
+        logger.info(f"[VideoAutomationAgent] Iniciando criação de vídeo '{output_filename}' com {len(image_paths)} imagens.")
 
         try:
             # Validar e carregar imagens
-            valid_images = [path for path in image_paths if Path(path).exists() and Path(path).is_file()]
+            valid_images: List[str] = [path for path in image_paths if Path(path).exists() and Path(path).is_file()]
             if not valid_images:
-                 await self.publish_error_response(message, "Nenhuma das imagens fornecidas foi encontrada.")
-                 return
+                logger.warning("[VideoAutomationAgent] Nenhuma das imagens fornecidas foi encontrada.")
+                await self.publish_error_response(message, "Nenhuma das imagens fornecidas foi encontrada.")
+                return
 
             # Cria o clipe de vídeo a partir da sequência de imagens
             video_clip = ImageSequenceClip(valid_images, durations=[duration_per_image] * len(valid_images))
@@ -101,23 +113,23 @@ class VideoAutomationAgent(BaseNetworkAgent):
                 audio_clip = AudioFileClip(audio_path)
                 # Garante que o áudio tenha a mesma duração do vídeo
                 video_clip = video_clip.set_audio(audio_clip.set_duration(video_clip.duration))
-            
+
             # Define o caminho de saída
-            output_path = self.output_dir / output_filename
-            
+            output_path: Path = self.output_dir / output_filename
+
             # Escreve o arquivo de vídeo final
             video_clip.write_videofile(
                 str(output_path),
                 codec="libx264",
                 audio_codec="aac",
                 fps=24,
-                logger=None # Desativa o logger verboso do moviepy
+                logger=None  # Desativa o logger verboso do moviepy
             )
 
-            logger.info(f"Vídeo criado com sucesso em: {output_path}")
-            
+            logger.info(f"[VideoAutomationAgent] Vídeo criado com sucesso em: {output_path}")
+
             # Responde com sucesso
-            response_content = {
+            response_content: Dict[str, Any] = {
                 "status": "completed",
                 "video_path": str(output_path),
                 "duration": video_clip.duration,
@@ -126,5 +138,5 @@ class VideoAutomationAgent(BaseNetworkAgent):
             await self.publish_response(message, response_content)
 
         except Exception as e:
-            logger.error(f"Erro ao criar o vídeo: {e}", exc_info=True)
+            logger.critical(f"[VideoAutomationAgent] Erro ao criar o vídeo: {e}", exc_info=True)
             await self.publish_error_response(message, f"Ocorreu um erro interno durante a criação do vídeo: {e}")
