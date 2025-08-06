@@ -79,8 +79,24 @@ class WebSearchAgent(BaseNetworkAgent):
         return results
 
 def create_web_search_agent(message_bus) -> List[BaseNetworkAgent]:
+    """
+    Factory function to create and initialize the WebSearchAgent(s) for the ALSHAM QUANTUM system.
+
+    This function instantiates the WebSearchAgent, logs all relevant events for diagnostics,
+    and returns it in a list for registration in the agent registry. Handles errors robustly
+    and ensures the agent is ready for operation.
+
+    Args:
+        message_bus (Any): The message bus or communication channel for agent messaging.
+
+    Returns:
+        List[BaseNetworkAgent]: A list containing the initialized WebSearchAgent instance(s).
+    """
+    agents: List[BaseNetworkAgent] = []
     try:
-        return [WebSearchAgent("web_search_001", message_bus)]
+        agent = WebSearchAgent("web_search_001", message_bus)
+        agents.append(agent)
+        logger.info(f"🔎 WebSearchAgent criado com sucesso: {agent.agent_id}")
     except Exception as e:
-        logger.error(f"❌ Erro crítico criando WebSearchAgent real: {e}", exc_info=True)
-        return []
+        logger.critical(f"❌ Erro crítico ao criar WebSearchAgent: {e}", exc_info=True)
+    return agents
