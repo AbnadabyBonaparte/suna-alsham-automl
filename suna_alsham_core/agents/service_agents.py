@@ -69,8 +69,6 @@ class CommunicationAgent(BaseNetworkAgent):
 
     async def _process_communication_request(self, data: Dict[str, Any]) -> Dict[str, Any]:
         """[AUTENTICIDADE] Processa e roteia uma requisição de comunicação."""
-        # Na Fase 3, esta lógica será expandida para suportar roteamento complexo,
-        # como multicast e publish/subscribe com o MessageBus aprimorado.
         logger.info(f"[Simulação] Roteando mensagem para {data.get('recipients')}")
         return {"status": "completed_simulated", "message": "Mensagem roteada (simulado)."}
 
@@ -107,7 +105,6 @@ class DecisionAgent(BaseNetworkAgent):
         if not options:
             return {"status": "error", "message": "Nenhuma opção fornecida para decisão."}
 
-        # Lógica de decisão autônoma (a mais simples)
         best_option = max(options, key=lambda x: x.get("score", 0))
         
         return {
@@ -138,3 +135,10 @@ def create_service_agents(message_bus) -> List[BaseNetworkAgent]:
             logger.error(f"❌ Erro criando agente de serviço {config['id']}: {e}", exc_info=True)
     
     return agents
+
+
+# --- FACTORY FUNCTION OBRIGATÓRIA PARA O BOOTSTRAP ---
+
+def create_agents():
+    from suna_alsham_core.message_bus import global_message_bus
+    return create_service_agents(global_message_bus)
