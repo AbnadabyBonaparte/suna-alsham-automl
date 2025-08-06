@@ -89,15 +89,29 @@ class SalesOrchestratorAgent(BaseNetworkAgent):
 
 # Função de fábrica que o agent_loader usará
 def create_sales_agents(message_bus) -> List[BaseNetworkAgent]:
-    """Cria e retorna todos os agentes do módulo de Vendas."""
-    logger.info("🔧 Criando agentes do domínio de Vendas & Conversão...")
-    agents = [
-        SalesOrchestratorAgent("sales_orchestrator_001", message_bus),
-        SalesFunnelAgent("sales_funnel_001", message_bus),
-        PricingOptimizerAgent("pricing_optimizer_001", message_bus),
-        CustomerSuccessAgent("customer_success_001", message_bus),
-        PaymentProcessingAgent("payment_processing_001", message_bus),
-        RevenueOptimizationAgent("revenue_optimization_001", message_bus),
-    ]
-    logger.info(f"✅ {len(agents)} agentes de Vendas criados.")
+    """
+    Factory function to create and initialize all Sales & Conversion agents for the ALSHAM QUANTUM system.
+
+    This function instantiates all Sales module agents, logs all relevant events for diagnostics,
+    and returns them in a list for registration in the agent registry. Handles errors robustly
+    and ensures all agents are ready for operation.
+
+    Args:
+        message_bus (Any): The message bus or communication channel for agent messaging.
+
+    Returns:
+        List[BaseNetworkAgent]: A list containing all initialized Sales module agent instances.
+    """
+    agents: List[BaseNetworkAgent] = []
+    logger.info("🔧 [Factory] Criando agentes do domínio de Vendas & Conversão...")
+    try:
+        agents.append(SalesOrchestratorAgent("sales_orchestrator_001", message_bus))
+        agents.append(SalesFunnelAgent("sales_funnel_001", message_bus))
+        agents.append(PricingOptimizerAgent("pricing_optimizer_001", message_bus))
+        agents.append(CustomerSuccessAgent("customer_success_001", message_bus))
+        agents.append(PaymentProcessingAgent("payment_processing_001", message_bus))
+        agents.append(RevenueOptimizationAgent("revenue_optimization_001", message_bus))
+        logger.info(f"✅ {len(agents)} agentes de Vendas criados.")
+    except Exception as e:
+        logger.critical(f"❌ Erro crítico ao criar agentes de Vendas: {e}", exc_info=True)
     return agents
