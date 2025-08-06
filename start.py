@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 """
 ALSHAM QUANTUM - Sistema de Inicialização Principal
-Versão Railway Safe - Healthcheck Imediato
+Modo compatível com Railway (Healthcheck imediato e inicialização paralela)
 """
 import os
 import logging
 import asyncio
-from contextlib import asynccontextmanager
+import threading
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -19,25 +19,17 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 # Estado do sistema
-agents = {}
-agent_registry = None
-network = None
 system_status = {
-    "bootstrap_completed": False,
-    "system_healthy": True,
-    "agents_active": 0,
-    "total_agents_expected": 56,
-    "warnings": 0,
+    "agents_loaded": False,
     "errors": 0,
-    "agent_loader_available": False,
-    "agent_registry_available": False,
-    "original_system_loaded": False
+    "warnings": 0,
+    "success_rate": "0%"
 }
 
 # Criação do app principal
 app = FastAPI(
     title="ALSHAM QUANTUM",
-    description="Sistema Multi-Agente de IA Autônomo - Railway Safe Mode",
+    description="Sistema Multi-Agente de IA Autônomo - Railway Safe Startup",
     version="2.0.0"
 )
 
@@ -50,38 +42,33 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Endpoint de healthcheck IMEDIATO (sem depender de nenhuma carga)
+# Endpoint de healthcheck IMEDIATO
 @app.get("/health")
 async def health_check():
     return {
         "status": "healthy",
         "message": "Healthcheck imediato - Railway Safe Mode",
-        "success_rate": "n/a (modo simplificado)",
-        "agents_loaded": "verificando..."
+        "agents_ready": system_status["agents_loaded"],
+        "success_rate": system_status["success_rate"]
     }
 
-# Rota raiz simples
+# Rota raiz
 @app.get("/")
 async def root():
     return {
         "system": "ALSHAM QUANTUM",
         "version": "2.0.0",
         "status": "online",
-        "message": "Sistema iniciado em modo seguro. Agentes em carregamento."
+        "message": "Sistema iniciado. Agentes carregando em segundo plano."
     }
 
-# Lifespan separado (NÃO bloqueia o startup do Railway)
-@asynccontextmanager
-async def lifespan(app: FastAPI):
-    global agents, agent_registry, network
-
-    logger.info("🚀 ALSHAM QUANTUM - Modo seguro iniciado")
-
+# Inicializador de agentes assíncrono em background
+async def initialize_agents_background():
     try:
         from suna_alsham_core.agent_loader import initialize_all_agents
         from suna_alsham_core.multi_agent_network import MessageBus
 
-        class SafeNetwork:
+        class Network:
             def __init__(self):
                 self.message_bus = MessageBus()
                 self.agents = {}
@@ -93,31 +80,27 @@ async def lifespan(app: FastAPI):
                 name = getattr(agent, 'name', getattr(agent, 'agent_id', f"agent_{len(self.agents)}"))
                 self.agents[name] = agent
 
-        network = SafeNetwork()
+        network = Network()
         await network.start()
-
         result = await initialize_all_agents(network)
-        agents = network.agents
 
-        system_status["agents_active"] = result.get("agents_loaded", 0)
-        system_status["warnings"] = result.get("modules_failed", 0)
-        system_status["original_system_loaded"] = True
-        system_status["agent_loader_available"] = True
+        system_status["agents_loaded"] = True
+        success = result.get("agents_loaded", 0)
+        fail = result.get("modules_failed", 0)
+        total = success + fail if (success + fail) > 0 else 1
+        system_status["success_rate"] = f"{(success / total * 100):.1f}%"
+        system_status["warnings"] = fail
 
-        logger.info(f"✅ {system_status['agents_active']} agentes carregados")
+        logger.info(f"✅ Agentes carregados: {success} | Falhas: {fail}")
 
     except Exception as e:
-        logger.error(f"❌ Erro ao carregar agentes: {e}")
+        logger.error(f"❌ Erro na inicialização dos agentes: {e}")
         system_status["errors"] += 1
 
-    yield
-
-    logger.info("🔄 Encerrando sistema")
-    try:
-        if network and hasattr(network.message_bus, 'stop'):
-            await network.message_bus.stop()
-    except Exception as e:
-        logger.error(f"❌ Falha ao encerrar: {e}")
-
-# Injetar lifespan no app
-app.router.lifespan_context = lifespan
+# Função para iniciar em thread paralela
+@app.on_event("startup")
+def start_background_tasks():
+    def runner():
+        asyncio.run(initialize_agents_background())
+    thread = threading.Thread(target=runner)
+    thread.start()
