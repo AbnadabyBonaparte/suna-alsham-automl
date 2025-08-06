@@ -75,37 +75,51 @@ class DataCollectorAgent(BaseNetworkAgent):
         if message.message_type == MessageType.REQUEST and message.content.get("request_type") == "collect_sql_data":
             await self.handle_collect_sql_request(message)
 
-    async def handle_collect_sql_request(self, message: AgentMessage):
+    async def handle_collect_sql_request(self, message: AgentMessage) -> None:
         """
-        Lida com a lógica de coletar dados de um banco de dados SQL.
+        Handles the logic for collecting data from a SQL database source.
+
+        This method validates the incoming SQL query, executes it using SQLAlchemy and Pandas,
+        serializes the result, and sends a preview back to the requester. Robust error handling
+        and logging are provided for diagnostics and production reliability.
+
+        Args:
+            message (AgentMessage): The incoming message containing the SQL query to execute.
+
+        Returns:
+            None
         """
-        query = message.content.get("query")
+        query: str = message.content.get("query")
         if not query:
+            logger.warning("Requisição recebida sem query SQL. Abortando coleta.")
             await self.publish_error_response(message, "A query SQL não foi fornecida.")
             return
 
-        logger.info(f"Executando a query: {query[:100]}...")
+        logger.info(f"[DataCollectorAgent] Executando a query SQL (preview): {query[:100]}...")
 
         try:
-            with self.db_engine.connect() as connection:
-                # Usando Pandas para executar a query e obter um DataFrame
-                df = pd.read_sql_query(sql=text(query), con=connection)
-                # Converte o DataFrame para uma lista de dicionários para ser serializável
-                collected_data = df.to_dict(orient='records')
+            if not self.db_engine:
+                raise RuntimeError("Motor de banco de dados não inicializado.")
 
-            logger.info(f"{len(collected_data)} registros coletados do banco de dados.")
-            
-            response_content = {
+            with self.db_engine.connect() as connection:
+                # Executa a query e obtém um DataFrame
+                df = pd.read_sql_query(sql=text(query), con=connection)
+                # Serializa o DataFrame para lista de dicionários
+                collected_data: List[dict] = df.to_dict(orient='records')
+
+            logger.info(f"[DataCollectorAgent] {len(collected_data)} registros coletados do banco de dados.")
+
+            response_content: Dict[str, Any] = {
                 "status": "completed",
                 "source_type": "sql",
                 "collected_rows": len(collected_data),
-                "data_preview": collected_data[:5] # Envia uma amostra dos dados
+                "data_preview": collected_data[:5]  # Envia uma amostra dos dados
             }
             await self.publish_response(message, response_content)
 
         except SQLAlchemyError as e:
-            logger.error(f"Erro de banco de dados ao executar a query: {e}", exc_info=True)
+            logger.error(f"[DataCollectorAgent] Erro de banco de dados ao executar a query: {e}", exc_info=True)
             await self.publish_error_response(message, f"Erro de Banco de Dados: {e}")
         except Exception as e:
-            logger.error(f"Erro inesperado na coleta de dados: {e}", exc_info=True)
+            logger.critical(f"[DataCollectorAgent] Erro inesperado na coleta de dados: {e}", exc_info=True)
             await self.publish_error_response(message, "Ocorreu um erro interno inesperado na coleta de dados.")
