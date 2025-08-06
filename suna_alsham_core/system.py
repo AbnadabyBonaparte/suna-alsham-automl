@@ -86,13 +86,31 @@ class SUNAAlshamSystemV2:
         return time.time() - self.start_time
 
     def get_system_status(self) -> Dict[str, Any]:
-        network_status = self.network.get_network_status()
-        return {
-            "system_status": self.system_status,
-            "total_agents": self.total_agents,
-            "active_agents": network_status.get("active_agents", 0),
-            "agent_categories": dict(self.agent_categories),
-            "uptime_seconds": self.get_uptime(),
-            "failed_modules": self.failed_modules,
-            "network_metrics": network_status.get("message_bus_metrics", {})
-        }
+        """
+        Returns a detailed status report of the SUNA-ALSHAM v2.1 system, including agent counts, categories,
+        uptime, failed modules, and network metrics. Handles errors robustly and logs for diagnostics.
+
+        Returns:
+            Dict[str, Any]: Dictionary with system status, agent stats, categories, uptime, failures, and metrics.
+        """
+        try:
+            network_status = self.network.get_network_status()
+            status_report = {
+                "system_status": self.system_status,
+                "total_agents": self.total_agents,
+                "active_agents": network_status.get("active_agents", 0),
+                "agent_categories": dict(self.agent_categories),
+                "uptime_seconds": self.get_uptime(),
+                "failed_modules": self.failed_modules,
+                "network_metrics": network_status.get("message_bus_metrics", {})
+            }
+            logger.debug(f"[SystemStatus] Status report generated: {status_report}")
+            return status_report
+        except Exception as e:
+            logger.error(f"Erro ao coletar system status: {e}", exc_info=True)
+            return {
+                "system_status": "error",
+                "error": str(e),
+                "uptime_seconds": self.get_uptime(),
+                "failed_modules": self.failed_modules
+            }
