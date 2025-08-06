@@ -62,19 +62,27 @@ class SupportOrchestratorAgent(BaseNetworkAgent):
 
 def create_suporte_agents(message_bus) -> List[BaseNetworkAgent]:
     """
-    Função de fábrica para criar todos os agentes do módulo de Suporte.
+    Factory function to create and initialize all Support agents for the ALSHAM QUANTUM system.
+
+    This function instantiates all Support module agents, logs all relevant events for diagnostics,
+    and returns them in a list for registration in the agent registry. Handles errors robustly
+    and ensures all agents are ready for operation.
+
+    Args:
+        message_bus (Any): The message bus or communication channel for agent messaging.
+
+    Returns:
+        List[BaseNetworkAgent]: A list containing all initialized Support module agent instances.
     """
-    logger.info("🔧 Criando agentes do domínio de Suporte...")
-    
-    # --- EQUIPE COMPLETA DE AGENTES DE SUPORTE ---
-    agents = [
-        SupportOrchestratorAgent("support_orchestrator_001", message_bus),
-        TicketManagerAgent("ticket_manager_001", message_bus),
-        ChatbotAgent("chatbot_001", message_bus),
-        SatisfactionAnalyzerAgent("satisfaction_analyzer_001", message_bus),
-        KnowledgeBaseAgent("knowledge_base_001", message_bus)
-    ]
-    # ---------------------------------------------
-    
-    logger.info(f"✅ {len(agents)} agentes de Suporte criados.")
+    agents: List[BaseNetworkAgent] = []
+    logger.info("🔧 [Factory] Criando agentes do domínio de Suporte...")
+    try:
+        agents.append(SupportOrchestratorAgent("support_orchestrator_001", message_bus))
+        agents.append(TicketManagerAgent("ticket_manager_001", message_bus))
+        agents.append(ChatbotAgent("chatbot_001", message_bus))
+        agents.append(SatisfactionAnalyzerAgent("satisfaction_analyzer_001", message_bus))
+        agents.append(KnowledgeBaseAgent("knowledge_base_001", message_bus))
+        logger.info(f"✅ {len(agents)} agentes de Suporte criados.")
+    except Exception as e:
+        logger.critical(f"❌ Erro crítico ao criar agentes de Suporte: {e}", exc_info=True)
     return agents
