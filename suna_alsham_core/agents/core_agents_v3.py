@@ -112,8 +112,9 @@ class CoreAgent(BaseNetworkAgent):
         logger.info(f"Processando atualização do sistema: {update_type}")
 
 
-def create_core_agents_v3(message_bus) -> List[BaseNetworkAgent]:
-    """Cria a lista de agentes do núcleo v3 com implementação completa."""
+# ✅ Função obrigatória para o agent_loader
+def create_agents(message_bus) -> List[BaseNetworkAgent]:
+    """Ponto de entrada para o carregamento dinâmico de agentes."""
     logger.info("🎯 Criando agentes core v3 com implementação completa...")
     
     agents = [
@@ -121,5 +122,5 @@ def create_core_agents_v3(message_bus) -> List[BaseNetworkAgent]:
         CoreAgent("core_v3_002", message_bus),
     ]
     
-    logger.info(f"✅ {len(agents)} agentes core v3 criados com implementação completa.")
+    logger.info(f"✅ {len(agents)} agentes core v3 criados com sucesso.")
     return agents
