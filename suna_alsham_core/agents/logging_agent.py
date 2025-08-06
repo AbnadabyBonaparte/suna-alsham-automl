@@ -102,9 +102,9 @@ class LoggingAgent(BaseNetworkAgent):
                 )
                 await self.log_queue.put(log_entry)
 
-def create_logging_agent(message_bus: Any) -> List[BaseNetworkAgent]:
+def create_agents(message_bus: Any) -> List[BaseNetworkAgent]:
     """
-    Factory function to create and initialize the LoggingAgent(s) for the ALSHAM QUANTUM system.
+    Factory function to create and initialize LoggingAgent(s) for the ALSHAM QUANTUM system.
 
     This function instantiates the LoggingAgent, logs all relevant events for diagnostics,
     and returns it in a list for registration in the agent registry. Handles errors robustly
