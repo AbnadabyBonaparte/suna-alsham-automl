@@ -1,7 +1,7 @@
 # Forçando a invalidação do cache de build - v1
-
 # ===== FASE 1: Builder =====
 FROM python:3.11-slim-bullseye AS builder
+
 ARG CACHE_BUSTER
 
 # Define variáveis de ambiente para otimizar o Python no Docker
@@ -28,7 +28,6 @@ RUN pip install --no-cache-dir --upgrade pip && \
 
 # Copia todo o resto do código da aplicação
 COPY . .
-
 
 # ===== FASE 2: Final =====
 FROM python:3.11-slim-bullseye
