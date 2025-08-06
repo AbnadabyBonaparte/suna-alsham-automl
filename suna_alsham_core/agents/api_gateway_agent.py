@@ -616,21 +616,25 @@ from typing import Any, List
 
 def create_api_gateway_agent(message_bus: Any) -> List[BaseNetworkAgent]:
     """
-    Função de bootstrap para criação do agente API Gateway Quantum.
-    Cria e inicializa o QuantumAPIGatewayAgent se FastAPI estiver disponível.
-    :param message_bus: Barramento de mensagens do sistema.
-    :return: Lista de instâncias de agentes API Gateway criados (pode ser vazia se FastAPI indisponível).
+    Factory function to create and return all Quantum API Gateway agents for the system.
+    This function is intended for use by the agent_loader/bootstrap system.
+
+    Args:
+        message_bus (Any): The message bus instance for agent communication.
+
+    Returns:
+        List[BaseNetworkAgent]: List of instantiated Quantum API Gateway agents (empty if FastAPI unavailable).
     """
     agents: List[BaseNetworkAgent] = []
-    logger.info("🌐 Criando QuantumAPIGatewayAgent...")
+    logger.info("🌐 Creating QuantumAPIGatewayAgent...")
     try:
         if FASTAPI_AVAILABLE:
             agent = QuantumAPIGatewayAgent("api_gateway_001", message_bus)
             agents.append(agent)
-            logger.info("✅ QuantumAPIGatewayAgent criado com sucesso.")
+            logger.info("✅ QuantumAPIGatewayAgent created successfully.")
         else:
-            logger.error("❌ FastAPI não disponível - API Gateway não pode ser criado")
+            logger.critical("❌ FastAPI not available - API Gateway cannot be created.")
     except Exception as e:
-        logger.error(f"❌ Erro crítico criando QuantumAPIGatewayAgent: {e}", exc_info=True)
-    logger.info(f"🌐 Total de agentes API Gateway criados: {len(agents)}")
+        logger.critical(f"❌ Critical error creating QuantumAPIGatewayAgent: {e}", exc_info=True)
+    logger.info(f"🌐 Total API Gateway agents created: {len(agents)}")
     return agents
