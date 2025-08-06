@@ -115,12 +115,19 @@ class DecisionAgent(BaseNetworkAgent):
         }
 
 
-def create_service_agents(message_bus: Any) -> List[BaseNetworkAgent]:
+def create_agents(message_bus: Any) -> List[BaseNetworkAgent]:
     """
-    Função de bootstrap para criação dos agentes de serviço do núcleo do sistema.
-    Cria e inicializa os agentes CommunicationAgent e DecisionAgent.
-    :param message_bus: Barramento de mensagens do sistema.
-    :return: Lista de instâncias de agentes de serviço criados.
+    Função fábrica para criar e inicializar os agentes de serviço do sistema ALSHAM QUANTUM.
+
+    Esta função instancia os agentes CommunicationAgent e DecisionAgent, registra todos os eventos relevantes para diagnóstico
+    e retorna em uma lista para registro no agent registry. Lida com erros de forma robusta
+    e garante que os agentes estejam prontos para operação.
+
+    Args:
+        message_bus (Any): O barramento de mensagens ou canal de comunicação para mensagens entre agentes.
+
+    Returns:
+        List[BaseNetworkAgent]: Uma lista contendo as instâncias inicializadas dos agentes de serviço.
     """
     agents: List[BaseNetworkAgent] = []
     logger.info("🔧 Criando agentes de Serviço...")
@@ -140,15 +147,3 @@ def create_service_agents(message_bus: Any) -> List[BaseNetworkAgent]:
 
     logger.info(f"🔧 Total de agentes de serviço criados: {len(agents)}")
     return agents
-
-
-# --- FACTORY FUNCTION OBRIGATÓRIA PARA O BOOTSTRAP ---
-
-def create_agents(message_bus) -> List[BaseNetworkAgent]:
-    """
-    Função obrigatória de bootstrap para carregamento automático dos agentes de serviço.
-    Deve ser exportada no módulo principal para integração plug-and-play.
-    :param message_bus: Barramento de mensagens do sistema recebido do agent_loader.
-    :return: Lista de agentes de serviço criados.
-    """
-    return create_service_agents(message_bus)
