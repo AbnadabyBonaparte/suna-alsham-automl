@@ -389,20 +389,35 @@ async def run_quantum_bootstrap() -> bool:
     return await bootstrap_instance.execute_bootstrap()
 
 def bootstrap() -> bool:
-    """Função síncrona callable para compatibilidade"""
+    """
+    Synchronous callable function to execute the ALSHAM QUANTUM bootstrap process.
+
+    Handles event loop context, robust error handling, and logs all relevant events for diagnostics.
+    Returns True if the bootstrap process completes (even with warnings), False only on critical failure.
+
+    Returns:
+        bool: True if bootstrap completed (even with warnings), False if critical failure.
+    """
     try:
         loop = asyncio.get_event_loop()
         if loop.is_running():
+            logger.info("[Bootstrap] Event loop já em execução, criando task assíncrona...")
             task = asyncio.create_task(bootstrap_instance.execute_bootstrap())
             return True
         else:
+            logger.info("[Bootstrap] Iniciando event loop para bootstrap...")
             return asyncio.run(bootstrap_instance.execute_bootstrap())
     except Exception as e:
-        logger.error(f"Erro na execução do bootstrap: {e}")
-        return True  # Não travar o sistema
+        logger.critical(f"Erro na execução do bootstrap: {e}", exc_info=True)
+        return False
 
 def get_bootstrap_status() -> Dict[str, Any]:
-    """Status detalhado do bootstrap"""
+    """
+    Returns a detailed status report of the ALSHAM QUANTUM bootstrap process.
+
+    Returns:
+        Dict[str, Any]: Dictionary with status, agent counts, warnings, errors, and coverage.
+    """
     return {
         "bootstrap_completed": True,
         "agents_expected": 56,
@@ -415,12 +430,27 @@ def get_bootstrap_status() -> Dict[str, Any]:
         "agent_coverage": f"{bootstrap_instance.agents_loaded}/56" if bootstrap_instance.agents_loaded else "0/56"
     }
 
-# Aliases para compatibilidade
+# Aliases para compatibilidade e integração
 def run_bootstrap() -> bool:
+    """
+    Alias for bootstrap().
+    Returns:
+        bool: Result of the bootstrap process.
+    """
     return bootstrap()
 
 def execute_bootstrap() -> bool:
+    """
+    Alias for bootstrap().
+    Returns:
+        bool: Result of the bootstrap process.
+    """
     return bootstrap()
 
 def start_bootstrap() -> bool:
+    """
+    Alias for bootstrap().
+    Returns:
+        bool: Result of the bootstrap process.
+    """
     return bootstrap()
