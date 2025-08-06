@@ -822,10 +822,29 @@ class SecurityGuardianAgent(BaseNetworkAgent):
             'metrics': self.metrics
         }
 
-# Agent factory function
+
 def create_security_guardian_agent(agent_id: str = "security_guardian", message_bus: MessageBus = None) -> SecurityGuardianAgent:
-    """Create Security Guardian Agent instance"""
-    return SecurityGuardianAgent(agent_id, message_bus)
+    """
+    Factory function to create and initialize the SecurityGuardianAgent for the ALSHAM QUANTUM system.
+
+    This function instantiates the SecurityGuardianAgent, logs all relevant events for diagnostics,
+    and returns the instance for registration in the agent registry. Handles errors robustly
+    and ensures the agent is ready for operation.
+
+    Args:
+        agent_id (str): The unique identifier for the Security Guardian Agent. Default is "security_guardian".
+        message_bus (MessageBus, optional): The message bus or communication channel for agent messaging.
+
+    Returns:
+        SecurityGuardianAgent: The initialized SecurityGuardianAgent instance.
+    """
+    try:
+        agent = SecurityGuardianAgent(agent_id, message_bus)
+        logging.info(f"🛡️ SecurityGuardianAgent criado e registrado: {agent.agent_id}")
+        return agent
+    except Exception as e:
+        logging.critical(f"❌ Erro crítico ao criar SecurityGuardianAgent: {e}", exc_info=True)
+        raise
 
 # Export for dynamic loading
 __all__ = ['SecurityGuardianAgent', 'create_security_guardian_agent', 'SecurityLevel', 'ThreatLevel', 'AuthMethod']
