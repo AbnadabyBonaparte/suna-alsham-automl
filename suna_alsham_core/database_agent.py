@@ -699,14 +699,26 @@ class QuantumDatabaseAgent(BaseNetworkAgent):
             }
         }
 
-def create_database_agent(message_bus) -> List[BaseNetworkAgent]:
-    """Cria o agente de Database Quantum."""
-    agents = []
-    logger.info("🗄️ Criando QuantumDatabaseAgent...")
+def create_database_agent(message_bus: Any) -> List[BaseNetworkAgent]:
+    """
+    Factory function to create and initialize the QuantumDatabaseAgent(s) for the ALSHAM QUANTUM system.
+
+    This function instantiates the QuantumDatabaseAgent, logs all relevant events for diagnostics,
+    and returns it in a list for registration in the agent registry. Handles errors robustly
+    and ensures the agent is ready for operation.
+
+    Args:
+        message_bus (Any): The message bus or communication channel for agent messaging.
+
+    Returns:
+        List[BaseNetworkAgent]: A list containing the initialized QuantumDatabaseAgent instance(s).
+    """
+    agents: List[BaseNetworkAgent] = []
+    logger.info("🗄️ [Factory] Criando QuantumDatabaseAgent...")
     try:
         agent = QuantumDatabaseAgent("database_001", message_bus)
         agents.append(agent)
-        logger.info("✅ QuantumDatabaseAgent criado com sucesso.")
+        logger.info(f"✅ QuantumDatabaseAgent criado com sucesso: {agent.agent_id}")
     except Exception as e:
-        logger.error(f"❌ Erro crítico criando QuantumDatabaseAgent: {e}", exc_info=True)
+        logger.critical(f"❌ Erro crítico ao criar QuantumDatabaseAgent: {e}", exc_info=True)
     return agents
