@@ -95,36 +95,46 @@ class InfluencerNetworkAgent(BaseNetworkAgent):
         await self.message_bus.publish(request_to_searcher)
         logger.info(f"Requisição de busca enviada para web_search_001 com search_id: {search_id}")
 
-    async def _handle_search_response(self, response_message: AgentMessage):
+    async def _handle_search_response(self, response_message: AgentMessage) -> None:
         """
-        Processa a resposta com os resultados da busca recebida do WebSearchAgent.
+        Handles the response with search results received from the WebSearchAgent.
+
+        This method validates the search context, checks the completion status,
+        logs all relevant events, processes the search results, and sends the final response
+        to the original requester. Robust error handling is provided for diagnostics and production reliability.
+
+        Args:
+            response_message (AgentMessage): The message containing the web search results.
+
+        Returns:
+            None
         """
-        search_id = response_message.callback_id
+        search_id: str = response_message.callback_id
         if search_id not in self.pending_searches:
-            logger.warning(f"Recebida resposta de busca para uma tarefa desconhecida: {search_id}")
+            logger.warning(f"[InfluencerNetworkAgent] Recebida resposta de busca para uma tarefa desconhecida: {search_id}")
             return
 
-        task_context = self.pending_searches.pop(search_id)
-        original_message = task_context["original_message"]
-        
+        task_context: Dict[str, Any] = self.pending_searches.pop(search_id)
+        original_message: AgentMessage = task_context["original_message"]
+
         if response_message.content.get("status") != "completed":
-            logger.error(f"Busca na web falhou para a tarefa {search_id}.")
+            logger.error(f"[InfluencerNetworkAgent] Busca na web falhou para a tarefa {search_id}.")
             await self.publish_error_response(original_message, "Falha na busca por influenciadores.")
             return
 
-        search_results = response_message.content.get("results", [])
-        logger.info(f"Resultados da busca recebidos para a tarefa {search_id}. {len(search_results)} links encontrados.")
+        search_results: List[Dict] = response_message.content.get("results", [])
+        logger.info(f"[InfluencerNetworkAgent] Resultados da busca recebidos para a tarefa {search_id}. {len(search_results)} links encontrados.")
 
-        # 5. Processar os resultados (neste caso, apenas extrair)
-        processed_results = self._process_search_results(search_results)
+        # Processar os resultados (neste caso, apenas extrair)
+        processed_results: List[Dict] = self._process_search_results(search_results)
 
-        # 6. Enviar a resposta final para o solicitante original
-        final_response_content = {
+        # Enviar a resposta final para o solicitante original
+        final_response_content: Dict[str, Any] = {
             "status": "completed",
             "topic": task_context["topic"],
             "found_influencers": processed_results
         }
-        final_response = self.create_response(original_message, final_response_content)
+        final_response: AgentMessage = self.create_response(original_message, final_response_content)
         await self.message_bus.publish(final_response)
 
     def _process_search_results(self, results: List[Dict]) -> List[Dict]:
