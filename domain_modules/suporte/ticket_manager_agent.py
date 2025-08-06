@@ -56,32 +56,46 @@ class TicketManagerAgent(BaseNetworkAgent):
             await self.publish_response(message, result)
 
     async def handle_create_ticket_request(self, message: AgentMessage) -> Dict[str, Any]:
-        """[LÓGICA REAL] Cria um novo ticket no Zendesk via API."""
+        """
+        Handles the creation of a new ticket in Zendesk via API.
+
+        This method validates the input, builds the payload, sends the request to Zendesk,
+        logs all relevant events, and returns the result. Robust error handling is provided for
+        diagnostics and production reliability.
+
+        Args:
+            message (AgentMessage): The incoming message containing ticket data.
+
+        Returns:
+            Dict[str, Any]: The result of the ticket creation attempt.
+        """
         if self.status == "degraded":
+            logger.warning("[TicketManagerAgent] Serviço de tickets indisponível. Credenciais faltando.")
             return {"status": "error", "message": "Serviço de tickets indisponível. Credenciais faltando."}
 
-        ticket_data = message.content.get("ticket_data", {})
-        subject = ticket_data.get("subject")
-        comment_body = ticket_data.get("comment")
-        requester_name = ticket_data.get("requester_name")
-        requester_email = ticket_data.get("requester_email")
+        ticket_data: Dict[str, Any] = message.content.get("ticket_data", {})
+        subject: str = ticket_data.get("subject")
+        comment_body: str = ticket_data.get("comment")
+        requester_name: str = ticket_data.get("requester_name")
+        requester_email: str = ticket_data.get("requester_email")
 
         if not all([subject, comment_body, requester_name, requester_email]):
+            logger.warning("[TicketManagerAgent] Dados insuficientes para criar o ticket (requer subject, comment, requester_name, requester_email).")
             return {"status": "error", "message": "Dados insuficientes para criar o ticket (requer subject, comment, requester_name, requester_email)."}
 
         # Formata o payload para a API do Zendesk
-        payload = {
+        payload: Dict[str, Any] = {
             "ticket": {
                 "subject": subject,
                 "comment": { "body": comment_body },
                 "requester": { "name": requester_name, "email": requester_email }
             }
         }
-        
+
         # Monta o header de autenticação
-        auth_str = f"{self.zendesk_email}/token:{self.zendesk_token}"
-        encoded_auth = base64.b64encode(auth_str.encode()).decode()
-        headers = {
+        auth_str: str = f"{self.zendesk_email}/token:{self.zendesk_token}"
+        encoded_auth: str = base64.b64encode(auth_str.encode()).decode()
+        headers: Dict[str, str] = {
             "Content-Type": "application/json",
             "Authorization": f"Basic {encoded_auth}"
         }
@@ -89,12 +103,12 @@ class TicketManagerAgent(BaseNetworkAgent):
         try:
             async with httpx.AsyncClient() as client:
                 response = await client.post(self.api_url, json=payload, headers=headers)
-                response.raise_for_status() # Lança uma exceção para respostas de erro (4xx ou 5xx)
-                
-                response_data = response.json()
+                response.raise_for_status()  # Lança uma exceção para respostas de erro (4xx ou 5xx)
+
+                response_data: Dict[str, Any] = response.json()
                 new_ticket_id = response_data.get("ticket", {}).get("id")
 
-                logger.info(f"Ticket #{new_ticket_id} criado com sucesso no Zendesk.")
+                logger.info(f"[TicketManagerAgent] Ticket #{new_ticket_id} criado com sucesso no Zendesk.")
                 return {
                     "status": "completed",
                     "ticket_id": new_ticket_id,
@@ -102,8 +116,8 @@ class TicketManagerAgent(BaseNetworkAgent):
                 }
 
         except httpx.HTTPStatusError as e:
-            logger.error(f"Erro da API do Zendesk ao criar ticket: {e.response.status_code} - {e.response.text}")
+            logger.error(f"[TicketManagerAgent] Erro da API do Zendesk ao criar ticket: {e.response.status_code} - {e.response.text}")
             return {"status": "error", "message": f"Erro da API: {e.response.text}"}
         except Exception as e:
-            logger.error(f"Erro inesperado ao criar ticket: {e}", exc_info=True)
+            logger.critical(f"[TicketManagerAgent] Erro inesperado ao criar ticket: {e}", exc_info=True)
             return {"status": "error", "message": f"Erro inesperado: {e}"}
