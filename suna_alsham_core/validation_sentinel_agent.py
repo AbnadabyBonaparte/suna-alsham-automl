@@ -366,13 +366,25 @@ class ValidationSentinelAgent(BaseNetworkAgent):
         }
 
 def create_validation_sentinel_agent(message_bus) -> List[BaseNetworkAgent]:
-    """Cria o agente Sentinela de Validação."""
-    agents = []
-    logger.info("🔎 Criando ValidationSentinelAgent...")
+    """
+    Factory function to create and initialize the ValidationSentinelAgent(s) for the ALSHAM QUANTUM system.
+
+    This function instantiates the ValidationSentinelAgent, logs all relevant events for diagnostics,
+    and returns it in a list for registration in the agent registry. Handles errors robustly
+    and ensures the agent is ready for operation.
+
+    Args:
+        message_bus (Any): The message bus or communication channel for agent messaging.
+
+    Returns:
+        List[BaseNetworkAgent]: A list containing the initialized ValidationSentinelAgent instance(s).
+    """
+    agents: List[BaseNetworkAgent] = []
+    logger.info("🔎 [Factory] Criando ValidationSentinelAgent...")
     try:
         agent = ValidationSentinelAgent("validation_sentinel_001", message_bus)
         agents.append(agent)
-        logger.info("✅ ValidationSentinelAgent criado com sucesso.")
+        logger.info(f"✅ ValidationSentinelAgent criado com sucesso: {agent.agent_id}")
     except Exception as e:
-        logger.error(f"❌ Erro crítico criando ValidationSentinelAgent: {e}", exc_info=True)
+        logger.critical(f"❌ Erro crítico ao criar ValidationSentinelAgent: {e}", exc_info=True)
     return agents
