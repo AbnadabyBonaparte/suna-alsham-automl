@@ -164,11 +164,11 @@ def create_code_analyzer_agent(message_bus: Any) -> List[BaseNetworkAgent]:
         List[BaseNetworkAgent]: A list containing the initialized CodeAnalyzerAgent instance(s).
     """
     agents: List[BaseNetworkAgent] = []
-    logger.info("🔍 [Factory] Criando CodeAnalyzerAgent...")
+    logger.info("🔍 [Factory] Creating CodeAnalyzerAgent...")
     try:
         agent = CodeAnalyzerAgent("code_analyzer_001", message_bus)
         agents.append(agent)
-        logger.info(f"🔍 CodeAnalyzerAgent criado com sucesso: {agent.agent_id}")
+        logger.info(f"🔍 CodeAnalyzerAgent created successfully: {agent.agent_id}")
     except Exception as e:
-        logger.critical(f"❌ Erro crítico ao criar CodeAnalyzerAgent: {e}", exc_info=True)
+        logger.critical(f"❌ Critical error creating CodeAnalyzerAgent: {e}", exc_info=True)
     return agents
