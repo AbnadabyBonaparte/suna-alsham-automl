@@ -113,12 +113,25 @@ class TestingAgent(BaseNetworkAgent):
 
 
 def create_testing_agent(message_bus) -> List[BaseNetworkAgent]:
-    """Cria o agente de Testes."""
-    agents = []
-    logger.info("🧪 Criando TestingAgent...")
+    """
+    Factory function to create and initialize the TestingAgent(s) for the ALSHAM QUANTUM system.
+
+    This function instantiates the TestingAgent, logs all relevant events for diagnostics,
+    and returns it in a list for registration in the agent registry. Handles errors robustly
+    and ensures the agent is ready for operation.
+
+    Args:
+        message_bus (Any): The message bus or communication channel for agent messaging.
+
+    Returns:
+        List[BaseNetworkAgent]: A list containing the initialized TestingAgent instance(s).
+    """
+    agents: List[BaseNetworkAgent] = []
+    logger.info("🧪 [Factory] Criando TestingAgent...")
     try:
         agent = TestingAgent("testing_001", message_bus)
         agents.append(agent)
+        logger.info(f"🧪 TestingAgent criado com sucesso: {agent.agent_id}")
     except Exception as e:
-        logger.error(f"❌ Erro crítico criando TestingAgent: {e}", exc_info=True)
+        logger.critical(f"❌ Erro crítico ao criar TestingAgent: {e}", exc_info=True)
     return agents
