@@ -917,27 +917,31 @@ class QuantumMetaCognitiveAgent(BaseNetworkAgent):
         # Implementação futura para introspecção sistêmica
         pass
 
-def create_meta_cognitive_agents(message_bus) -> List[BaseNetworkAgent]:
-    """Cria os agentes Meta-Cognitivos Quantum."""
+def create_agents(message_bus: Any) -> List[BaseNetworkAgent]:
+    """
+    Factory function to create and initialize Quantum Meta-Cognitive Agent(s) for the ALSHAM QUANTUM system.
+
+    This function instantiates the QuantumOrchestratorAgent and QuantumMetaCognitiveAgent, logs all relevant events for diagnostics,
+    and returns them in a list for registration in the agent registry. Handles errors robustly and ensures the agents are ready for operation.
+
+    Args:
+        message_bus (Any): The message bus or communication channel for agent messaging.
+
+    Returns:
+        List[BaseNetworkAgent]: A list containing the initialized Quantum Meta-Cognitive Agent instance(s).
+    """
     agents: List[BaseNetworkAgent] = []
-    
     try:
         # Orquestrador Quantum
         orchestrator = QuantumOrchestratorAgent("orchestrator_001", message_bus)
         agents.append(orchestrator)
-        
+
         # Meta-Cognitivo Quantum
         meta_agent = QuantumMetaCognitiveAgent("metacognitive_001", message_bus)
         asyncio.create_task(meta_agent.start_meta_cognition())
         agents.append(meta_agent)
-        
+
         logger.info("✅ Agentes Meta-Cognitivos Quantum criados com sucesso.")
-        
     except Exception as e:
         logger.critical(f"❌ Erro CRÍTICO criando agentes Meta-Cognitivos Quantum: {e}", exc_info=True)
-    
     return agents
-
-def create_agents(message_bus):
-    """Factory function obrigatória para o bootstrap."""
-    return create_meta_cognitive_agents(message_bus)
