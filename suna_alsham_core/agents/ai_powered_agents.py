@@ -645,7 +645,12 @@ class QuantumAIAnalyzerAgent(BaseNetworkAgent):
         }
 
 def create_ai_agents(message_bus) -> List[BaseNetworkAgent]:
-    """Cria os agentes de IA Quantum."""
+    """
+    Cria e retorna a lista de agentes de IA Quantum para o sistema.
+    Esta função pode ser utilizada para inicialização manual ou testes.
+    :param message_bus: Barramento de mensagens do sistema.
+    :return: Lista de instâncias de agentes QuantumAIAnalyzerAgent.
+    """
     agents = []
     logger.info("🧠 Criando QuantumAIAnalyzerAgent...")
     try:
@@ -657,5 +662,10 @@ def create_ai_agents(message_bus) -> List[BaseNetworkAgent]:
     return agents
 
 def create_agents(message_bus):
-    """Função esperada pelo sistema de bootstrap para carregamento automático."""
+    """
+    Função esperada pelo sistema de bootstrap para carregamento automático dos agentes.
+    Deve ser exportada no módulo principal para integração plug-and-play.
+    :param message_bus: Barramento de mensagens do sistema.
+    :return: Lista de agentes criados.
+    """
     return create_ai_agents(message_bus)
