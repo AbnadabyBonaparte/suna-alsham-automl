@@ -75,28 +75,41 @@ class SatisfactionAnalyzerAgent(BaseNetworkAgent):
         )
         await self.message_bus.publish(request_to_ai)
 
-    async def handle_ai_response(self, response_message: AgentMessage):
-        """Recebe a análise da IA e calcula o score de satisfação."""
-        analysis_id = response_message.callback_id
+    async def handle_ai_response(self, response_message: AgentMessage) -> None:
+        """
+        Handles the sentiment analysis result from the AI and calculates the satisfaction score.
+
+        This method validates the analysis context, extracts the sentiment, computes a CSAT score,
+        logs all relevant events, and sends the final response. Robust error handling is provided for
+        diagnostics and production reliability.
+
+        Args:
+            response_message (AgentMessage): The message containing the AI sentiment analysis result.
+
+        Returns:
+            None
+        """
+        analysis_id: str = response_message.callback_id
         if not analysis_id or analysis_id not in self.pending_analyses:
+            logger.warning(f"[SatisfactionAnalyzerAgent] Resposta recebida para análise desconhecida ou já finalizada: {analysis_id}")
             return
 
-        conversation = self.pending_analyses.pop(analysis_id)
-        original_message = conversation["original_message"]
+        conversation: Dict[str, Any] = self.pending_analyses.pop(analysis_id)
+        original_message: AgentMessage = conversation["original_message"]
 
-        sentiment = response_message.content.get("result", {}).get("sentiment", "neutral").lower()
+        sentiment: str = response_message.content.get("result", {}).get("sentiment", "neutral").lower()
 
         # Converte o sentimento em um score numérico (simples)
         if sentiment == "positive":
-            csat_score = 0.95
+            csat_score: float = 0.95
         elif sentiment == "negative":
-            csat_score = 0.15
+            csat_score: float = 0.15
         else:
-            csat_score = 0.60
-            
-        logger.info(f"Análise [ID: {analysis_id}] concluída. Sentimento: {sentiment}, Score: {csat_score}")
+            csat_score: float = 0.60
 
-        final_response = {
+        logger.info(f"[SatisfactionAnalyzerAgent] Análise [ID: {analysis_id}] concluída. Sentimento: {sentiment}, Score: {csat_score}")
+
+        final_response: Dict[str, Any] = {
             "status": "completed",
             "sentiment": sentiment,
             "csat_score": csat_score
