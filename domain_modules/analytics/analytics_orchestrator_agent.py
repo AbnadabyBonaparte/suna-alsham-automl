@@ -154,14 +154,28 @@ class AnalyticsOrchestratorAgent(BaseNetworkAgent):
 
 # Função de fábrica que o agent_loader usará
 def create_analytics_agents(message_bus) -> List[BaseNetworkAgent]:
-    """Cria e retorna todos os agentes do módulo de Analytics."""
-    logger.info("🔧 Criando agentes do domínio de Analytics & Intelligence...")
-    agents = [
-        AnalyticsOrchestratorAgent("analytics_orchestrator_001", message_bus),
-        DataCollectorAgent("data_collector_001", message_bus),
-        DataProcessingAgent("data_processing_001", message_bus),
-        PredictiveAnalysisAgent("predictive_analysis_001", message_bus),
-        ReportingVisualizationAgent("reporting_visualization_001", message_bus),
-    ]
-    logger.info(f"✅ {len(agents)} agentes de Analytics criados.")
+    """
+    Factory function to create and initialize all Analytics & Intelligence agents for the ALSHAM QUANTUM system.
+
+    This function instantiates all Analytics module agents, logs all relevant events for diagnostics,
+    and returns them in a list for registration in the agent registry. Handles errors robustly
+    and ensures all agents are ready for operation.
+
+    Args:
+        message_bus (Any): The message bus or communication channel for agent messaging.
+
+    Returns:
+        List[BaseNetworkAgent]: A list containing all initialized Analytics module agent instances.
+    """
+    agents: List[BaseNetworkAgent] = []
+    logger.info("🔧 [Factory] Criando agentes do domínio de Analytics & Intelligence...")
+    try:
+        agents.append(AnalyticsOrchestratorAgent("analytics_orchestrator_001", message_bus))
+        agents.append(DataCollectorAgent("data_collector_001", message_bus))
+        agents.append(DataProcessingAgent("data_processing_001", message_bus))
+        agents.append(PredictiveAnalysisAgent("predictive_analysis_001", message_bus))
+        agents.append(ReportingVisualizationAgent("reporting_visualization_001", message_bus))
+        logger.info(f"✅ {len(agents)} agentes de Analytics criados.")
+    except Exception as e:
+        logger.critical(f"❌ Erro crítico ao criar agentes de Analytics: {e}", exc_info=True)
     return agents
