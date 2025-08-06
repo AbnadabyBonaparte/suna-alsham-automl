@@ -253,12 +253,19 @@ class NewAgentOnboardingAgent(BaseNetworkAgent):
             self.onboarding_task.cancel()
 
 
-def create_specialized_agents(message_bus: Any) -> List[BaseNetworkAgent]:
+def create_agents(message_bus: Any) -> List[BaseNetworkAgent]:
     """
-    Função de bootstrap para criação dos agentes especializados do sistema.
-    Cria e inicializa os agentes TaskDelegatorAgent e NewAgentOnboardingAgent.
-    :param message_bus: Barramento de mensagens do sistema.
-    :return: Lista de instâncias de agentes especializados criados.
+    Função fábrica para criar e inicializar os agentes especializados do sistema ALSHAM QUANTUM.
+
+    Esta função instancia os agentes TaskDelegatorAgent e NewAgentOnboardingAgent, registra todos os eventos relevantes para diagnóstico
+    e retorna em uma lista para registro no agent registry. Lida com erros de forma robusta
+    e garante que os agentes estejam prontos para operação.
+
+    Args:
+        message_bus (Any): O barramento de mensagens ou canal de comunicação para mensagens entre agentes.
+
+    Returns:
+        List[BaseNetworkAgent]: Uma lista contendo as instâncias inicializadas dos agentes especializados.
     """
     agents: List[BaseNetworkAgent] = []
     logger.info("🛠️ Criando agentes Especializados...")
@@ -278,15 +285,3 @@ def create_specialized_agents(message_bus: Any) -> List[BaseNetworkAgent]:
 
     logger.info(f"🛠️ Total de agentes especializados criados: {len(agents)}")
     return agents
-
-
-# --- FACTORY FUNCTION OBRIGATÓRIA PARA O BOOTSTRAP ---
-
-def create_agents(message_bus) -> List[BaseNetworkAgent]:
-    """
-    Função obrigatória de bootstrap para carregamento automático dos agentes especializados.
-    Deve ser exportada no módulo principal para integração plug-and-play.
-    :param message_bus: Barramento de mensagens do sistema recebido do agent_loader.
-    :return: Lista de agentes especializados criados.
-    """
-    return create_specialized_agents(message_bus)
