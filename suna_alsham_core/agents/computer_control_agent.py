@@ -129,11 +129,11 @@ def create_computer_control_agent(message_bus: Any) -> List[BaseNetworkAgent]:
         List[BaseNetworkAgent]: A list containing the initialized ComputerControlAgent instance(s).
     """
     agents: List[BaseNetworkAgent] = []
-    logger.info("🤖 [Factory] Criando ComputerControlAgent...")
+    logger.info("🤖 [Factory] Creating ComputerControlAgent...")
     try:
         agent = ComputerControlAgent("computer_control_001", message_bus)
         agents.append(agent)
-        logger.info(f"🤖 ComputerControlAgent criado com sucesso: {agent.agent_id}")
+        logger.info(f"🤖 ComputerControlAgent created successfully: {agent.agent_id}")
     except Exception as e:
-        logger.critical(f"❌ Erro crítico ao criar ComputerControlAgent: {e}", exc_info=True)
+        logger.critical(f"❌ Critical error creating ComputerControlAgent: {e}", exc_info=True)
     return agents
