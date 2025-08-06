@@ -32,9 +32,21 @@ class StructureAnalyzerAgent(BaseNetworkAgent):
         }
 
 def create_structure_analyzer_agents() -> List[BaseNetworkAgent]:
-    """Factory function mínima e segura"""
+    """
+    Factory function to create and initialize the StructureAnalyzerAgent(s) for the ALSHAM QUANTUM system.
+
+    This function instantiates the StructureAnalyzerAgent, logs all relevant events for diagnostics,
+    and returns it in a list for registration in the agent registry. Handles errors robustly
+    and ensures the agent is ready for operation.
+
+    Returns:
+        List[BaseNetworkAgent]: A list containing the initialized StructureAnalyzerAgent instance(s).
+    """
+    agents: List[BaseNetworkAgent] = []
     try:
-        return [StructureAnalyzerAgent("structure_analyzer_001")]
+        agent = StructureAnalyzerAgent("structure_analyzer_001")
+        agents.append(agent)
+        logging.info(f"🔍 StructureAnalyzerAgent criado e registrado: {agent.agent_id}")
     except Exception as e:
-        logging.error(f"❌ Erro na factory: {e}")
-        return []
+        logging.critical(f"❌ Erro crítico ao criar StructureAnalyzerAgent: {e}", exc_info=True)
+    return agents
