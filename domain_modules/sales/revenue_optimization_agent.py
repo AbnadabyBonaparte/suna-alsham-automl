@@ -99,29 +99,41 @@ class RevenueOptimizationAgent(BaseNetworkAgent):
         await self.message_bus.publish(request_to_ai)
         logger.info(f"Requisição de otimização de receita enviada para ai_powered_001 com ID: {optimization_id}")
 
-    async def _handle_ai_response(self, response_message: AgentMessage):
+    async def _handle_ai_response(self, response_message: AgentMessage) -> None:
         """
-        Processa a resposta com a sugestão de oportunidade vinda do AIPoweredAgent.
+        Handles the response containing the revenue opportunity suggestion from the AIPoweredAgent.
+
+        This method validates the optimization context, checks the completion status,
+        logs all relevant events, and sends the final response to the original requester.
+        Robust error handling is provided for diagnostics and production reliability.
+
+        Args:
+            response_message (AgentMessage): The message containing the AI opportunity suggestion response.
+
+        Returns:
+            None
         """
-        optimization_id = response_message.callback_id
+        optimization_id: str = response_message.callback_id
         if optimization_id not in self.pending_optimizations:
+            logger.warning(f"[RevenueOptimizationAgent] Optimization ID '{optimization_id}' não encontrado em pending_optimizations.")
             return
 
-        task_context = self.pending_optimizations.pop(optimization_id)
-        original_message = task_context["original_message"]
-        
+        task_context: Dict[str, Any] = self.pending_optimizations.pop(optimization_id)
+        original_message: AgentMessage = task_context["original_message"]
+
         if response_message.content.get("status") != "completed":
+            logger.error(f"[RevenueOptimizationAgent] Falha na análise de oportunidade pela IA para a tarefa {optimization_id}.")
             await self.publish_error_response(original_message, "Falha na análise de oportunidade pela IA.")
             return
 
-        opportunity = response_message.content.get("result", {}).get("structured_data", {})
-        logger.info(f"Oportunidade de receita encontrada pela IA: {opportunity}")
+        opportunity: Dict[str, Any] = response_message.content.get("result", {}).get("structured_data", {})
+        logger.info(f"[RevenueOptimizationAgent] Oportunidade de receita encontrada pela IA: {opportunity}")
 
-        # 5. Enviar a resposta final
-        final_response_content = {
+        # Envia a resposta final
+        final_response_content: Dict[str, Any] = {
             "status": "completed",
             "customer_id": task_context["customer_id"],
             "opportunity": opportunity
         }
-        final_response = self.create_response(original_message, final_response_content)
+        final_response: AgentMessage = self.create_response(original_message, final_response_content)
         await self.message_bus.publish(final_response)
