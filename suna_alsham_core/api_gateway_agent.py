@@ -612,9 +612,16 @@ class QuantumAPIGatewayAgent(BaseNetworkAgent):
             }
         }
 
-def create_api_gateway_agent(message_bus) -> List[BaseNetworkAgent]:
-    """Cria o agente API Gateway Quantum."""
-    agents = []
+from typing import Any, List
+
+def create_api_gateway_agent(message_bus: Any) -> List[BaseNetworkAgent]:
+    """
+    Função de bootstrap para criação do agente API Gateway Quantum.
+    Cria e inicializa o QuantumAPIGatewayAgent se FastAPI estiver disponível.
+    :param message_bus: Barramento de mensagens do sistema.
+    :return: Lista de instâncias de agentes API Gateway criados (pode ser vazia se FastAPI indisponível).
+    """
+    agents: List[BaseNetworkAgent] = []
     logger.info("🌐 Criando QuantumAPIGatewayAgent...")
     try:
         if FASTAPI_AVAILABLE:
@@ -625,4 +632,5 @@ def create_api_gateway_agent(message_bus) -> List[BaseNetworkAgent]:
             logger.error("❌ FastAPI não disponível - API Gateway não pode ser criado")
     except Exception as e:
         logger.error(f"❌ Erro crítico criando QuantumAPIGatewayAgent: {e}", exc_info=True)
+    logger.info(f"🌐 Total de agentes API Gateway criados: {len(agents)}")
     return agents
