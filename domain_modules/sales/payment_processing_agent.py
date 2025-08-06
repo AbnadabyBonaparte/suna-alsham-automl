@@ -71,36 +71,46 @@ class PaymentProcessingAgent(BaseNetworkAgent):
         if message.message_type == MessageType.REQUEST and message.content.get("request_type") == "process_payment":
             await self.handle_process_payment_request(message)
 
-    async def handle_process_payment_request(self, message: AgentMessage):
+    async def handle_process_payment_request(self, message: AgentMessage) -> None:
         """
-        Lida com a lógica de criar uma cobrança usando o gateway de pagamento.
+        Handles the logic for creating a charge using the payment gateway (Stripe).
+
+        This method validates payment details, creates a charge via the Stripe API,
+        logs all relevant events, and returns the transaction result. Robust error handling
+        is provided for diagnostics and production reliability.
+
+        Args:
+            message (AgentMessage): The incoming message containing payment details.
+
+        Returns:
+            None
         """
-        payment_details = message.content.get("payment_details", {})
-        amount_cents = payment_details.get("amount_cents") # O valor deve ser em centavos
-        currency = payment_details.get("currency", "brl")
-        # O 'payment_token' é gerado pelo frontend (Stripe.js) e não é o número do cartão
-        token = payment_details.get("payment_token") 
-        description = payment_details.get("description", "Pagamento para SUNA-ALSHAM")
+        payment_details: Dict[str, Any] = message.content.get("payment_details", {})
+        amount_cents: int = payment_details.get("amount_cents")  # O valor deve ser em centavos
+        currency: str = payment_details.get("currency", "brl")
+        token: str = payment_details.get("payment_token")  # Token seguro gerado pelo frontend
+        description: str = payment_details.get("description", "Pagamento para SUNA-ALSHAM")
 
         if not all([amount_cents, token]):
+            logger.warning("[PaymentProcessingAgent] Detalhes do pagamento incompletos (requer amount_cents e payment_token).")
             await self.publish_error_response(message, "Detalhes do pagamento incompletos (requer amount_cents e payment_token).")
             return
 
-        logger.info(f"Processando pagamento de {amount_cents} {currency.upper()}.")
+        logger.info(f"[PaymentProcessingAgent] Processando pagamento de {amount_cents} {currency.upper()}.")
 
         try:
-            # 1. Cria a cobrança na API do Stripe
+            # Cria a cobrança na API do Stripe
             charge = stripe.Charge.create(
                 amount=amount_cents,
                 currency=currency,
-                source=token, # Usa o token seguro
+                source=token,  # Usa o token seguro
                 description=description,
             )
 
-            logger.info(f"Pagamento processado com sucesso. ID da transação: {charge.id}")
-            
-            # 2. Responde com sucesso e o ID da transação
-            response_content = {
+            logger.info(f"[PaymentProcessingAgent] Pagamento processado com sucesso. ID da transação: {charge.id}")
+
+            # Responde com sucesso e o ID da transação
+            response_content: Dict[str, Any] = {
                 "status": "completed",
                 "transaction_id": charge.id,
                 "amount_charged": charge.amount,
@@ -113,13 +123,13 @@ class PaymentProcessingAgent(BaseNetworkAgent):
             # Erro específico do cartão (ex: recusado)
             body = e.json_body
             err = body.get('error', {})
-            logger.error(f"Erro de cartão ao processar pagamento: {err.get('message')}")
+            logger.error(f"[PaymentProcessingAgent] Erro de cartão ao processar pagamento: {err.get('message')}")
             await self.publish_error_response(message, f"Erro de Cartão: {err.get('message')}")
         except stripe.error.StripeError as e:
             # Outros erros da API do Stripe
-            logger.error(f"Erro da API do Stripe: {e}", exc_info=True)
+            logger.error(f"[PaymentProcessingAgent] Erro da API do Stripe: {e}", exc_info=True)
             await self.publish_error_response(message, f"Erro do Gateway de Pagamento: {e}")
         except Exception as e:
             # Erros inesperados
-            logger.error(f"Erro inesperado no processamento de pagamento: {e}", exc_info=True)
+            logger.critical(f"[PaymentProcessingAgent] Erro inesperado no processamento de pagamento: {e}", exc_info=True)
             await self.publish_error_response(message, "Ocorreu um erro interno inesperado no serviço de pagamento.")
