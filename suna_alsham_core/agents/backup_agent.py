@@ -196,8 +196,12 @@ class BackupAgent(BaseNetworkAgent):
             # Aqui estava o bloco de código que poderia causar o erro
             logger.error(f"Erro ao salvar versão do arquivo no DB: {e}")
 
-def create_backup_agent(message_bus) -> List[BaseNetworkAgent]:
-    agents = []
+def create_agents(message_bus) -> List[BaseNetworkAgent]:
+    """
+    Factory function padrão para integração com agent_loader.
+    Cria e retorna todos os agentes Backup deste módulo.
+    """
+    agents: List[BaseNetworkAgent] = []
     logger.info("💼 Criando BackupAgent...")
     try:
         agent = BackupAgent("backup_agent_001", message_bus)
@@ -207,41 +211,3 @@ def create_backup_agent(message_bus) -> List[BaseNetworkAgent]:
     except Exception as e:
         logger.critical(f"❌ Erro crítico ao criar BackupAgent: {e}", exc_info=True)
     return agents
-    """
-    Factory function to create and initialize the BackupAgent(s) for the ALSHAM QUANTUM system.
-
-    This function instantiates the BackupAgent, starts its backup service asynchronously,
-    and returns it in a list for registration in the agent registry. Handles errors robustly
-    and logs all relevant events for diagnostics and observability.
-
-    Args:
-        message_bus (Any): The message bus or communication channel for agent messaging.
-
-    Returns:
-        List[BaseNetworkAgent]: A list containing the initialized BackupAgent instance(s).
-    """
-    agents: List[BaseNetworkAgent] = []
-    logger.info("💼 [Factory] Creating BackupAgent...")
-    try:
-        agent = BackupAgent("backup_agent_001", message_bus)
-        asyncio.create_task(agent.start_backup_service())
-        agents.append(agent)
-        logger.info(f"💼 BackupAgent created and backup service started successfully: {agent.agent_id}")
-    except Exception as e:
-        logger.critical(f"❌ Critical error creating BackupAgent: {e}", exc_info=True)
-    return agents
-    """
-    Factory function to create and initialize the BackupAgent(s) for the ALSHAM QUANTUM system.
-
-    This function instantiates the BackupAgent, starts its backup service asynchronously,
-    and returns it in a list for registration in the agent registry. Handles errors robustly
-    and logs all relevant events for diagnostics and observability.
-
-    Args:
-        message_bus (Any): The message bus or communication channel for agent messaging.
-
-    Returns:
-        List[BaseNetworkAgent]: A list containing the initialized BackupAgent instance(s).
-    """
-    agents: List[BaseNetworkAgent] = []
-    logger.info("\U0001F4BC [Factory] Criando BackupAgent...")
