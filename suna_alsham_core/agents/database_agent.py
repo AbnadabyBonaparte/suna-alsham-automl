@@ -699,26 +699,17 @@ class QuantumDatabaseAgent(BaseNetworkAgent):
             }
         }
 
-def create_database_agent(message_bus: Any) -> List[BaseNetworkAgent]:
+def create_agents(message_bus) -> List[BaseNetworkAgent]:
     """
-    Factory function to create and initialize the QuantumDatabaseAgent(s) for the ALSHAM QUANTUM system.
-
-    This function instantiates the QuantumDatabaseAgent, logs all relevant events for diagnostics,
-    and returns it in a list for registration in the agent registry. Handles errors robustly
-    and ensures the agent is ready for operation.
-
-    Args:
-        message_bus (Any): The message bus or communication channel for agent messaging.
-
-    Returns:
-        List[BaseNetworkAgent]: A list containing the initialized QuantumDatabaseAgent instance(s).
+    Factory function padrão para integração com agent_loader.
+    Cria e retorna todos os agentes Database deste módulo.
     """
     agents: List[BaseNetworkAgent] = []
-    logger.info("🗄️ [Factory] Creating QuantumDatabaseAgent...")
+    logger.info("🗄️ Criando QuantumDatabaseAgent...")
     try:
         agent = QuantumDatabaseAgent("database_001", message_bus)
         agents.append(agent)
-        logger.info(f"✅ QuantumDatabaseAgent created successfully: {agent.agent_id}")
+        logger.info(f"✅ QuantumDatabaseAgent criado com sucesso: {agent.agent_id}")
     except Exception as e:
-        logger.critical(f"❌ Critical error creating QuantumDatabaseAgent: {e}", exc_info=True)
+        logger.critical(f"❌ Erro crítico ao criar QuantumDatabaseAgent: {e}", exc_info=True)
     return agents
