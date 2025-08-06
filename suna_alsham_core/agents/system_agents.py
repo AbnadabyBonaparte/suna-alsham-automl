@@ -240,10 +240,25 @@ class RecoveryAgent(BaseNetworkAgent):
 
 # --- Fábrica exigida pelo bootstrap ---
 
-def create_agents():
-    """Função exigida pelo sistema para carregamento automático."""
-    return [
-        MonitorAgent("monitor_001", None),
-        ControlAgent("control_001", None),
-        RecoveryAgent("recovery_001", None),
+def create_agents() -> List[BaseNetworkAgent]:
+    """
+    Função de bootstrap obrigatória para carregamento automático dos agentes de sistema.
+    Cria e inicializa os agentes MonitorAgent, ControlAgent e RecoveryAgent.
+    :return: Lista de instâncias de agentes de sistema criados.
+    """
+    logger.info("⚙️ Criando agentes de sistema (Monitor, Control, Recovery)...")
+    agents: List[BaseNetworkAgent] = []
+    agent_configs = [
+        {"id": "monitor_001", "class": MonitorAgent},
+        {"id": "control_001", "class": ControlAgent},
+        {"id": "recovery_001", "class": RecoveryAgent},
     ]
+    for config in agent_configs:
+        try:
+            agent = config["class"](config["id"], None)
+            agents.append(agent)
+            logger.info(f"✅ Agente de sistema {config['id']} criado com sucesso.")
+        except Exception as e:
+            logger.error(f"❌ Erro criando agente de sistema {config['id']}: {e}", exc_info=True)
+    logger.info(f"⚙️ Total de agentes de sistema criados: {len(agents)}")
+    return agents
