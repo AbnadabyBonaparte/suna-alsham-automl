@@ -128,9 +128,9 @@ class DebugMasterAgent(BaseNetworkAgent):
         return {"file": "unknown", "line": 0, "function": "unknown"}
 
 
-def create_debug_master_agent(message_bus: Any) -> List[BaseNetworkAgent]:
+def create_agents(message_bus: Any) -> List[BaseNetworkAgent]:
     """
-    Factory function to create and initialize the DebugMasterAgent(s) for the ALSHAM QUANTUM system.
+    Factory function to create and initialize DebugMasterAgent(s) for the ALSHAM QUANTUM system.
 
     This function instantiates the DebugMasterAgent, logs all relevant events for diagnostics,
     and returns it in a list for registration in the agent registry. Handles errors robustly
