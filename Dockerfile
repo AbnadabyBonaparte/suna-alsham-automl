@@ -1,51 +1,41 @@
-# Forçando a invalidação do cache de build - v1
-# ===== FASE 1: Builder =====
-FROM python:3.11-slim-bullseye AS builder
+# Dockerfile Otimizado para ALSHAM QUANTUM
+FROM python:3.11-slim
 
-ARG CACHE_BUSTER
-
-# Define variáveis de ambiente para otimizar o Python no Docker
+# Variáveis de ambiente para Python
 ENV PYTHONUNBUFFERED=1 \
-    PYTHONDONTWRITEBYTECODE=1
+    PYTHONDONTWRITEBYTECODE=1 \
+    PIP_NO_CACHE_DIR=1 \
+    PIP_DISABLE_PIP_VERSION_CHECK=1
 
-# Instala dependências do sistema necessárias para gitpython e docker
+# Instalar dependências do sistema
 RUN apt-get update && apt-get install -y \
+    gcc \
+    g++ \
     git \
-    libffi-dev \
-    python3-dev \
+    postgresql-client \
     && rm -rf /var/lib/apt/lists/*
 
-# Define o diretório de trabalho dentro do container
+# Diretório de trabalho
 WORKDIR /app
 
-# Copia apenas o arquivo de dependências primeiro para aproveitar o cache do Docker
+# Copiar requirements primeiro (para cache do Docker)
 COPY requirements.txt .
 
-# Instala as dependências de produção
-RUN pip install --no-cache-dir --upgrade pip && \
-    pip install --no-cache-dir -r requirements.txt && \
-    pip install --no-cache-dir --upgrade gitpython docker
+# Instalar dependências Python
+RUN pip install --no-cache-dir -r requirements.txt
 
-# Copia todo o resto do código da aplicação
+# Copiar código da aplicação
 COPY . .
 
-# ===== FASE 2: Final =====
-FROM python:3.11-slim-bullseye
+# Criar diretório para logs
+RUN mkdir -p /app/logs
 
-# Instala apenas as dependências do sistema necessárias para runtime
-RUN apt-get update && apt-get install -y \
-    git \
-    && rm -rf /var/lib/apt/lists/*
-
-# Define o mesmo diretório de trabalho
-WORKDIR /app
-
-# Copia apenas o código da aplicação e as dependências já instaladas da fase 'builder'
-COPY --from=builder /app /app
-COPY --from=builder /usr/local/lib/python3.11/site-packages /usr/local/lib/python3.11/site-packages
-
-# Expõe a porta padrão usada pelo app (8000)
+# Expor porta
 EXPOSE 8000
 
-# Comando de inicialização robusto (pode ser alterado para gunicorn se desejar)
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+    CMD python -c "import requests; requests.get('http://localhost:8000/health')" || exit 1
+
+# Comando de inicialização
 CMD ["python", "start.py"]
