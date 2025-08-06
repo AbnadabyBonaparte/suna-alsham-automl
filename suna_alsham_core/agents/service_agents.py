@@ -144,11 +144,11 @@ def create_service_agents(message_bus: Any) -> List[BaseNetworkAgent]:
 
 # --- FACTORY FUNCTION OBRIGATÓRIA PARA O BOOTSTRAP ---
 
-def create_agents() -> List[BaseNetworkAgent]:
+def create_agents(message_bus) -> List[BaseNetworkAgent]:
     """
     Função obrigatória de bootstrap para carregamento automático dos agentes de serviço.
     Deve ser exportada no módulo principal para integração plug-and-play.
+    :param message_bus: Barramento de mensagens do sistema recebido do agent_loader.
     :return: Lista de agentes de serviço criados.
     """
-    from suna_alsham_core.message_bus import global_message_bus
-    return create_service_agents(global_message_bus)
+    return create_service_agents(message_bus)
