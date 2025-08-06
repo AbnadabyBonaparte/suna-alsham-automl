@@ -112,31 +112,48 @@ class PredictiveAnalysisAgent(BaseNetworkAgent):
             logger.error(f"Erro ao treinar o modelo: {e}", exc_info=True)
             await self.publish_error_response(message, f"Erro interno durante o treinamento: {e}")
 
-    async def handle_predict_request(self, message: AgentMessage):
-        """Lida com o carregamento de um modelo e a realização de uma previsão."""
-        model_path_str = message.content.get("model_path")
-        input_data = message.content.get("input_data", [])
+    async def handle_predict_request(self, message: AgentMessage) -> None:
+        """
+        Handles loading a trained model and performing a prediction on input data.
+
+        This method validates the model path and input data, loads the model using joblib,
+        prepares the input as a DataFrame, performs the prediction, and returns the result.
+        Robust error handling and logging are provided for diagnostics and production reliability.
+
+        Args:
+            message (AgentMessage): The incoming message containing model path and input data.
+
+        Returns:
+            None
+        """
+        model_path_str: str = message.content.get("model_path")
+        input_data: List[dict] = message.content.get("input_data", [])
 
         if not model_path_str or not Path(model_path_str).exists():
+            logger.warning(f"[PredictiveAnalysisAgent] Arquivo do modelo não encontrado em: {model_path_str}")
             await self.publish_error_response(message, f"Arquivo do modelo não encontrado em: {model_path_str}")
             return
-        
-        logger.info(f"Carregando modelo de '{model_path_str}' para fazer previsão.")
+
+        logger.info(f"[PredictiveAnalysisAgent] Carregando modelo de '{model_path_str}' para fazer previsão.")
 
         try:
             model = joblib.load(model_path_str)
-            
+
             # Prepara os dados de entrada
             input_df = pd.DataFrame(input_data)
-            
+            if input_df.empty:
+                logger.warning("[PredictiveAnalysisAgent] Nenhum dado de entrada fornecido para previsão.")
+                await self.publish_error_response(message, "Nenhum dado de entrada fornecido para previsão.")
+                return
+
             prediction = model.predict(input_df)
-            
-            response_content = {
+
+            response_content: Dict[str, Any] = {
                 "status": "completed",
-                "prediction": prediction.tolist() # Converte array numpy para lista
+                "prediction": prediction.tolist()  # Converte array numpy para lista
             }
             await self.publish_response(message, response_content)
 
         except Exception as e:
-            logger.error(f"Erro ao fazer a previsão: {e}", exc_info=True)
+            logger.critical(f"[PredictiveAnalysisAgent] Erro ao fazer a previsão: {e}", exc_info=True)
             await self.publish_error_response(message, f"Erro interno durante a previsão: {e}")
