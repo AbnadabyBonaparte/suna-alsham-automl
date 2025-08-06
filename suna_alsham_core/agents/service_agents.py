@@ -115,30 +115,40 @@ class DecisionAgent(BaseNetworkAgent):
         }
 
 
-def create_service_agents(message_bus) -> List[BaseNetworkAgent]:
+def create_service_agents(message_bus: Any) -> List[BaseNetworkAgent]:
     """
-    Cria os agentes de serviço para o núcleo do sistema.
+    Função de bootstrap para criação dos agentes de serviço do núcleo do sistema.
+    Cria e inicializa os agentes CommunicationAgent e DecisionAgent.
+    :param message_bus: Barramento de mensagens do sistema.
+    :return: Lista de instâncias de agentes de serviço criados.
     """
-    agents = []
+    agents: List[BaseNetworkAgent] = []
     logger.info("🔧 Criando agentes de Serviço...")
-    
+
     agent_configs = [
         {"id": "communication_001", "class": CommunicationAgent},
         {"id": "decision_001", "class": DecisionAgent},
     ]
-    
+
     for config in agent_configs:
         try:
             agent = config["class"](config["id"], message_bus)
             agents.append(agent)
+            logger.info(f"✅ Agente de serviço {config['id']} criado com sucesso.")
         except Exception as e:
             logger.error(f"❌ Erro criando agente de serviço {config['id']}: {e}", exc_info=True)
-    
+
+    logger.info(f"🔧 Total de agentes de serviço criados: {len(agents)}")
     return agents
 
 
 # --- FACTORY FUNCTION OBRIGATÓRIA PARA O BOOTSTRAP ---
 
-def create_agents():
+def create_agents() -> List[BaseNetworkAgent]:
+    """
+    Função obrigatória de bootstrap para carregamento automático dos agentes de serviço.
+    Deve ser exportada no módulo principal para integração plug-and-play.
+    :return: Lista de agentes de serviço criados.
+    """
     from suna_alsham_core.message_bus import global_message_bus
     return create_service_agents(global_message_bus)
