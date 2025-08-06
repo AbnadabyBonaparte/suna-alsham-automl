@@ -45,8 +45,8 @@ WORKDIR /app
 COPY --from=builder /app /app
 COPY --from=builder /usr/local/lib/python3.11/site-packages /usr/local/lib/python3.11/site-packages
 
-# Expõe a porta que nossa aplicação irá usar (o Railway detecta isso)
-EXPOSE 8080
+# Expõe a porta padrão usada pelo app (8000)
+EXPOSE 8000
 
-# O comando para iniciar nosso sistema quando o container rodar.
+# Comando de inicialização robusto (pode ser alterado para gunicorn se desejar)
 CMD ["python", "start.py"]
