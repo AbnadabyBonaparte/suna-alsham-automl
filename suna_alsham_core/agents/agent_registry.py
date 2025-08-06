@@ -192,16 +192,11 @@ class AgentRegistry:
             "active_agents": status_counts.get("active", 0)
         }
 
-# Instância global
 agent_registry = AgentRegistry()
 
-# Factory para integração com agent_loader
-def create_agents(message_bus: Any) -> List[BaseAgent]:
+def create_agents(message_bus) -> List[BaseAgent]:
     """
-    Factory function para integração com agent_loader.
-    Retorna uma lista com a instância global do registry como agente único.
+    Factory function for agent_loader integration.
+    Returns a list with the global registry instance as the sole agent.
     """
     return [agent_registry]
-
-# Instância global
-agent_registry = AgentRegistry()
