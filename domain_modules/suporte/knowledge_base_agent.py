@@ -78,27 +78,40 @@ class KnowledgeBaseAgent(BaseNetworkAgent):
         )
         await self.message_bus.publish(request_to_db)
 
-    async def handle_db_response(self, response_message: AgentMessage):
-        """Recebe o resultado da busca do DatabaseAgent e formata a resposta."""
-        search_id = response_message.callback_id
+    async def handle_db_response(self, response_message: AgentMessage) -> None:
+        """
+        Handles the result of a search from the DatabaseAgent and formats the response for the requester.
+
+        This method validates the search context, checks the completion status,
+        logs all relevant events, processes the database results, and sends the final response.
+        Robust error handling is provided for diagnostics and production reliability.
+
+        Args:
+            response_message (AgentMessage): The message containing the database search results.
+
+        Returns:
+            None
+        """
+        search_id: str = response_message.callback_id
         if not search_id or search_id not in self.pending_searches:
+            logger.warning(f"[KnowledgeBaseAgent] Resposta recebida para busca desconhecida ou já finalizada: {search_id}")
             return
 
-        search_context = self.pending_searches.pop(search_id)
-        original_message = search_context["original_message"]
-        
-        db_data = response_message.content.get("data", [])
-        
-        found_articles = []
+        search_context: Dict[str, Any] = self.pending_searches.pop(search_id)
+        original_message: AgentMessage = search_context["original_message"]
+
+        db_data: List[List[Any]] = response_message.content.get("data", [])
+
+        found_articles: List[Dict[str, str]] = []
         if response_message.content.get("status") == "completed" and db_data:
             for row in db_data:
                 # Assumindo que a ordem das colunas é title, content
                 if len(row) >= 2:
                     found_articles.append({"title": row[0], "content": row[1]})
-        
-        logger.info(f"Busca na KB [ID: {search_id}] concluída. {len(found_articles)} artigo(s) encontrado(s).")
 
-        final_response = {
+        logger.info(f"[KnowledgeBaseAgent] Busca na KB [ID: {search_id}] concluída. {len(found_articles)} artigo(s) encontrado(s).")
+
+        final_response: Dict[str, Any] = {
             "status": "completed",
             "found_articles": found_articles
         }
