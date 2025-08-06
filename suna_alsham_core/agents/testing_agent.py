@@ -112,19 +112,19 @@ class TestingAgent(BaseNetworkAgent):
         }
 
 
-def create_testing_agent(message_bus) -> List[BaseNetworkAgent]:
+def create_agents(message_bus: Any) -> List[BaseNetworkAgent]:
     """
-    Factory function to create and initialize the TestingAgent(s) for the ALSHAM QUANTUM system.
+    Função fábrica para criar e inicializar o(s) TestingAgent(s) do sistema ALSHAM QUANTUM.
 
-    This function instantiates the TestingAgent, logs all relevant events for diagnostics,
-    and returns it in a list for registration in the agent registry. Handles errors robustly
-    and ensures the agent is ready for operation.
+    Esta função instancia o TestingAgent, registra todos os eventos relevantes para diagnóstico
+    e retorna em uma lista para registro no agent registry. Lida com erros de forma robusta
+    e garante que o agente esteja pronto para operação.
 
     Args:
-        message_bus (Any): The message bus or communication channel for agent messaging.
+        message_bus (Any): O barramento de mensagens ou canal de comunicação para mensagens entre agentes.
 
     Returns:
-        List[BaseNetworkAgent]: A list containing the initialized TestingAgent instance(s).
+        List[BaseNetworkAgent]: Uma lista contendo a(s) instância(s) inicializada(s) de TestingAgent.
     """
     agents: List[BaseNetworkAgent] = []
     logger.info("🧪 [Factory] Criando TestingAgent...")
