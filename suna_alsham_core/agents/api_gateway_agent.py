@@ -612,29 +612,21 @@ class QuantumAPIGatewayAgent(BaseNetworkAgent):
             }
         }
 
-from typing import Any, List
-
-def create_api_gateway_agent(message_bus: Any) -> List[BaseNetworkAgent]:
+def create_agents(message_bus) -> List[BaseNetworkAgent]:
     """
-    Factory function to create and return all Quantum API Gateway agents for the system.
-    This function is intended for use by the agent_loader/bootstrap system.
-
-    Args:
-        message_bus (Any): The message bus instance for agent communication.
-
-    Returns:
-        List[BaseNetworkAgent]: List of instantiated Quantum API Gateway agents (empty if FastAPI unavailable).
+    Factory function padrão para integração com agent_loader.
+    Cria e retorna todos os agentes Quantum API Gateway deste módulo.
     """
     agents: List[BaseNetworkAgent] = []
-    logger.info("🌐 Creating QuantumAPIGatewayAgent...")
+    logger.info("🌐 Criando QuantumAPIGatewayAgent...")
     try:
         if FASTAPI_AVAILABLE:
             agent = QuantumAPIGatewayAgent("api_gateway_001", message_bus)
             agents.append(agent)
-            logger.info("✅ QuantumAPIGatewayAgent created successfully.")
+            logger.info("✅ QuantumAPIGatewayAgent criado com sucesso.")
         else:
-            logger.critical("❌ FastAPI not available - API Gateway cannot be created.")
+            logger.critical("❌ FastAPI não disponível - API Gateway não pode ser criado.")
     except Exception as e:
-        logger.critical(f"❌ Critical error creating QuantumAPIGatewayAgent: {e}", exc_info=True)
-    logger.info(f"🌐 Total API Gateway agents created: {len(agents)}")
+        logger.critical(f"❌ Erro crítico ao criar QuantumAPIGatewayAgent: {e}", exc_info=True)
+    logger.info(f"🌐 Total de agentes API Gateway criados: {len(agents)}")
     return agents
