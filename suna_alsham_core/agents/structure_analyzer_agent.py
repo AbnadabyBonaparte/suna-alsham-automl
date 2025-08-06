@@ -31,16 +31,19 @@ class StructureAnalyzerAgent(BaseNetworkAgent):
             "status": "operational"
         }
 
-def create_structure_analyzer_agents() -> List[BaseNetworkAgent]:
+def create_agents(message_bus: Any) -> List[BaseNetworkAgent]:
     """
-    Factory function to create and initialize the StructureAnalyzerAgent(s) for the ALSHAM QUANTUM system.
+    Função fábrica para criar e inicializar o(s) StructureAnalyzerAgent(s) do sistema ALSHAM QUANTUM.
 
-    This function instantiates the StructureAnalyzerAgent, logs all relevant events for diagnostics,
-    and returns it in a list for registration in the agent registry. Handles errors robustly
-    and ensures the agent is ready for operation.
+    Esta função instancia o StructureAnalyzerAgent, registra todos os eventos relevantes para diagnóstico
+    e retorna em uma lista para registro no agent registry. Lida com erros de forma robusta
+    e garante que o agente esteja pronto para operação.
+
+    Args:
+        message_bus (Any): O barramento de mensagens ou canal de comunicação para mensagens entre agentes (não utilizado neste agente).
 
     Returns:
-        List[BaseNetworkAgent]: A list containing the initialized StructureAnalyzerAgent instance(s).
+        List[BaseNetworkAgent]: Uma lista contendo a(s) instância(s) inicializada(s) de StructureAnalyzerAgent.
     """
     agents: List[BaseNetworkAgent] = []
     try:
