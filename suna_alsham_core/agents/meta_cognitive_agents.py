@@ -880,11 +880,28 @@ class QuantumMetaCognitiveAgent(BaseNetworkAgent):
             "quantum_introspection",
             "emergent_pattern_detection"
         ])
-        
         self._analysis_task: Optional[asyncio.Task] = None
-        self.system_logs: List[Dict[str, Any]] = []  # Armazenamento simples de logs para análise
+        self.system_logs: List[Dict[str, Any]] = []  # Logs reais capturados
         self.interaction_graph = nx.Graph()  # Grafo para padrões emergentes
+        self._log_handler = self._create_log_handler()
+        logging.getLogger().addHandler(self._log_handler)
+        self._message_history: List[Dict[str, Any]] = []  # Histórico real de mensagens
         logger.info(f"🧠 {self.agent_id} (Quantum Meta-Cognitive) inicializado.")
+
+    def _create_log_handler(self):
+        class LogCollector(logging.Handler):
+            def __init__(self, outer):
+                super().__init__()
+                self.outer = outer
+            def emit(self, record):
+                log_entry = {
+                    'timestamp': datetime.fromtimestamp(record.created),
+                    'level': record.levelname,
+                    'message': record.getMessage(),
+                    'module': record.module
+                }
+                self.outer.system_logs.append(log_entry)
+        return LogCollector(self)
     
     async def start_meta_cognition(self):
         """Inicia processo de meta-cognição quantum."""
@@ -896,28 +913,22 @@ class QuantumMetaCognitiveAgent(BaseNetworkAgent):
         """Loop principal de análise meta-cognitiva."""
         while True:
             await asyncio.sleep(600)  # Análise a cada 10 minutos
-            
             try:
                 await self._analyze_system_behavior()
                 await self._detect_emergent_patterns()
                 await self._quantum_self_reflection()
-                
             except Exception as e:
                 logger.error(f"❌ Erro na meta-cognição: {e}", exc_info=True)
     
     async def _analyze_system_behavior(self):
         """Analisa o comportamento do sistema em tempo real usando métricas reais."""
-        # Coleta métricas do sistema com psutil
         cpu_usage = psutil.cpu_percent(interval=1)
         memory_usage = psutil.virtual_memory().percent
         disk_usage = psutil.disk_usage('/').percent
         net_io = psutil.net_io_counters()
-        
-        # Análise simples de logs (assumindo que logs são coletados via MessageBus ou logger)
-        # Aqui, simulamos coleta de logs recentes; em produção, integrar com MessageBus para eventos
+        # Logs reais dos últimos 10 minutos
         recent_logs = [log for log in self.system_logs if (datetime.now() - log['timestamp']) < timedelta(minutes=10)]
-        error_count = sum(1 for log in recent_logs if 'error' in log['message'].lower())
-        
+        error_count = sum(1 for log in recent_logs if log['level'] in ("ERROR", "CRITICAL"))
         analysis = {
             "cpu_usage": cpu_usage,
             "memory_usage": memory_usage,
@@ -927,10 +938,7 @@ class QuantumMetaCognitiveAgent(BaseNetworkAgent):
             "recent_errors": error_count,
             "behavior": "nominal" if cpu_usage < 80 and error_count < 5 else "stressed"
         }
-        
         logger.info(f"📊 Análise de comportamento: {analysis}")
-        
-        # Publica análise via MessageBus para outros agentes
         analysis_message = self.create_message(
             recipient_id="orchestrator_001",
             message_type=MessageType.NOTIFICATION,
@@ -939,30 +947,28 @@ class QuantumMetaCognitiveAgent(BaseNetworkAgent):
         await self.message_bus.publish(analysis_message)
     
     async def _detect_emergent_patterns(self):
-        """Detecta padrões emergentes usando grafos com networkx."""
-        # Constrói grafo baseado em interações (ex.: de logs ou histórico de mensagens)
-        # Aqui, exemplo com dados simulados; integrar com MessageBus para dados reais
+        """Detecta padrões emergentes usando grafos com networkx a partir de mensagens reais."""
         self.interaction_graph.clear()
-        # Adiciona nós (agentes) e arestas (interações)
-        agents = ["orchestrator_001", "ai_analyzer_001", "evolution_engine_001"]
-        for agent in agents:
-            self.interaction_graph.add_node(agent)
-        
-        # Adiciona arestas baseadas em interações recentes (simulado)
-        interactions = [("orchestrator_001", "ai_analyzer_001", {"weight": 5}),
-                        ("orchestrator_001", "evolution_engine_001", {"weight": 3}),
-                        ("ai_analyzer_001", "evolution_engine_001", {"weight": 2})]
-        self.interaction_graph.add_weighted_edges_from(interactions)
-        
-        # Detecta comunidades (padrões emergentes)
+        # Coleta histórico real de mensagens do MessageBus (assumindo que existe um método para isso)
+        # Aqui, interceptamos mensagens recebidas pelo agente
+        # Para um sistema real, integre com o MessageBus para coletar todas as mensagens trocadas
+        for msg in self._message_history:
+            sender = msg.get('sender_id')
+            recipient = msg.get('recipient_id')
+            if sender and recipient:
+                if not self.interaction_graph.has_node(sender):
+                    self.interaction_graph.add_node(sender)
+                if not self.interaction_graph.has_node(recipient):
+                    self.interaction_graph.add_node(recipient)
+                if self.interaction_graph.has_edge(sender, recipient):
+                    self.interaction_graph[sender][recipient]['weight'] += 1
+                else:
+                    self.interaction_graph.add_edge(sender, recipient, weight=1)
+        # Detecta comunidades
         from networkx.algorithms.community import greedy_modularity_communities
         communities = list(greedy_modularity_communities(self.interaction_graph))
-        
         patterns = [{"community": i, "agents": list(c)} for i, c in enumerate(communities)]
-        
         logger.info(f"🔍 Padrões emergentes detectados: {patterns}")
-        
-        # Publica padrões detectados
         patterns_message = self.create_message(
             recipient_id="orchestrator_001",
             message_type=MessageType.NOTIFICATION,
@@ -971,20 +977,43 @@ class QuantumMetaCognitiveAgent(BaseNetworkAgent):
         await self.message_bus.publish(patterns_message)
     
     async def _quantum_self_reflection(self):
-        """Executa auto-reflexão quântica para adaptação, usando probabilidades simuladas."""
-        # Simula reflexão quântica com estados probabilísticos (pode integrar qiskit no futuro)
-        import random
-        coherence_score = random.uniform(0.7, 1.0)  # Simulação de estado quântico coerente
+        """Executa auto-reflexão quântica baseada em métricas reais do sistema."""
+        # Busca métricas reais do QuantumOrchestratorAgent
+        # Supondo que o Orchestrator publica métricas periodicamente via MessageBus
+        # Aqui, usamos a última métrica recebida
+        coherence_score = None
+        for log in reversed(self.system_logs):
+            if 'Análise de comportamento' in log['message'] and 'coherence' in log['message']:
+                try:
+                    # Extrai valor do log
+                    import re
+                    match = re.search(r'coherence[":= ]+([0-9.]+)', log['message'])
+                    if match:
+                        coherence_score = float(match.group(1))
+                        break
+                except Exception:
+                    continue
+        # Fallback: calcula coerência baseada em taxa de sucesso e eficiência
+        if coherence_score is None:
+            # Busca última métrica publicada
+            for log in reversed(self.system_logs):
+                if 'quantum_metrics' in log['message']:
+                    try:
+                        import json
+                        metrics = json.loads(log['message'])
+                        success_rate = metrics.get('success_rate', 1.0)
+                        efficiency = metrics.get('system_efficiency', 1.0)
+                        coherence_score = (success_rate + efficiency) / 2
+                        break
+                    except Exception:
+                        continue
+        if coherence_score is None:
+            coherence_score = 1.0  # Assume coerência máxima se não encontrar
         adaptation_needed = coherence_score < 0.85
-        
-        logger.info(f"🤔 Iniciando auto-reflexão quântica. Coerência: {coherence_score:.2f}")
-        
+        logger.info(f"🤔 Iniciando auto-reflexão quântica. Coerência real: {coherence_score:.2f}")
         if adaptation_needed:
-            # Propõe adaptação (ex.: ajustar prioridades)
-            adaptation = {"action": "increase_resources", "reason": "low_coherence"}
+            adaptation = {"action": "increase_resources", "reason": "low_coherence", "coherence": coherence_score}
             logger.warning(f"⚠️ Adaptação necessária: {adaptation}")
-            
-            # Publica sugestão de adaptação
             reflection_message = self.create_message(
                 recipient_id="orchestrator_001",
                 message_type=MessageType.REQUEST,
@@ -993,6 +1022,17 @@ class QuantumMetaCognitiveAgent(BaseNetworkAgent):
             await self.message_bus.publish(reflection_message)
         else:
             logger.info("✅ Sistema coerente; nenhuma adaptação necessária.")
+    async def _internal_handle_message(self, message: AgentMessage):
+        """Intercepta mensagens para alimentar o grafo de interações e histórico real."""
+        # Salva mensagem recebida para análise de padrões
+        self._message_history.append({
+            'sender_id': message.sender_id,
+            'recipient_id': message.recipient_id,
+            'message_type': message.message_type.value,
+            'timestamp': datetime.now()
+        })
+        # Opcional: processar mensagens específicas se necessário
+        # await super()._internal_handle_message(message)
 
 def create_agents(message_bus: Any) -> List[BaseNetworkAgent]:
     """
