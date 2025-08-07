@@ -30,7 +30,9 @@ class TrainingDataPoint:
 
 # Import comentado até o módulo estar disponível
 # from suna_alsham_core.real_evolution_engine import TrainingDataPoint
-from suna_alsham_core.multi_agent_network import (
+
+# CORREÇÃO: Import path corrigido
+from ..core.multi_agent_network import (
     AgentMessage,
     AgentType,
     BaseNetworkAgent,
@@ -155,7 +157,10 @@ class QuantumOrchestratorAgent(BaseNetworkAgent):
     - Monitoramento em tempo real com ajustes adaptativos
     """
     
-    def __init__(self, agent_id: str, message_bus):
+    def __init__(self, agent_id: str, message_bus, max_concurrent_missions: int = None, mission_history_limit: int = None, performance_analysis_interval: int = None, quantum_coherence_threshold: float = None, critical_event_callback=None):
+        """
+        Inicializa o Quantum Orchestrator Agent com parâmetros configuráveis e callback externo para eventos críticos.
+        """
         super().__init__(agent_id, AgentType.ORCHESTRATOR, message_bus)
         self.capabilities.extend([
             "quantum_orchestration",
@@ -165,24 +170,22 @@ class QuantumOrchestratorAgent(BaseNetworkAgent):
             "parallel_execution",
             "adaptive_learning"
         ])
-        
+        import os
         # Estado quantum do orquestrador
         self.active_missions: Dict[str, MissionContext] = {}
-        self.mission_history: deque = deque(maxlen=1000)
+        self.mission_history: deque = deque(maxlen=mission_history_limit or int(os.environ.get('MISSION_HISTORY_LIMIT', 1000)))
         self.quantum_metrics = QuantumMetrics()
         self.agent_performance_cache: Dict[str, deque] = defaultdict(lambda: deque(maxlen=50))
         self.mission_templates: Dict[str, List[Dict]] = {}
-        
         # Configurações quantum
-        self.max_concurrent_missions = 10
-        self.mission_timeout_minutes = 30
-        self.performance_analysis_interval = 300  # 5 minutos
-        self.quantum_coherence_threshold = 0.8
-        
+        self.max_concurrent_missions = max_concurrent_missions or int(os.environ.get('MAX_CONCURRENT_MISSIONS', 10))
+        self.mission_timeout_minutes = int(os.environ.get('MISSION_TIMEOUT_MINUTES', 30))
+        self.performance_analysis_interval = performance_analysis_interval or int(os.environ.get('PERFORMANCE_ANALYSIS_INTERVAL', 300))
+        self.quantum_coherence_threshold = quantum_coherence_threshold or float(os.environ.get('QUANTUM_COHERENCE_THRESHOLD', 0.8))
+        self.critical_event_callback = critical_event_callback
         # Tarefas em background
         self._performance_analyzer_task = asyncio.create_task(self._performance_analysis_loop())
         self._mission_monitor_task = asyncio.create_task(self._mission_monitoring_loop())
-        
         logger.info(f"👑 {self.agent_id} (Quantum Orchestrator) inicializado - Superinteligência ativa.")
     
     async def _performance_analysis_loop(self):
@@ -667,11 +670,9 @@ class QuantumOrchestratorAgent(BaseNetworkAgent):
                 "steps_completed": len([s for s in mission_context.steps if s.status == StepStatus.COMPLETED]),
                 "total_steps": len(mission_context.steps)
             }
-            
             logger.info(f"✅ [Quantum Orchestrator] Missão '{mission_id}' concluída com sucesso!")
             logger.info(f" ⏱️ Tempo total: {total_time:.1f}s")
             logger.info(f" 📋 Passos: {response_content['steps_completed']}/{response_content['total_steps']}")
-            
         else:
             response_content = {
                 "status": "error",
@@ -679,19 +680,23 @@ class QuantumOrchestratorAgent(BaseNetworkAgent):
                 "mission_id": mission_id,
                 "execution_time_seconds": total_time
             }
-            
             logger.error(f"❌ [Quantum Orchestrator] Missão '{mission_id}' falhou: {message}")
-        
-        # Envia resposta (procura por mensagem original no contexto)
-        # Por simplicidade, registra apenas no log aqui - implementação completa precisaria
-        # armazenar referência à mensagem original
-        
+        # Callback externo para eventos críticos
+        if self.critical_event_callback and (final_status == MissionStatus.FAILED or final_status == MissionStatus.COMPLETED):
+            try:
+                await self.critical_event_callback({
+                    'event': 'mission_concluded',
+                    'mission_id': mission_id,
+                    'status': final_status.value,
+                    'message': message,
+                    'metrics': response_content
+                })
+            except Exception as e:
+                logger.error(f"Erro no callback externo de evento crítico: {e}")
         # Envia dados de treinamento para o Evolution Engine
         await self._send_training_data(mission_context, final_status)
-        
         # Atualiza métricas quantum
         self._update_quantum_metrics(mission_context, final_status)
-        
         # Move para histórico e limpa memória ativa
         self.mission_history.append(mission_context)
         del self.active_missions[mission_id]
@@ -873,7 +878,12 @@ class QuantumMetaCognitiveAgent(BaseNetworkAgent):
     """
     
     def __init__(self, agent_id: str, message_bus):
-        super().__init__(agent_id, AgentType.META_COGNITIVE, message_bus)
+        # CORREÇÃO: Se META_COGNITIVE não existir, usar CORE
+        try:
+            super().__init__(agent_id, AgentType.META_COGNITIVE, message_bus)
+        except:
+            super().__init__(agent_id, AgentType.CORE, message_bus)
+            
         self.capabilities.extend([
             "system_consciousness",
             "behavioral_analysis",
@@ -1034,20 +1044,32 @@ class QuantumMetaCognitiveAgent(BaseNetworkAgent):
         # Opcional: processar mensagens específicas se necessário
         # await super()._internal_handle_message(message)
 
-def create_agents(message_bus: Any) -> List[BaseNetworkAgent]:
+def create_agents(message_bus, max_concurrent_missions: int = None, mission_history_limit: int = None, performance_analysis_interval: int = None, quantum_coherence_threshold: float = None, critical_event_callback=None) -> List[BaseNetworkAgent]:
     """
     Factory function to create and initialize Quantum Meta-Cognitive Agent(s) for the ALSHAM QUANTUM system.
-    This function instantiates the QuantumOrchestratorAgent and QuantumMetaCognitiveAgent, logs all relevant events for diagnostics,
-    and returns them in a list for registration in the agent registry. Handles errors robustly and ensures the agents are ready for operation.
+    Permite configuração avançada via parâmetros ou variáveis de ambiente, e integração de callback externo para eventos críticos.
     Args:
-        message_bus (Any): The message bus or communication channel for agent messaging.
+        message_bus: The message bus or communication channel for agent messaging.
+        max_concurrent_missions: Maximum concurrent missions (int, optional).
+        mission_history_limit: Max mission history size (int, optional).
+        performance_analysis_interval: Interval for performance analysis (int, optional).
+        quantum_coherence_threshold: Quantum coherence threshold (float, optional).
+        critical_event_callback: Callback async function for critical events (optional).
     Returns:
         List[BaseNetworkAgent]: A list containing the initialized Quantum Meta-Cognitive Agent instance(s).
     """
     agents: List[BaseNetworkAgent] = []
     try:
         # Orquestrador Quantum
-        orchestrator = QuantumOrchestratorAgent("orchestrator_001", message_bus)
+        orchestrator = QuantumOrchestratorAgent(
+            "orchestrator_001",
+            message_bus,
+            max_concurrent_missions=max_concurrent_missions,
+            mission_history_limit=mission_history_limit,
+            performance_analysis_interval=performance_analysis_interval,
+            quantum_coherence_threshold=quantum_coherence_threshold,
+            critical_event_callback=critical_event_callback
+        )
         agents.append(orchestrator)
         # Meta-Cognitivo Quantum
         meta_agent = QuantumMetaCognitiveAgent("metacognitive_001", message_bus)
