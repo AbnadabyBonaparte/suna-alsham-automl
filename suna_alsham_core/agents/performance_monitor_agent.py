@@ -240,24 +240,24 @@ class PerformanceMonitorAgent(BaseAgent):
 
 
 # === Fallback e agente robusto ===
-def create_agents():
-    """Criar agente de performance - VERSÃO CORRIGIDA V2"""
+def create_agents(*args, **kwargs):
+    """Criar agente de performance - ASSINATURA CORRIGIDA"""
     try:
         print("⚡ Iniciando criação performance_monitor_agent...")
-        required_imports = ['psutil', 'time', 'asyncio']
-        for imp in required_imports:
-            try:
-                __import__(imp)
-            except ImportError as e:
-                print(f"⚠️ Dependência faltando: {imp}")
-        agent = PerformanceMonitorAgent()
-        if hasattr(agent, 'agent_id') and hasattr(agent, 'get_capabilities') and agent.agent_id != "MONITOR":
+        # Processar argumentos se fornecidos
+        config = kwargs.get('config', {})
+        logger = kwargs.get('logger', None)
+        # ✅ CRIAR AGENTE COM CONFIGURAÇÃO
+        agent = PerformanceMonitorAgent(config=config)
+        # ✅ VALIDAR CRIAÇÃO
+        if hasattr(agent, 'agent_id') and hasattr(agent, 'get_capabilities'):
             print(f"✅ Performance agent criado: {agent.agent_id}")
             return [agent]
         else:
-            raise Exception("Agent validation failed - missing required attributes or invalid agent_id")
+            raise Exception("Agent validation failed")
     except Exception as e:
         print(f"❌ Erro em performance_monitor create_agents: {e}")
+        # ✅ FALLBACK ROBUSTO
         try:
             basic_monitor = BasicPerformanceMonitor()
             print(f"✅ Fallback criado: {basic_monitor.agent_id}")
@@ -267,10 +267,11 @@ def create_agents():
             return []
 
 class BasicPerformanceMonitor:
-    """Monitor de performance básico - FALLBACK"""
-    def __init__(self):
+    """Monitor de performance básico"""
+    def __init__(self, config=None):
         self.agent_id = "monitor_basic_001"
         self.capabilities = ["basic_monitoring", "system_stats"]
+        self.config = config or {}
         self.active = True
         print(f"✅ BasicPerformanceMonitor inicializado: {self.agent_id}")
     def get_capabilities(self):
@@ -287,20 +288,11 @@ class BasicPerformanceMonitor:
             return stats
         except Exception as e:
             return {"error": str(e), "agent_id": self.agent_id}
-    def get_system_stats(self):
-        try:
-            import psutil
-            return {
-                "cpu": psutil.cpu_percent(interval=1),
-                "memory": psutil.virtual_memory().percent,
-                "timestamp": time.time()
-            }
-        except:
-            return {"status": "stats_unavailable"}
 
 class PerformanceMonitorAgent(BasicPerformanceMonitor):
     """Monitor de performance completo"""
-    def __init__(self):
+    def __init__(self, config=None):
+        super().__init__(config)
         self.agent_id = "performance_monitor_001"
         self.capabilities = [
             "system_monitoring",
@@ -310,10 +302,9 @@ class PerformanceMonitorAgent(BasicPerformanceMonitor):
         ]
         try:
             self._initialize_monitoring()
-            print(f"✅ PerformanceMonitorAgent full init: {self.agent_id}")
+            print(f"✅ PerformanceMonitorAgent inicializado: {self.agent_id}")
         except Exception as e:
-            print(f"⚠️ Full init failed, using basic: {e}")
-            super().__init__()
+            print(f"⚠️ Full init failed: {e}")
     def _initialize_monitoring(self):
         self.metrics_history = []
         self.alert_thresholds = {
@@ -323,3 +314,8 @@ class PerformanceMonitorAgent(BasicPerformanceMonitor):
         }
     def get_capabilities(self):
         return self.capabilities
+    async def process_message(self, message):
+        try:
+            return await super().process_message(message)
+        except Exception as e:
+            return {"error": str(e), "agent": self.agent_id}
