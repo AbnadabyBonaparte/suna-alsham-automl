@@ -14,6 +14,8 @@ from dataclasses import asdict, dataclass, field
 from datetime import datetime, timedelta
 from enum import Enum
 from typing import Any, Dict, List, Optional, Set, Tuple
+import psutil  # Para métricas reais de sistema
+import networkx as nx  # Para análise de padrões emergentes via grafos
 
 # Temporariamente definindo TrainingDataPoint localmente até o módulo real_evolution_engine estar disponível
 @dataclass
@@ -28,7 +30,6 @@ class TrainingDataPoint:
 
 # Import comentado até o módulo estar disponível
 # from suna_alsham_core.real_evolution_engine import TrainingDataPoint
-
 from suna_alsham_core.multi_agent_network import (
     AgentMessage,
     AgentType,
@@ -61,7 +62,7 @@ class StepStatus(Enum):
 
 class PriorityLevel(Enum):
     """Níveis de prioridade quantum."""
-    QUANTUM = "quantum"      # Máxima prioridade
+    QUANTUM = "quantum"  # Máxima prioridade
     CRITICAL = "critical"
     HIGH = "high"
     NORMAL = "normal"
@@ -183,7 +184,7 @@ class QuantumOrchestratorAgent(BaseNetworkAgent):
         self._mission_monitor_task = asyncio.create_task(self._mission_monitoring_loop())
         
         logger.info(f"👑 {self.agent_id} (Quantum Orchestrator) inicializado - Superinteligência ativa.")
-
+    
     async def _performance_analysis_loop(self):
         """Loop de análise de performance e otimização quantum."""
         while True:
@@ -196,7 +197,7 @@ class QuantumOrchestratorAgent(BaseNetworkAgent):
                 
             except Exception as e:
                 logger.error(f"❌ Erro na análise de performance: {e}", exc_info=True)
-
+    
     async def _mission_monitoring_loop(self):
         """Monitora missões ativas e executa recuperação automática."""
         while True:
@@ -208,7 +209,7 @@ class QuantumOrchestratorAgent(BaseNetworkAgent):
                 
             except Exception as e:
                 logger.error(f"❌ Erro no monitoramento de missões: {e}", exc_info=True)
-
+    
     async def _internal_handle_message(self, message: AgentMessage):
         """Processa mensagens com inteligência quantum."""
         logger.debug(f"👑 [Quantum Orchestrator] Mensagem recebida: {message.message_type.value} de {message.sender_id}")
@@ -219,7 +220,7 @@ class QuantumOrchestratorAgent(BaseNetworkAgent):
             await self._handle_mission_response(message)
         elif message.message_type == MessageType.REQUEST and message.content.get("request_type") == "get_orchestrator_metrics":
             await self._handle_metrics_request(message)
-
+    
     async def _handle_new_mission_request(self, message: AgentMessage):
         """Processa nova requisição de missão com análise quantum."""
         mission_id = message.message_id
@@ -263,7 +264,7 @@ class QuantumOrchestratorAgent(BaseNetworkAgent):
         
         # Inicia planejamento quantum
         await self._initiate_quantum_planning(mission_context, message)
-
+    
     async def _initiate_quantum_planning(self, mission_context: MissionContext, original_message: AgentMessage):
         """Inicia o processo de planejamento quantum."""
         mission_context.status = MissionStatus.PLANNING
@@ -299,7 +300,7 @@ class QuantumOrchestratorAgent(BaseNetworkAgent):
         )
         
         await self.message_bus.publish(planning_request)
-
+    
     def _determine_mission_priority(self, content: str) -> PriorityLevel:
         """Determina prioridade da missão baseada no conteúdo."""
         content_lower = content.lower()
@@ -316,7 +317,7 @@ class QuantumOrchestratorAgent(BaseNetworkAgent):
             return PriorityLevel.NORMAL
         else:
             return PriorityLevel.NORMAL
-
+    
     def _analyze_mission_complexity(self, content: str) -> float:
         """Analisa complexidade da missão (0.0 - 1.0)."""
         factors = {
@@ -329,7 +330,7 @@ class QuantumOrchestratorAgent(BaseNetworkAgent):
         
         complexity = sum(factors.values())
         return min(complexity, 1.0)
-
+    
     def _predict_success_probability(self, content: str, complexity: float) -> float:
         """Prediz probabilidade de sucesso baseada em padrões históricos."""
         base_probability = 0.85  # Probabilidade base otimista
@@ -346,12 +347,12 @@ class QuantumOrchestratorAgent(BaseNetworkAgent):
         
         probability = base_probability - complexity_penalty - problem_penalty + historical_bonus
         return max(0.1, min(0.99, probability))
-
+    
     def _select_optimal_ai_analyzer(self, complexity: float) -> str:
         """Seleciona o AI analyzer optimal baseado na complexidade e performance."""
         # Por enquanto retorna o padrão, mas pode ser expandido para múltiplos analyzers
         return "ai_analyzer_001"
-
+    
     def _get_agent_performance_hints(self) -> Dict[str, float]:
         """Retorna dicas de performance dos agentes para o planejador."""
         hints = {}
@@ -362,7 +363,7 @@ class QuantumOrchestratorAgent(BaseNetworkAgent):
                 hints[agent_id] = round(avg_performance, 3)
         
         return hints
-
+    
     def _convert_to_message_priority(self, mission_priority: PriorityLevel) -> Priority:
         """Converte prioridade da missão para prioridade de mensagem."""
         mapping = {
@@ -374,7 +375,7 @@ class QuantumOrchestratorAgent(BaseNetworkAgent):
             PriorityLevel.BACKGROUND: Priority.LOW
         }
         return mapping.get(mission_priority, Priority.NORMAL)
-
+    
     async def _handle_mission_response(self, message: AgentMessage):
         """Processa respostas de agentes para missões ativas."""
         callback_id = message.callback_id
@@ -396,7 +397,7 @@ class QuantumOrchestratorAgent(BaseNetworkAgent):
                         await self._handle_step_response(mission_id, step_index, message)
                 except ValueError:
                     logger.warning(f"⚠️ Formato inválido de callback_id: {callback_id}")
-
+    
     async def _handle_planning_response(self, mission_id: str, planning_message: AgentMessage):
         """Processa resposta do planejamento e inicia execução."""
         mission_context = self.active_missions[mission_id]
@@ -433,14 +434,14 @@ class QuantumOrchestratorAgent(BaseNetworkAgent):
         # Registra métricas do planejamento
         planning_metrics = planning_message.content
         logger.info(f"🧠 [Quantum Orchestrator] Plano recebido para '{mission_id}':")
-        logger.info(f"  📋 {len(execution_steps)} passos definidos")
-        logger.info(f"  🤖 Provedor IA: {planning_metrics.get('provider_used', 'unknown')}")
-        logger.info(f"  ⏱️ Tempo de planejamento: {planning_metrics.get('response_time_ms', 0):.1f}ms")
-        logger.info(f"  🎯 Confiança: {planning_metrics.get('confidence_score', 0):.2f}")
+        logger.info(f" 📋 {len(execution_steps)} passos definidos")
+        logger.info(f" 🤖 Provedor IA: {planning_metrics.get('provider_used', 'unknown')}")
+        logger.info(f" ⏱️ Tempo de planejamento: {planning_metrics.get('response_time_ms', 0):.1f}ms")
+        logger.info(f" 🎯 Confiança: {planning_metrics.get('confidence_score', 0):.2f}")
         
         # Inicia execução
         await self._execute_next_mission_step(mission_id)
-
+    
     async def _execute_next_mission_step(self, mission_id: str):
         """Executa o próximo passo da missão."""
         if mission_id not in self.active_missions:
@@ -458,8 +459,8 @@ class QuantumOrchestratorAgent(BaseNetworkAgent):
         current_step.started_at = datetime.now()
         
         logger.info(f"🔧 [Quantum Orchestrator] Executando passo {current_step.step_number}/{len(mission_context.steps)}")
-        logger.info(f"  📝 Descrição: {current_step.description}")
-        logger.info(f"  🤖 Agente: {current_step.assigned_agent}")
+        logger.info(f" 📝 Descrição: {current_step.description}")
+        logger.info(f" 🤖 Agente: {current_step.assigned_agent}")
         
         try:
             # Resolve contexto dinâmico
@@ -481,7 +482,7 @@ class QuantumOrchestratorAgent(BaseNetworkAgent):
             current_step.status = StepStatus.FAILED
             current_step.error_message = str(e)
             await self._handle_step_failure(mission_id, mission_context.current_step_index)
-
+    
     def _resolve_quantum_context(self, task_content: Dict, step_outputs: Dict[int, Dict[str, Any]]) -> Dict:
         """Resolve contexto dinâmico com inteligência quantum."""
         if not task_content:
@@ -522,7 +523,7 @@ class QuantumOrchestratorAgent(BaseNetworkAgent):
             logger.error(f"❌ Erro decodificando JSON após resolução de contexto: {e}")
             logger.error(f"Conteúdo problemático: {resolved_content}")
             return task_content  # Retorna original em caso de erro
-
+    
     async def _handle_step_response(self, mission_id: str, step_index: int, step_message: AgentMessage):
         """Processa resposta de um passo da missão."""
         mission_context = self.active_missions[mission_id]
@@ -551,7 +552,7 @@ class QuantumOrchestratorAgent(BaseNetworkAgent):
             self._update_agent_performance(current_step.assigned_agent, 1.0, current_step.execution_time_ms)
             
             logger.info(f"✅ [Quantum Orchestrator] Passo {current_step.step_number} concluído com sucesso")
-            logger.info(f"  ⏱️ Tempo de execução: {current_step.execution_time_ms:.1f}ms")
+            logger.info(f" ⏱️ Tempo de execução: {current_step.execution_time_ms:.1f}ms")
             
             # Avança para próximo passo
             mission_context.current_step_index += 1
@@ -567,7 +568,7 @@ class QuantumOrchestratorAgent(BaseNetworkAgent):
             logger.error(f"❌ Passo {current_step.step_number} falhou: {current_step.error_message}")
             
             await self._handle_step_failure(mission_id, step_index)
-
+    
     def _update_agent_performance(self, agent_id: str, success_score: float, execution_time_ms: float):
         """Atualiza métricas de performance do agente."""
         # Score composto: sucesso (70%) + velocidade (30%)
@@ -585,7 +586,7 @@ class QuantumOrchestratorAgent(BaseNetworkAgent):
             # Média móvel ponderada
             current_avg = self.quantum_metrics.agent_success_rates[agent_id]
             self.quantum_metrics.agent_success_rates[agent_id] = (current_avg * 0.8) + (composite_score * 0.2)
-
+    
     async def _handle_step_failure(self, mission_id: str, step_index: int):
         """Processa falha de um passo com estratégias de recuperação."""
         mission_context = self.active_missions[mission_id]
@@ -616,11 +617,11 @@ class QuantumOrchestratorAgent(BaseNetworkAgent):
             else:
                 # Falha total da missão
                 await self._conclude_mission(
-                    mission_id, 
-                    MissionStatus.FAILED, 
+                    mission_id,
+                    MissionStatus.FAILED,
                     f"Passo {failed_step.step_number} falhou: {failed_step.error_message}"
                 )
-
+    
     async def _apply_fallback_strategy(self, mission_id: str, step_index: int) -> bool:
         """Aplica estratégia de fallback para um passo falhado."""
         mission_context = self.active_missions[mission_id]
@@ -642,7 +643,7 @@ class QuantumOrchestratorAgent(BaseNetworkAgent):
             return False
         
         return False
-
+    
     async def _conclude_mission(self, mission_id: str, final_status: MissionStatus, message: str):
         """Conclui uma missão e envia feedback de aprendizado."""
         if mission_id not in self.active_missions:
@@ -668,8 +669,8 @@ class QuantumOrchestratorAgent(BaseNetworkAgent):
             }
             
             logger.info(f"✅ [Quantum Orchestrator] Missão '{mission_id}' concluída com sucesso!")
-            logger.info(f"  ⏱️ Tempo total: {total_time:.1f}s")
-            logger.info(f"  📋 Passos: {response_content['steps_completed']}/{response_content['total_steps']}")
+            logger.info(f" ⏱️ Tempo total: {total_time:.1f}s")
+            logger.info(f" 📋 Passos: {response_content['steps_completed']}/{response_content['total_steps']}")
             
         else:
             response_content = {
@@ -682,7 +683,7 @@ class QuantumOrchestratorAgent(BaseNetworkAgent):
             logger.error(f"❌ [Quantum Orchestrator] Missão '{mission_id}' falhou: {message}")
         
         # Envia resposta (procura por mensagem original no contexto)
-        # Por simplicidade, registra apenas no log aqui - implementação completa precisaria 
+        # Por simplicidade, registra apenas no log aqui - implementação completa precisaria
         # armazenar referência à mensagem original
         
         # Envia dados de treinamento para o Evolution Engine
@@ -694,7 +695,7 @@ class QuantumOrchestratorAgent(BaseNetworkAgent):
         # Move para histórico e limpa memória ativa
         self.mission_history.append(mission_context)
         del self.active_missions[mission_id]
-
+    
     async def _send_training_data(self, mission_context: MissionContext, final_status: MissionStatus):
         """Envia dados de treinamento para o Evolution Engine."""
         try:
@@ -745,7 +746,7 @@ class QuantumOrchestratorAgent(BaseNetworkAgent):
             
         except Exception as e:
             logger.error(f"❌ Erro enviando dados de treinamento: {e}", exc_info=True)
-
+    
     def _update_quantum_metrics(self, mission_context: MissionContext, final_status: MissionStatus):
         """Atualiza métricas quantum do orquestrador."""
         self.quantum_metrics.total_missions += 1
@@ -759,7 +760,7 @@ class QuantumOrchestratorAgent(BaseNetworkAgent):
         current_avg = self.quantum_metrics.average_mission_time
         new_time = mission_context.total_execution_time
         self.quantum_metrics.average_mission_time = (
-            (current_avg * (self.quantum_metrics.total_missions - 1) + new_time) / 
+            (current_avg * (self.quantum_metrics.total_missions - 1) + new_time) /
             self.quantum_metrics.total_missions
         )
         
@@ -767,7 +768,7 @@ class QuantumOrchestratorAgent(BaseNetworkAgent):
         current_avg_steps = self.quantum_metrics.average_steps_per_mission
         new_steps = len(mission_context.steps)
         self.quantum_metrics.average_steps_per_mission = (
-            (current_avg_steps * (self.quantum_metrics.total_missions - 1) + new_steps) / 
+            (current_avg_steps * (self.quantum_metrics.total_missions - 1) + new_steps) /
             self.quantum_metrics.total_missions
         )
         
@@ -781,7 +782,7 @@ class QuantumOrchestratorAgent(BaseNetworkAgent):
         success_rate = self.quantum_metrics.successful_missions / self.quantum_metrics.total_missions
         avg_agent_performance = sum(self.quantum_metrics.agent_success_rates.values()) / max(len(self.quantum_metrics.agent_success_rates), 1)
         self.quantum_metrics.orchestration_efficiency = (success_rate + avg_agent_performance) / 2
-
+    
     async def _monitor_active_missions(self):
         """Monitora missões ativas para detectar problemas."""
         current_time = datetime.now()
@@ -793,8 +794,8 @@ class QuantumOrchestratorAgent(BaseNetworkAgent):
             if elapsed_minutes > self.mission_timeout_minutes:
                 logger.warning(f"⏰ Missão '{mission_id}' excedeu timeout de {self.mission_timeout_minutes} minutos")
                 await self._conclude_mission(
-                    mission_id, 
-                    MissionStatus.FAILED, 
+                    mission_id,
+                    MissionStatus.FAILED,
                     f"Timeout após {elapsed_minutes:.1f} minutos"
                 )
                 continue
@@ -805,18 +806,18 @@ class QuantumOrchestratorAgent(BaseNetworkAgent):
                 if current_step_index < len(mission_context.steps):
                     current_step = mission_context.steps[current_step_index]
                     
-                    if (current_step.status == StepStatus.EXECUTING and 
+                    if (current_step.status == StepStatus.EXECUTING and
                         current_step.started_at and
                         (current_time - current_step.started_at).total_seconds() > 300):  # 5 minutos
                         
                         logger.warning(f"⚠️ Passo {current_step.step_number} da missão '{mission_id}' pode estar preso")
                         # Poderia implementar recuperação automática aqui
-
+    
     async def _execute_automatic_recovery(self):
         """Executa procedimentos de recuperação automática."""
         # Implementação futura para recuperação inteligente
         pass
-
+    
     async def _analyze_agent_performance(self):
         """Analisa performance dos agentes e otimiza seleção."""
         logger.debug("📊 Analisando performance dos agentes...")
@@ -826,12 +827,12 @@ class QuantumOrchestratorAgent(BaseNetworkAgent):
             if len(performance_history) >= 5:  # Mínimo de amostras
                 recent_avg = sum(list(performance_history)[-10:]) / min(len(performance_history), 10)
                 self.quantum_metrics.agent_success_rates[agent_id] = recent_avg
-
+    
     async def _optimize_mission_patterns(self):
         """Otimiza padrões de missão baseado no histórico."""
         # Implementação futura para criação de templates baseados em padrões de sucesso
         pass
-
+    
     async def _maintain_quantum_coherence(self):
         """Mantém coerência quântica do sistema de orquestração."""
         if self.quantum_metrics.total_missions > 0:
@@ -843,12 +844,12 @@ class QuantumOrchestratorAgent(BaseNetworkAgent):
             
             if self.quantum_metrics.quantum_coherence < self.quantum_coherence_threshold:
                 logger.warning(f"⚠️ Coerência quântica baixa: {self.quantum_metrics.quantum_coherence:.3f}")
-
+    
     async def _handle_metrics_request(self, message: AgentMessage):
         """Processa requisições de métricas do orquestrador."""
         metrics = self.get_orchestrator_metrics()
         await self.publish_response(message, {"status": "success", "metrics": metrics})
-
+    
     def get_orchestrator_metrics(self) -> Dict[str, Any]:
         """Retorna métricas completas do orquestrador quantum."""
         return {
@@ -875,20 +876,22 @@ class QuantumMetaCognitiveAgent(BaseNetworkAgent):
         super().__init__(agent_id, AgentType.META_COGNITIVE, message_bus)
         self.capabilities.extend([
             "system_consciousness",
-            "behavioral_analysis", 
+            "behavioral_analysis",
             "quantum_introspection",
             "emergent_pattern_detection"
         ])
         
         self._analysis_task: Optional[asyncio.Task] = None
+        self.system_logs: List[Dict[str, Any]] = []  # Armazenamento simples de logs para análise
+        self.interaction_graph = nx.Graph()  # Grafo para padrões emergentes
         logger.info(f"🧠 {self.agent_id} (Quantum Meta-Cognitive) inicializado.")
-
+    
     async def start_meta_cognition(self):
         """Inicia processo de meta-cognição quantum."""
         if self._analysis_task is None or self._analysis_task.done():
             self._analysis_task = asyncio.create_task(self._meta_analysis_loop())
             logger.info("🧠 Meta-cognição quantum iniciada.")
-
+    
     async def _meta_analysis_loop(self):
         """Loop principal de análise meta-cognitiva."""
         while True:
@@ -901,32 +904,103 @@ class QuantumMetaCognitiveAgent(BaseNetworkAgent):
                 
             except Exception as e:
                 logger.error(f"❌ Erro na meta-cognição: {e}", exc_info=True)
-
+    
     async def _analyze_system_behavior(self):
-        """Analisa comportamento emergente do sistema."""
-        # Implementação futura para análise comportamental profunda
-        pass
-
+        """Analisa o comportamento do sistema em tempo real usando métricas reais."""
+        # Coleta métricas do sistema com psutil
+        cpu_usage = psutil.cpu_percent(interval=1)
+        memory_usage = psutil.virtual_memory().percent
+        disk_usage = psutil.disk_usage('/').percent
+        net_io = psutil.net_io_counters()
+        
+        # Análise simples de logs (assumindo que logs são coletados via MessageBus ou logger)
+        # Aqui, simulamos coleta de logs recentes; em produção, integrar com MessageBus para eventos
+        recent_logs = [log for log in self.system_logs if (datetime.now() - log['timestamp']) < timedelta(minutes=10)]
+        error_count = sum(1 for log in recent_logs if 'error' in log['message'].lower())
+        
+        analysis = {
+            "cpu_usage": cpu_usage,
+            "memory_usage": memory_usage,
+            "disk_usage": disk_usage,
+            "net_sent_bytes": net_io.bytes_sent,
+            "net_recv_bytes": net_io.bytes_recv,
+            "recent_errors": error_count,
+            "behavior": "nominal" if cpu_usage < 80 and error_count < 5 else "stressed"
+        }
+        
+        logger.info(f"📊 Análise de comportamento: {analysis}")
+        
+        # Publica análise via MessageBus para outros agentes
+        analysis_message = self.create_message(
+            recipient_id="orchestrator_001",
+            message_type=MessageType.NOTIFICATION,
+            content={"event_type": "system_behavior_analysis", "data": analysis}
+        )
+        await self.message_bus.publish(analysis_message)
+    
     async def _detect_emergent_patterns(self):
-        """Detecta padrões emergentes no comportamento do sistema."""
-        # Implementação futura para detecção de padrões
-        pass
-
+        """Detecta padrões emergentes usando grafos com networkx."""
+        # Constrói grafo baseado em interações (ex.: de logs ou histórico de mensagens)
+        # Aqui, exemplo com dados simulados; integrar com MessageBus para dados reais
+        self.interaction_graph.clear()
+        # Adiciona nós (agentes) e arestas (interações)
+        agents = ["orchestrator_001", "ai_analyzer_001", "evolution_engine_001"]
+        for agent in agents:
+            self.interaction_graph.add_node(agent)
+        
+        # Adiciona arestas baseadas em interações recentes (simulado)
+        interactions = [("orchestrator_001", "ai_analyzer_001", {"weight": 5}),
+                        ("orchestrator_001", "evolution_engine_001", {"weight": 3}),
+                        ("ai_analyzer_001", "evolution_engine_001", {"weight": 2})]
+        self.interaction_graph.add_weighted_edges_from(interactions)
+        
+        # Detecta comunidades (padrões emergentes)
+        from networkx.algorithms.community import greedy_modularity_communities
+        communities = list(greedy_modularity_communities(self.interaction_graph))
+        
+        patterns = [{"community": i, "agents": list(c)} for i, c in enumerate(communities)]
+        
+        logger.info(f"🔍 Padrões emergentes detectados: {patterns}")
+        
+        # Publica padrões detectados
+        patterns_message = self.create_message(
+            recipient_id="orchestrator_001",
+            message_type=MessageType.NOTIFICATION,
+            content={"event_type": "emergent_patterns", "data": patterns}
+        )
+        await self.message_bus.publish(patterns_message)
+    
     async def _quantum_self_reflection(self):
-        """Executa auto-reflexão quantum do sistema."""
-        # Implementação futura para introspecção sistêmica
-        pass
+        """Executa auto-reflexão quântica para adaptação, usando probabilidades simuladas."""
+        # Simula reflexão quântica com estados probabilísticos (pode integrar qiskit no futuro)
+        import random
+        coherence_score = random.uniform(0.7, 1.0)  # Simulação de estado quântico coerente
+        adaptation_needed = coherence_score < 0.85
+        
+        logger.info(f"🤔 Iniciando auto-reflexão quântica. Coerência: {coherence_score:.2f}")
+        
+        if adaptation_needed:
+            # Propõe adaptação (ex.: ajustar prioridades)
+            adaptation = {"action": "increase_resources", "reason": "low_coherence"}
+            logger.warning(f"⚠️ Adaptação necessária: {adaptation}")
+            
+            # Publica sugestão de adaptação
+            reflection_message = self.create_message(
+                recipient_id="orchestrator_001",
+                message_type=MessageType.REQUEST,
+                content={"event_type": "system_adaptation", "data": adaptation}
+            )
+            await self.message_bus.publish(reflection_message)
+        else:
+            logger.info("✅ Sistema coerente; nenhuma adaptação necessária.")
 
 def create_agents(message_bus: Any) -> List[BaseNetworkAgent]:
     """
     Factory function to create and initialize Quantum Meta-Cognitive Agent(s) for the ALSHAM QUANTUM system.
-
     This function instantiates the QuantumOrchestratorAgent and QuantumMetaCognitiveAgent, logs all relevant events for diagnostics,
     and returns them in a list for registration in the agent registry. Handles errors robustly and ensures the agents are ready for operation.
-
     Args:
         message_bus (Any): The message bus or communication channel for agent messaging.
-
     Returns:
         List[BaseNetworkAgent]: A list containing the initialized Quantum Meta-Cognitive Agent instance(s).
     """
@@ -935,12 +1009,10 @@ def create_agents(message_bus: Any) -> List[BaseNetworkAgent]:
         # Orquestrador Quantum
         orchestrator = QuantumOrchestratorAgent("orchestrator_001", message_bus)
         agents.append(orchestrator)
-
         # Meta-Cognitivo Quantum
         meta_agent = QuantumMetaCognitiveAgent("metacognitive_001", message_bus)
         asyncio.create_task(meta_agent.start_meta_cognition())
         agents.append(meta_agent)
-
         logger.info("✅ Agentes Meta-Cognitivos Quantum criados com sucesso.")
     except Exception as e:
         logger.critical(f"❌ Erro CRÍTICO criando agentes Meta-Cognitivos Quantum: {e}", exc_info=True)
