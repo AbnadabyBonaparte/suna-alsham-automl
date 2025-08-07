@@ -1076,15 +1076,16 @@ class QuantumMetaCognitiveAgent(BaseNetworkAgent):
 import time
 
 class BasicMetaCognitiveAgent:
-    """Agente meta-cognitivo básico como fallback"""
-    def __init__(self):
+    """Agente meta-cognitivo básico"""
+    def __init__(self, config=None):
         self.agent_id = "metacognitive_basic_001"
         self.capabilities = [
             "self_monitoring",
             "performance_evaluation",
             "strategic_thinking"
         ]
-        print(f"✅ {self.agent_id} inicializado com sucesso")
+        self.config = config or {}
+        print(f"✅ {self.agent_id} inicializado")
     def get_capabilities(self):
         return self.capabilities
     async def process_message(self, message):
@@ -1093,19 +1094,18 @@ class BasicMetaCognitiveAgent:
             "agent": self.agent_id,
             "timestamp": time.time()
         }
-    def think_about(self, topic):
-        return f"Meta-análise de: {topic}"
 
 class MetaCognitiveAgent(BasicMetaCognitiveAgent):
     """Versão completa do agente meta-cognitivo"""
-    def __init__(self):
-        super().__init__()
+    def __init__(self, config=None):
+        super().__init__(config)
         self.agent_id = "metacognitive_full_001"
         try:
             self._initialize_meta_systems()
         except Exception as e:
-            print(f"⚠️ Meta-systems init failed, using basic mode: {e}")
+            print(f"⚠️ Meta-systems init failed: {e}")
     def _initialize_meta_systems(self):
+        """Inicializar sistemas meta-cognitivos"""
         self.meta_knowledge = {}
         self.learning_history = []
         self.performance_metrics = {}
@@ -1118,30 +1118,25 @@ class SelfReflectionAgent(BasicMetaCognitiveAgent):
         self.capabilities.append("self_reflection")
         print(f"✅ {self.agent_id} inicializado com sucesso")
 
-def create_agents():
-    """Criar agentes meta-cognitivos - VERSÃO CORRIGIDA"""
+def create_agents(*args, **kwargs):
+    """Criar agentes meta-cognitivos - ASSINATURA CORRIGIDA"""
     agents = []
     try:
         print("🧠 Iniciando criação de meta_cognitive_agents...")
-        # Criar agente meta-cognitivo principal
-        meta_agent = MetaCognitiveAgent()
+        # Processar argumentos se fornecidos
+        config = kwargs.get('config', {})
+        logger = kwargs.get('logger', None)
+        # ✅ CRIAR AGENTE META-COGNITIVO
+        meta_agent = MetaCognitiveAgent(config=config)
         agents.append(meta_agent)
-        # Criar agente de auto-reflexão (opcional)
-        try:
-            reflection_agent = SelfReflectionAgent()
-            agents.append(reflection_agent)
-        except Exception as e:
-            print(f"⚠️ SelfReflectionAgent falhou: {e}")
-        print(f"✅ Meta-cognitive agents criados: {len(agents)}")
+        print(f"✅ Meta-cognitive agents criados com sucesso: {len(agents)}")
         return agents
     except Exception as e:
-        print(f"❌ Erro crítico em meta_cognitive create_agents: {e}")
-        import traceback
-        traceback.print_exc()
-        # Fallback - pelo menos um agente básico
+        print(f"❌ Erro em meta_cognitive create_agents: {e}")
+        # ✅ FALLBACK ROBUSTO
         try:
             basic_meta = BasicMetaCognitiveAgent()
             return [basic_meta]
         except Exception as fallback_error:
-            print(f"❌ Fallback também falhou: {fallback_error}")
+            print(f"❌ Fallback falhou: {fallback_error}")
             return []
