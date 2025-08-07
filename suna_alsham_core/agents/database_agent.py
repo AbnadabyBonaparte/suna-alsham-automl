@@ -2,11 +2,9 @@
 """
 Database Agent – ALSHAM QUANTUM
 [Quantum Version 2.0 - Multi-Provider Database Intelligence]
-
-Sistema avançado de gerenciamento de banco de dados com suporte a múltiplos 
+Sistema avançado de gerenciamento de banco de dados com suporte a múltiplos
 provedores, cache inteligente, connection pooling e auto-recovery.
 """
-
 import asyncio
 import hashlib
 import json
@@ -17,49 +15,41 @@ from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from enum import Enum
 from typing import Any, Dict, List, Optional, Tuple, Union
-
 # Multi-Provider Database Support
 try:
-    import asyncpg  # PostgreSQL
+    import asyncpg # PostgreSQL
     POSTGRESQL_AVAILABLE = True
 except ImportError:
     POSTGRESQL_AVAILABLE = False
     asyncpg = None
-
 try:
-    import aiomysql  # MySQL
+    import aiomysql # MySQL
     MYSQL_AVAILABLE = True
 except ImportError:
     MYSQL_AVAILABLE = False
     aiomysql = None
-
 try:
-    import aiosqlite  # SQLite
+    import aiosqlite # SQLite
     SQLITE_AVAILABLE = True
 except ImportError:
     SQLITE_AVAILABLE = False
     aiosqlite = None
-
 try:
-    import motor.motor_asyncio  # MongoDB
+    import motor.motor_asyncio # MongoDB
     MONGODB_AVAILABLE = True
 except ImportError:
     MONGODB_AVAILABLE = False
     motor = None
-
 from suna_alsham_core.multi_agent_network import (
     AgentMessage, AgentType, BaseNetworkAgent, MessageType, Priority
 )
-
 logger = logging.getLogger(__name__)
-
 class DatabaseProvider(Enum):
     """Provedores de banco de dados suportados."""
     POSTGRESQL = "postgresql"
     MYSQL = "mysql"
     SQLITE = "sqlite"
     MONGODB = "mongodb"
-
 class QueryType(Enum):
     """Tipos de query suportados."""
     SELECT = "select"
@@ -69,7 +59,6 @@ class QueryType(Enum):
     CREATE = "create"
     DROP = "drop"
     AGGREGATE = "aggregate"
-
 @dataclass
 class DatabaseConfig:
     """Configuração de provedor de banco de dados."""
@@ -83,7 +72,6 @@ class DatabaseConfig:
     response_times: List[float] = field(default_factory=list)
     query_count: int = 0
     error_count: int = 0
-
 @dataclass
 class QueryRequest:
     """Requisição de query estruturada."""
@@ -94,7 +82,6 @@ class QueryRequest:
     cache_key: Optional[str] = None
     timeout: int = 30
     created_at: datetime = field(default_factory=datetime.now)
-
 @dataclass
 class QueryResponse:
     """Resposta de query com métricas."""
@@ -105,7 +92,6 @@ class QueryResponse:
     execution_time_ms: float
     from_cache: bool = False
     created_at: datetime = field(default_factory=datetime.now)
-
 class QuantumDatabaseAgent(BaseNetworkAgent):
     """
     Agente de Banco de Dados Quantum com capacidades avançadas:
@@ -116,7 +102,7 @@ class QuantumDatabaseAgent(BaseNetworkAgent):
     - Métricas detalhadas de performance
     - Query optimization automática
     """
-    
+   
     def __init__(self, agent_id: str, message_bus):
         super().__init__(agent_id, AgentType.SERVICE, message_bus)
         self.capabilities.extend([
@@ -128,11 +114,13 @@ class QuantumDatabaseAgent(BaseNetworkAgent):
             "performance_metrics",
             "schema_management"
         ])
-        
+       
         self.providers: Dict[DatabaseProvider, DatabaseConfig] = {}
         self.query_cache: Dict[str, Tuple[QueryResponse, datetime]] = {}
         self.active_queries: Dict[str, QueryRequest] = {}
-        self.cache_ttl_seconds = int(os.environ.get("DB_CACHE_TTL", "300"))  # 5 minutos
+        self.cache_ttl_seconds = int(os.environ.get("DB_CACHE_TTL", "300")) # 5 minutos
+        self.cache_max_entries = int(os.environ.get("DB_CACHE_MAX_ENTRIES", "1000")) # Parametrizável
+        self.cache_cleanup_batch = int(os.environ.get("DB_CACHE_CLEANUP_BATCH", "100")) # Parametrizável
         self.performance_metrics = {
             "total_queries": 0,
             "successful_queries": 0,
@@ -143,17 +131,24 @@ class QuantumDatabaseAgent(BaseNetworkAgent):
             "provider_usage": {},
             "uptime_start": datetime.now()
         }
-        
+       
         # Inicialização quantum
         self._initialize_database_providers()
         self._quantum_init_task = asyncio.create_task(self._quantum_initialization())
         self._cache_cleanup_task = asyncio.create_task(self._cache_cleanup_loop())
-        
+       
         logger.info(f"🗄️ {self.agent_id} (Quantum Database) inicializado com {len(self.providers)} provedores de DB.")
 
+    def _mask_sensitive(self, value: str) -> str:
+        """Mascara connection strings e dados sensíveis para logs."""
+        if not value:
+            return value
+        # Mascara senhas em URLs: ...:senha@...
+        import re
+        return re.sub(r'//([^:/]+):([^@]+)@', r'//\1:***@', value)
     def _initialize_database_providers(self):
         """Inicializa múltiplos provedores de banco de dados."""
-        
+       
         # PostgreSQL Provider
         postgres_url = os.environ.get("DATABASE_URL") or os.environ.get("POSTGRESQL_URL")
         if POSTGRESQL_AVAILABLE and postgres_url:
@@ -164,7 +159,7 @@ class QuantumDatabaseAgent(BaseNetworkAgent):
                 timeout_seconds=int(os.environ.get("PG_TIMEOUT", "30"))
             )
             logger.info("✅ Provedor PostgreSQL configurado.")
-        
+       
         # MySQL Provider
         mysql_url = os.environ.get("MYSQL_URL")
         if MYSQL_AVAILABLE and mysql_url:
@@ -175,18 +170,18 @@ class QuantumDatabaseAgent(BaseNetworkAgent):
                 timeout_seconds=int(os.environ.get("MYSQL_TIMEOUT", "30"))
             )
             logger.info("✅ Provedor MySQL configurado.")
-        
+       
         # SQLite Provider (sempre disponível como fallback)
         if SQLITE_AVAILABLE:
             sqlite_path = os.environ.get("SQLITE_PATH", "./alsham_quantum.db")
             self.providers[DatabaseProvider.SQLITE] = DatabaseConfig(
                 provider=DatabaseProvider.SQLITE,
                 connection_string=f"sqlite:///{sqlite_path}",
-                max_connections=1,  # SQLite é single-threaded
+                max_connections=1, # SQLite é single-threaded
                 timeout_seconds=10
             )
             logger.info("✅ Provedor SQLite configurado como fallback.")
-        
+       
         # MongoDB Provider
         mongodb_url = os.environ.get("MONGODB_URL")
         if MONGODB_AVAILABLE and mongodb_url:
@@ -197,20 +192,19 @@ class QuantumDatabaseAgent(BaseNetworkAgent):
                 timeout_seconds=int(os.environ.get("MONGODB_TIMEOUT", "30"))
             )
             logger.info("✅ Provedor MongoDB configurado.")
-        
+       
         if not self.providers:
             self.status = "degraded"
             logger.critical("❌ NENHUM provedor de banco de dados configurado!")
-
     async def _quantum_initialization(self):
         """Inicialização e teste de conexão quantum."""
         if not self.providers:
             self.status = "degraded"
             return
-            
+           
         logger.info("🔍 Testando conexões com provedores de banco de dados...")
         active_providers = []
-        
+       
         for provider_type, config in self.providers.items():
             try:
                 if await self._test_database_connection(provider_type, config):
@@ -223,14 +217,13 @@ class QuantumDatabaseAgent(BaseNetworkAgent):
                 config.available = False
                 config.last_error = str(e)
                 logger.error(f"❌ Erro testando provedor {provider_type.value}: {e}")
-        
+       
         if active_providers:
             self.status = "active"
             logger.info(f"🚀 {len(active_providers)} provedores ativos. Sistema database quantum operacional.")
         else:
             self.status = "degraded"
             logger.critical("❌ NENHUM provedor de banco disponível! Sistema em modo degradado.")
-
     async def _test_database_connection(self, provider_type: DatabaseProvider, config: DatabaseConfig) -> bool:
         """Testa conexão com um provedor específico."""
         try:
@@ -239,7 +232,7 @@ class QuantumDatabaseAgent(BaseNetworkAgent):
                 await conn.execute("SELECT 1")
                 await conn.close()
                 return True
-                
+               
             elif provider_type == DatabaseProvider.MYSQL and MYSQL_AVAILABLE:
                 pool = await aiomysql.create_pool(
                     **self._parse_mysql_url(config.connection_string),
@@ -251,13 +244,13 @@ class QuantumDatabaseAgent(BaseNetworkAgent):
                 pool.close()
                 await pool.wait_closed()
                 return True
-                
+               
             elif provider_type == DatabaseProvider.SQLITE and SQLITE_AVAILABLE:
                 db_path = config.connection_string.replace("sqlite:///", "")
                 async with aiosqlite.connect(db_path, timeout=15.0) as conn:
                     await conn.execute("SELECT 1")
                 return True
-                
+               
             elif provider_type == DatabaseProvider.MONGODB and MONGODB_AVAILABLE:
                 client = motor.motor_asyncio.AsyncIOMotorClient(
                     config.connection_string, serverSelectionTimeoutMS=15000
@@ -265,12 +258,11 @@ class QuantumDatabaseAgent(BaseNetworkAgent):
                 await client.admin.command('ping')
                 client.close()
                 return True
-                
+               
         except Exception as e:
             logger.debug(f"Teste de conexão falhou para {provider_type.value}: {e}")
-            
+           
         return False
-
     def _parse_mysql_url(self, url: str) -> Dict[str, Any]:
         """Parse MySQL URL para parâmetros de conexão."""
         # Implementação básica - pode ser expandida
@@ -281,41 +273,38 @@ class QuantumDatabaseAgent(BaseNetworkAgent):
             "password": "",
             "db": "alsham_quantum"
         }
-
     async def _cache_cleanup_loop(self):
         """Loop de limpeza do cache baseado em TTL."""
         while True:
-            await asyncio.sleep(60)  # Cleanup a cada minuto
-            
+            await asyncio.sleep(60) # Cleanup a cada minuto
+           
             try:
                 current_time = datetime.now()
                 expired_keys = []
-                
+               
                 for cache_key, (response, timestamp) in self.query_cache.items():
                     if (current_time - timestamp).total_seconds() > self.cache_ttl_seconds:
                         expired_keys.append(cache_key)
-                
+               
                 for key in expired_keys:
                     del self.query_cache[key]
-                
+               
                 if expired_keys:
                     logger.debug(f"🗑️ Cache cleanup: {len(expired_keys)} entradas expiradas removidas")
-                    
+                   
             except Exception as e:
                 logger.error(f"❌ Erro no cleanup do cache: {e}")
-
     def _generate_cache_key(self, query: str, params: Optional[List[Any]] = None) -> str:
         """Gera chave de cache para a query."""
         content = f"{query}_{json.dumps(params, sort_keys=True) if params else 'no_params'}"
         return hashlib.md5(content.encode()).hexdigest()
-
     def _select_optimal_provider(self, query_type: QueryType) -> Optional[DatabaseProvider]:
         """Seleciona o provedor optimal baseado no tipo de query e performance."""
         available_providers = [p for p, config in self.providers.items() if config.available]
-        
+       
         if not available_providers:
             return None
-        
+       
         # Prioridade para diferentes tipos de query
         if query_type in [QueryType.SELECT, QueryType.AGGREGATE]:
             # Para reads, prioriza providers mais rápidos
@@ -323,7 +312,7 @@ class QuantumDatabaseAgent(BaseNetworkAgent):
                 return DatabaseProvider.POSTGRESQL
             elif DatabaseProvider.MYSQL in available_providers:
                 return DatabaseProvider.MYSQL
-        
+       
         # Para writes, usa provider primário disponível
         priority_order = [
             DatabaseProvider.POSTGRESQL,
@@ -331,27 +320,26 @@ class QuantumDatabaseAgent(BaseNetworkAgent):
             DatabaseProvider.SQLITE,
             DatabaseProvider.MONGODB
         ]
-        
+       
         for provider in priority_order:
             if provider in available_providers:
                 return provider
-        
-        return available_providers[0]  # Fallback
-
+       
+        return available_providers[0] # Fallback
     async def _internal_handle_message(self, message: AgentMessage):
         """Processa requisições de banco de dados quantum."""
         if message.message_type != MessageType.REQUEST:
             return
-        
+       
         if self.status != "active":
             await self.publish_error_response(
-                message, 
+                message,
                 f"Database Agent Quantum não está operacional. Status: {self.status.upper()}"
             )
             return
-        
+       
         request_type = message.content.get("request_type")
-        
+       
         if request_type == "execute_query":
             await self._handle_execute_query(message)
         elif request_type == "get_database_metrics":
@@ -360,23 +348,23 @@ class QuantumDatabaseAgent(BaseNetworkAgent):
             await self._handle_clear_cache(message)
         else:
             await self.publish_error_response(message, f"Tipo de requisição não suportado: {request_type}")
-
     async def _handle_execute_query(self, message: AgentMessage):
         """Processa requisição de execução de query."""
         request_id = message.message_id
         query = message.content.get("query", "")
         params = message.content.get("params")
-        
+       
         if not query:
             await self.publish_error_response(message, "Query não especificada.")
             return
-        
+       
+        # Log seguro: não expõe params nem connection string
         logger.info(f"🗄️ [Quantum DB] Executando query '{request_id}': '{query[:100]}...'")
-        
+       
         try:
             # Determina tipo da query
             query_type = self._determine_query_type(query)
-            
+           
             # Cria estrutura de requisição
             query_request = QueryRequest(
                 request_id=request_id,
@@ -385,9 +373,9 @@ class QuantumDatabaseAgent(BaseNetworkAgent):
                 query_type=query_type,
                 cache_key=self._generate_cache_key(query, params) if query_type == QueryType.SELECT else None
             )
-            
+           
             self.active_queries[request_id] = query_request
-            
+           
             # Verifica cache para queries SELECT
             if query_type == QueryType.SELECT and query_request.cache_key:
                 cached_result = self._get_from_cache(query_request.cache_key)
@@ -404,23 +392,23 @@ class QuantumDatabaseAgent(BaseNetworkAgent):
                     return
                 else:
                     self.performance_metrics["cache_misses"] += 1
-            
+           
             # Executa query
             query_response = await self._execute_query_with_provider(query_request)
-            
+           
             # Cache resultado se for SELECT
             if query_type == QueryType.SELECT and query_request.cache_key:
                 self._store_in_cache(query_request.cache_key, query_response)
-            
+           
             # Atualiza métricas
             self.performance_metrics["total_queries"] += 1
             self.performance_metrics["successful_queries"] += 1
-            
+           
             provider_used = query_response.provider_used.value
             self.performance_metrics["provider_usage"][provider_used] = (
                 self.performance_metrics["provider_usage"].get(provider_used, 0) + 1
             )
-            
+           
             # Resposta de sucesso
             response_content = {
                 "status": "success",
@@ -430,24 +418,23 @@ class QuantumDatabaseAgent(BaseNetworkAgent):
                 "from_cache": query_response.from_cache,
                 "provider_used": provider_used
             }
-            
+           
             await self.publish_response(message, response_content)
             logger.info(f"🗄️ [Quantum DB] Query executada com sucesso usando {provider_used} ({query_response.execution_time_ms:.1f}ms)")
-            
+           
         except Exception as e:
             self.performance_metrics["failed_queries"] += 1
             logger.error(f"❌ [Quantum DB] Erro ao executar query: {e}", exc_info=True)
             await self.publish_error_response(message, f"Erro no Database Quantum: {e}")
-        
+       
         finally:
             # Cleanup
             if request_id in self.active_queries:
                 del self.active_queries[request_id]
-
     def _determine_query_type(self, query: str) -> QueryType:
         """Determina o tipo da query baseado no SQL."""
         query_upper = query.strip().upper()
-        
+       
         if query_upper.startswith("SELECT"):
             if any(keyword in query_upper for keyword in ["COUNT(", "SUM(", "AVG(", "MAX(", "MIN(", "GROUP BY"]):
                 return QueryType.AGGREGATE
@@ -463,8 +450,7 @@ class QuantumDatabaseAgent(BaseNetworkAgent):
         elif query_upper.startswith("DROP"):
             return QueryType.DROP
         else:
-            return QueryType.SELECT  # Default
-
+            return QueryType.SELECT # Default
     def _get_from_cache(self, cache_key: str) -> Optional[QueryResponse]:
         """Recupera resultado do cache se não expirado."""
         if cache_key in self.query_cache:
@@ -475,40 +461,36 @@ class QuantumDatabaseAgent(BaseNetworkAgent):
                 # Remove entrada expirada
                 del self.query_cache[cache_key]
         return None
-
     def _store_in_cache(self, cache_key: str, response: QueryResponse):
         """Armazena resultado no cache."""
         self.query_cache[cache_key] = (response, datetime.now())
-        
-        # Limita tamanho do cache
-        if len(self.query_cache) > 1000:
-            # Remove as 100 entradas mais antigas
+        # Limita tamanho do cache de forma parametrizada
+        if len(self.query_cache) > self.cache_max_entries:
             sorted_cache = sorted(
                 self.query_cache.items(),
-                key=lambda x: x[1][1]  # Ordena por timestamp
+                key=lambda x: x[1][1] # Ordena por timestamp
             )
-            for key, _ in sorted_cache[:100]:
+            for key, _ in sorted_cache[:self.cache_cleanup_batch]:
                 del self.query_cache[key]
-
     async def _execute_query_with_provider(self, request: QueryRequest) -> QueryResponse:
         """Executa query com o provedor optimal."""
         start_time = time.time()
-        
+       
         # Seleciona provedor optimal
         provider_type = self._select_optimal_provider(request.query_type)
         if not provider_type:
             raise Exception("Nenhum provedor de banco de dados disponível")
-        
+       
         provider_config = self.providers[provider_type]
-        
+       
         try:
             # Executa query com o provedor selecionado
             data, rows_affected = await self._execute_with_specific_provider(
                 provider_type, provider_config, request.query, request.params
             )
-            
+           
             execution_time = (time.time() - start_time) * 1000
-            
+           
             response = QueryResponse(
                 request_id=request.request_id,
                 data=data,
@@ -516,36 +498,35 @@ class QuantumDatabaseAgent(BaseNetworkAgent):
                 provider_used=provider_type,
                 execution_time_ms=execution_time
             )
-            
+           
             # Atualiza métricas do provider
             provider_config.response_times.append(execution_time)
             if len(provider_config.response_times) > 100:
                 provider_config.response_times = provider_config.response_times[-100:]
-            
+           
             provider_config.query_count += 1
-            
+           
             return response
-            
+           
         except Exception as e:
             provider_config.available = False
             provider_config.last_error = str(e)
             provider_config.error_count += 1
             logger.error(f"❌ Provedor {provider_type.value} falhou: {e}")
-            
+           
             # Tenta com próximo provedor disponível
             remaining_providers = [p for p, c in self.providers.items() if c.available and p != provider_type]
             if remaining_providers:
                 # Recursão com próximo provider
-                request.query_type = self._determine_query_type(request.query)  # Redefine tipo
+                request.query_type = self._determine_query_type(request.query) # Redefine tipo
                 return await self._execute_query_with_provider(request)
             else:
                 raise Exception(f"Todos os provedores falharam. Último erro: {e}")
-
-    async def _execute_with_specific_provider(self, provider_type: DatabaseProvider, 
-                                            config: DatabaseConfig, query: str, 
+    async def _execute_with_specific_provider(self, provider_type: DatabaseProvider,
+                                            config: DatabaseConfig, query: str,
                                             params: Optional[List[Any]] = None) -> Tuple[List[Dict], int]:
         """Executa query com um provedor específico."""
-        
+       
         if provider_type == DatabaseProvider.POSTGRESQL:
             return await self._execute_postgresql(config, query, params)
         elif provider_type == DatabaseProvider.MYSQL:
@@ -556,8 +537,7 @@ class QuantumDatabaseAgent(BaseNetworkAgent):
             return await self._execute_mongodb(config, query, params)
         else:
             raise Exception(f"Provedor {provider_type.value} não suportado")
-
-    async def _execute_postgresql(self, config: DatabaseConfig, query: str, 
+    async def _execute_postgresql(self, config: DatabaseConfig, query: str,
                                  params: Optional[List[Any]] = None) -> Tuple[List[Dict], int]:
         """Executa query no PostgreSQL."""
         conn = await asyncpg.connect(config.connection_string, timeout=config.timeout_seconds)
@@ -573,8 +553,7 @@ class QuantumDatabaseAgent(BaseNetworkAgent):
                 return [], rows_affected
         finally:
             await conn.close()
-
-    async def _execute_mysql(self, config: DatabaseConfig, query: str, 
+    async def _execute_mysql(self, config: DatabaseConfig, query: str,
                             params: Optional[List[Any]] = None) -> Tuple[List[Dict], int]:
         """Executa query no MySQL."""
         pool = await aiomysql.create_pool(
@@ -595,13 +574,12 @@ class QuantumDatabaseAgent(BaseNetworkAgent):
         finally:
             pool.close()
             await pool.wait_closed()
-
-    async def _execute_sqlite(self, config: DatabaseConfig, query: str, 
+    async def _execute_sqlite(self, config: DatabaseConfig, query: str,
                              params: Optional[List[Any]] = None) -> Tuple[List[Dict], int]:
         """Executa query no SQLite."""
         db_path = config.connection_string.replace("sqlite:///", "")
         async with aiosqlite.connect(db_path, timeout=config.timeout_seconds) as conn:
-            conn.row_factory = aiosqlite.Row  # Para retornar dict-like rows
+            conn.row_factory = aiosqlite.Row # Para retornar dict-like rows
             async with conn.execute(query, params or []) as cursor:
                 if query.strip().upper().startswith("SELECT"):
                     rows = await cursor.fetchall()
@@ -610,8 +588,7 @@ class QuantumDatabaseAgent(BaseNetworkAgent):
                 else:
                     await conn.commit()
                     return [], cursor.rowcount
-
-    async def _execute_mongodb(self, config: DatabaseConfig, query: str, 
+    async def _execute_mongodb(self, config: DatabaseConfig, query: str,
                               params: Optional[List[Any]] = None) -> Tuple[List[Dict], int]:
         """Executa operação no MongoDB."""
         # Implementação básica - MongoDB usa diferentes operações, não SQL
@@ -623,50 +600,47 @@ class QuantumDatabaseAgent(BaseNetworkAgent):
             # Em produção, seria necessário parser JSON/MongoDB operations
             db = client.get_default_database()
             collection = db.get_collection("default_collection")
-            
+           
             # Exemplo básico de find
             cursor = collection.find({})
             data = await cursor.to_list(length=100)
-            
+           
             # Converte ObjectId para string para serialização JSON
             for doc in data:
                 if '_id' in doc:
                     doc['_id'] = str(doc['_id'])
-            
+           
             return data, len(data)
         finally:
             client.close()
-
     async def _handle_metrics_request(self, message: AgentMessage):
         """Processa requisições de métricas do database."""
         metrics = self.get_database_metrics()
         await self.publish_response(message, {"status": "success", "metrics": metrics})
-
     async def _handle_clear_cache(self, message: AgentMessage):
         """Limpa o cache de queries."""
         cache_size = len(self.query_cache)
         self.query_cache.clear()
-        
+       
         await self.publish_response(message, {
             "status": "success",
             "message": f"Cache limpo. {cache_size} entradas removidas."
         })
-
     def get_database_metrics(self) -> Dict[str, Any]:
         """Retorna métricas completas do database quantum."""
         total_queries = self.performance_metrics["total_queries"]
         uptime = datetime.now() - self.performance_metrics["uptime_start"]
-        
+       
         # Calcula tempo médio de resposta
         all_response_times = []
         for config in self.providers.values():
             all_response_times.extend(config.response_times)
-        
+       
         avg_response_time = (
             sum(all_response_times) / len(all_response_times)
             if all_response_times else 0.0
         )
-        
+       
         return {
             **self.performance_metrics,
             "uptime_seconds": uptime.total_seconds(),
@@ -676,7 +650,7 @@ class QuantumDatabaseAgent(BaseNetworkAgent):
                 if total_queries > 0 else 1.0
             ),
             "cache_hit_rate": (
-                self.performance_metrics["cache_hits"] / 
+                self.performance_metrics["cache_hits"] /
                 (self.performance_metrics["cache_hits"] + self.performance_metrics["cache_misses"])
                 if (self.performance_metrics["cache_hits"] + self.performance_metrics["cache_misses"]) > 0 else 0.0
             ),
@@ -698,7 +672,6 @@ class QuantumDatabaseAgent(BaseNetworkAgent):
                 for provider, config in self.providers.items()
             }
         }
-
 def create_agents(message_bus) -> List[BaseNetworkAgent]:
     """
     Factory function padrão para integração com agent_loader.
@@ -713,3 +686,54 @@ def create_agents(message_bus) -> List[BaseNetworkAgent]:
     except Exception as e:
         logger.critical(f"❌ Erro crítico ao criar QuantumDatabaseAgent: {e}", exc_info=True)
     return agents
+# --- Esqueleto de Testes Unitários para QuantumDatabaseAgent ---
+import unittest
+from unittest.mock import MagicMock
+
+class QuantumDatabaseAgentTestCase(unittest.TestCase):
+    def setUp(self):
+        # Cria um agente com provedores simulados
+        self.agent = QuantumDatabaseAgent("test_db_agent", MagicMock())
+        # Simula dois provedores
+        self.agent.providers = {
+            DatabaseProvider.SQLITE: DatabaseConfig(
+                provider=DatabaseProvider.SQLITE,
+                connection_string="sqlite:///test.db"
+            ),
+            DatabaseProvider.POSTGRESQL: DatabaseConfig(
+                provider=DatabaseProvider.POSTGRESQL,
+                connection_string="postgresql://user:***@localhost/db"
+            )
+        }
+        self.agent.providers[DatabaseProvider.SQLITE].available = False
+        self.agent.providers[DatabaseProvider.POSTGRESQL].available = True
+
+    def test_failover_provider_selection(self):
+        # Se o primeiro provedor está indisponível, deve escolher o próximo
+        selected = self.agent._select_optimal_provider(QueryType.SELECT)
+        self.assertEqual(selected, DatabaseProvider.POSTGRESQL)
+
+    def test_cache_limit(self):
+        # Testa se o cache respeita o limite parametrizado
+        self.agent.cache_max_entries = 5
+        self.agent.cache_cleanup_batch = 2
+        for i in range(7):
+            key = f"key_{i}"
+            resp = QueryResponse(
+                request_id=key,
+                data=[],
+                rows_affected=0,
+                provider_used=DatabaseProvider.POSTGRESQL,
+                execution_time_ms=1.0
+            )
+            self.agent._store_in_cache(key, resp)
+        self.assertLessEqual(len(self.agent.query_cache), 5)
+
+    def test_mask_sensitive(self):
+        # Testa se a máscara de dados sensíveis funciona
+        url = "postgresql://user:senha123@localhost/db"
+        masked = self.agent._mask_sensitive(url)
+        self.assertIn(":***@", masked)
+
+if __name__ == "__main__":
+    unittest.main()
