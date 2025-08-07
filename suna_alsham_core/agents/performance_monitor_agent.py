@@ -1,115 +1,243 @@
-#!/usr/bin/env python3
-"""
-Módulo do Agente de Monitoramento de Performance - SUNA-ALSHAM
-
-[Versão Final Limpa]
-"""
-
 import asyncio
 import logging
-import time
-from collections import deque
-from dataclasses import dataclass, field
-from typing import Any, Dict, List
-
+from typing import List, Dict, Any, Optional
+from datetime import datetime, timedelta
 import psutil
+import time
+from dataclasses import dataclass
+from enum import Enum
 
-from suna_alsham_core.multi_agent_network import (
-    AgentMessage,
-    AgentType,
-    BaseNetworkAgent,
-    MessageType,
-)
-
-logger = logging.getLogger(__name__)
+# Assuming these imports exist in your system
+from ..core.base_agent import BaseAgent
+from ..core.agent_types import AgentType
+from ..core.message import Message, MessageType
 
 @dataclass
 class PerformanceMetrics:
-    cpu_usage_percent: float
-    memory_usage_percent: float
-    memory_usage_mb: float
+    timestamp: datetime
+    cpu_usage: float
+    memory_usage: float
+    disk_usage: float
+    network_io: Dict[str, int]
     active_agents: int
-    message_queue_depth: int
-    average_latency_ms: float
-    timestamp: float = field(default_factory=time.time)
+    response_times: List[float]
 
-class PerformanceMonitorAgent(BaseNetworkAgent):
-    def __init__(self, agent_id: str, message_bus):
-        super().__init__(agent_id, AgentType.SYSTEM, message_bus)
-        self.capabilities.extend(["performance_monitoring", "metric_collection"])
-        self.monitoring_interval_seconds = 60
-        self.latency_tracker = deque(maxlen=100)
-        self.process = psutil.Process()
-        logger.info(f"📊 {self.agent_id} (Monitor de Performance) inicializado.")
+class AlertLevel(Enum):
+    INFO = "info"
+    WARNING = "warning"
+    CRITICAL = "critical"
 
-    async def _internal_handle_message(self, message: AgentMessage):
-        if message.message_type == MessageType.REQUEST:
-            request_type = message.content.get("request_type")
-            if request_type == "get_performance_metrics":
-                metrics = self.collect_metrics()
-                await self.publish_response(message, {"status": "completed", "metrics": metrics.__dict__})
-            elif request_type == "start_continuous_monitoring":
-                interval = message.content.get("interval", self.monitoring_interval_seconds)
-                asyncio.create_task(self.run_continuous_monitoring(interval))
-                await self.publish_response(message, {"status": "acknowledged"})
+class PerformanceMonitorAgent(BaseAgent):
+    def __init__(self, agent_id: str = "performance_monitor"):
+        super().__init__(
+            agent_id=agent_id,
+            agent_type=AgentType.MONITOR,
+            capabilities=["system_monitoring", "performance_analysis", "alerting"]
+        )
+        self.metrics_history: List[PerformanceMetrics] = []
+        # Permite configuração dos thresholds via env ou parâmetros
+        import os
+        self.alert_thresholds = {
+            'cpu_critical': float(os.environ.get('PERF_CPU_CRITICAL', 90.0)),
+            'cpu_warning': float(os.environ.get('PERF_CPU_WARNING', 75.0)),
+            'memory_critical': float(os.environ.get('PERF_MEM_CRITICAL', 85.0)),
+            'memory_warning': float(os.environ.get('PERF_MEM_WARNING', 70.0)),
+            'response_time_critical': float(os.environ.get('PERF_RESP_CRITICAL', 5000)),
+            'response_time_warning': float(os.environ.get('PERF_RESP_WARNING', 2000))
+        }
+        self.logger = logging.getLogger(f"agent.{agent_id}")
+        self.active_alerts: List[Dict[str, Any]] = []  # Armazena alertas ativos
+        self.alert_callback = None  # Callback customizável para integração externa
 
-    def collect_metrics(self) -> PerformanceMetrics:
+    async def initialize(self) -> bool:
+        """Initialize the performance monitoring system"""
         try:
-            with self.process.oneshot():
-                cpu_usage = self.process.cpu_percent()
-                memory_info = self.process.memory_info()
-                memory_usage_mb = memory_info.rss / (1024 * 1024)
+            self.logger.info("Initializing Performance Monitor Agent")
+            # Start background monitoring task
+            asyncio.create_task(self._continuous_monitoring())
+            return True
+        except Exception as e:
+            self.logger.error(f"Failed to initialize: {e}")
+            return False
 
-            total_memory_percent = psutil.virtual_memory().percent
-            network_metrics = self.message_bus.get_metrics()
-            active_agents = network_metrics.get("subscribed_agents", 0)
-            queue_depths = network_metrics.get("queue_depths", {})
-            total_queue_depth = sum(queue_depths.values())
-            avg_latency = sum(self.latency_tracker) / len(self.latency_tracker) if self.latency_tracker else 0
+    async def process_message(self, message: Message) -> Message:
+        """Process incoming messages for performance queries"""
+        try:
+            if message.type == MessageType.QUERY:
+                if "performance" in message.content.lower():
+                    metrics = await self._collect_current_metrics()
+                    return Message(
+                        message_type=MessageType.RESPONSE,
+                        sender_id=self.agent_id,
+                        recipient_id=message.sender_id,
+                        content=self._format_metrics_report(metrics)
+                    )
+                elif "alerts" in message.content.lower():
+                    alerts = await self._get_active_alerts()
+                    return Message(
+                        message_type=MessageType.RESPONSE,
+                        sender_id=self.agent_id,
+                        recipient_id=message.sender_id,
+                        content={"active_alerts": alerts}
+                    )
+            
+            return await super().process_message(message)
+        
+        except Exception as e:
+            self.logger.error(f"Error processing message: {e}")
+            return Message(
+                message_type=MessageType.ERROR,
+                sender_id=self.agent_id,
+                recipient_id=message.sender_id,
+                content=f"Processing error: {str(e)}"
+            )
 
+    async def _continuous_monitoring(self):
+        """Background task for continuous system monitoring"""
+        while True:
+            try:
+                metrics = await self._collect_current_metrics()
+                self.metrics_history.append(metrics)
+                
+                # Keep only last 1000 metrics
+                if len(self.metrics_history) > 1000:
+                    self.metrics_history = self.metrics_history[-1000:]
+                
+                # Check for alerts
+                await self._check_alerts(metrics)
+                
+                # Wait 30 seconds before next collection
+                await asyncio.sleep(30)
+                
+            except Exception as e:
+                self.logger.error(f"Error in continuous monitoring: {e}")
+                await asyncio.sleep(60)  # Wait longer on error
+
+    async def _collect_current_metrics(self) -> PerformanceMetrics:
+        """Collect current system performance metrics"""
+        try:
+            # System metrics
+            cpu_usage = psutil.cpu_percent(interval=1)
+            memory = psutil.virtual_memory()
+            disk = psutil.disk_usage('/')
+            network = psutil.net_io_counters()
+            
+            # Agent-specific metrics (placeholder - integrate with your agent system)
+            active_agents = await self._count_active_agents()
+            response_times = await self._get_recent_response_times()
+            
             return PerformanceMetrics(
-                cpu_usage_percent=cpu_usage,
-                memory_usage_percent=total_memory_percent,
-                memory_usage_mb=memory_usage_mb,
+                timestamp=datetime.now(),
+                cpu_usage=cpu_usage,
+                memory_usage=memory.percent,
+                disk_usage=(disk.used / disk.total) * 100,
+                network_io={
+                    'bytes_sent': network.bytes_sent,
+                    'bytes_recv': network.bytes_recv
+                },
                 active_agents=active_agents,
-                message_queue_depth=total_queue_depth,
-                average_latency_ms=avg_latency,
+                response_times=response_times
             )
         except Exception as e:
-            logger.error(f"Erro ao coletar métricas: {e}", exc_info=True)
-            return PerformanceMetrics(0, 0, 0, 0, 0, -1.0)
-
-    async def run_continuous_monitoring(self, interval: int):
-        logger.info(f"Monitoramento contínuo iniciado com intervalo de {interval} segundos.")
-        while self.status == "active":
-            metrics = self.collect_metrics()
-            log_message = self.create_message(
-                recipient_id="logging_001",
-                message_type=MessageType.NOTIFICATION,
-                content={"event_type": "performance_metrics", "metrics": metrics.__dict__}
+            self.logger.error(f"Error collecting metrics: {e}")
+            return PerformanceMetrics(
+                timestamp=datetime.now(),
+                cpu_usage=0.0,
+                memory_usage=0.0,
+                disk_usage=0.0,
+                network_io={},
+                active_agents=0,
+                response_times=[]
             )
-            await self.message_bus.publish(log_message)
-            await asyncio.sleep(interval)
 
+    async def _count_active_agents(self) -> int:
+        """Count currently active agents in the system"""
+        # This should integrate with your agent registry/orchestrator
+        # Placeholder implementation
+        return len(self.metrics_history)  # Temporary
+
+    async def _get_recent_response_times(self) -> List[float]:
+        """Get recent response times from agents"""
+        # This should integrate with your message routing system
+        # Placeholder implementation
+        return [100.0, 150.0, 200.0]  # Temporary
+
+    async def _check_alerts(self, metrics: PerformanceMetrics):
+        """Check metrics against thresholds and generate alerts. Mantém lista de alertas ativos."""
+        alerts = []
+        # CPU alerts
+        if metrics.cpu_usage >= self.alert_thresholds['cpu_critical']:
+            alerts.append(self._create_alert(AlertLevel.CRITICAL, f"CPU usage critical: {metrics.cpu_usage}%"))
+        elif metrics.cpu_usage >= self.alert_thresholds['cpu_warning']:
+            alerts.append(self._create_alert(AlertLevel.WARNING, f"CPU usage high: {metrics.cpu_usage}%"))
+        # Memory alerts
+        if metrics.memory_usage >= self.alert_thresholds['memory_critical']:
+            alerts.append(self._create_alert(AlertLevel.CRITICAL, f"Memory usage critical: {metrics.memory_usage}%"))
+        elif metrics.memory_usage >= self.alert_thresholds['memory_warning']:
+            alerts.append(self._create_alert(AlertLevel.WARNING, f"Memory usage high: {metrics.memory_usage}%"))
+        # Response time alerts
+        if metrics.response_times:
+            avg_response = sum(metrics.response_times) / len(metrics.response_times)
+            if avg_response >= self.alert_thresholds['response_time_critical']:
+                alerts.append(self._create_alert(AlertLevel.CRITICAL, f"Response time critical: {avg_response}ms"))
+            elif avg_response >= self.alert_thresholds['response_time_warning']:
+                alerts.append(self._create_alert(AlertLevel.WARNING, f"Response time high: {avg_response}ms"))
+        # Atualiza lista de alertas ativos (mantém só os últimos 100)
+        if alerts:
+            self.active_alerts.extend(alerts)
+            self.active_alerts = self.active_alerts[-100:]
+        # Envia alertas (callback externo se definido)
+        for alert in alerts:
+            await self._send_alert(alert)
+
+    def _create_alert(self, level: AlertLevel, message: str) -> Dict[str, Any]:
+        """Create an alert dictionary"""
+        return {
+            'level': level.value,
+            'message': message,
+            'timestamp': datetime.now().isoformat(),
+            'source': self.agent_id
+        }
+
+    async def _send_alert(self, alert: Dict[str, Any]):
+        """Send alert to appropriate handlers. Suporta callback externo."""
+        self.logger.warning(f"ALERT [{alert['level'].upper()}]: {alert['message']}")
+        if self.alert_callback:
+            try:
+                await self.alert_callback(alert)
+            except Exception as e:
+                self.logger.error(f"Error in alert callback: {e}")
+
+    async def _get_active_alerts(self) -> List[Dict[str, Any]]:
+        """Get currently active alerts (últimos 100)."""
+        return list(self.active_alerts)
+
+    def _format_metrics_report(self, metrics: PerformanceMetrics) -> Dict[str, Any]:
+        """Format metrics into a readable report"""
+        return {
+            'timestamp': metrics.timestamp.isoformat(),
+            'system_performance': {
+                'cpu_usage_percent': metrics.cpu_usage,
+                'memory_usage_percent': metrics.memory_usage,
+                'disk_usage_percent': metrics.disk_usage
+            },
+            'network': metrics.network_io,
+            'agents': {
+                'active_count': metrics.active_agents,
+                'avg_response_time_ms': sum(metrics.response_times) / len(metrics.response_times) if metrics.response_times else 0
+            }
+        }
+
+def create_agents(alert_callback=None) -> List[BaseAgent]:
     """
-    Função fábrica para criar e inicializar o(s) PerformanceMonitorAgent(s) do sistema ALSHAM QUANTUM.
-
-    Esta função instancia o PerformanceMonitorAgent, registra todos os eventos relevantes para diagnóstico
-    e retorna em uma lista para registro no agent registry. Lida com erros de forma robusta
-    e garante que o agente esteja pronto para operação.
-
-    Args:
-        message_bus (Any): O barramento de mensagens ou canal de comunicação para mensagens entre agentes.
-
-    Returns:
-        List[BaseNetworkAgent]: Uma lista contendo a(s) instância(s) inicializada(s) de PerformanceMonitorAgent.
+    Factory function to create performance monitoring agents.
+    Permite passar callback para integração de alertas externos.
     """
-    agents: List[BaseNetworkAgent] = []
-    logger.info("📊 [Factory] Criando PerformanceMonitorAgent...")
-    try:
-        agent = PerformanceMonitorAgent("performance_monitor_001", message_bus)
-        agents.append(agent)
-        logger.info(f"📊 PerformanceMonitorAgent criado com sucesso: {agent.agent_id}")
-    except Exception as e:
-        logger.critical(f"❌ Erro crítico ao criar PerformanceMonitorAgent: {e}", exc_info=True)
+    agents = [
+        PerformanceMonitorAgent("performance_monitor_main"),
+        PerformanceMonitorAgent("performance_monitor_backup")
+    ]
+    if alert_callback:
+        for agent in agents:
+            agent.alert_callback = alert_callback
     return agents
