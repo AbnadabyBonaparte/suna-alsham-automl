@@ -1,7 +1,8 @@
+#!/usr/bin/env python3
 """
 ALSHAM QUANTUM - Analytics Data Processing Agent
 Agente especializado em processamento e transformação de dados
-Versão: 2.0 - Sem dependências externas
+Versão: 2.0 - Corrigida para compatibilidade com agent_loader
 """
 
 import json
@@ -14,61 +15,90 @@ from collections import defaultdict, Counter
 import random
 import math
 
+# Importações corrigidas para compatibilidade
+from suna_alsham_core.multi_agent_network import (
+    BaseNetworkAgent,
+    AgentType,
+    MessageType,
+    Priority,
+    AgentMessage,
+    MessageBus
+)
+
 # Configuração de logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-class BaseNetworkAgent:
-    """Classe base para todos os agentes da rede ALSHAM QUANTUM"""
+class DataSimulator:
+    """Simulador de dados para testing e desenvolvimento"""
     
-    def __init__(self, agent_id: str, agent_type: str):
-        self.agent_id = agent_id
-        self.agent_type = agent_type
-        self.status = "active"
-        self.created_at = datetime.now()
-        self.last_heartbeat = datetime.now()
-        self.message_count = 0
-        
-    async def _internal_handle_message(self, message: Dict[str, Any]) -> Dict[str, Any]:
-        """Método interno obrigatório para processamento de mensagens"""
-        self.message_count += 1
-        self.last_heartbeat = datetime.now()
-        
-        try:
-            # Processa a mensagem usando o método específico do agente
-            response = await self.process_message(message)
-            
-            return {
-                "agent_id": self.agent_id,
-                "status": "success",
-                "response": response,
-                "timestamp": datetime.now().isoformat(),
-                "message_count": self.message_count
+    def __init__(self):
+        self.schemas = {
+            "sales": {
+                "fields": ["product_id", "customer_id", "amount", "quantity", "date", "category"],
+                "types": ["string", "string", "float", "int", "datetime", "string"]
+            },
+            "analytics": {
+                "fields": ["metric_name", "value", "timestamp", "source", "confidence"],
+                "types": ["string", "float", "datetime", "string", "float"]
+            },
+            "generic": {
+                "fields": ["id", "name", "value", "category", "status"],
+                "types": ["string", "string", "float", "string", "string"]
             }
-            
-        except Exception as e:
-            logger.error(f"Erro no agente {self.agent_id}: {str(e)}")
-            return {
-                "agent_id": self.agent_id,
-                "status": "error",
-                "error": str(e),
-                "timestamp": datetime.now().isoformat()
-            }
-    
-    async def process_message(self, message: Dict[str, Any]) -> Dict[str, Any]:
-        """Método para ser implementado pelos agentes específicos"""
-        raise NotImplementedError("Agentes devem implementar process_message()")
-    
-    def get_status(self) -> Dict[str, Any]:
-        """Retorna status atual do agente"""
-        return {
-            "agent_id": self.agent_id,
-            "agent_type": self.agent_type,
-            "status": self.status,
-            "created_at": self.created_at.isoformat(),
-            "last_heartbeat": self.last_heartbeat.isoformat(),
-            "message_count": self.message_count
         }
+    
+    def generate_dataset(self, size: int, data_type: str) -> List[Dict]:
+        """Gera dataset simulado"""
+        if data_type not in self.schemas:
+            data_type = "generic"
+        
+        schema = self.schemas[data_type]
+        dataset = []
+        
+        for i in range(size):
+            record = {}
+            for field, field_type in zip(schema["fields"], schema["types"]):
+                record[field] = self._generate_field_value(field, field_type, i)
+            dataset.append(record)
+        
+        return dataset
+    
+    def get_schema(self, data_type: str) -> Dict:
+        """Retorna schema do tipo de dados"""
+        return self.schemas.get(data_type, self.schemas["generic"])
+    
+    def _generate_field_value(self, field: str, field_type: str, index: int) -> Any:
+        """Gera valor para campo específico"""
+        if field_type == "string":
+            if "id" in field:
+                return f"{field}_{index:04d}"
+            elif "name" in field:
+                return f"Item_{index}"
+            elif "category" in field:
+                return random.choice(["A", "B", "C", "Electronics", "Clothing", "Books"])
+            elif "status" in field:
+                return random.choice(["active", "inactive", "pending"])
+            else:
+                return f"value_{index}"
+        
+        elif field_type == "float":
+            if "amount" in field or "value" in field:
+                return round(random.uniform(10, 1000), 2)
+            elif "confidence" in field:
+                return round(random.uniform(0.5, 1.0), 2)
+            else:
+                return round(random.uniform(0, 100), 2)
+        
+        elif field_type == "int":
+            return random.randint(1, 100)
+        
+        elif field_type == "datetime":
+            base_time = datetime.now() - timedelta(days=random.randint(0, 30))
+            return base_time.isoformat()
+        
+        else:
+            return str(index)
 
 class DataProcessingAgent(BaseNetworkAgent):
     """
@@ -76,11 +106,8 @@ class DataProcessingAgent(BaseNetworkAgent):
     Realiza limpeza, transformação, agregação e análise estatística
     """
     
-    def __init__(self):
-        super().__init__(
-            agent_id="analytics_data_processor",
-            agent_type="data_processing"
-        )
+    def __init__(self, agent_id: str, message_bus: MessageBus):
+        super().__init__(agent_id, AgentType.BUSINESS_DOMAIN, message_bus)
         
         # Configurações de processamento
         self.processing_rules = {
@@ -102,43 +129,64 @@ class DataProcessingAgent(BaseNetworkAgent):
         # Simulador de dados para testing
         self.data_simulator = DataSimulator()
         
-        logger.info(f"✅ Analytics Data Processing Agent iniciado: {self.agent_id}")
+        # Adiciona capabilities
+        self.capabilities.extend([
+            "data_processing",
+            "data_cleaning",
+            "data_transformation",
+            "data_aggregation",
+            "statistical_analysis",
+            "feature_engineering",
+            "data_validation",
+            "outlier_detection"
+        ])
+        
+        logger.info(f"✅ {self.agent_id} (Data Processing) inicializado")
 
-    async def process_message(self, message: Dict[str, Any]) -> Dict[str, Any]:
+    async def _internal_handle_message(self, message: AgentMessage):
         """Processa mensagens de processamento de dados"""
-        
-        action = message.get("action", "process_data")
-        
-        if action == "process_data":
-            return await self._process_data(message.get("data", {}))
-        
-        elif action == "clean_data":
-            return await self._clean_data(message.get("data", {}))
-        
-        elif action == "transform_data":
-            return await self._transform_data(message.get("data", {}))
-        
-        elif action == "aggregate_data":
-            return await self._aggregate_data(message.get("data", {}))
-        
-        elif action == "analyze_statistics":
-            return await self._analyze_statistics(message.get("data", {}))
-        
-        elif action == "get_processing_status":
-            return self._get_processing_status()
-        
-        elif action == "simulate_data":
-            return await self._simulate_data(message.get("params", {}))
-        
-        else:
-            return {
-                "error": f"Ação não reconhecida: {action}",
-                "available_actions": [
-                    "process_data", "clean_data", "transform_data", 
-                    "aggregate_data", "analyze_statistics", 
-                    "get_processing_status", "simulate_data"
-                ]
-            }
+        try:
+            content = message.content
+            action = content.get("action", content.get("type", "process_data"))
+            
+            if action == "process_data":
+                return await self._process_data(content.get("data", {}))
+            
+            elif action == "clean_data":
+                return await self._clean_data(content.get("data", {}))
+            
+            elif action == "transform_data":
+                return await self._transform_data(content.get("data", {}))
+            
+            elif action == "aggregate_data":
+                return await self._aggregate_data(content.get("data", {}))
+            
+            elif action == "analyze_statistics" or action == "basic_stats":
+                return await self._analyze_statistics(content.get("data", {}))
+            
+            elif action == "feature_engineering":
+                return await self._feature_engineering(content)
+                
+            elif action == "get_processing_status":
+                return self._get_processing_status()
+            
+            elif action == "simulate_data":
+                return await self._simulate_data(content.get("params", {}))
+            
+            else:
+                logger.debug(f"📊 Ação não reconhecida: {action}")
+                return {
+                    "error": f"Ação não reconhecida: {action}",
+                    "available_actions": [
+                        "process_data", "clean_data", "transform_data", 
+                        "aggregate_data", "analyze_statistics", "basic_stats",
+                        "feature_engineering", "get_processing_status", "simulate_data"
+                    ]
+                }
+                
+        except Exception as e:
+            logger.error(f"Erro ao processar mensagem: {e}", exc_info=True)
+            return {"error": f"Erro interno: {str(e)}"}
 
     async def _process_data(self, data_config: Dict[str, Any]) -> Dict[str, Any]:
         """Pipeline completo de processamento de dados"""
@@ -160,19 +208,19 @@ class DataProcessingAgent(BaseNetworkAgent):
             
             # 1. Limpeza de dados
             cleaned_data = await self._clean_data({"data": dataset})
-            results["cleaned_records"] = len(cleaned_data["cleaned_data"])
+            results["cleaned_records"] = len(cleaned_data.get("cleaned_data", []))
             
             # 2. Transformação
-            transformed_data = await self._transform_data({"data": cleaned_data["cleaned_data"]})
-            results["transformed_features"] = len(transformed_data["features"])
+            transformed_data = await self._transform_data({"data": cleaned_data.get("cleaned_data", [])})
+            results["transformed_features"] = len(transformed_data.get("features", {}))
             
             # 3. Agregação
-            aggregated_data = await self._aggregate_data({"data": transformed_data["transformed_data"]})
-            results["aggregation_groups"] = len(aggregated_data["aggregations"])
+            aggregated_data = await self._aggregate_data({"data": transformed_data.get("transformed_data", [])})
+            results["aggregation_groups"] = len(aggregated_data.get("aggregations", {}))
             
             # 4. Análise estatística
-            stats = await self._analyze_statistics({"data": transformed_data["transformed_data"]})
-            results["statistics"] = stats["statistics"]
+            stats = await self._analyze_statistics({"data": transformed_data.get("transformed_data", [])})
+            results["statistics"] = stats.get("statistics", {})
             
             # Atualiza estatísticas
             self.processing_stats["total_records_processed"] += len(dataset)
@@ -404,6 +452,46 @@ class DataProcessingAgent(BaseNetworkAgent):
         except Exception as e:
             return {"error": f"Falha na análise estatística: {str(e)}"}
 
+    async def _feature_engineering(self, message_content: Dict[str, Any]) -> Dict[str, Any]:
+        """Engenharia de features específica para machine learning"""
+        try:
+            data = message_content.get("data", [])
+            if not data:
+                return {"error": "Dados não fornecidos"}
+            
+            engineered_features = []
+            for record in data:
+                if isinstance(record, dict):
+                    # Adiciona features engenheiradas
+                    enhanced_record = record.copy()
+                    
+                    # Features temporais
+                    if "date" in record or "timestamp" in record:
+                        date_field = record.get("date") or record.get("timestamp")
+                        enhanced_record["day_of_week"] = random.randint(0, 6)
+                        enhanced_record["is_weekend"] = random.choice([0, 1])
+                        enhanced_record["month"] = random.randint(1, 12)
+                    
+                    # Features de interação
+                    numeric_fields = [k for k, v in record.items() if isinstance(v, (int, float))]
+                    if len(numeric_fields) >= 2:
+                        field1, field2 = numeric_fields[:2]
+                        enhanced_record[f"{field1}_{field2}_interaction"] = record[field1] * record[field2]
+                    
+                    engineered_features.append(enhanced_record)
+                else:
+                    engineered_features.append(record)
+            
+            return {
+                "status": "success",
+                "engineered_data": engineered_features,
+                "new_features_count": len(engineered_features[0]) - len(data[0]) if data else 0,
+                "feature_types": ["temporal", "interaction", "aggregated"]
+            }
+            
+        except Exception as e:
+            return {"error": f"Falha na engenharia de features: {str(e)}"}
+
     async def _simulate_data(self, params: Dict[str, Any]) -> Dict[str, Any]:
         """Simula dados para testing e desenvolvimento"""
         
@@ -427,10 +515,15 @@ class DataProcessingAgent(BaseNetworkAgent):
     def _get_processing_status(self) -> Dict[str, Any]:
         """Retorna status e estatísticas de processamento"""
         
-        uptime = datetime.now() - self.created_at
+        uptime = datetime.now() - self.created_at if hasattr(self, 'created_at') else timedelta(0)
         
         return {
-            "agent_status": self.get_status(),
+            "agent_status": {
+                "agent_id": self.agent_id,
+                "agent_type": str(self.agent_type),
+                "status": self.status,
+                "capabilities": self.capabilities
+            },
             "processing_statistics": self.processing_stats,
             "uptime": str(uptime),
             "cache_size": len(self.processed_cache),
@@ -477,7 +570,7 @@ class DataProcessingAgent(BaseNetworkAgent):
         sample = data[0]
         
         for field, value in sample.items():
-            if isinstance(value, (int, float)) or (isinstance(value, str) and value.replace('.', '').isdigit()):
+            if isinstance(value, (int, float)) or (isinstance(value, str) and value.replace('.', '').replace('-', '').isdigit()):
                 numeric_fields.append(field)
         
         return numeric_fields
@@ -491,7 +584,7 @@ class DataProcessingAgent(BaseNetworkAgent):
         sample = data[0]
         
         for field, value in sample.items():
-            if isinstance(value, str) and not value.replace('.', '').isdigit():
+            if isinstance(value, str) and not value.replace('.', '').replace('-', '').isdigit():
                 categorical_fields.append(field)
         
         return categorical_fields
@@ -668,163 +761,30 @@ class DataProcessingAgent(BaseNetworkAgent):
         
         return recommendations
 
-class DataSimulator:
-    """Simulador de dados para testing e desenvolvimento"""
-    
-    def __init__(self):
-        self.schemas = {
-            "sales": {
-                "fields": ["product_id", "customer_id", "amount", "quantity", "date", "category"],
-                "types": ["string", "string", "float", "int", "datetime", "string"]
-            },
-            "analytics": {
-                "fields": ["metric_name", "value", "timestamp", "source", "confidence"],
-                "types": ["string", "float", "datetime", "string", "float"]
-            },
-            "generic": {
-                "fields": ["id", "name", "value", "category", "status"],
-                "types": ["string", "string", "float", "string", "string"]
-            }
-        }
-    
-    def generate_dataset(self, size: int, data_type: str) -> List[Dict]:
-        """Gera dataset simulado"""
-        if data_type not in self.schemas:
-            data_type = "generic"
-        
-        schema = self.schemas[data_type]
-        dataset = []
-        
-        for i in range(size):
-            record = {}
-            for field, field_type in zip(schema["fields"], schema["types"]):
-                record[field] = self._generate_field_value(field, field_type, i)
-            dataset.append(record)
-        
-        return dataset
-    
-    def get_schema(self, data_type: str) -> Dict:
-        """Retorna schema do tipo de dados"""
-        return self.schemas.get(data_type, self.schemas["generic"])
-    
-    def _generate_field_value(self, field: str, field_type: str, index: int) -> Any:
-        """Gera valor para campo específico"""
-        if field_type == "string":
-            if "id" in field:
-                return f"{field}_{index:04d}"
-            elif "name" in field:
-                return f"Item_{index}"
-            elif "category" in field:
-                return random.choice(["A", "B", "C", "Electronics", "Clothing", "Books"])
-            elif "status" in field:
-                return random.choice(["active", "inactive", "pending"])
-            else:
-                return f"value_{index}"
-        
-        elif field_type == "float":
-            if "amount" in field or "value" in field:
-                return round(random.uniform(10, 1000), 2)
-            elif "confidence" in field:
-                return round(random.uniform(0.5, 1.0), 2)
-            else:
-                return round(random.uniform(0, 100), 2)
-        
-        elif field_type == "int":
-            return random.randint(1, 100)
-        
-        elif field_type == "datetime":
-            base_time = datetime.now() - timedelta(days=random.randint(0, 30))
-            return base_time.isoformat()
-        
-        else:
-            return str(index)
 
-# Função obrigatória para o Agent Loader
-def create_agents() -> List[BaseNetworkAgent]:
+def create_agents(message_bus: MessageBus) -> List[BaseNetworkAgent]:
     """
     Função obrigatória para criação dos agentes deste módulo
-    Retorna lista de agentes instanciados
+    
+    Args:
+        message_bus: MessageBus para comunicação entre agentes.
+        
+    Returns:
+        List[BaseNetworkAgent]: Lista de agentes instanciados
     """
+    agents: List[BaseNetworkAgent] = []
+    
     try:
+        logger.info("📊 [Factory] Criando DataProcessingAgent...")
+        
         # Cria instância do agente de processamento de dados
-        data_processing_agent = DataProcessingAgent()
+        agent = DataProcessingAgent("data_processing_001", message_bus)
+        agents.append(agent)
         
-        logger.info("✅ Analytics Data Processing Agent criado com sucesso")
-        
-        return [data_processing_agent]
+        logger.info(f"✅ DataProcessingAgent criado: {agent.agent_id}")
+        logger.info(f"🔧 Capabilities: {', '.join(agent.capabilities)}")
         
     except Exception as e:
-        logger.error(f"❌ Erro ao criar Analytics Data Processing Agent: {str(e)}")
-        return []
-
-# Teste standalone
-if __name__ == "__main__":
-    async def test_data_processing_agent():
-        """Teste completo do agente"""
-        print("🧪 Testando Analytics Data Processing Agent...")
-        
-        # Cria agente
-        agents = create_agents()
-        if not agents:
-            print("❌ Falha na criação do agente")
-            return
-        
-        agent = agents[0]
-        print(f"✅ Agente criado: {agent.agent_id}")
-        
-        # Teste 1: Processamento completo de dados
-        print("\n📊 Teste 1: Pipeline completo de processamento...")
-        
-        message = {
-            "action": "process_data",
-            "data": {
-                "size": 500,
-                "data_type": "sales"
-            }
-        }
-        
-        result = await agent._internal_handle_message(message)
-        print(f"Status: {result['status']}")
-        if result['status'] == 'success':
-            pipeline_results = result['response']['pipeline_results']
-            print(f"  • Records processados: {pipeline_results['cleaned_records']}")
-            print(f"  • Features criadas: {pipeline_results['transformed_features']}")
-            print(f"  • Grupos de agregação: {pipeline_results['aggregation_groups']}")
-            print(f"  • Tempo de processamento: {result['response']['processing_time']}")
-            print(f"  • Score de qualidade: {result['response']['data_quality_score']:.2f}")
-        
-        # Teste 2: Simulação de dados
-        print("\n🎲 Teste 2: Simulação de dados...")
-        
-        message = {
-            "action": "simulate_data",
-            "params": {
-                "size": 100,
-                "type": "analytics"
-            }
-        }
-        
-        result = await agent._internal_handle_message(message)
-        if result['status'] == 'success':
-            print(f"  • Dados simulados: {result['response']['size']} records")
-            print(f"  • Tipo: {result['response']['data_type']}")
-            print(f"  • Schema: {result['response']['schema']['fields']}")
-        
-        # Teste 3: Status do agente
-        print("\n📈 Teste 3: Status do processamento...")
-        
-        message = {"action": "get_processing_status"}
-        result = await agent._internal_handle_message(message)
-        
-        if result['status'] == 'success':
-            stats = result['response']['processing_statistics']
-            print(f"  • Total de records processados: {stats['total_records_processed']}")
-            print(f"  • Operações de limpeza: {stats['cleaning_operations']}")
-            print(f"  • Operações de transformação: {stats['transformation_operations']}")
-            print(f"  • Taxa de sucesso: {result['response']['performance_metrics']['success_rate']}")
-        
-        print(f"\n✅ Todos os testes concluídos! Agente funcionando perfeitamente.")
-        print(f"🎯 Analytics Data Processing Agent - Status: OPERACIONAL")
+        logger.critical(f"❌ Erro ao criar DataProcessingAgent: {e}", exc_info=True)
     
-    # Executa teste
-    asyncio.run(test_data_processing_agent())
+    return agents
