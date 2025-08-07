@@ -29,7 +29,10 @@ import ipaddress
 from collections import defaultdict, deque
 import json
 
-from multi_agent_network import BaseNetworkAgent, MessageBus, AgentType
+# CORREÇÃO: Import paths corrigidos
+from ..core.base_agent import BaseAgent
+from ..core.agent_types import AgentType
+from ..core.message import Message, MessageType
 
 class SecurityLevel(Enum):
     """Security clearance levels"""
@@ -287,7 +290,7 @@ class ThreatDetector:
         else:
             return ThreatLevel.LOW
 
-class SecurityGuardianAgent(BaseNetworkAgent):
+class SecurityGuardianAgent(BaseAgent):
     """
     Quantum Level Security Guardian Agent
     
@@ -300,12 +303,16 @@ class SecurityGuardianAgent(BaseNetworkAgent):
     - Real-time security monitoring
     """
     
-    def __init__(self, agent_id: str = "security_guardian", message_bus: MessageBus = None):
-        super().__init__(agent_id, AgentType.CORE, message_bus)
+    def __init__(self, agent_id: str = "security_guardian", message_bus=None):
+        super().__init__(agent_id, AgentType.SECURITY, capabilities=[
+            "quantum_encryption", "threat_detection", "authentication", 
+            "audit_logging", "access_control", "behavioral_analysis"
+        ])
         
         # Core components
         self.encryption = QuantumEncryption()
         self.threat_detector = ThreatDetector()
+        self.message_bus = message_bus
         
         # Security state
         self.active_sessions: Dict[str, SecurityContext] = {}
@@ -334,6 +341,7 @@ class SecurityGuardianAgent(BaseNetworkAgent):
             'encryption_operations': 0
         }
         
+        self.logger = logging.getLogger(f"agent.{agent_id}")
         self.logger.info("Security Guardian Agent initialized with quantum-level protection")
     
     async def authenticate_user(self, credentials: Dict[str, Any]) -> Optional[SecurityContext]:
@@ -755,58 +763,113 @@ class SecurityGuardianAgent(BaseNetworkAgent):
         return recommendations
     
     # Network agent methods
-    async def process_message(self, message: Dict[str, Any]) -> Dict[str, Any]:
+    async def process_message(self, message: Message) -> Message:
         """Process incoming security messages"""
         try:
-            message_type = message.get('type', 'unknown')
+            if message.type == MessageType.QUERY:
+                content = message.content
+                
+                if isinstance(content, dict):
+                    message_type = content.get('type', 'unknown')
+                    
+                    if message_type == 'authenticate':
+                        context = await self.authenticate_user(content.get('credentials', {}))
+                        return Message(
+                            message_type=MessageType.RESPONSE,
+                            sender_id=self.agent_id,
+                            recipient_id=message.sender_id,
+                            content={
+                                'success': context is not None,
+                                'session_id': context.session_id if context else None,
+                                'security_level': context.security_level.value if context else None
+                            }
+                        )
+                    
+                    elif message_type == 'authorize':
+                        authorized = await self.authorize_action(
+                            content.get('session_id'),
+                            content.get('action'),
+                            content.get('resource')
+                        )
+                        return Message(
+                            message_type=MessageType.RESPONSE,
+                            sender_id=self.agent_id,
+                            recipient_id=message.sender_id,
+                            content={'authorized': authorized}
+                        )
+                    
+                    elif message_type == 'encrypt':
+                        encrypted = await self.encrypt_message(
+                            content.get('data'),
+                            content.get('session_id')
+                        )
+                        return Message(
+                            message_type=MessageType.RESPONSE,
+                            sender_id=self.agent_id,
+                            recipient_id=message.sender_id,
+                            content={'encrypted_data': encrypted}
+                        )
+                    
+                    elif message_type == 'decrypt':
+                        decrypted = await self.decrypt_message(
+                            content.get('encrypted_data'),
+                            content.get('session_id')
+                        )
+                        return Message(
+                            message_type=MessageType.RESPONSE,
+                            sender_id=self.agent_id,
+                            recipient_id=message.sender_id,
+                            content={'decrypted_data': decrypted}
+                        )
+                    
+                    elif message_type == 'threat_scan':
+                        threats = await self.scan_for_threats(content.get('data', {}))
+                        return Message(
+                            message_type=MessageType.RESPONSE,
+                            sender_id=self.agent_id,
+                            recipient_id=message.sender_id,
+                            content={
+                                'threats_found': len(threats),
+                                'threats': [{'level': t.threat_level.value, 'type': t.event_type} for t in threats]
+                            }
+                        )
+                    
+                    elif message_type == 'security_report':
+                        report = await self.generate_security_report()
+                        return Message(
+                            message_type=MessageType.RESPONSE,
+                            sender_id=self.agent_id,
+                            recipient_id=message.sender_id,
+                            content=report
+                        )
+                    
+                    else:
+                        return Message(
+                            message_type=MessageType.ERROR,
+                            sender_id=self.agent_id,
+                            recipient_id=message.sender_id,
+                            content={'error': f'Unknown message type: {message_type}'}
+                        )
+                        
+                elif isinstance(content, str) and "security" in content.lower():
+                    report = await self.generate_security_report()
+                    return Message(
+                        message_type=MessageType.RESPONSE,
+                        sender_id=self.agent_id,
+                        recipient_id=message.sender_id,
+                        content=report
+                    )
             
-            if message_type == 'authenticate':
-                context = await self.authenticate_user(message.get('credentials', {}))
-                return {
-                    'success': context is not None,
-                    'session_id': context.session_id if context else None,
-                    'security_level': context.security_level.value if context else None
-                }
-            
-            elif message_type == 'authorize':
-                authorized = await self.authorize_action(
-                    message.get('session_id'),
-                    message.get('action'),
-                    message.get('resource')
-                )
-                return {'authorized': authorized}
-            
-            elif message_type == 'encrypt':
-                encrypted = await self.encrypt_message(
-                    message.get('data'),
-                    message.get('session_id')
-                )
-                return {'encrypted_data': encrypted}
-            
-            elif message_type == 'decrypt':
-                decrypted = await self.decrypt_message(
-                    message.get('encrypted_data'),
-                    message.get('session_id')
-                )
-                return {'decrypted_data': decrypted}
-            
-            elif message_type == 'threat_scan':
-                threats = await self.scan_for_threats(message.get('data', {}))
-                return {
-                    'threats_found': len(threats),
-                    'threats': [{'level': t.threat_level.value, 'type': t.event_type} for t in threats]
-                }
-            
-            elif message_type == 'security_report':
-                report = await self.generate_security_report()
-                return report
-            
-            else:
-                return {'error': f'Unknown message type: {message_type}'}
+            return await super().process_message(message)
                 
         except Exception as e:
             self.logger.error(f"Message processing error: {e}")
-            return {'error': str(e)}
+            return Message(
+                message_type=MessageType.ERROR,
+                sender_id=self.agent_id,
+                recipient_id=message.sender_id,
+                content={'error': str(e)}
+            )
     
     async def get_status(self) -> Dict[str, Any]:
         """Get agent status"""
@@ -823,8 +886,7 @@ class SecurityGuardianAgent(BaseNetworkAgent):
         }
 
 
-
-def create_agents(message_bus: Any) -> List[BaseNetworkAgent]:
+def create_agents(message_bus=None) -> List[BaseAgent]:
     """
     Função fábrica para criar e inicializar o(s) SecurityGuardianAgent(s) do sistema ALSHAM QUANTUM.
 
@@ -833,12 +895,12 @@ def create_agents(message_bus: Any) -> List[BaseNetworkAgent]:
     e garante que o agente esteja pronto para operação.
 
     Args:
-        message_bus (Any): O barramento de mensagens ou canal de comunicação para mensagens entre agentes.
+        message_bus: O barramento de mensagens ou canal de comunicação para mensagens entre agentes.
 
     Returns:
-        List[BaseNetworkAgent]: Uma lista contendo a(s) instância(s) inicializada(s) de SecurityGuardianAgent.
+        List[BaseAgent]: Uma lista contendo a(s) instância(s) inicializada(s) de SecurityGuardianAgent.
     """
-    agents: List[BaseNetworkAgent] = []
+    agents: List[BaseAgent] = []
     try:
         agent = SecurityGuardianAgent("security_guardian", message_bus)
         agents.append(agent)
@@ -848,4 +910,4 @@ def create_agents(message_bus: Any) -> List[BaseNetworkAgent]:
     return agents
 
 # Export for dynamic loading
-__all__ = ['SecurityGuardianAgent', 'create_security_guardian_agent', 'SecurityLevel', 'ThreatLevel', 'AuthMethod']
+__all__ = ['SecurityGuardianAgent', 'create_agents', 'SecurityLevel', 'ThreatLevel', 'AuthMethod']
