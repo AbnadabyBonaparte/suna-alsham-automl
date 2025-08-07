@@ -1,7 +1,8 @@
+#!/usr/bin/env python3
 """
 ALSHAM QUANTUM - Analytics Predictive Analysis Agent
 Agente especializado em análise preditiva e machine learning
-Versão: 2.0 - Implementação nativa sem dependências externas
+Versão: 2.0 - Corrigida para compatibilidade com agent_loader
 """
 
 import json
@@ -15,61 +16,19 @@ from pathlib import Path
 import statistics
 from collections import defaultdict, deque
 
+# Importações corrigidas para compatibilidade
+from suna_alsham_core.multi_agent_network import (
+    BaseNetworkAgent,
+    AgentType,
+    MessageType,
+    Priority,
+    AgentMessage,
+    MessageBus
+)
+
 # Configuração de logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
-
-class BaseNetworkAgent:
-    """Classe base para todos os agentes da rede ALSHAM QUANTUM"""
-    
-    def __init__(self, agent_id: str, agent_type: str):
-        self.agent_id = agent_id
-        self.agent_type = agent_type
-        self.status = "active"
-        self.created_at = datetime.now()
-        self.last_heartbeat = datetime.now()
-        self.message_count = 0
-        
-    async def _internal_handle_message(self, message: Dict[str, Any]) -> Dict[str, Any]:
-        """Método interno obrigatório para processamento de mensagens"""
-        self.message_count += 1
-        self.last_heartbeat = datetime.now()
-        
-        try:
-            # Processa a mensagem usando o método específico do agente
-            response = await self.process_message(message)
-            
-            return {
-                "agent_id": self.agent_id,
-                "status": "success",
-                "response": response,
-                "timestamp": datetime.now().isoformat(),
-                "message_count": self.message_count
-            }
-            
-        except Exception as e:
-            logger.error(f"Erro no agente {self.agent_id}: {str(e)}")
-            return {
-                "agent_id": self.agent_id,
-                "status": "error",
-                "error": str(e),
-                "timestamp": datetime.now().isoformat()
-            }
-    
-    async def process_message(self, message: Dict[str, Any]) -> Dict[str, Any]:
-        """Método para ser implementado pelos agentes específicos"""
-        raise NotImplementedError("Agentes devem implementar process_message()")
-    
-    def get_status(self) -> Dict[str, Any]:
-        """Retorna status atual do agente"""
-        return {
-            "agent_id": self.agent_id,
-            "agent_type": self.agent_type,
-            "status": self.status,
-            "created_at": self.created_at.isoformat(),
-            "last_heartbeat": self.last_heartbeat.isoformat(),
-            "message_count": self.message_count
-        }
 
 class NativeMLEngine:
     """Engine nativo de Machine Learning sem dependências externas"""
@@ -168,7 +127,7 @@ class NativeMLEngine:
             "kernel": "rbf",
             "c_parameter": random.uniform(0.1, 10),
             "gamma": random.uniform(0.001, 1),
-            "support_vectors": random.randint(10, len(X) // 3),
+            "support_vectors": random.randint(10, len(X) // 3) if X else 10,
             "accuracy": random.uniform(0.75, 0.94),
             "n_features": len(X[0]) if X else 1,
             "n_samples": len(X)
@@ -226,11 +185,8 @@ class PredictiveAnalysisAgent(BaseNetworkAgent):
     Implementa algoritmos nativos sem dependências externas
     """
     
-    def __init__(self):
-        super().__init__(
-            agent_id="analytics_predictive_analyzer",
-            agent_type="predictive_analysis"
-        )
+    def __init__(self, agent_id: str, message_bus: MessageBus):
+        super().__init__(agent_id, AgentType.BUSINESS_DOMAIN, message_bus)
         
         # Engine nativo de ML
         self.ml_engine = NativeMLEngine()
@@ -259,50 +215,71 @@ class PredictiveAnalysisAgent(BaseNetworkAgent):
             "model_types_used": set()
         }
         
-        logger.info(f"✅ Analytics Predictive Analysis Agent iniciado: {self.agent_id}")
+        # Adiciona capabilities
+        self.capabilities.extend([
+            "machine_learning",
+            "predictive_modeling",
+            "model_training",
+            "model_evaluation",
+            "feature_importance_analysis",
+            "hyperparameter_tuning",
+            "model_comparison",
+            "prediction_generation"
+        ])
+        
+        logger.info(f"✅ {self.agent_id} (Predictive Analysis) inicializado")
 
-    async def process_message(self, message: Dict[str, Any]) -> Dict[str, Any]:
+    async def _internal_handle_message(self, message: AgentMessage):
         """Processa mensagens de análise preditiva"""
-        
-        action = message.get("action", "train_model")
-        
-        if action == "train_model":
-            return await self._train_model(message.get("data", {}))
-        
-        elif action == "predict":
-            return await self._make_prediction(message.get("data", {}))
-        
-        elif action == "evaluate_model":
-            return await self._evaluate_model(message.get("data", {}))
-        
-        elif action == "feature_importance":
-            return await self._analyze_feature_importance(message.get("data", {}))
-        
-        elif action == "model_comparison":
-            return await self._compare_models(message.get("data", {}))
-        
-        elif action == "save_model":
-            return await self._save_model(message.get("data", {}))
-        
-        elif action == "load_model":
-            return await self._load_model(message.get("data", {}))
-        
-        elif action == "get_prediction_status":
-            return self._get_prediction_status()
-        
-        elif action == "hyperparameter_tuning":
-            return await self._tune_hyperparameters(message.get("data", {}))
-        
-        else:
-            return {
-                "error": f"Ação não reconhecida: {action}",
-                "available_actions": [
-                    "train_model", "predict", "evaluate_model", 
-                    "feature_importance", "model_comparison",
-                    "save_model", "load_model", "get_prediction_status",
-                    "hyperparameter_tuning"
-                ]
-            }
+        try:
+            content = message.content
+            action = content.get("action", content.get("type", "train_model"))
+            
+            if action == "train_model":
+                return await self._train_model(content.get("data", {}))
+            
+            elif action == "predict":
+                return await self._make_prediction(content.get("data", {}))
+            
+            elif action == "evaluate_model":
+                return await self._evaluate_model(content.get("data", {}))
+                
+            elif action == "analyze_data":
+                return await self._analyze_data(content)
+            
+            elif action == "feature_importance":
+                return await self._analyze_feature_importance(content.get("data", {}))
+            
+            elif action == "model_comparison":
+                return await self._compare_models(content.get("data", {}))
+            
+            elif action == "save_model":
+                return await self._save_model(content.get("data", {}))
+            
+            elif action == "load_model":
+                return await self._load_model(content.get("data", {}))
+            
+            elif action == "get_prediction_status":
+                return self._get_prediction_status()
+            
+            elif action == "hyperparameter_tuning":
+                return await self._tune_hyperparameters(content.get("data", {}))
+            
+            else:
+                logger.debug(f"🔮 Ação não reconhecida: {action}")
+                return {
+                    "error": f"Ação não reconhecida: {action}",
+                    "available_actions": [
+                        "train_model", "predict", "evaluate_model", "analyze_data",
+                        "feature_importance", "model_comparison",
+                        "save_model", "load_model", "get_prediction_status",
+                        "hyperparameter_tuning"
+                    ]
+                }
+                
+        except Exception as e:
+            logger.error(f"Erro ao processar mensagem: {e}", exc_info=True)
+            return {"error": f"Erro interno: {str(e)}"}
 
     async def _train_model(self, data: Dict[str, Any]) -> Dict[str, Any]:
         """Treina um modelo de machine learning"""
@@ -478,6 +455,36 @@ class PredictiveAnalysisAgent(BaseNetworkAgent):
             logger.error(f"Erro na avaliação do modelo: {str(e)}")
             return {"error": f"Falha na avaliação: {str(e)}"}
 
+    async def _analyze_data(self, message_content: Dict[str, Any]) -> Dict[str, Any]:
+        """Analisa dados para machine learning"""
+        try:
+            data = message_content.get("data", [])
+            if not data:
+                return {"error": "Dados não fornecidos"}
+            
+            # Análise básica dos dados
+            analysis_result = {
+                "data_shape": {
+                    "rows": len(data),
+                    "columns": len(data[0]) if data and isinstance(data[0], dict) else 0
+                },
+                "data_types": self._analyze_data_types(data),
+                "missing_values": self._analyze_missing_values(data),
+                "statistical_summary": self._generate_statistical_summary(data),
+                "ml_readiness": self._assess_ml_readiness(data),
+                "recommended_models": self._recommend_models(data)
+            }
+            
+            return {
+                "status": "success",
+                "analysis": analysis_result,
+                "timestamp": datetime.now().isoformat()
+            }
+            
+        except Exception as e:
+            logger.error(f"Erro na análise de dados: {str(e)}")
+            return {"error": f"Falha na análise: {str(e)}"}
+
     async def _analyze_feature_importance(self, data: Dict[str, Any]) -> Dict[str, Any]:
         """Analisa importância das features"""
         
@@ -499,7 +506,7 @@ class PredictiveAnalysisAgent(BaseNetworkAgent):
                 # Normaliza coeficientes para importância
                 if coefficients:
                     max_coef = max(abs(c) for c in coefficients)
-                    feature_importance = [abs(c) / max_coef for c in coefficients]
+                    feature_importance = [abs(c) / max_coef if max_coef > 0 else 0 for c in coefficients]
                 else:
                     feature_importance = []
             else:
@@ -507,7 +514,7 @@ class PredictiveAnalysisAgent(BaseNetworkAgent):
                 n_features = len(feature_names) if feature_names else model.get("n_features", 1)
                 feature_importance = [random.uniform(0, 1) for _ in range(n_features)]
                 total = sum(feature_importance)
-                feature_importance = [imp / total for imp in feature_importance]
+                feature_importance = [imp / total if total > 0 else 0 for imp in feature_importance]
             
             # Combina nomes de features com importâncias
             if not feature_names:
@@ -618,7 +625,7 @@ class PredictiveAnalysisAgent(BaseNetworkAgent):
             # Salva em arquivo JSON
             file_path.parent.mkdir(parents=True, exist_ok=True)
             with open(file_path, 'w', encoding='utf-8') as f:
-                json.dump(save_data, f, indent=2, ensure_ascii=False)
+                json.dump(save_data, f, indent=2, ensure_ascii=False, default=str)
             
             return {
                 "status": "success",
@@ -741,19 +748,22 @@ class PredictiveAnalysisAgent(BaseNetworkAgent):
     def _get_prediction_status(self) -> Dict[str, Any]:
         """Retorna status e estatísticas de predição"""
         
-        uptime = datetime.now() - self.created_at
-        
         return {
-            "agent_status": self.get_status(),
+            "agent_status": {
+                "agent_id": self.agent_id,
+                "agent_type": str(self.agent_type),
+                "status": self.status,
+                "capabilities": self.capabilities
+            },
             "prediction_statistics": {
-                **self.prediction_stats,
+                "models_trained": self.prediction_stats["models_trained"],
+                "predictions_made": self.prediction_stats["predictions_made"],
                 "model_types_used": list(self.prediction_stats["model_types_used"])
             },
             "trained_models": {
                 "count": len(self.trained_models),
                 "models": list(self.trained_models.keys())
             },
-            "uptime": str(uptime),
             "available_algorithms": ["linear_regression", "random_forest", "svm", "neural_network"],
             "performance_metrics": {
                 "avg_training_time": f"{random.uniform(2, 8):.2f}s",
@@ -856,6 +866,116 @@ class PredictiveAnalysisAgent(BaseNetworkAgent):
             "accuracy": round(accuracy, 4)
         }
 
+    def _analyze_data_types(self, data: List[Dict]) -> Dict[str, str]:
+        """Analisa tipos de dados no dataset"""
+        if not data or not isinstance(data[0], dict):
+            return {}
+        
+        data_types = {}
+        sample = data[0]
+        
+        for key, value in sample.items():
+            if isinstance(value, bool):
+                data_types[key] = "boolean"
+            elif isinstance(value, int):
+                data_types[key] = "integer"
+            elif isinstance(value, float):
+                data_types[key] = "float"
+            elif isinstance(value, str):
+                data_types[key] = "string"
+            elif isinstance(value, (list, tuple)):
+                data_types[key] = "array"
+            elif isinstance(value, dict):
+                data_types[key] = "object"
+            else:
+                data_types[key] = "unknown"
+        
+        return data_types
+
+    def _analyze_missing_values(self, data: List[Dict]) -> Dict[str, int]:
+        """Analisa valores faltantes no dataset"""
+        if not data:
+            return {}
+        
+        missing_counts = defaultdict(int)
+        
+        for record in data:
+            if isinstance(record, dict):
+                for key in record.keys():
+                    value = record.get(key)
+                    if value is None or value == "" or (isinstance(value, str) and value.lower() == "null"):
+                        missing_counts[key] += 1
+        
+        return dict(missing_counts)
+
+    def _generate_statistical_summary(self, data: List[Dict]) -> Dict[str, Any]:
+        """Gera resumo estatístico do dataset"""
+        if not data:
+            return {}
+        
+        numeric_fields = defaultdict(list)
+        
+        for record in data:
+            if isinstance(record, dict):
+                for key, value in record.items():
+                    if isinstance(value, (int, float)):
+                        numeric_fields[key].append(value)
+        
+        summary = {}
+        for field, values in numeric_fields.items():
+            if values:
+                summary[field] = {
+                    "mean": statistics.mean(values),
+                    "median": statistics.median(values),
+                    "std": statistics.stdev(values) if len(values) > 1 else 0,
+                    "min": min(values),
+                    "max": max(values)
+                }
+        
+        return summary
+
+    def _assess_ml_readiness(self, data: List[Dict]) -> Dict[str, Any]:
+        """Avalia prontidão dos dados para ML"""
+        readiness = {
+            "is_ready": True,
+            "issues": [],
+            "score": 100
+        }
+        
+        if len(data) < 30:
+            readiness["issues"].append("Dataset muito pequeno (< 30 amostras)")
+            readiness["score"] -= 30
+            readiness["is_ready"] = False
+        
+        missing_values = self._analyze_missing_values(data)
+        if missing_values:
+            total_missing = sum(missing_values.values())
+            missing_ratio = total_missing / (len(data) * len(data[0]) if data else 1)
+            if missing_ratio > 0.2:
+                readiness["issues"].append(f"Muitos valores faltantes ({missing_ratio*100:.1f}%)")
+                readiness["score"] -= 20
+        
+        return readiness
+
+    def _recommend_models(self, data: List[Dict]) -> List[str]:
+        """Recomenda modelos baseados nos dados"""
+        recommendations = []
+        
+        if len(data) < 100:
+            recommendations.append("linear_regression")  # Simples para poucos dados
+        
+        if len(data) > 500:
+            recommendations.append("random_forest")  # Bom para muitos dados
+            recommendations.append("neural_network")
+        
+        if len(data) > 100 and len(data) < 1000:
+            recommendations.append("svm")  # Bom para dados médios
+        
+        if not recommendations:
+            recommendations = ["linear_regression"]  # Default
+        
+        return recommendations
+
     def _generate_training_recommendations(self, model: Dict, performance: Dict) -> List[str]:
         """Gera recomendações baseadas no treinamento"""
         recommendations = []
@@ -947,170 +1067,30 @@ class PredictiveAnalysisAgent(BaseNetworkAgent):
             "ensemble_type": "voting"
         }
 
-# Função obrigatória para o Agent Loader
-def create_agents() -> List[BaseNetworkAgent]:
+
+def create_agents(message_bus: MessageBus) -> List[BaseNetworkAgent]:
     """
     Função obrigatória para criação dos agentes deste módulo
-    Retorna lista de agentes instanciados
+    
+    Args:
+        message_bus: MessageBus para comunicação entre agentes.
+    
+    Returns:
+        List[BaseNetworkAgent]: Lista de agentes instanciados
     """
+    agents: List[BaseNetworkAgent] = []
+    
     try:
+        logger.info("🔮 [Factory] Criando PredictiveAnalysisAgent...")
+        
         # Cria instância do agente de análise preditiva
-        predictive_analysis_agent = PredictiveAnalysisAgent()
+        agent = PredictiveAnalysisAgent("predictive_analysis_001", message_bus)
+        agents.append(agent)
         
-        logger.info("✅ Analytics Predictive Analysis Agent criado com sucesso")
-        
-        return [predictive_analysis_agent]
+        logger.info(f"✅ PredictiveAnalysisAgent criado: {agent.agent_id}")
+        logger.info(f"🔧 Capabilities: {', '.join(agent.capabilities)}")
         
     except Exception as e:
-        logger.error(f"❌ Erro ao criar Analytics Predictive Analysis Agent: {str(e)}")
-        return []
-
-# Teste standalone
-if __name__ == "__main__":
-    async def test_predictive_analysis_agent():
-        """Teste completo do agente"""
-        print("🧪 Testando Analytics Predictive Analysis Agent...")
-        
-        # Cria agente
-        agents = create_agents()
-        if not agents:
-            print("❌ Falha na criação do agente")
-            return
-        
-        agent = agents[0]
-        print(f"✅ Agente criado: {agent.agent_id}")
-        
-        # Teste 1: Treinamento de modelo
-        print("\n🤖 Teste 1: Treinamento de modelo de regressão linear...")
-        
-        # Simula dataset de vendas
-        dataset = []
-        for i in range(200):
-            record = {
-                "price": random.uniform(10, 1000),
-                "marketing_spend": random.uniform(100, 5000),
-                "season": random.choice(["spring", "summer", "fall", "winter"]),
-                "sales": random.uniform(50, 2000)  # target
-            }
-            # Adiciona alguma correlação
-            record["sales"] += record["price"] * 0.5 + record["marketing_spend"] * 0.1
-            dataset.append(record)
-        
-        message = {
-            "action": "train_model",
-            "data": {
-                "model_type": "linear_regression",
-                "dataset": dataset,
-                "target_column": "sales",
-                "feature_columns": ["price", "marketing_spend"],
-                "model_name": "sales_predictor"
-            }
-        }
-        
-        result = await agent._internal_handle_message(message)
-        print(f"Status: {result['status']}")
-        if result['status'] == 'success':
-            model_details = result['response']['model_details']
-            print(f"  • Modelo: {model_details['model_type']}")
-            print(f"  • R² Score: {model_details.get('r_squared', 0):.3f}")
-            print(f"  • Samples de treino: {result['response']['training_samples']}")
-            print(f"  • Features: {result['response']['features']}")
-            print(f"  • Tempo de treinamento: {result['response']['training_time']}")
-        
-        # Teste 2: Fazendo predições
-        print("\n🔮 Teste 2: Fazendo predições...")
-        
-        prediction_data = [
-            {"price": 500, "marketing_spend": 2000},
-            {"price": 200, "marketing_spend": 1000},
-            {"price": 800, "marketing_spend": 3000}
-        ]
-        
-        message = {
-            "action": "predict",
-            "data": {
-                "model_name": "sales_predictor",
-                "input_data": prediction_data
-            }
-        }
-        
-        result = await agent._internal_handle_message(message)
-        if result['status'] == 'success':
-            predictions = result['response']['predictions']
-            print(f"  • Predições: {[round(p, 2) for p in predictions[:3]]}")
-            print(f"  • Amostras processadas: {result['response']['input_samples']}")
-            print(f"  • Nível de confiança: {result['response']['prediction_metadata']['confidence_level']}")
-        
-        # Teste 3: Análise de importância de features
-        print("\n🎯 Teste 3: Análise de importância de features...")
-        
-        message = {
-            "action": "feature_importance",
-            "data": {
-                "model_name": "sales_predictor",
-                "feature_names": ["price", "marketing_spend"]
-            }
-        }
-        
-        result = await agent._internal_handle_message(message)
-        if result['status'] == 'success':
-            features = result['response']['feature_importance']
-            print("  • Importância das features:")
-            for feature in features:
-                print(f"    - {feature['feature_name']}: {feature['importance']:.3f} ({feature['impact']})")
-        
-        # Teste 4: Treinamento de modelo Random Forest
-        print("\n🌳 Teste 4: Treinamento de Random Forest...")
-        
-        message = {
-            "action": "train_model",
-            "data": {
-                "model_type": "random_forest",
-                "dataset": dataset,
-                "target_column": "sales",
-                "feature_columns": ["price", "marketing_spend"],
-                "model_name": "sales_rf_predictor"
-            }
-        }
-        
-        result = await agent._internal_handle_message(message)
-        if result['status'] == 'success':
-            print(f"  • Random Forest treinado com sucesso")
-            print(f"  • OOB Score: {result['response']['model_details'].get('oob_score', 0):.3f}")
-        
-        # Teste 5: Comparação de modelos
-        print("\n⚖️ Teste 5: Comparação de modelos...")
-        
-        message = {
-            "action": "model_comparison",
-            "data": {
-                "model_names": ["sales_predictor", "sales_rf_predictor"]
-            }
-        }
-        
-        result = await agent._internal_handle_message(message)
-        if result['status'] == 'success':
-            print(f"  • Modelos comparados: {result['response']['models_compared']}")
-            best_model = result['response']['best_model']
-            if best_model:
-                print(f"  • Melhor modelo: {best_model['model_name']} ({best_model['model_type']})")
-                print(f"  • Accuracy: {best_model['performance'].get('accuracy', 0):.3f}")
-        
-        # Teste 6: Status do agente
-        print("\n📊 Teste 6: Status do agente...")
-        
-        message = {"action": "get_prediction_status"}
-        result = await agent._internal_handle_message(message)
-        
-        if result['status'] == 'success':
-            stats = result['response']['prediction_statistics']
-            print(f"  • Modelos treinados: {stats['models_trained']}")
-            print(f"  • Predições feitas: {stats['predictions_made']}")
-            print(f"  • Algoritmos disponíveis: {len(result['response']['available_algorithms'])}")
-            print(f"  • Taxa de sucesso: {result['response']['performance_metrics']['success_rate']}")
-        
-        print(f"\n✅ Todos os testes concluídos! Agente funcionando perfeitamente.")
-        print(f"🎯 Analytics Predictive Analysis Agent - Status: OPERACIONAL")
+        logger.critical(f"❌ Erro ao criar PredictiveAnalysisAgent: {e}", exc_info=True)
     
-    # Executa teste
-    asyncio.run(test_predictive_analysis_agent())
+    return agents
