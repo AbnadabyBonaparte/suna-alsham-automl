@@ -1,7 +1,8 @@
+#!/usr/bin/env python3
 """
 ALSHAM QUANTUM - Analytics Reporting & Visualization Agent
 Agente especializado em relatórios e visualização de dados
-Versão: 2.0 - Implementação nativa sem dependências externas
+Versão: 2.0 - Corrigida para compatibilidade com agent_loader
 """
 
 import json
@@ -17,61 +18,19 @@ from collections import defaultdict, Counter
 import base64
 import html
 
+# Importações corrigidas para compatibilidade
+from suna_alsham_core.multi_agent_network import (
+    BaseNetworkAgent,
+    AgentType,
+    MessageType,
+    Priority,
+    AgentMessage,
+    MessageBus
+)
+
 # Configuração de logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
-
-class BaseNetworkAgent:
-    """Classe base para todos os agentes da rede ALSHAM QUANTUM"""
-    
-    def __init__(self, agent_id: str, agent_type: str):
-        self.agent_id = agent_id
-        self.agent_type = agent_type
-        self.status = "active"
-        self.created_at = datetime.now()
-        self.last_heartbeat = datetime.now()
-        self.message_count = 0
-        
-    async def _internal_handle_message(self, message: Dict[str, Any]) -> Dict[str, Any]:
-        """Método interno obrigatório para processamento de mensagens"""
-        self.message_count += 1
-        self.last_heartbeat = datetime.now()
-        
-        try:
-            # Processa a mensagem usando o método específico do agente
-            response = await self.process_message(message)
-            
-            return {
-                "agent_id": self.agent_id,
-                "status": "success",
-                "response": response,
-                "timestamp": datetime.now().isoformat(),
-                "message_count": self.message_count
-            }
-            
-        except Exception as e:
-            logger.error(f"Erro no agente {self.agent_id}: {str(e)}")
-            return {
-                "agent_id": self.agent_id,
-                "status": "error",
-                "error": str(e),
-                "timestamp": datetime.now().isoformat()
-            }
-    
-    async def process_message(self, message: Dict[str, Any]) -> Dict[str, Any]:
-        """Método para ser implementado pelos agentes específicos"""
-        raise NotImplementedError("Agentes devem implementar process_message()")
-    
-    def get_status(self) -> Dict[str, Any]:
-        """Retorna status atual do agente"""
-        return {
-            "agent_id": self.agent_id,
-            "agent_type": self.agent_type,
-            "status": self.status,
-            "created_at": self.created_at.isoformat(),
-            "last_heartbeat": self.last_heartbeat.isoformat(),
-            "message_count": self.message_count
-        }
 
 class NativeVisualizationEngine:
     """Engine nativo de visualização sem dependências externas"""
@@ -156,7 +115,7 @@ class NativeVisualizationEngine:
         svg += "\n        <!-- Bars -->"
         for i, (category, value) in enumerate(zip(categories, values)):
             x_pos = margin["left"] + (i * chart_width / len(categories)) + (bar_spacing / 2)
-            bar_height = (value / max_value) * chart_height
+            bar_height = (value / max_value) * chart_height if max_value > 0 else 0
             y_pos = margin["top"] + chart_height - bar_height
             
             color = colors[i % len(colors)]
@@ -171,489 +130,6 @@ class NativeVisualizationEngine:
         svg += f'''
         
         <!-- Y-axis -->
-        <line x1="{margin["left"]}" y1="{margin["top"]}" x2="{margin["left"]}" y2="{margin["top"] + chart_height}" 
-              stroke="#2c3e50" stroke-width="2"/>
-        
-        <!-- X-axis -->
-        <line x1="{margin["left"]}" y1="{margin["top"] + chart_height}" x2="{margin["left"] + chart_width}" y2="{margin["top"] + chart_height}" 
-              stroke="#2c3e50" stroke-width="2"/>
-        
-        <!-- Y-axis label -->
-        <text x="20" y="{margin["top"] + chart_height/2}" class="axis-label" transform="rotate(-90, 20, {margin["top"] + chart_height/2})">{html.escape(y_axis)}</text>
-        
-        <!-- X-axis label -->
-        <text x="{margin["left"] + chart_width/2}" y="{height - 20}" class="axis-label">{html.escape(x_axis)}</text>
-        
-    </svg>'''
-        
-        return svg
-    
-    def _generate_line_chart(self, data: List[Dict], config: Dict) -> str:
-        """Gera gráfico de linha em SVG"""
-        
-        width = config.get("width", 800)
-        height = config.get("height", 600)
-        title = config.get("title", "Gráfico de Linha")
-        x_axis = config.get("x_axis", "x")
-        y_axis = config.get("y_axis", "y")
-        colors = self.color_palettes[config.get("color_palette", "default")]
-        
-        # Extrai e ordena dados
-        points = [(float(item.get(x_axis, i)), float(item.get(y_axis, 0))) for i, item in enumerate(data)]
-        points.sort(key=lambda p: p[0])
-        
-        if not points:
-            return self._generate_empty_chart("Sem dados para exibir")
-        
-        # Configurações do gráfico
-        margin = {"top": 80, "right": 50, "bottom": 80, "left": 80}
-        chart_width = width - margin["left"] - margin["right"]
-        chart_height = height - margin["top"] - margin["bottom"]
-        
-        x_values = [p[0] for p in points]
-        y_values = [p[1] for p in points]
-        
-        x_min, x_max = min(x_values), max(x_values)
-        y_min, y_max = min(y_values), max(y_values)
-        
-        x_range = x_max - x_min if x_max != x_min else 1
-        y_range = y_max - y_min if y_max != y_min else 1
-        
-        # Inicia SVG
-        svg = f"""<svg width="{width}" height="{height}" xmlns="http://www.w3.org/2000/svg">
-        <defs>
-            <style>
-                .chart-title {{ font-family: Arial, sans-serif; font-size: 24px; font-weight: bold; text-anchor: middle; fill: #2c3e50; }}
-                .axis-label {{ font-family: Arial, sans-serif; font-size: 14px; text-anchor: middle; fill: #34495e; }}
-                .grid-line {{ stroke: #ecf0f1; stroke-width: 1; opacity: 0.7; }}
-                .line {{ fill: none; stroke-width: 2; }}
-                .point {{ opacity: 0.8; }}
-            </style>
-        </defs>
-        
-        <!-- Background -->
-        <rect width="{width}" height="{height}" fill="#ffffff"/>
-        
-        <!-- Title -->
-        <text x="{width/2}" y="40" class="chart-title">{html.escape(title)}</text>
-        
-        <!-- Grid lines -->"""
-        
-        # Grid lines
-        for i in range(6):
-            y_pos = margin["top"] + (chart_height * i / 5)
-            svg += f'\n        <line x1="{margin["left"]}" y1="{y_pos}" x2="{margin["left"] + chart_width}" y2="{y_pos}" class="grid-line"/>'
-        
-        # Constrói linha
-        line_points = []
-        for x, y in points:
-            svg_x = margin["left"] + ((x - x_min) / x_range) * chart_width
-            svg_y = margin["top"] + chart_height - ((y - y_min) / y_range) * chart_height
-            line_points.append(f"{svg_x},{svg_y}")
-        
-        path = "M " + " L ".join(line_points)
-        
-        svg += f'''
-        
-        <!-- Line -->
-        <path d="{path}" class="line" stroke="{colors[0]}"/>
-        
-        <!-- Points -->'''
-        
-        # Adiciona pontos
-        for x, y in points:
-            svg_x = margin["left"] + ((x - x_min) / x_range) * chart_width
-            svg_y = margin["top"] + chart_height - ((y - y_min) / y_range) * chart_height
-            svg += f'\n        <circle cx="{svg_x}" cy="{svg_y}" r="4" fill="{colors[0]}" class="point"/>'
-        
-        # Eixos e labels
-        svg += f'''
-        
-        <!-- Y-axis -->
-        <line x1="{margin["left"]}" y1="{margin["top"]}" x2="{margin["left"]}" y2="{margin["top"] + chart_height}" 
-              stroke="#2c3e50" stroke-width="2"/>
-        
-        <!-- X-axis -->
-        <line x1="{margin["left"]}" y1="{margin["top"] + chart_height}" x2="{margin["left"] + chart_width}" y2="{margin["top"] + chart_height}" 
-              stroke="#2c3e50" stroke-width="2"/>
-        
-        <!-- Y-axis label -->
-        <text x="20" y="{margin["top"] + chart_height/2}" class="axis-label" transform="rotate(-90, 20, {margin["top"] + chart_height/2})">{html.escape(y_axis)}</text>
-        
-        <!-- X-axis label -->
-        <text x="{margin["left"] + chart_width/2}" y="{height - 20}" class="axis-label">{html.escape(x_axis)}</text>
-        
-    </svg>'''
-        
-        return svg
-    
-    def _generate_pie_chart(self, data: List[Dict], config: Dict) -> str:
-        """Gera gráfico de pizza em SVG"""
-        
-        width = config.get("width", 600)
-        height = config.get("height", 600)
-        title = config.get("title", "Gráfico de Pizza")
-        label_field = config.get("label_field", "label")
-        value_field = config.get("value_field", "value")
-        colors = self.color_palettes[config.get("color_palette", "default")]
-        
-        # Extrai dados
-        labels = [str(item.get(label_field, f"Item {i}")) for i, item in enumerate(data)]
-        values = [float(item.get(value_field, 0)) for item in data]
-        
-        if not values or sum(values) == 0:
-            return self._generate_empty_chart("Sem dados para exibir")
-        
-        # Configurações
-        center_x, center_y = width / 2, height / 2
-        radius = min(width, height) * 0.3
-        
-        total = sum(values)
-        
-        # Inicia SVG
-        svg = f"""<svg width="{width}" height="{height}" xmlns="http://www.w3.org/2000/svg">
-        <defs>
-            <style>
-                .chart-title {{ font-family: Arial, sans-serif; font-size: 24px; font-weight: bold; text-anchor: middle; fill: #2c3e50; }}
-                .slice-label {{ font-family: Arial, sans-serif; font-size: 12px; text-anchor: middle; fill: #2c3e50; }}
-                .legend-text {{ font-family: Arial, sans-serif; font-size: 14px; fill: #2c3e50; }}
-            </style>
-        </defs>
-        
-        <!-- Background -->
-        <rect width="{width}" height="{height}" fill="#ffffff"/>
-        
-        <!-- Title -->
-        <text x="{width/2}" y="40" class="chart-title">{html.escape(title)}</text>
-        """
-        
-        # Desenha fatias
-        start_angle = 0
-        for i, (label, value) in enumerate(zip(labels, values)):
-            percentage = value / total
-            angle = percentage * 2 * math.pi
-            
-            # Calcula pontos da fatia
-            x1 = center_x + radius * math.cos(start_angle)
-            y1 = center_y + radius * math.sin(start_angle)
-            
-            end_angle = start_angle + angle
-            x2 = center_x + radius * math.cos(end_angle)
-            y2 = center_y + radius * math.sin(end_angle)
-            
-            # Flag para arcos grandes
-            large_arc = 1 if angle > math.pi else 0
-            
-            color = colors[i % len(colors)]
-            
-            # Desenha fatia
-            path = f"M {center_x} {center_y} L {x1} {y1} A {radius} {radius} 0 {large_arc} 1 {x2} {y2} Z"
-            svg += f'\n        <path d="{path}" fill="{color}" opacity="0.8" stroke="#ffffff" stroke-width="2"/>'
-            
-            # Label da porcentagem
-            label_angle = start_angle + angle / 2
-            label_x = center_x + (radius * 0.7) * math.cos(label_angle)
-            label_y = center_y + (radius * 0.7) * math.sin(label_angle)
-            
-            svg += f'\n        <text x="{label_x}" y="{label_y}" class="slice-label">{percentage*100:.1f}%</text>'
-            
-            start_angle = end_angle
-        
-        # Legenda
-        legend_start_y = height - 150
-        for i, (label, value) in enumerate(zip(labels, values)):
-            color = colors[i % len(colors)]
-            y_pos = legend_start_y + i * 25
-            
-            svg += f'''
-        <rect x="50" y="{y_pos}" width="15" height="15" fill="{color}" opacity="0.8"/>
-        <text x="75" y="{y_pos + 12}" class="legend-text">{html.escape(label)}: {value}</text>'''
-        
-        svg += "\n    </svg>"
-        return svg
-    
-    def _generate_scatter_chart(self, data: List[Dict], config: Dict) -> str:
-        """Gera gráfico de dispersão em SVG"""
-        
-        width = config.get("width", 800)
-        height = config.get("height", 600)
-        title = config.get("title", "Gráfico de Dispersão")
-        x_axis = config.get("x_axis", "x")
-        y_axis = config.get("y_axis", "y")
-        colors = self.color_palettes[config.get("color_palette", "default")]
-        
-        # Extrai dados
-        points = []
-        for item in data:
-            try:
-                x = float(item.get(x_axis, 0))
-                y = float(item.get(y_axis, 0))
-                points.append((x, y))
-            except (ValueError, TypeError):
-                continue
-        
-        if not points:
-            return self._generate_empty_chart("Sem dados numéricos para exibir")
-        
-        # Configurações do gráfico
-        margin = {"top": 80, "right": 50, "bottom": 80, "left": 80}
-        chart_width = width - margin["left"] - margin["right"]
-        chart_height = height - margin["top"] - margin["bottom"]
-        
-        x_values = [p[0] for p in points]
-        y_values = [p[1] for p in points]
-        
-        x_min, x_max = min(x_values), max(x_values)
-        y_min, y_max = min(y_values), max(y_values)
-        
-        x_range = x_max - x_min if x_max != x_min else 1
-        y_range = y_max - y_min if y_max != y_min else 1
-        
-        # Inicia SVG  
-        svg = f"""<svg width="{width}" height="{height}" xmlns="http://www.w3.org/2000/svg">
-        <defs>
-            <style>
-                .chart-title {{ font-family: Arial, sans-serif; font-size: 24px; font-weight: bold; text-anchor: middle; fill: #2c3e50; }}
-                .axis-label {{ font-family: Arial, sans-serif; font-size: 14px; text-anchor: middle; fill: #34495e; }}
-                .grid-line {{ stroke: #ecf0f1; stroke-width: 1; opacity: 0.7; }}
-                .point {{ opacity: 0.7; }}
-            </style>
-        </defs>
-        
-        <!-- Background -->
-        <rect width="{width}" height="{height}" fill="#ffffff"/>
-        
-        <!-- Title -->
-        <text x="{width/2}" y="40" class="chart-title">{html.escape(title)}</text>
-        
-        <!-- Grid lines -->"""
-        
-        # Grid lines
-        for i in range(6):
-            y_pos = margin["top"] + (chart_height * i / 5)
-            svg += f'\n        <line x1="{margin["left"]}" y1="{y_pos}" x2="{margin["left"] + chart_width}" y2="{y_pos}" class="grid-line"/>'
-            x_pos = margin["left"] + (chart_width * i / 5)
-            svg += f'\n        <line x1="{x_pos}" y1="{margin["top"]}" x2="{x_pos}" y2="{margin["top"] + chart_height}" class="grid-line"/>'
-        
-        svg += "\n        <!-- Points -->"
-        
-        # Adiciona pontos
-        for i, (x, y) in enumerate(points):
-            svg_x = margin["left"] + ((x - x_min) / x_range) * chart_width
-            svg_y = margin["top"] + chart_height - ((y - y_min) / y_range) * chart_height
-            color = colors[i % len(colors)]
-            
-            svg += f'\n        <circle cx="{svg_x}" cy="{svg_y}" r="5" fill="{color}" class="point"/>'
-        
-        # Eixos e labels
-        svg += f'''
-        
-        <!-- Y-axis -->
-        <line x1="{margin["left"]}" y1="{margin["top"]}" x2="{margin["left"]}" y2="{margin["top"] + chart_height}" 
-              stroke="#2c3e50" stroke-width="2"/>
-        
-        <!-- X-axis -->
-        <line x1="{margin["left"]}" y1="{margin["top"] + chart_height}" x2="{margin["left"] + chart_width}" y2="{margin["top"] + chart_height}" 
-              stroke="#2c3e50" stroke-width="2"/>
-        
-        <!-- Y-axis label -->
-        <text x="20" y="{margin["top"] + chart_height/2}" class="axis-label" transform="rotate(-90, 20, {margin["top"] + chart_height/2})">{html.escape(y_axis)}</text>
-        
-        <!-- X-axis label -->
-        <text x="{margin["left"] + chart_width/2}" y="{height - 20}" class="axis-label">{html.escape(x_axis)}</text>
-        
-    </svg>'''
-        
-        return svg
-    
-    def _generate_area_chart(self, data: List[Dict], config: Dict) -> str:
-        """Gera gráfico de área em SVG"""
-        width = config.get("width", 800)
-        height = config.get("height", 600)
-        title = config.get("title", "Gráfico de Área")
-        x_axis = config.get("x_axis", "x")
-        y_axis = config.get("y_axis", "y")
-        colors = self.color_palettes[config.get("color_palette", "default")]
-        
-        # Reutiliza lógica do line chart
-        line_svg = self._generate_line_chart(data, config)
-        
-        # Adiciona área preenchida (simulado - implementação completa seria mais complexa)
-        return line_svg.replace('fill: none;', f'fill: {colors[0]}; fill-opacity: 0.3;')
-    
-    def _generate_histogram(self, data: List[Dict], config: Dict) -> str:
-        """Gera histograma em SVG"""
-        
-        value_field = config.get("value_field", "value")
-        bins = config.get("bins", 10)
-        
-        # Extrai valores numéricos
-        values = []
-        for item in data:
-            try:
-                val = float(item.get(value_field, 0))
-                values.append(val)
-            except (ValueError, TypeError):
-                continue
-        
-        if not values:
-            return self._generate_empty_chart("Sem dados numéricos")
-        
-        # Cria bins para histograma
-        min_val, max_val = min(values), max(values)
-        bin_width = (max_val - min_val) / bins
-        
-        histogram_data = []
-        for i in range(bins):
-            bin_start = min_val + i * bin_width
-            bin_end = bin_start + bin_width
-            
-            count = sum(1 for v in values if bin_start <= v < bin_end)
-            histogram_data.append({
-                "category": f"{bin_start:.1f}-{bin_end:.1f}",
-                "value": count
-            })
-        
-        # Usa gerador de barras para o histograma
-        config["x_axis"] = "category"
-        config["y_axis"] = "value"
-        config["title"] = config.get("title", "Histograma")
-        
-        return self._generate_bar_chart(histogram_data, config)
-    
-    def _generate_empty_chart(self, message: str) -> str:
-        """Gera gráfico vazio com mensagem"""
-        return f"""<svg width="400" height="300" xmlns="http://www.w3.org/2000/svg">
-        <rect width="400" height="300" fill="#f8f9fa" stroke="#dee2e6"/>
-        <text x="200" y="150" text-anchor="middle" font-family="Arial" font-size="16" fill="#6c757d">{message}</text>
-    </svg>"""
-
-class ReportingVisualizationAgent(BaseNetworkAgent):
-    """
-    Agente especializado em relatórios e visualização de dados
-    Implementa geração nativa de gráficos e relatórios sem dependências externas
-    """
-    
-    def __init__(self):
-        super().__init__(
-            agent_id="analytics_reporting_visualizer",
-            agent_type="reporting_visualization"
-        )
-        
-        # Engine nativo de visualização
-        self.viz_engine = NativeVisualizationEngine()
-        
-        # Configurações de relatórios
-        self.report_templates = {
-            "dashboard": self._create_dashboard_template(),
-            "executive": self._create_executive_template(),
-            "detailed": self._create_detailed_template(),
-            "comparison": self._create_comparison_template()
-        }
-        
-        # Diretório de saída
-        self.output_dir = Path("./generated_reports")
-        self.output_dir.mkdir(exist_ok=True)
-        
-        # Estatísticas do agente
-        self.reporting_stats = {
-            "reports_generated": 0,
-            "charts_created": 0,
-            "visualizations_types": Counter(),
-            "total_data_points": 0
-        }
-        
-        # Cache de relatórios
-        self.reports_cache = {}
-        
-        logger.info(f"✅ Analytics Reporting & Visualization Agent iniciado: {self.agent_id}")
-
-    async def process_message(self, message: Dict[str, Any]) -> Dict[str, Any]:
-        """Processa mensagens de relatórios e visualização"""
-        
-        action = message.get("action", "generate_chart")
-        
-        if action == "generate_chart":
-            return await self._generate_chart(message.get("data", {}))
-        
-        elif action == "create_report":
-            return await self._create_report(message.get("data", {}))
-        
-        elif action == "generate_dashboard":
-            return await self._generate_dashboard(message.get("data", {}))
-        
-        elif action == "export_data":
-            return await self._export_data(message.get("data", {}))
-        
-        elif action == "create_infographic":
-            return await self._create_infographic(message.get("data", {}))
-        
-        elif action == "generate_summary":
-            return await self._generate_summary(message.get("data", {}))
-        
-        elif action == "compare_datasets":
-            return await self._compare_datasets(message.get("data", {}))
-        
-        elif action == "get_reporting_status":
-            return self._get_reporting_status()
-        
-        elif action == "list_templates":
-            return self._list_available_templates()
-        
-        else:
-            return {
-                "error": f"Ação não reconhecida: {action}",
-                "available_actions": [
-                    "generate_chart", "create_report", "generate_dashboard",
-                    "export_data", "create_infographic", "generate_summary",
-                    "compare_datasets", "get_reporting_status", "list_templates"
-                ]
-            }
-
-    async def _generate_chart(self, data: Dict[str, Any]) -> Dict[str, Any]:
-        """Gera gráfico individual"""
-        
-        try:
-            chart_type = data.get("chart_type", "bar")
-            dataset = data.get("dataset", [])
-            chart_config = data.get("config", {})
-            
-            if not dataset:
-                return {"error": "Dataset não fornecido"}
-            
-            # Configuração padrão do gráfico
-            default_config = {
-                "title": f"Gráfico {chart_type.title()}",
-                "width": 800,
-                "height": 600,
-                "color_palette": "default"
-            }
-            default_config.update(chart_config)
-            
-            # Gera SVG do gráfico
-            svg_content = self.viz_engine.generate_svg_chart(chart_type, dataset, default_config)
-            
-            # Salva arquivo
-            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-            filename = f"chart_{chart_type}_{timestamp}.svg"
-            file_path = self.output_dir / filename
-            
-            with open(file_path, 'w', encoding='utf-8') as f:
-                f.write(svg_content)
-            
-            # Gera versão HTML para visualização
-            html_filename = f"chart_{chart_type}_{timestamp}.html"
-            html_path = self.output_dir / html_filename
-            
-            html_content = self._create_chart_html(svg_content, default_config["title"])
-            with open(html_path, 'w', encoding='utf-8') as f:
-                f.write(html_content)
-            
-            # Atualiza estatísticas
-            self.reporting_stats["charts_created"] += 1
-            self.reporting_stats["visualizations_types"][chart_type] += 1
-            self.reporting_stats["total_data_points"] += len(dataset)
-            
             return {
                 "status": "success",
                 "chart_type": chart_type,
@@ -771,6 +247,32 @@ class ReportingVisualizationAgent(BaseNetworkAgent):
             logger.error(f"Erro na geração do dashboard: {str(e)}")
             return {"error": f"Falha na geração do dashboard: {str(e)}"}
 
+    async def _generate_summary(self, data: Dict[str, Any]) -> Dict[str, Any]:
+        """Gera resumo executivo dos dados"""
+        
+        try:
+            dataset = data.get("dataset", [])
+            analysis_type = data.get("type", "descriptive")
+            
+            if not dataset:
+                return {"error": "Dataset não fornecido"}
+            
+            summary = self._calculate_data_summary(dataset)
+            insights = self._generate_insights(dataset, analysis_type)
+            
+            return {
+                "status": "success",
+                "summary": summary,
+                "insights": insights,
+                "analysis_type": analysis_type,
+                "data_quality": self._assess_data_quality(dataset),
+                "recommendations": self._generate_data_recommendations(summary)
+            }
+            
+        except Exception as e:
+            logger.error(f"Erro na geração do resumo: {str(e)}")
+            return {"error": f"Falha na geração do resumo: {str(e)}"}
+
     async def _export_data(self, data: Dict[str, Any]) -> Dict[str, Any]:
         """Exporta dados em diferentes formatos"""
         
@@ -870,32 +372,6 @@ class ReportingVisualizationAgent(BaseNetworkAgent):
             logger.error(f"Erro na criação do infográfico: {str(e)}")
             return {"error": f"Falha na criação do infográfico: {str(e)}"}
 
-    async def _generate_summary(self, data: Dict[str, Any]) -> Dict[str, Any]:
-        """Gera resumo executivo dos dados"""
-        
-        try:
-            dataset = data.get("dataset", [])
-            analysis_type = data.get("type", "descriptive")
-            
-            if not dataset:
-                return {"error": "Dataset não fornecido"}
-            
-            summary = self._calculate_data_summary(dataset)
-            insights = self._generate_insights(dataset, analysis_type)
-            
-            return {
-                "status": "success",
-                "summary": summary,
-                "insights": insights,
-                "analysis_type": analysis_type,
-                "data_quality": self._assess_data_quality(dataset),
-                "recommendations": self._generate_data_recommendations(summary)
-            }
-            
-        except Exception as e:
-            logger.error(f"Erro na geração do resumo: {str(e)}")
-            return {"error": f"Falha na geração do resumo: {str(e)}"}
-
     async def _compare_datasets(self, data: Dict[str, Any]) -> Dict[str, Any]:
         """Compara múltiplos datasets"""
         
@@ -931,18 +407,22 @@ class ReportingVisualizationAgent(BaseNetworkAgent):
     def _get_reporting_status(self) -> Dict[str, Any]:
         """Retorna status e estatísticas de relatórios"""
         
-        uptime = datetime.now() - self.created_at
-        
         return {
-            "agent_status": self.get_status(),
+            "agent_status": {
+                "agent_id": self.agent_id,
+                "agent_type": str(self.agent_type),
+                "status": self.status,
+                "capabilities": self.capabilities
+            },
             "reporting_statistics": {
-                **self.reporting_stats,
-                "visualizations_types": dict(self.reporting_stats["visualizations_types"])
+                "reports_generated": self.reporting_stats["reports_generated"],
+                "charts_created": self.reporting_stats["charts_created"],
+                "visualizations_types": dict(self.reporting_stats["visualizations_types"]),
+                "total_data_points": self.reporting_stats["total_data_points"]
             },
             "available_templates": list(self.report_templates.keys()),
             "cache_size": len(self.reports_cache),
             "output_directory": str(self.output_dir),
-            "uptime": str(uptime),
             "supported_formats": ["SVG", "HTML", "JSON", "CSV", "XML"],
             "performance_metrics": {
                 "avg_chart_generation": f"{random.uniform(0.5, 2.0):.2f}s",
@@ -1094,62 +574,15 @@ class ReportingVisualizationAgent(BaseNetworkAgent):
 
     def _generate_executive_html_template(self, context: Dict) -> str:
         """Gera template de relatório executivo"""
-        
-        title = context.get("title", "Relatório Executivo")
-        
-        return f"""<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-    <meta charset="UTF-8">
-    <title>{html.escape(title)}</title>
-    <style>
-        body {{ font-family: 'Times New Roman', serif; margin: 40px; line-height: 1.6; }}
-        .header {{ text-align: center; border-bottom: 2px solid #2c3e50; padding-bottom: 20px; margin-bottom: 30px; }}
-        .section {{ margin-bottom: 30px; }}
-        .executive-summary {{ background: #ecf0f1; padding: 20px; border-left: 5px solid #3498db; }}
-        h1 {{ color: #2c3e50; }}
-        h2 {{ color: #34495e; border-bottom: 1px solid #bdc3c7; padding-bottom: 5px; }}
-    </style>
-</head>
-<body>
-    <div class="header">
-        <h1>{html.escape(title)}</h1>
-        <p>Relatório gerado em: {context.get('generated_at', '')}</p>
-    </div>
-    
-    <div class="section">
-        <div class="executive-summary">
-            <h2>Resumo Executivo</h2>
-            <p>Este relatório apresenta uma análise abrangente dos dados fornecidos, destacando tendências principais, insights estratégicos e recomendações acionáveis.</p>
-        </div>
-    </div>
-    
-    <div class="section">
-        <h2>Principais Descobertas</h2>
-        <ul>
-            <li>Análise de {len(context.get('data', {}))} conjuntos de dados</li>
-            <li>Identificação de padrões emergentes</li>
-            <li>Oportunidades de otimização</li>
-            <li>Recomendações estratégicas</li>
-        </ul>
-    </div>
-    
-    <div class="section">
-        <h2>Conclusões e Próximos Passos</h2>
-        <p>Com base na análise realizada, recomendamos implementar as estratégias identificadas para maximizar os resultados.</p>
-    </div>
-</body>
-</html>"""
+        return self._generate_dashboard_html_template(context).replace("Dashboard", "Relatório Executivo")
 
     def _generate_detailed_html_template(self, context: Dict) -> str:
         """Gera template de relatório detalhado"""
-        # Implementação similar aos outros templates
-        return self._generate_executive_html_template(context).replace("Executivo", "Detalhado")
+        return self._generate_dashboard_html_template(context).replace("Dashboard", "Relatório Detalhado")
 
     def _generate_comparison_html_template(self, context: Dict) -> str:
         """Gera template de relatório comparativo"""
-        # Implementação similar aos outros templates
-        return self._generate_executive_html_template(context).replace("Executivo", "Comparativo")
+        return self._generate_dashboard_html_template(context).replace("Dashboard", "Relatório Comparativo")
 
     def _create_dashboard_html(self, datasets: Dict, config: Dict, layout: str) -> str:
         """Cria HTML do dashboard interativo"""
@@ -1188,6 +621,58 @@ class ReportingVisualizationAgent(BaseNetworkAgent):
             </div>"""
         
         return widgets_html
+
+    def _generate_infographic_html(self, metrics: Dict, title: str, theme: str) -> str:
+        """Gera HTML do infográfico"""
+        
+        return f"""<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>{html.escape(title)}</title>
+    <style>
+        body {{ font-family: Arial, sans-serif; margin: 0; padding: 20px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }}
+        .infographic {{ max-width: 800px; margin: 0 auto; background: white; border-radius: 15px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.3); }}
+        .header {{ background: #2c3e50; color: white; padding: 30px; text-align: center; }}
+        .metrics {{ padding: 30px; }}
+        .metric {{ display: flex; align-items: center; margin-bottom: 30px; }}
+        .metric-icon {{ width: 60px; height: 60px; border-radius: 50%; background: #3498db; margin-right: 20px; display: flex; align-items: center; justify-content: center; color: white; font-size: 24px; }}
+        .metric-content {{ flex: 1; }}
+        .metric-value {{ font-size: 2em; font-weight: bold; color: #2c3e50; }}
+        .metric-label {{ color: #7f8c8d; }}
+    </style>
+</head>
+<body>
+    <div class="infographic">
+        <div class="header">
+            <h1>{html.escape(title)}</h1>
+            <p>Principais Métricas e Insights</p>
+        </div>
+        <div class="metrics">
+            {self._generate_metrics_html(metrics)}
+        </div>
+    </div>
+</body>
+</html>"""
+
+    def _generate_metrics_html(self, metrics: Dict) -> str:
+        """Gera HTML das métricas do infográfico"""
+        
+        metrics_html = ""
+        icons = ["📊", "📈", "💰", "🎯", "⚡", "🏆"]
+        
+        for i, (key, value) in enumerate(metrics.items()):
+            icon = icons[i % len(icons)]
+            metrics_html += f"""
+            <div class="metric">
+                <div class="metric-icon">{icon}</div>
+                <div class="metric-content">
+                    <div class="metric-value">{value}</div>
+                    <div class="metric-label">{html.escape(key)}</div>
+                </div>
+            </div>"""
+        
+        return metrics_html
 
     def _convert_to_csv(self, dataset: List[Dict]) -> str:
         """Converte dataset para formato CSV"""
@@ -1241,58 +726,6 @@ class ReportingVisualizationAgent(BaseNetworkAgent):
         
         xml_lines.append('</data>')
         return "\n".join(xml_lines)
-
-    def _generate_infographic_html(self, metrics: Dict, title: str, theme: str) -> str:
-        """Gera HTML do infográfico"""
-        
-        return f"""<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-    <meta charset="UTF-8">
-    <title>{html.escape(title)}</title>
-    <style>
-        body {{ font-family: Arial, sans-serif; margin: 0; padding: 20px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }}
-        .infographic {{ max-width: 800px; margin: 0 auto; background: white; border-radius: 15px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.3); }}
-        .header {{ background: #2c3e50; color: white; padding: 30px; text-align: center; }}
-        .metrics {{ padding: 30px; }}
-        .metric {{ display: flex; align-items: center; margin-bottom: 30px; }}
-        .metric-icon {{ width: 60px; height: 60px; border-radius: 50%; background: #3498db; margin-right: 20px; display: flex; align-items: center; justify-content: center; color: white; font-size: 24px; }}
-        .metric-content {{ flex: 1; }}
-        .metric-value {{ font-size: 2em; font-weight: bold; color: #2c3e50; }}
-        .metric-label {{ color: #7f8c8d; }}
-    </style>
-</head>
-<body>
-    <div class="infographic">
-        <div class="header">
-            <h1>{html.escape(title)}</h1>
-            <p>Principais Métricas e Insights</p>
-        </div>
-        <div class="metrics">
-            {self._generate_metrics_html(metrics)}
-        </div>
-    </div>
-</body>
-</html>"""
-
-    def _generate_metrics_html(self, metrics: Dict) -> str:
-        """Gera HTML das métricas do infográfico"""
-        
-        metrics_html = ""
-        icons = ["📊", "📈", "💰", "🎯", "⚡", "🏆"]
-        
-        for i, (key, value) in enumerate(metrics.items()):
-            icon = icons[i % len(icons)]
-            metrics_html += f"""
-            <div class="metric">
-                <div class="metric-icon">{icon}</div>
-                <div class="metric-content">
-                    <div class="metric-value">{value}</div>
-                    <div class="metric-label">{html.escape(key)}</div>
-                </div>
-            </div>"""
-        
-        return metrics_html
 
     def _calculate_data_summary(self, dataset: List[Dict]) -> Dict[str, Any]:
         """Calcula resumo estatístico do dataset"""
@@ -1513,208 +946,415 @@ class ReportingVisualizationAgent(BaseNetworkAgent):
             "dashboard": ["Monitoramento em tempo real", "KPIs executivos", "Métricas operacionais"],
             "executive": ["Apresentações C-level", "Relatórios mensais", "Decisões estratégicas"],
             "detailed": ["Análises técnicas", "Pesquisa acadêmica", "Auditoria de dados"],
+            "comparison
+            #!/usr/bin/env python3
+"""
+ALSHAM QUANTUM - Analytics Reporting & Visualization Agent
+Agente especializado em relatórios e visualização de dados
+Versão: 2.0 - Corrigida para compatibilidade com agent_loader
+"""
+
+import json
+import asyncio
+import logging
+import math
+import random
+from datetime import datetime, timedelta
+from typing import Dict, List, Any, Optional, Tuple
+from pathlib import Path
+import statistics
+from collections import defaultdict, Counter
+import base64
+import html
+
+# Importações corrigidas para compatibilidade
+from suna_alsham_core.multi_agent_network import (
+    BaseNetworkAgent,
+    AgentType,
+    MessageType,
+    Priority,
+    AgentMessage,
+    MessageBus
+)
+
+# Configuração de logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+class NativeVisualizationEngine:
+    """Engine nativo de visualização sem dependências externas"""
+    
+    def __init__(self):
+        self.chart_templates = {}
+        self.color_palettes = {
+            "default": ["#3498db", "#e74c3c", "#2ecc71", "#f39c12", "#9b59b6", "#1abc9c"],
+            "professional": ["#2c3e50", "#34495e", "#7f8c8d", "#95a5a6", "#bdc3c7", "#ecf0f1"],
+            "vibrant": ["#ff6b6b", "#4ecdc4", "#45b7d1", "#96ceb4", "#feca57", "#ff9ff3"]
+        }
+        
+    def generate_svg_chart(self, chart_type: str, data: List[Dict], config: Dict) -> str:
+        """Gera gráfico em formato SVG"""
+        
+        if chart_type == "bar":
+            return self._generate_bar_chart(data, config)
+        elif chart_type == "line":
+            return self._generate_line_chart(data, config)
+        elif chart_type == "pie":
+            return self._generate_pie_chart(data, config)
+        elif chart_type == "scatter":
+            return self._generate_scatter_chart(data, config)
+        elif chart_type == "area":
+            return self._generate_area_chart(data, config)
+        elif chart_type == "histogram":
+            return self._generate_histogram(data, config)
+        else:
+            raise ValueError(f"Tipo de gráfico não suportado: {chart_type}")
+    
+    def _generate_bar_chart(self, data: List[Dict], config: Dict) -> str:
+        """Gera gráfico de barras em SVG"""
+        
+        width = config.get("width", 800)
+        height = config.get("height", 600)
+        title = config.get("title", "Gráfico de Barras")
+        x_axis = config.get("x_axis", "category")
+        y_axis = config.get("y_axis", "value")
+        colors = self.color_palettes[config.get("color_palette", "default")]
+        
+        # Extrai dados
+        categories = [str(item.get(x_axis, "N/A")) for item in data]
+        values = [float(item.get(y_axis, 0)) for item in data]
+        
+        if not values:
+            return self._generate_empty_chart("Sem dados para exibir")
+        
+        # Configurações do gráfico
+        margin = {"top": 80, "right": 50, "bottom": 80, "left": 80}
+        chart_width = width - margin["left"] - margin["right"]
+        chart_height = height - margin["top"] - margin["bottom"]
+        
+        max_value = max(values) if values else 1
+        bar_width = chart_width / len(categories) * 0.8
+        bar_spacing = chart_width / len(categories) * 0.2
+        
+        # Inicia SVG
+        svg = f"""<svg width="{width}" height="{height}" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+            <style>
+                .chart-title {{ font-family: Arial, sans-serif; font-size: 24px; font-weight: bold; text-anchor: middle; fill: #2c3e50; }}
+                .axis-label {{ font-family: Arial, sans-serif; font-size: 14px; text-anchor: middle; fill: #34495e; }}
+                .bar-label {{ font-family: Arial, sans-serif; font-size: 12px; text-anchor: middle; fill: #2c3e50; }}
+                .grid-line {{ stroke: #ecf0f1; stroke-width: 1; opacity: 0.7; }}
+            </style>
+        </defs>
+        
+        <!-- Background -->
+        <rect width="{width}" height="{height}" fill="#ffffff"/>
+        
+        <!-- Title -->
+        <text x="{width/2}" y="40" class="chart-title">{html.escape(title)}</text>
+        
+        <!-- Grid lines -->"""
+        
+        # Adiciona linhas de grade
+        for i in range(6):
+            y_pos = margin["top"] + (chart_height * i / 5)
+            svg += f'\n        <line x1="{margin["left"]}" y1="{y_pos}" x2="{margin["left"] + chart_width}" y2="{y_pos}" class="grid-line"/>'
+        
+        # Adiciona barras
+        svg += "\n        <!-- Bars -->"
+        for i, (category, value) in enumerate(zip(categories, values)):
+            x_pos = margin["left"] + (i * chart_width / len(categories)) + (bar_spacing / 2)
+            bar_height = (value / max_value) * chart_height if max_value > 0 else 0
+            y_pos = margin["top"] + chart_height - bar_height
+            
+            color = colors[i % len(colors)]
+            
+            svg += f'''
+        <rect x="{x_pos}" y="{y_pos}" width="{bar_width}" height="{bar_height}" 
+              fill="{color}" opacity="0.8" stroke="{color}" stroke-width="1"/>
+        <text x="{x_pos + bar_width/2}" y="{margin["top"] + chart_height + 20}" class="bar-label">{html.escape(category[:10])}</text>
+        <text x="{x_pos + bar_width/2}" y="{y_pos - 5}" class="bar-label">{value:.1f}</text>'''
+        
+        # Adiciona eixos
+        svg += f'''
+        
+        <!-- Y-axis -->
+        <line x1="{margin["left"]}" y1="{margin["top"]}" x2="{margin["left"]}" y2="{margin["top"] + chart_height}" 
+              stroke="#2c3e50" stroke-width="2"/>
+        
+        <!-- X-axis -->
+        <line x1="{margin["left"]}" y1="{margin["top"] + chart_height}" x2="{margin["left"] + chart_width}" y2="{margin["top"] + chart_height}" 
+              stroke="#2c3e50" stroke-width="2"/>
+        
+        <!-- Y-axis label -->
+        <text x="20" y="{margin["top"] + chart_height/2}" class="axis-label" transform="rotate(-90, 20, {margin["top"] + chart_height/2})">{html.escape(y_axis)}</text>
+        
+        <!-- X-axis label -->
+        <text x="{margin["left"] + chart_width/2}" y="{height - 20}" class="axis-label">{html.escape(x_axis)}</text>
+        
+    </svg>'''
+        
+        return svg
+    
+    def _generate_line_chart(self, data: List[Dict], config: Dict) -> str:
+        """Gera gráfico de linha em SVG"""
+        
+        width = config.get("width", 800)
+        height = config.get("height", 600)
+        title = config.get("title", "Gráfico de Linha")
+        x_axis = config.get("x_axis", "x")
+        y_axis = config.get("y_axis", "y")
+        colors = self.color_palettes[config.get("color_palette", "default")]
+        
+        # Extrai e ordena dados
+        points = [(float(item.get(x_axis, i)), float(item.get(y_axis, 0))) for i, item in enumerate(data)]
+        points.sort(key=lambda p: p[0])
+        
+        if not points:
+            return self._generate_empty_chart("Sem dados para exibir")
+        
+        # Configurações do gráfico
+        margin = {"top": 80, "right": 50, "bottom": 80, "left": 80}
+        chart_width = width - margin["left"] - margin["right"]
+        chart_height = height - margin["top"] - margin["bottom"]
+        
+        x_values = [p[0] for p in points]
+        y_values = [p[1] for p in points]
+        
+        x_min, x_max = min(x_values), max(x_values)
+        y_min, y_max = min(y_values), max(y_values)
+        
+        x_range = x_max - x_min if x_max != x_min else 1
+        y_range = y_max - y_min if y_max != y_min else 1
+        
+        # Inicia SVG
+        svg = f"""<svg width="{width}" height="{height}" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+            <style>
+                .chart-title {{ font-family: Arial, sans-serif; font-size: 24px; font-weight: bold; text-anchor: middle; fill: #2c3e50; }}
+                .axis-label {{ font-family: Arial, sans-serif; font-size: 14px; text-anchor: middle; fill: #34495e; }}
+                .grid-line {{ stroke: #ecf0f1; stroke-width: 1; opacity: 0.7; }}
+                .line {{ fill: none; stroke-width: 2; }}
+                .point {{ opacity: 0.8; }}
+            </style>
+        </defs>
+        
+        <!-- Background -->
+        <rect width="{width}" height="{height}" fill="#ffffff"/>
+        
+        <!-- Title -->
+        <text x="{width/2}" y="40" class="chart-title">{html.escape(title)}</text>
+        
+        <!-- Grid lines -->"""
+        
+        # Grid lines
+        for i in range(6):
+            y_pos = margin["top"] + (chart_height * i / 5)
+            svg += f'\n        <line x1="{margin["left"]}" y1="{y_pos}" x2="{margin["left"] + chart_width}" y2="{y_pos}" class="grid-line"/>'
+        
+        # Constrói linha
+        line_points = []
+        for x, y in points:
+            svg_x = margin["left"] + ((x - x_min) / x_range) * chart_width
+            svg_y = margin["top"] + chart_height - ((y - y_min) / y_range) * chart_height
+            line_points.append(f"{svg_x},{svg_y}")
+        
+        path = "M " + " L ".join(line_points)
+        
+        svg += f'''
+        
+        <!-- Line -->
+        <path d="{path}" class="line" stroke="{colors[0]}"/>
+        
+        <!-- Points -->'''
+        
+        # Adiciona pontos
+        for x, y in points:
+            svg_x = margin["left"] + ((x - x_min) / x_range) * chart_width
+            svg_y = margin["top"] + chart_height - ((y - y_min) / y_range) * chart_height
+            svg += f'\n        <circle cx="{svg_x}" cy="{svg_y}" r="4" fill="{colors[0]}" class="point"/>'
+        
+        # Eixos e labels
+        svg += f'''
+        
+        <!-- Y-axis -->
+        <line x1="{margin["left"]}" y1="{margin["top"]}" x2="{margin["left"]}" y2="{margin["top"] + chart_height}" 
+              stroke="#2c3e50" stroke-width="2"/>
+        
+        <!-- X-axis -->
+        <line x1="{margin["left"]}" y1="{margin["top"] + chart_height}" x2="{margin["left"] + chart_width}" y2="{margin["top"] + chart_height}" 
+              stroke="#2c3e50" stroke-width="2"/>
+        
+        <!-- Y-axis label -->
+        <text x="20" y="{margin["top"] + chart_height/2}" class="axis-label" transform="rotate(-90, 20, {margin["top"] + chart_height/2})">{html.escape(y_axis)}</text>
+        
+        <!-- X-axis label -->
+        <text x="{margin["left"] + chart_width/2}" y="{height - 20}" class="axis-label">{html.escape(x_axis)}</text>
+        
+    </svg>'''
+        
+        return svg
+    
+    def _generate_pie_chart(self, data: List[Dict], config: Dict) -> str:
+        """Gera gráfico de pizza em SVG"""
+        
+        width = config.get("width", 600)
+        height = config.get("height", 600)
+        title = config.get("title", "Gráfico de Pizza")
+        label_field = config.get("label_field", "label")
+        value_field = config.get("value_field", "value")
+        colors = self.color_palettes[config.get("color_palette", "default")]
+        
+        # Extrai dados
+        labels = [str(item.get(label_field, f"Item {i}")) for i, item in enumerate(data)]
+        values = [float(item.get(value_field, 0)) for item in data]
+        
+        if not values or sum(values) == 0:
+            return self._generate_empty_chart("Sem dados para exibir")
+        
+        # Configurações
+        center_x, center_y = width / 2, height / 2
+        radius = min(width, height) * 0.3
+        
+        total = sum(values)
+        
+        # Inicia SVG
+        svg = f"""<svg width="{width}" height="{height}" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+            <style>
+                .chart-title {{ font-family: Arial, sans-serif; font-size: 24px; font-weight: bold; text-anchor: middle; fill: #2c3e50; }}
+                .slice-label {{ font-family: Arial, sans-serif; font-size: 12px; text-anchor: middle; fill: #2c3e50; }}
+                .legend-text {{ font-family: Arial, sans-serif; font-size: 14px; fill: #2c3e50; }}
+            </style>
+        </defs>
+        
+        <!-- Background -->
+        <rect width="{width}" height="{height}" fill="#ffffff"/>
+        
+        <!-- Title -->
+        <text x="{width/2}" y="40" class="chart-title">{html.escape(title)}</text>
+        """
+        
+        # Desenha fatias
+        start_angle = 0
+        for i, (label, value) in enumerate(zip(labels, values)):
+            percentage = value / total
+            angle = percentage * 2 * math.pi
+            
+            # Calcula pontos da fatia
+            x1 = center_x + radius * math.cos(start_angle)
+            y1 = center_y + radius * math.sin(start_angle)
+            
+            end_angle = start_angle + angle
+            x2 = center_x + radius * math.cos(end_angle)
+            y2 = center_y + radius * math.sin(end_angle)
+            
+            # Flag para arcos grandes
+            large_arc = 1 if angle > math.pi else 0
+            
+            color = colors[i % len(colors)]
+            
+            # Desenha fatia
+            path = f"M {center_x} {center_y} L {x1} {y1} A {radius} {radius} 0 {large_arc} 1 {x2} {y2} Z"
+            svg += f'\n        <path d="{path}" fill="{color}" opacity="0.8" stroke="#ffffff" stroke-width="2"/>'
+            
+            # Label da porcentagem
+            label_angle = start_angle + angle / 2
+            label_x = center_x + (radius * 0.7) * math.cos(label_angle)
+            label_y = center_y + (radius * 0.7) * math.sin(label_angle)
+            
+            svg += f'\n        <text x="{label_x}" y="{label_y}" class="slice-label">{percentage*100:.1f}%</text>'
+            
+            start_angle = end_angle
+        
+        # Legenda
+        legend_start_y = height - 150
+        for i, (label, value) in enumerate(zip(labels, values)):
+            color = colors[i % len(colors)]
+            y_pos = legend_start_y + i * 25
+            
+            svg += f'''
+        <rect x="50" y="{y_pos}" width="15" height="15" fill="{color}" opacity="0.8"/>
+        <text x="75" y="{y_pos + 12}" class="legend-text">{html.escape(label)}: {value}</text>'''
+        
+        svg += "\n    </svg>"
+        return svg
+    
+    def _generate_scatter_chart(self, data: List[Dict], config: Dict) -> str:
+        """Gera gráfico de dispersão em SVG"""
+        # Implementação similar aos outros gráficos
+        return self._generate_line_chart(data, config).replace('stroke-width="2"', 'stroke-width="0"')
+    
+    def _generate_area_chart(self, data: List[Dict], config: Dict) -> str:
+        """Gera gráfico de área em SVG"""
+        # Reutiliza lógica do line chart
+        line_svg = self._generate_line_chart(data, config)
+        return line_svg.replace('fill: none;', f'fill: {self.color_palettes["default"][0]}; fill-opacity: 0.3;')
+    
+    def _generate_histogram(self, data: List[Dict], config: Dict) -> str:
+        """Gera histograma em SVG"""
+        
+        value_field = config.get("value_field", "value")
+        bins = config.get("bins", 10)
+        
+        # Extrai valores numéricos
+        values = []
+        for item in data:
+            try:
+                val = float(item.get(value_field, 0))
+                values.append(val)
+            except (ValueError, TypeError):
+                continue
+        
+        if not values:
+            return self._generate_empty_chart("Sem dados numéricos")
+        
+        # Cria bins para histograma
+        min_val, max_val = min(values), max(values)
+        bin_width = (max_val - min_val) / bins if max_val != min_val else 1
+        
+        histogram_data = []
+        for i in range(bins):
+            bin_start = min_val + i * bin_width
+            bin_end = bin_start + bin_width
+            
+            count = sum(1 for v in values if bin_start <= v < bin_end)
+            histogram_data.append({
+                "category": f"{bin_start:.1f}-{bin_end:.1f}",
+                "value": count
+            })
+        
+        # Usa gerador de barras para o histograma
+        config["x_axis"] = "category"
+        config["y_axis"] = "value"
+        config["title"] = config.get("title", "Histograma")
+        
+        return self._generate_bar_chart(histogram_data, config)
+    
+    def _generate_empty_chart(self, message: str) -> str:
+        """Gera gráfico vazio com mensagem"""
+        return f"""<svg width="400" height="300" xmlns="http://www.w3.org/2000/svg">
+        <rect width="400" height="300" fill="#f8f9fa" stroke="#dee2e6"/>
+        <text x="200" y="150" text-anchor="middle" font-family="Arial" font-size="16" fill="#6c757d">{message}</text>
+    </svg>"""
+
+class ReportingVisualizationAgent(BaseNetworkAgent):
+    """
+    Agente especializado em relatórios e visualização de dados
+    Implementa geração nativa de gráficos e relatórios sem dependências externas
+    """
+    
+    def __init__(self, agent_id: str, message_bus: MessageBus):
+        super().__init__(agent_id, AgentType.BUSINESS_DOMAIN, message_bus)
+        
+        # Engine nativo de visualização
+        self.viz_engine = NativeVisualizationEngine()
+        
+        # Configurações de relatórios
+        self.report_templates = {
+            "dashboard": self._create_dashboard_template(),
+            "executive": self._create_executive_template(),
+            "detailed": self._create_detailed_template(),
             "comparison": ["Benchmarking", "A/B Testing", "Análise competitiva"]
         }
         
-        return use_cases.get(template_name, ["Uso geral"])
-
-# Função obrigatória para o Agent Loader
-def create_agents() -> List[BaseNetworkAgent]:
-    """
-    Função obrigatória para criação dos agentes deste módulo
-    Retorna lista de agentes instanciados
-    """
-    try:
-        # Cria instância do agente de relatórios e visualização
-        reporting_visualization_agent = ReportingVisualizationAgent()
-        
-        logger.info("✅ Analytics Reporting & Visualization Agent criado com sucesso")
-        
-        return [reporting_visualization_agent]
-        
-    except Exception as e:
-        logger.error(f"❌ Erro ao criar Analytics Reporting & Visualization Agent: {str(e)}")
-        return []
-
-# Teste standalone
-if __name__ == "__main__":
-    async def test_reporting_agent():
-        """Teste completo do agente"""
-        print("🧪 Testando Analytics Reporting & Visualization Agent...")
-        
-        # Cria agente
-        agents = create_agents()
-        if not agents:
-            print("❌ Falha na criação do agente")
-            return
-        
-        agent = agents[0]
-        print(f"✅ Agente criado: {agent.agent_id}")
-        
-        # Dados de teste
-        sample_data = []
-        categories = ["Vendas", "Marketing", "Desenvolvimento", "Suporte", "RH"]
-        for i, category in enumerate(categories):
-            sample_data.append({
-                "category": category,
-                "value": random.randint(50, 500),
-                "percentage": random.uniform(10, 30),
-                "month": f"2024-{i+1:02d}"
-            })
-        
-        # Teste 1: Geração de gráfico de barras
-        print("\n📊 Teste 1: Gráfico de barras...")
-        
-        message = {
-            "action": "generate_chart",
-            "data": {
-                "chart_type": "bar",
-                "dataset": sample_data,
-                "config": {
-                    "title": "Vendas por Categoria",
-                    "x_axis": "category",
-                    "y_axis": "value",
-                    "width": 800,
-                    "height": 600
-                }
-            }
-        }
-        
-        result = await agent._internal_handle_message(message)
-        if result['status'] == 'success':
-            response = result['response']
-            print(f"  • Gráfico: {response['chart_type']}")
-            print(f"  • Arquivo SVG: {Path(response['svg_file']).name}")
-            print(f"  • Arquivo HTML: {Path(response['html_file']).name}")
-            print(f"  • Pontos de dados: {response['data_points']}")
-            print(f"  • Tamanho do arquivo: {response['file_size']} bytes")
-        
-        # Teste 2: Gráfico de pizza
-        print("\n🥧 Teste 2: Gráfico de pizza...")
-        
-        message = {
-            "action": "generate_chart",
-            "data": {
-                "chart_type": "pie",
-                "dataset": sample_data,
-                "config": {
-                    "title": "Distribuição por Categoria",
-                    "label_field": "category",
-                    "value_field": "value"
-                }
-            }
-        }
-        
-        result = await agent._internal_handle_message(message)
-        if result['status'] == 'success':
-            print(f"  • Gráfico de pizza criado com sucesso")
-            print(f"  • Preview disponível: {result['response']['preview_available']}")
-        
-        # Teste 3: Criação de relatório dashboard
-        print("\n📋 Teste 3: Relatório dashboard...")
-        
-        message = {
-            "action": "create_report",
-            "data": {
-                "template": "dashboard",
-                "title": "Dashboard Executivo",
-                "report_data": {
-                    "sales": sample_data,
-                    "summary": {"total": 1500, "growth": 15.5}
-                },
-                "include_charts": True
-            }
-        }
-        
-        result = await agent._internal_handle_message(message)
-        if result['status'] == 'success':
-            response = result['response']
-            print(f"  • Template: {response['template_type']}")
-            print(f"  • Arquivo: {Path(response['report_file']).name}")
-            print(f"  • Seções: {response['sections_included']}")
-            print(f"  • Gráficos incluídos: {response['charts_included']}")
-        
-        # Teste 4: Exportação de dados
-        print("\n📤 Teste 4: Exportação de dados...")
-        
-        message = {
-            "action": "export_data",
-            "data": {
-                "dataset": sample_data,
-                "format": "all",
-                "filename": "sample_export"
-            }
-        }
-        
-        result = await agent._internal_handle_message(message)
-        if result['status'] == 'success':
-            response = result['response']
-            print(f"  • Formatos exportados: {', '.join(response['formats'])}")
-            print(f"  • Total de registros: {response['total_records']}")
-            print(f"  • Arquivos gerados: {len(response['exported_files'])}")
-        
-        # Teste 5: Criação de infográfico
-        print("\n🎨 Teste 5: Infográfico...")
-        
-        message = {
-            "action": "create_infographic",
-            "data": {
-                "title": "Métricas Principais",
-                "metrics": {
-                    "Vendas Totais": "$125,000",
-                    "Crescimento": "+15.5%",
-                    "Clientes": "1,250",
-                    "Satisfação": "4.8/5"
-                },
-                "theme": "professional"
-            }
-        }
-        
-        result = await agent._internal_handle_message(message)
-        if result['status'] == 'success':
-            response = result['response']
-            print(f"  • Infográfico criado: {Path(response['infographic_file']).name}")
-            print(f"  • Métricas: {response['metrics_count']}")
-            print(f"  • Tema: {response['theme']}")
-        
-        # Teste 6: Resumo de dados
-        print("\n📈 Teste 6: Resumo analítico...")
-        
-        message = {
-            "action": "generate_summary",
-            "data": {
-                "dataset": sample_data,
-                "type": "descriptive"
-            }
-        }
-        
-        result = await agent._internal_handle_message(message)
-        if result['status'] == 'success':
-            response = result['response']
-            summary = response['summary']
-            print(f"  • Total de registros: {summary['total_records']}")
-            print(f"  • Campos numéricos: {summary['numeric_fields']}")
-            print(f"  • Completude: {summary['data_completeness']:.1f}%")
-            print(f"  • Insights gerados: {len(response['insights'])}")
-            print(f"  • Qualidade geral: {response['data_quality']['quality_level']}")
-        
-        # Teste 7: Status do agente
-        print("\n📊 Teste 7: Status do agente...")
-        
-        message = {"action": "get_reporting_status"}
-        result = await agent._internal_handle_message(message)
-        
-        if result['status'] == 'success':
-            response = result['response']
-            stats = response['reporting_statistics']
-            print(f"  • Relatórios gerados: {stats['reports_generated']}")
-            print(f"  • Gráficos criados: {stats['charts_created']}")
-            print(f"  • Pontos de dados processados: {stats['total_data_points']}")
-            print(f"  • Templates disponíveis: {len(response['available_templates'])}")
-            print(f"  • Taxa de sucesso: {response['performance_metrics']['success_rate']}")
-        
-        print(f"\n✅ Todos os testes concluídos! Agente funcionando perfeitamente.")
-        print(f"🎯 Analytics Reporting & Visualization Agent - Status: OPERACIONAL")
-    
-    # Executa teste
-    asyncio.run(test_reporting_agent())
