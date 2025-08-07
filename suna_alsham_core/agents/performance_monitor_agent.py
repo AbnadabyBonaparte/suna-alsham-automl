@@ -49,6 +49,16 @@ class PerformanceMonitorAgent(BaseAgent):
         self.active_alerts: List[Dict[str, Any]] = []  # Armazena alertas ativos
         self.alert_callback = None  # Callback customizável para integração externa
 
+    def get_capabilities(self) -> List[str]:
+        """Implementação obrigatória do método abstrato get_capabilities"""
+        return [
+            "system_monitoring",
+            "performance_analysis",
+            "resource_tracking",
+            "bottleneck_detection",
+            "optimization_recommendations"
+        ]
+
     async def initialize(self) -> bool:
         """Initialize the performance monitoring system"""
         try:
