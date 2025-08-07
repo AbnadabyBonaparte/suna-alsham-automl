@@ -1,12 +1,10 @@
 #!/usr/bin/env python3
 """
 Módulo do Code Analyzer Agent - SUNA-ALSHAM
-
 [Fase 2] - Revisão Final. Alinhado com a BaseNetworkAgent fortalecida.
 Define o agente de análise estática de código, responsável por inspecionar o
 código-fonte em busca de problemas de sintaxe, estilo, complexidade e segurança.
 """
-
 import ast
 import logging
 import re
@@ -24,12 +22,9 @@ from suna_alsham_core.multi_agent_network import (
     MessageType,
     Priority,
 )
-
 logger = logging.getLogger(__name__)
 
-
 # --- Enums e Dataclasses (sem alteração) ---
-
 class CodeIssueType(Enum):
     """Tipos de problemas de código que o agente pode detectar."""
     SYNTAX_ERROR = "syntax_error"
@@ -38,14 +33,12 @@ class CodeIssueType(Enum):
     SECURITY = "security"
     PERFORMANCE = "performance"
 
-
 class SeverityLevel(Enum):
     """Níveis de severidade dos problemas encontrados."""
     CRITICAL = "critical"
     HIGH = "high"
     MEDIUM = "medium"
     LOW = "low"
-
 
 @dataclass
 class CodeIssue:
@@ -57,15 +50,12 @@ class CodeIssue:
     message: str
     suggestion: str
 
-
 # --- Classe Principal do Agente ---
-
 class CodeAnalyzerAgent(BaseNetworkAgent):
     """
     Agente especializado em análise de código. Utiliza AST (Abstract Syntax Tree)
     para uma análise profunda e estrutural do código-fonte.
     """
-
     def __init__(self, agent_id: str, message_bus):
         """Inicializa o CodeAnalyzerAgent."""
         super().__init__(agent_id, AgentType.SPECIALIZED, message_bus)
@@ -74,7 +64,7 @@ class CodeAnalyzerAgent(BaseNetworkAgent):
             "complexity_analysis",
             "security_scanning",
         ])
-        
+       
         self.max_complexity_threshold = 10
         logger.info(f"🔍 {self.agent_id} (Analisador de Código) inicializado.")
 
@@ -84,7 +74,6 @@ class CodeAnalyzerAgent(BaseNetworkAgent):
         """
         if message.message_type != MessageType.REQUEST:
             return
-
         if message.content.get("request_type") == "analyze_file":
             result = await self.analyze_file(message.content)
             await self.message_bus.publish(self.create_response(message, result))
@@ -100,21 +89,19 @@ class CodeAnalyzerAgent(BaseNetworkAgent):
         file_path = request_data.get("file_path")
         if not file_path or not Path(file_path).exists():
             return {"status": "error", "message": f"Arquivo não encontrado: {file_path}"}
-
         logger.info(f"🔍 Analisando arquivo: {file_path}")
-        
+       
         try:
             with open(file_path, "r", encoding="utf-8") as f:
                 code = f.read()
-            
+           
             tree = ast.parse(code, filename=file_path)
-            
+           
             complexity_issues = self._analyze_complexity(tree, file_path)
             security_issues = self._analyze_security(code, file_path)
             all_issues = complexity_issues + security_issues
-            
+           
             health_score = self._calculate_health_score(all_issues)
-
             return {
                 "status": "completed",
                 "file_path": file_path,
@@ -130,24 +117,108 @@ class CodeAnalyzerAgent(BaseNetworkAgent):
 
     def _analyze_complexity(self, tree: ast.AST, file_path: str) -> List[CodeIssue]:
         """Analisa a complexidade ciclomática do código."""
-        # ... (lógica inalterada)
-        return []
+        issues = []
+        for node in ast.walk(tree):
+            if isinstance(node, ast.FunctionDef):
+                complexity = self._calculate_cyclomatic_complexity(node)
+                if complexity > self.max_complexity_threshold:
+                    issues.append(CodeIssue(
+                        file_path=file_path,
+                        line_number=node.lineno,
+                        issue_type=CodeIssueType.COMPLEXITY,
+                        severity=SeverityLevel.HIGH if complexity > 20 else SeverityLevel.MEDIUM,
+                        message=f"Função '{node.name}' tem complexidade ciclomática alta: {complexity}",
+                        suggestion="Refatore a função para reduzir branches (if, for, while, etc.)."
+                    ))
+        return issues
 
-    def _calculate_cyclomatic_complexity(self, node: ast.FunctionDef) -> int:
+    def _calculate_cyclomatic_complexity(self, node: ast.AST) -> int:
         """Calcula a complexidade ciclomática de uma função."""
-        # ... (lógica inalterada)
-        return 1
+        class ComplexityVisitor(ast.NodeVisitor):
+            def __init__(self):
+                self.complexity = 1  # Começa em 1
+
+            def visit_If(self, node):
+                self.complexity += 1  # Cada if adiciona 1
+                self.generic_visit(node)
+
+            def visit_For(self, node):
+                self.complexity += 1
+                self.generic_visit(node)
+
+            def visit_While(self, node):
+                self.complexity += 1
+                self.generic_visit(node)
+
+            def visit_ListComp(self, node):
+                self.complexity += 1
+                self.generic_visit(node)
+
+            def visit_DictComp(self, node):
+                self.complexity += 1
+                self.generic_visit(node)
+
+            def visit_GeneratorExp(self, node):
+                self.complexity += 1
+                self.generic_visit(node)
+
+            def visit_Try(self, node):
+                self.complexity += len(node.handlers)  # Cada except adiciona
+                self.generic_visit(node)
+
+            def visit_With(self, node):
+                self.complexity += 1
+                self.generic_visit(node)
+
+        visitor = ComplexityVisitor()
+        visitor.visit(node)
+        return visitor.complexity
 
     def _analyze_security(self, code: str, file_path: str) -> List[CodeIssue]:
         """Realiza uma varredura de segurança básica no código."""
-        # ... (lógica inalterada)
-        return []
+        issues = []
+        lines = code.splitlines()
+
+        # Padrões comuns de vulnerabilidades
+        dangerous_patterns = [
+            (r'\beval\s*\(', CodeIssueType.SECURITY, SeverityLevel.CRITICAL, "Uso de eval pode levar a injeção de código.", "Evite eval; use ast.literal_eval ou alternativas seguras."),
+            (r'\bexec\s*\(', CodeIssueType.SECURITY, SeverityLevel.CRITICAL, "Uso de exec pode executar código arbitrário.", "Evite exec; refatore para funções seguras."),
+            (r'\bos\.system\s*\(', CodeIssueType.SECURITY, SeverityLevel.HIGH, "os.system pode ser vulnerável a command injection.", "Use subprocess com shell=False."),
+            (r'\bpickle\.load\s*\(', CodeIssueType.SECURITY, SeverityLevel.HIGH, "Pickle pode executar código arbitrário de fontes não confiáveis.", "Use JSON ou alternativas seguras para serialização."),
+            (r'\bsql\s*=\s*.*\+\s*', CodeIssueType.SECURITY, SeverityLevel.HIGH, "Concatenação de strings em SQL pode levar a SQL injection.", "Use prepared statements ou ORM como SQLAlchemy."),
+            (r'API_KEY\s*=\s*["\'].*["\']', CodeIssueType.SECURITY, SeverityLevel.MEDIUM, "Possível chave secreta hardcoded.", "Use variáveis de ambiente ou secrets manager."),
+        ]
+
+        for line_num, line in enumerate(lines, start=1):
+            for pattern, issue_type, severity, message, suggestion in dangerous_patterns:
+                if re.search(pattern, line):
+                    issues.append(CodeIssue(
+                        file_path=file_path,
+                        line_number=line_num,
+                        issue_type=issue_type,
+                        severity=severity,
+                        message=message,
+                        suggestion=suggestion
+                    ))
+
+        return issues
 
     def _calculate_health_score(self, issues: List[CodeIssue]) -> float:
         """Calcula um score de saúde para o código de 0 a 100."""
-        # ... (lógica inalterada)
-        return 100.0
+        if not issues:
+            return 100.0
 
+        # Deduções baseadas em severidade
+        deductions = {
+            SeverityLevel.CRITICAL: 25,
+            SeverityLevel.HIGH: 15,
+            SeverityLevel.MEDIUM: 10,
+            SeverityLevel.LOW: 5
+        }
+
+        total_deduction = sum(deductions.get(issue.severity, 0) for issue in issues)
+        health_score = max(0, 100 - total_deduction)
+        return round(health_score, 1)
 
 def create_agents(message_bus) -> List[BaseNetworkAgent]:
     """
