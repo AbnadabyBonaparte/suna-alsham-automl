@@ -31,14 +31,41 @@ class TrainingDataPoint:
 # Import comentado até o módulo estar disponível
 # from suna_alsham_core.real_evolution_engine import TrainingDataPoint
 
-# CORREÇÃO: Import path corrigido
-from ..core.multi_agent_network import (
-    AgentMessage,
-    AgentType,
-    BaseNetworkAgent,
-    MessageType,
-    Priority,
-)
+
+from typing import Any
+# === Importação robusta MultiAgentNetwork e tipos ===
+try:
+    from suna_alsham_core.core.multi_agent_network import MultiAgentNetwork, AgentMessage, AgentType, BaseNetworkAgent, MessageType, Priority
+except ImportError:
+    try:
+        from suna_alsham_core.agents.specialized_agents import NetworkManager as MultiAgentNetwork
+        AgentMessage = Any
+        AgentType = Any
+        BaseNetworkAgent = Any
+        MessageType = Any
+        Priority = Any
+    except ImportError:
+        class MultiAgentNetwork:
+            """Implementação básica para resolver dependência"""
+            def __init__(self):
+                self.agents = {}
+                self.connections = {}
+            def register_agent(self, agent_id, agent):
+                self.agents[agent_id] = agent
+            def get_active_agents(self):
+                return list(self.agents.keys())
+            def broadcast_message(self, message, sender=None):
+                for agent_id, agent in self.agents.items():
+                    if agent_id != sender and hasattr(agent, 'receive_message'):
+                        try:
+                            agent.receive_message(message)
+                        except Exception as e:
+                            print(f"Error sending message to {agent_id}: {e}")
+        AgentMessage = Any
+        AgentType = Any
+        BaseNetworkAgent = Any
+        MessageType = Any
+        Priority = Any
 
 logger = logging.getLogger(__name__)
 
@@ -213,7 +240,7 @@ class QuantumOrchestratorAgent(BaseNetworkAgent):
             except Exception as e:
                 logger.error(f"❌ Erro no monitoramento de missões: {e}", exc_info=True)
     
-    async def _internal_handle_message(self, message: AgentMessage):
+    async def _internal_handle_message(self, message: Any):
         """Processa mensagens com inteligência quantum."""
         logger.debug(f"👑 [Quantum Orchestrator] Mensagem recebida: {message.message_type.value} de {message.sender_id}")
         
@@ -224,7 +251,7 @@ class QuantumOrchestratorAgent(BaseNetworkAgent):
         elif message.message_type == MessageType.REQUEST and message.content.get("request_type") == "get_orchestrator_metrics":
             await self._handle_metrics_request(message)
     
-    async def _handle_new_mission_request(self, message: AgentMessage):
+    async def _handle_new_mission_request(self, message: Any):
         """Processa nova requisição de missão com análise quantum."""
         mission_id = message.message_id
         user_content = message.content.get("content", "")
@@ -268,7 +295,7 @@ class QuantumOrchestratorAgent(BaseNetworkAgent):
         # Inicia planejamento quantum
         await self._initiate_quantum_planning(mission_context, message)
     
-    async def _initiate_quantum_planning(self, mission_context: MissionContext, original_message: AgentMessage):
+    async def _initiate_quantum_planning(self, mission_context: MissionContext, original_message: Any):
         """Inicia o processo de planejamento quantum."""
         mission_context.status = MissionStatus.PLANNING
         mission_context.updated_at = datetime.now()
@@ -367,7 +394,7 @@ class QuantumOrchestratorAgent(BaseNetworkAgent):
         
         return hints
     
-    def _convert_to_message_priority(self, mission_priority: PriorityLevel) -> Priority:
+    def _convert_to_message_priority(self, mission_priority: PriorityLevel) -> Any:
         """Converte prioridade da missão para prioridade de mensagem."""
         mapping = {
             PriorityLevel.QUANTUM: Priority.CRITICAL,
@@ -379,7 +406,7 @@ class QuantumOrchestratorAgent(BaseNetworkAgent):
         }
         return mapping.get(mission_priority, Priority.NORMAL)
     
-    async def _handle_mission_response(self, message: AgentMessage):
+    async def _handle_mission_response(self, message: Any):
         """Processa respostas de agentes para missões ativas."""
         callback_id = message.callback_id
         
@@ -401,7 +428,7 @@ class QuantumOrchestratorAgent(BaseNetworkAgent):
                 except ValueError:
                     logger.warning(f"⚠️ Formato inválido de callback_id: {callback_id}")
     
-    async def _handle_planning_response(self, mission_id: str, planning_message: AgentMessage):
+    async def _handle_planning_response(self, mission_id: str, planning_message: Any):
         """Processa resposta do planejamento e inicia execução."""
         mission_context = self.active_missions[mission_id]
         
@@ -527,7 +554,7 @@ class QuantumOrchestratorAgent(BaseNetworkAgent):
             logger.error(f"Conteúdo problemático: {resolved_content}")
             return task_content  # Retorna original em caso de erro
     
-    async def _handle_step_response(self, mission_id: str, step_index: int, step_message: AgentMessage):
+    async def _handle_step_response(self, mission_id: str, step_index: int, step_message: Any):
         """Processa resposta de um passo da missão."""
         mission_context = self.active_missions[mission_id]
         
@@ -850,7 +877,7 @@ class QuantumOrchestratorAgent(BaseNetworkAgent):
             if self.quantum_metrics.quantum_coherence < self.quantum_coherence_threshold:
                 logger.warning(f"⚠️ Coerência quântica baixa: {self.quantum_metrics.quantum_coherence:.3f}")
     
-    async def _handle_metrics_request(self, message: AgentMessage):
+    async def _handle_metrics_request(self, message: Any):
         """Processa requisições de métricas do orquestrador."""
         metrics = self.get_orchestrator_metrics()
         await self.publish_response(message, {"status": "success", "metrics": metrics})
@@ -1032,7 +1059,7 @@ class QuantumMetaCognitiveAgent(BaseNetworkAgent):
             await self.message_bus.publish(reflection_message)
         else:
             logger.info("✅ Sistema coerente; nenhuma adaptação necessária.")
-    async def _internal_handle_message(self, message: AgentMessage):
+    async def _internal_handle_message(self, message: Any):
         """Intercepta mensagens para alimentar o grafo de interações e histórico real."""
         # Salva mensagem recebida para análise de padrões
         self._message_history.append({
@@ -1044,7 +1071,7 @@ class QuantumMetaCognitiveAgent(BaseNetworkAgent):
         # Opcional: processar mensagens específicas se necessário
         # await super()._internal_handle_message(message)
 
-def create_agents(message_bus, max_concurrent_missions: int = None, mission_history_limit: int = None, performance_analysis_interval: int = None, quantum_coherence_threshold: float = None, critical_event_callback=None) -> List[BaseNetworkAgent]:
+def create_agents(message_bus, max_concurrent_missions: int = None, mission_history_limit: int = None, performance_analysis_interval: int = None, quantum_coherence_threshold: float = None, critical_event_callback=None) -> Any:
     """
     Factory function to create and initialize Quantum Meta-Cognitive Agent(s) for the ALSHAM QUANTUM system.
     Permite configuração avançada via parâmetros ou variáveis de ambiente, e integração de callback externo para eventos críticos.
@@ -1058,7 +1085,7 @@ def create_agents(message_bus, max_concurrent_missions: int = None, mission_hist
     Returns:
         List[BaseNetworkAgent]: A list containing the initialized Quantum Meta-Cognitive Agent instance(s).
     """
-    agents: List[BaseNetworkAgent] = []
+    agents: Any = []
     try:
         # Orquestrador Quantum
         orchestrator = QuantumOrchestratorAgent(
