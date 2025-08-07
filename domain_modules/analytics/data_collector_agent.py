@@ -18,17 +18,14 @@ from enum import Enum
 from pathlib import Path
 import urllib.parse
 
-# Importações para APIs e web scraping
-import requests
-import aiohttp
-
 # Importações corrigidas para compatibilidade
 from suna_alsham_core.multi_agent_network import (
     BaseNetworkAgent,
     AgentType,
     MessageType,
     Priority,
-    AgentMessage
+    AgentMessage,
+    MessageBus
 )
 
 logger = logging.getLogger(__name__)
@@ -87,7 +84,7 @@ class DataCollectorAgent(BaseNetworkAgent):
     Especializado em coleta de dados de múltiplas fontes.
     """
     
-    def __init__(self, agent_id: str, message_bus):
+    def __init__(self, agent_id: str, message_bus: MessageBus):
         super().__init__(agent_id, AgentType.BUSINESS_DOMAIN, message_bus)
         
         # Configuração do agente
@@ -485,6 +482,45 @@ class DataCollectorAgent(BaseNetworkAgent):
             })
         return data
 
+    async def _handle_collect_file_data(self, message: AgentMessage):
+        """Coleta dados de arquivo."""
+        try:
+            content = message.content
+            file_path = content.get("file_path", "data.csv")
+            file_format = content.get("format", "csv")
+            
+            # Simular leitura de arquivo
+            data = await self._simulate_file_collection(file_path, file_format)
+            
+            await self.publish_response(message, {
+                "status": "completed",
+                "source_type": "file",
+                "file_path": file_path,
+                "format": file_format,
+                "records_collected": len(data),
+                "data_preview": data[:10],
+                "file_metadata": {
+                    "size_bytes": random.randint(1000, 1000000),
+                    "created_date": datetime.now().isoformat(),
+                    "encoding": "utf-8"
+                }
+            })
+            
+        except Exception as e:
+            await self.publish_error_response(message, f"Erro na coleta de arquivo: {str(e)}")
+
+    async def _simulate_file_collection(self, file_path: str, file_format: str) -> List[Dict[str, Any]]:
+        """Simula coleta de dados de arquivo."""
+        await asyncio.sleep(0.2)  # Simular tempo de leitura
+        
+        # Gerar dados baseados no formato
+        if file_format == "csv":
+            return await self._generate_sales_data()
+        elif file_format == "json":
+            return await self._generate_api_data()
+        else:
+            return await self._generate_generic_data()
+
     async def _handle_collect_sample_data(self, message: AgentMessage):
         """Coleta amostra de dados para testes."""
         try:
@@ -580,8 +616,8 @@ class DataCollectorAgent(BaseNetworkAgent):
         summary = {
             "total_records": len(data),
             "date_range": {
-                "start": min(item.get("date", "") for item in data),
-                "end": max(item.get("date", "") for item in data)
+                "start": min(item.get("date", "") for item in data if "date" in item),
+                "end": max(item.get("date", "") for item in data if "date" in item)
             },
             "data_completeness": 100.0  # Simulado
         }
@@ -631,6 +667,29 @@ class DataCollectorAgent(BaseNetworkAgent):
         except Exception as e:
             await self.publish_error_response(message, f"Erro ao obter status: {str(e)}")
 
+    async def _handle_list_jobs(self, message: AgentMessage):
+        """Lista todos os jobs de coleta."""
+        try:
+            active_jobs = [
+                {
+                    "job_id": job_id,
+                    "status": job.status,
+                    "source_type": job.source_type.value,
+                    "created_at": job.created_at.isoformat()
+                }
+                for job_id, job in self.active_jobs.items()
+            ]
+            
+            await self.publish_response(message, {
+                "active_jobs": active_jobs,
+                "completed_jobs": self.completed_jobs[-10:],  # Últimos 10
+                "total_active": len(active_jobs),
+                "total_completed": len(self.completed_jobs)
+            })
+            
+        except Exception as e:
+            await self.publish_error_response(message, f"Erro ao listar jobs: {str(e)}")
+
     async def _handle_get_collection_stats(self, message: AgentMessage):
         """Retorna estatísticas de coleta."""
         try:
@@ -651,6 +710,28 @@ class DataCollectorAgent(BaseNetworkAgent):
             
         except Exception as e:
             await self.publish_error_response(message, f"Erro ao obter estatísticas: {str(e)}")
+
+    async def _handle_validate_source(self, message: AgentMessage):
+        """Valida uma fonte de dados."""
+        try:
+            source_type = message.content.get("source_type")
+            source_config = message.content.get("source_config", {})
+            
+            # Simular validação
+            is_valid = random.choice([True, True, True, False])  # 75% chance de sucesso
+            
+            validation_result = {
+                "source_type": source_type,
+                "is_valid": is_valid,
+                "connection_test": "passed" if is_valid else "failed",
+                "latency_ms": random.randint(10, 500) if is_valid else None,
+                "error_message": None if is_valid else "Connection refused or timeout"
+            }
+            
+            await self.publish_response(message, validation_result)
+            
+        except Exception as e:
+            await self.publish_error_response(message, f"Erro na validação: {str(e)}")
 
     async def _execute_data_collection(self, job: DataCollectionJob) -> DataCollectionResult:
         """Executa coleta de dados baseada no job."""
@@ -748,7 +829,7 @@ class DataCollectorAgent(BaseNetworkAgent):
         return sum(quality_factors) / len(quality_factors)
 
 
-def create_agents(message_bus) -> List[BaseNetworkAgent]:
+def create_agents(message_bus: MessageBus) -> List[BaseNetworkAgent]:
     """
     Factory function para criar o Data Collector Agent.
     
