@@ -20,7 +20,8 @@ from suna_alsham_core.multi_agent_network import (
     AgentType,
     MessageType,
     Priority,
-    AgentMessage
+    AgentMessage,
+    MessageBus
 )
 
 logger = logging.getLogger(__name__)
@@ -74,7 +75,7 @@ class AnalyticsOrchestratorAgent(BaseNetworkAgent):
     Coordena pipelines completos de análise de dados.
     """
     
-    def __init__(self, agent_id: str, message_bus):
+    def __init__(self, agent_id: str, message_bus: MessageBus):
         super().__init__(agent_id, AgentType.BUSINESS_DOMAIN, message_bus)
         
         # Configuração do agente
@@ -541,6 +542,33 @@ class AnalyticsOrchestratorAgent(BaseNetworkAgent):
         except Exception as e:
             await self.publish_error_response(message, f"Erro ao listar pipelines: {str(e)}")
 
+    async def _handle_cancel_pipeline(self, message: AgentMessage):
+        """Cancela um pipeline em execução."""
+        try:
+            pipeline_id = message.content.get("pipeline_id")
+            if not pipeline_id:
+                await self.publish_error_response(message, "pipeline_id é obrigatório")
+                return
+            
+            if pipeline_id in self.active_pipelines:
+                pipeline = self.active_pipelines[pipeline_id]
+                pipeline.current_step = PipelineStatus.FAILED
+                pipeline.error_messages.append("Pipeline cancelado pelo usuário")
+                
+                del self.active_pipelines[pipeline_id]
+                self.pipeline_stats["failed_pipelines"] += 1
+                
+                await self.publish_response(message, {
+                    "status": "cancelled",
+                    "pipeline_id": pipeline_id,
+                    "message": "Pipeline cancelado com sucesso"
+                })
+            else:
+                await self.publish_error_response(message, f"Pipeline {pipeline_id} não encontrado")
+                
+        except Exception as e:
+            await self.publish_error_response(message, f"Erro ao cancelar pipeline: {str(e)}")
+
     async def _handle_get_pipeline_stats(self, message: AgentMessage):
         """Retorna estatísticas dos pipelines."""
         try:
@@ -552,6 +580,17 @@ class AnalyticsOrchestratorAgent(BaseNetworkAgent):
             
         except Exception as e:
             await self.publish_error_response(message, f"Erro ao obter estatísticas: {str(e)}")
+
+    async def _handle_pipeline_step_response(self, message: AgentMessage):
+        """Processa resposta de um step do pipeline."""
+        try:
+            pipeline_id = message.content.get("pipeline_id")
+            if pipeline_id and pipeline_id in self.active_pipelines:
+                # Continua o pipeline
+                await self._execute_next_pipeline_step(pipeline_id)
+                
+        except Exception as e:
+            logger.error(f"Erro ao processar resposta do step: {str(e)}")
 
     async def _handle_agent_response(self, message: AgentMessage):
         """Processa resposta de outros agentes no pipeline."""
@@ -578,7 +617,7 @@ class AnalyticsOrchestratorAgent(BaseNetworkAgent):
             del self.active_pipelines[pipeline_id]
 
 
-def create_agents(message_bus) -> List[BaseNetworkAgent]:
+def create_agents(message_bus: MessageBus) -> List[BaseNetworkAgent]:
     """
     Factory function para criar o Analytics Orchestrator Agent.
     
