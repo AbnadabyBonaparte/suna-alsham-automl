@@ -21,8 +21,36 @@ class QuantumCore:
         self.agents = {}
         self.message_bus = None
         self.initialized_at = datetime.now()
+        self.config = {}
         self._on_register_callbacks = []
         self._on_remove_callbacks = []
+    def get_info(self) -> Dict[str, Any]:
+        """
+        Retorna informações detalhadas do core (status, config, agentes).
+        Returns:
+            dict: Informações completas do core.
+        """
+        return {
+            **self.get_status(),
+            "config": self.config,
+            "agents": list(self.agents.keys())
+        }
+
+    def update_agent(self, agent_id: str, agent_info: Dict[str, Any]) -> bool:
+        """
+        Atualiza informações de um agente já registrado.
+        Args:
+            agent_id: Identificador do agente.
+            agent_info: Novas informações do agente.
+        Returns:
+            bool: True se atualizado, False se não encontrado.
+        """
+        if agent_id in self.agents:
+            self.agents[agent_id].update(agent_info)
+            logger.info(f"🔄 Agente atualizado: {agent_id}")
+            return True
+        logger.warning(f"⚠️ Tentativa de atualizar agente inexistente: {agent_id}")
+        return False
         # Thread safety opcional
         try:
             from threading import Lock
@@ -138,7 +166,7 @@ class QuantumCore:
 
     def save_state(self, path: str = "core_state.json") -> None:
         """
-        Salva o estado do core (agentes e status) em arquivo JSON.
+        Salva o estado do core (agentes, status e config) em arquivo JSON.
         Args:
             path: Caminho do arquivo para salvar o estado.
         """
@@ -146,11 +174,15 @@ class QuantumCore:
             "version": self.version,
             "status": self.status,
             "agents": self.agents,
-            "initialized_at": self.initialized_at.isoformat()
+            "initialized_at": self.initialized_at.isoformat(),
+            "config": self.config
         }
-        with open(path, "w", encoding="utf-8") as f:
-            json.dump(state, f, ensure_ascii=False, indent=2)
-        logger.info(f"💾 Estado do core salvo em {path}")
+        try:
+            with open(path, "w", encoding="utf-8") as f:
+                json.dump(state, f, ensure_ascii=False, indent=2)
+            logger.info(f"💾 Estado do core salvo em {path}")
+        except Exception as e:
+            logger.error(f"Erro ao salvar estado do core: {e}")
 
     def load_state(self, path: str = "core_state.json") -> None:
         """
@@ -158,13 +190,17 @@ class QuantumCore:
         Args:
             path: Caminho do arquivo de estado salvo.
         """
-        with open(path, "r", encoding="utf-8") as f:
-            state = json.load(f)
-        self.version = state.get("version", self.version)
-        self.status = state.get("status", self.status)
-        self.agents = state.get("agents", {})
-        self.initialized_at = datetime.fromisoformat(state.get("initialized_at", datetime.now().isoformat()))
-        logger.info(f"♻️ Estado do core restaurado de {path}")
+        try:
+            with open(path, "r", encoding="utf-8") as f:
+                state = json.load(f)
+            self.version = state.get("version", self.version)
+            self.status = state.get("status", self.status)
+            self.agents = state.get("agents", {})
+            self.initialized_at = datetime.fromisoformat(state.get("initialized_at", datetime.now().isoformat()))
+            self.config = state.get("config", {})
+            logger.info(f"♻️ Estado do core restaurado de {path}")
+        except Exception as e:
+            logger.error(f"Erro ao restaurar estado do core: {e}")
     def on_register(self, callback):
         """
         Registra callback a ser chamado ao registrar agente.
