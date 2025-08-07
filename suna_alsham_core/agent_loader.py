@@ -268,36 +268,63 @@ async def _load_module_safe(
             error_msg = f"Módulo não encontrado: {ie}"
             failed_modules.append(module_name)
             detailed_failures[module_name] = error_msg
-            if is_core:
-                logger.error(f"❌ {error_msg}")
-            else:
-                logger.warning(f"⚠️ {error_msg} (opcional)")
+            logger.error(f"❌ {error_msg}") if is_core else logger.warning(f"⚠️ {error_msg} (opcional)")
             return False
-        
+
         # Verifica create_agents
         if not hasattr(imported_module, "create_agents"):
             error_msg = "Função create_agents não encontrada"
             failed_modules.append(module_name)
             detailed_failures[module_name] = error_msg
-            if is_core:
-                logger.error(f"❌ {error_msg}")
-            else:
-                logger.warning(f"⚠️ {error_msg} (opcional)")
+            logger.error(f"❌ {error_msg}") if is_core else logger.warning(f"⚠️ {error_msg} (opcional)")
             return False
-        
+
         # Executa create_agents
         try:
             agents = imported_module.create_agents(network.message_bus)
-            
-            if not agents or not isinstance(agents, list):
-                error_msg = f"create_agents retornou {type(agents).__name__} em vez de lista"
+
+            if agents is None:
+                error_msg = "create_agents retornou None"
                 failed_modules.append(module_name)
                 detailed_failures[module_name] = error_msg
+                logger.error(f"❌ {error_msg}")
                 return False
-            
-            # Registra agentes
+
+            if not isinstance(agents, list):
+                error_msg = f"create_agents retornou {type(agents).__name__} em vez de list - esperado list[QuantumAgent]"
+                failed_modules.append(module_name)
+                detailed_failures[module_name] = error_msg
+                logger.error(f"❌ {error_msg}")
+                return False
+
+            if len(agents) == 0:
+                error_msg = "create_agents retornou lista vazia"
+                failed_modules.append(module_name)
+                detailed_failures[module_name] = error_msg
+                logger.warning(f"⚠️ {error_msg}")
+                return False
+
+            # Validação adicional dos agentes
+            valid_agents = []
+            for i, agent in enumerate(agents):
+                if agent is None:
+                    logger.warning(f"  ⚠️ Agente {i+1} é None, ignorando")
+                    continue
+                if not hasattr(agent, 'agent_id'):
+                    logger.warning(f"  ⚠️ Agente {i+1} não tem 'agent_id', ignorando")
+                    continue
+                valid_agents.append(agent)
+
+            if len(valid_agents) == 0:
+                error_msg = "Nenhum agente válido encontrado na lista retornada"
+                failed_modules.append(module_name)
+                detailed_failures[module_name] = error_msg
+                logger.error(f"❌ {error_msg}")
+                return False
+
+            # Registra agentes válidos
             module_agent_count = 0
-            for agent in agents:
+            for agent in valid_agents:
                 try:
                     network.register_agent(agent)
                     agent_id = getattr(agent, 'agent_id', f'agent_{len(successful_agents)}')
@@ -305,29 +332,32 @@ async def _load_module_safe(
                     module_agent_count += 1
                     logger.debug(f"    ✅ {agent_id}")
                 except Exception as e:
-                    logger.error(f"    ❌ Erro registrando agente: {e}")
-            
+                    logger.error(f"    ❌ Erro registrando agente {getattr(agent, 'agent_id', 'unknown')}: {e}", exc_info=True)
+
             if module_agent_count > 0:
                 agents_by_module[module_name] = module_agent_count
+                logger.info(f"  ✅ {module_agent_count} agente(s) registrado(s) com sucesso")
                 return True
             else:
                 error_msg = "Nenhum agente registrado com sucesso"
                 failed_modules.append(module_name)
                 detailed_failures[module_name] = error_msg
+                logger.error(f"❌ {error_msg}")
                 return False
-                
+
         except Exception as e:
-            error_msg = f"Erro em create_agents: {e}"
+            import traceback
+            tb = traceback.format_exc()
+            error_msg = f"Erro em create_agents: {e}\nTraceback:\n{tb}"
             failed_modules.append(module_name)
             detailed_failures[module_name] = error_msg
-            if is_core:
-                logger.error(f"❌ {error_msg}")
-            else:
-                logger.warning(f"⚠️ {error_msg}")
+            logger.error(f"❌ {error_msg}") if is_core else logger.warning(f"⚠️ {error_msg}")
             return False
-            
+
     except Exception as e:
-        error_msg = f"Erro inesperado: {e}"
+        import traceback
+        tb = traceback.format_exc()
+        error_msg = f"Erro inesperado: {e}\nTraceback:\n{tb}"
         failed_modules.append(module_name)
         detailed_failures[module_name] = error_msg
         logger.error(f"❌ {error_msg}", exc_info=True)
