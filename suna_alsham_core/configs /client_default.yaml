@@ -1,4 +1,3 @@
-
 # ===============================
 # ALSHAM QUANTUM - Plugin System Configuration (PRODUCTION-GRADE)
 # ===============================
@@ -41,7 +40,7 @@ plugins:
     health_check_url: "http://localhost:8002/health"
   support:
     version: "1.0.0"
-    enabled: false  # Disabled by default - client specific
+    enabled: true
     priority: 3
     config:
       ticket_auto_assignment: true
