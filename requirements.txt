@@ -8,7 +8,7 @@ requests
 websockets
 sqlalchemy
 openai
-dotenv
+python-dotenv
 loguru
 gunicorn
 PyJWT
@@ -17,3 +17,6 @@ bcrypt
 psutil
 prometheus-client
 networkx
+aiofiles
+beautifulsoup4
+python-json-logger
