@@ -429,7 +429,7 @@ class QuantumAPIGatewayAgent(BaseNetworkAgent):
                 access_log=False  # Usamos nosso próprio logging
             )
             server = uvicorn.Server(config)
-            await server.serve()
+             # await server.serve()  # REMOVIDO - uvicorn já inicia o servidor
         except Exception as e:
             logger.error(f"❌ Erro ao iniciar servidor HTTP: {e}", exc_info=True)
 
