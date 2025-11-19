@@ -933,3 +933,7 @@ def create_agents(message_bus=None) -> List[BaseAgent]:
 
 # Export for dynamic loading
 __all__ = ['SecurityGuardianAgent', 'create_agents', 'SecurityLevel', 'ThreatLevel', 'AuthMethod']
+
+    def get_capabilities(self):
+        return ["authentication", "authorization", "encryption", "threat_detection", "jwt_management", "rate_limiting", "audit_logging", "intrusion_detection"]
+
