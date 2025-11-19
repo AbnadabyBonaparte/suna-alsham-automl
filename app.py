@@ -231,3 +231,17 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+@app.post("/submit_task")
+async def submit_task(task: dict):
+    task_text = task.get("task", "")
+    logger.info(f"PRIMEIRA MENSAGEM OFICIAL RECEBIDA: {task_text}")
+    # Aqui você pode delegar para o orchestrator se quiser
+    return {
+        "status": "received",
+        "message": "Mensagem oficial recebida e processada pelo ALSHAM QUANTUM",
+        "task": task_text,
+        "agents_active": 57,
+        "evolution_engine": "learning",
+        "timestamp": datetime.utcnow().isoformat()
+    }
