@@ -7,6 +7,7 @@ export default function DashboardLayout({
 }) {
   return (
     <div className="flex min-h-screen bg-black">
+      <GlobalKeyListener />
       {/* Sidebar Fixa */}
       <div className="fixed inset-y-0 z-50 w-64 hidden md:flex flex-col">
         <Sidebar />
