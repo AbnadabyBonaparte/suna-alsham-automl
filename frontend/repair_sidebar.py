@@ -1,3 +1,6 @@
+import os
+
+sidebar_code = """
 "use client";
 
 import { Button } from "@/components/ui/button";
@@ -63,3 +66,16 @@ export function Sidebar() {
     </div>
   );
 }
+"""
+
+def write_file(path, content):
+    try:
+        os.makedirs(os.path.dirname(path), exist_ok=True)
+        with open(path, "w", encoding="utf-8") as f:
+            f.write(content.strip())
+        print(f"✅ Sidebar reparada: {path}")
+    except Exception as e:
+        print(f"❌ Erro: {e}")
+
+print("🛠️ Reparando Sidebar e Icones...")
+write_file("src/components/layout/Sidebar.tsx", sidebar_code)
