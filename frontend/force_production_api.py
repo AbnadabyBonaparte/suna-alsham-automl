@@ -1,3 +1,7 @@
+import os
+
+# Código que FORÇA a URL de produção
+api_code = """
 // ENDEREÇO FIXO DO CÉREBRO (RAILWAY)
 // Não usamos mais localhost nem variáveis de ambiente por enquanto para garantir a conexão.
 const API_URL = "https://suna-alsham-automl-production.up.railway.app";
@@ -31,3 +35,16 @@ export async function fetchAgents() {
     return []; // Retorna array vazio para não quebrar a UI
   }
 }
+"""
+
+def write_file(path, content):
+    try:
+        os.makedirs(os.path.dirname(path), exist_ok=True)
+        with open(path, "w", encoding="utf-8") as f:
+            f.write(content.strip())
+        print(f"✅ API Real Configurada: {path}")
+    except Exception as e:
+        print(f"❌ Erro: {e}")
+
+print("🔗 Forçando conexão direta com Railway...")
+write_file("src/lib/api.ts", api_code)
