@@ -5,11 +5,8 @@ const nextConfig = {
     // Ignora erros de TS no build para garantir o deploy
     ignoreBuildErrors: true,
   },
-  eslint: {
-    // Ignora erros de lint no build
-    ignoreDuringBuilds: true,
-  },
-  // Desabilita a chave antiga que estava dando erro e usa a nova estrutura se necessário
+  // A chave 'eslint' foi removida pois estava causando o erro "Unrecognized key"
+  // O build vai passar agora.
 };
 
 export default nextConfig;
