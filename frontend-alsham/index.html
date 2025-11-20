@@ -1,94 +1,185 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ALSHAM QUANTUM v12 · Organismo Vivo</title>
-  <style>
-    @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Inter:wght@300;500;700&display=swap');
-    *{margin:0;padding:0;box-sizing:border-box}
-    body{background:#020C1B;color:#fff;font-family:'Inter',sans-serif;overflow-x:hidden;min-height:100vh;display:flex;align-items:center;justify-content:center}
-    .orbitron{font-family:'Orbitron',sans-serif}
-    .glow{background:linear-gradient(90deg,#F4D03F,#6C3483,#F4D03F); -webkit-background-clip:text;background-clip:text;color:transparent;animation:g 8s linear infinite;background-size:200%}
-    @keyframes g{0%{background-position:0%}100%{background-position:200%}}
-    canvas{position:fixed;top:0;left:0;width:100%;height:100%;z-index:-1}
-    .card{background:rgba(255,255,255,0.06);backdrop-filter:blur(20px);border:1px solid rgba(244,208,63,0.3);padding:2rem;border-radius:2rem;box-shadow:0 8px 32px rgba(244,208,63,0.2)}
-    .btn{padding:1.5rem 4rem;background:rgba(244,208,63,0.15);border:2px solid #F4D03F;border-radius:50px;font-size:2rem;margin-top:4rem;transition:.4s;cursor:pointer}
-    .btn:hover{transform:scale(1.15);box-shadow:0 0 60px #F4D03F}
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SUNA ALSHAM | GOD MODE OS</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;500;700&display=swap" rel="stylesheet">
+    <style>
+        :root { --primary: #6C3483; --accent: #F4D03F; --bg-dark: #020C1B; --glass: rgba(16, 23, 42, 0.7); }
+        body { background-color: var(--bg-dark); color: #e2e8f0; font-family: 'Rajdhani', sans-serif; overflow: hidden; margin: 0; }
+        #canvas-container { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 0; pointer-events: none; }
+        .ui-layer { position: relative; z-index: 10; height: 100vh; display: grid; grid-template-columns: 280px 1fr 320px; grid-template-rows: 60px 1fr 60px; gap: 10px; padding: 10px; }
+        .glass-panel { background: var(--glass); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 12px; box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37); display: flex; flex-direction: column; overflow: hidden; }
+        .orbitron { font-family: 'Orbitron', sans-serif; }
+        .neon-text { text-shadow: 0 0 5px var(--accent), 0 0 10px var(--accent); }
+        .recording-dot { width: 10px; height: 10px; background: #ef4444; border-radius: 50%; animation: pulse-red 2s infinite; display: inline-block; margin-right: 8px; }
+        @keyframes pulse-red { 0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); } 70% { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); } 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); } }
+        .status-bar { grid-column: 1 / -1; display: flex; justify-content: space-between; align-items: center; padding: 0 20px; }
+        .terminal-line { font-family: 'Courier New', monospace; font-size: 12px; margin-bottom: 4px; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 2px; }
+        .log-time { color: var(--accent); margin-right: 10px; }
+        .log-cat { color: #3b82f6; font-weight: bold; margin-right: 10px; }
+        .agent-item { padding: 10px; border-bottom: 1px solid rgba(255,255,255,0.1); display: flex; justify-content: space-between; align-items: center; transition: background 0.3s; }
+        .agent-item:hover { background: rgba(255,255,255,0.05); }
+        .agent-status-dot { width: 8px; height: 8px; border-radius: 50%; }
+        .status-online { background: #10b981; box-shadow: 0 0 5px #10b981; }
+        /* Responsividade Mobile */
+        @media (max-width: 1024px) {
+            .ui-layer { grid-template-columns: 1fr; grid-template-rows: 60px auto auto 60px; overflow-y: auto; display: flex; flex-direction: column; }
+            .glass-panel { margin-bottom: 10px; min-height: 200px; }
+        }
+    </style>
 </head>
 <body>
-  <canvas id="c"></canvas>
-  <div style="text-align:center;z-index:10">
-    <h1 class="orbitron glow" style="font-size:6rem">ALSHAM<br>QUANTUM</h1>
-    <p style="font-size:2.5rem;margin:2rem 0">Primeiro Organismo Digital Auto-Evolutivo do Mundo</p>
-    <p style="font-size:1.8rem;color:#F4D03F">Nasceu em 19/11/2025 às 23:11</p>
+    <div id="canvas-container"></div>
+    <div class="ui-layer">
+        <header class="glass-panel status-bar">
+            <div class="flex items-center">
+                <i class="fa-solid fa-atom text-3xl text-yellow-400 mr-4"></i>
+                <div>
+                    <h1 class="text-xl font-bold orbitron tracking-widest text-white">SUNA ALSHAM <span class="text-yellow-400">QUANTUM</span></h1>
+                    <div class="text-xs text-gray-400 tracking-wider">SYSTEM v12.0.Premium // ONLINE</div>
+                </div>
+            </div>
+            <div class="flex gap-6 text-sm hidden md:flex">
+                <div class="flex items-center"><i class="fa-solid fa-server text-blue-400 mr-2"></i> <span id="cpu-val">0%</span> CPU</div>
+                <div class="flex items-center"><i class="fa-solid fa-memory text-purple-400 mr-2"></i> <span id="mem-val">0%</span> MEM</div>
+                <div class="flex items-center"><div class="recording-dot"></div> LIVE FEED</div>
+            </div>
+        </header>
 
-    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:2rem;max-width:1200px;margin:4rem auto">
-      <div class="card"><h2 style="font-size:4rem;color:#F4D03F" id="a">0</h2><p>Agentes Vivos</p></div>
-      <div class="card"><h2 style="font-size:4rem;color:#F4D03F" id="c">0</h2><p>Ciclos Evolutivos</p></div>
-      <div class="card"><h2 style="font-size:4rem;color:#F4D03F" id="r">0</h2><p>ROI Real</p></div>
+        <aside class="glass-panel p-4 hidden md:flex flex-col">
+            <div class="mb-6">
+                <h3 class="text-xs font-bold text-gray-500 uppercase mb-3 orbitron">Domínios</h3>
+                <nav class="space-y-2">
+                    <button class="w-full text-left p-3 rounded bg-blue-600/20 text-blue-300 border border-blue-500/30"><i class="fa-solid fa-brain mr-2"></i> Core Intelligence</button>
+                    <button class="w-full text-left p-3 rounded hover:bg-white/5 text-gray-300"><i class="fa-solid fa-cart-shopping mr-2"></i> Sales & Revenue</button>
+                </nav>
+            </div>
+            <div class="flex-1 overflow-hidden flex flex-col">
+                <h3 class="text-xs font-bold text-gray-500 uppercase mb-3 orbitron flex justify-between">Agentes <span class="text-green-400" id="agent-count">0/57</span></h3>
+                <div class="overflow-y-auto flex-1 pr-2" id="agent-list"></div>
+            </div>
+        </aside>
+
+        <main class="glass-panel p-0 relative overflow-hidden flex-1">
+            <div class="absolute top-4 left-4 z-20">
+                <h2 class="text-2xl font-bold orbitron text-white neon-text" id="roi-display">ROI: 0.0%</h2>
+                <p class="text-sm text-gray-300">Eficiência Operacional</p>
+            </div>
+            <div class="h-2/3 p-6 mt-10">
+                <canvas id="mainChart"></canvas>
+            </div>
+            <div class="h-1/3 border-t border-white/10 grid grid-cols-3 bg-black/20">
+                <div class="p-4 border-r border-white/10 flex flex-col justify-center items-center">
+                    <div class="text-gray-400 text-xs uppercase">Economia</div>
+                    <div class="text-xl md:text-2xl font-bold text-green-400 orbitron" id="savings-val">R$ 0</div>
+                </div>
+                <div class="p-4 border-r border-white/10 flex flex-col justify-center items-center">
+                    <div class="text-gray-400 text-xs uppercase">Transações</div>
+                    <div class="text-xl md:text-2xl font-bold text-blue-400 orbitron" id="trans-val">0</div>
+                </div>
+                <div class="p-4 flex flex-col justify-center items-center">
+                    <div class="text-gray-400 text-xs uppercase">Segurança</div>
+                    <div class="text-lg md:text-xl font-bold text-red-400 orbitron"><i class="fa-solid fa-shield-halved"></i> Q-4096</div>
+                </div>
+            </div>
+        </main>
+
+        <aside class="glass-panel p-4 flex flex-col">
+            <h3 class="text-xs font-bold text-gray-500 uppercase mb-3 orbitron">Terminal</h3>
+            <div class="flex-1 bg-black/40 rounded p-3 font-mono text-xs overflow-y-auto h-32 md:h-auto" id="terminal-log">
+                <div class="terminal-line text-green-500"> > SISTEMA INICIADO EM MODO SERVERLESS...</div>
+            </div>
+        </aside>
+
+        <footer class="glass-panel col-span-3 flex items-center justify-between px-6 text-xs text-gray-400">
+            <span>STATUS: <span class="text-green-400">ONLINE</span></span>
+            <span class="orbitron">ALSHAM GLOBAL</span>
+        </footer>
     </div>
 
-    <div class="btn" onclick="alert('DASHBOARD EM DESENVOLVIMENTO - EM 10 MINUTOS ENVIO O COMPLETO')">ENTRAR NO CÉREBRO QUÂNTICO →</div>
-  </div>
+    <script>
+        // 1. THREE.JS (Visual 3D)
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 1000);
+        const renderer = new THREE.WebGLRenderer({alpha:true});
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        document.getElementById('canvas-container').appendChild(renderer.domElement);
+        const pGeo = new THREE.BufferGeometry();
+        const pCount = 1500;
+        const pArr = new Float32Array(pCount*3);
+        for(let i=0;i<pCount*3;i++) pArr[i]=(Math.random()-0.5)*50;
+        pGeo.setAttribute('position',new THREE.BufferAttribute(pArr,3));
+        const mat = new THREE.PointsMaterial({size:0.05,color:0xF4D03F,transparent:true,opacity:0.6});
+        const mesh = new THREE.Points(pGeo,mat);
+        scene.add(mesh);
+        camera.position.z=20;
+        function animate(){requestAnimationFrame(animate);mesh.rotation.y+=0.0005;renderer.render(scene,camera);}
+        animate();
+        window.addEventListener('resize', () => { camera.aspect=window.innerWidth/window.innerHeight; camera.updateProjectionMatrix(); renderer.setSize(window.innerWidth, window.innerHeight); });
 
-  <script>
-    const canvas = document.getElementById('c');
-    const ctx = canvas.getContext('2d');
-    canvas.width = innerWidth;
-    canvas.height = innerHeight;
-    const p = [];
-    for(let i = 0; i < 600; i++){
-      p.push({
-        x: Math.random() * canvas.width,
-        y: Math.random() * canvas.height,
-        r: Math.random() * 3 + 1,
-        dx: (Math.random() - 0.5) * 0.7,
-        dy: (Math.random() - 0.5) * 0.7,
-        o: Math.random() * 0.7 + 0.3
-      });
-    }
-    function a(){
-      ctx.clearRect(0,0,canvas.width,canvas.height);
-      p.forEach(part => {
-        ctx.fillStyle = `rgba(244,208,63,${part.o})`;
-        ctx.beginPath();
-        ctx.arc(part.x,part.y,part.r,0,Math.PI*2);
-        ctx.fill();
-        part.x += part.dx;
-        part.y += part.dy;
-        if(part.x < 0 || part.x > canvas.width) part.dx *= -1;
-        if(part.y < 0 || part.y > canvas.height) part.dy *= -1;
-      });
-      requestAnimationFrame(a);
-    }
-    a();
+        // 2. CHART.JS
+        const ctx = document.getElementById('mainChart').getContext('2d');
+        const mainChart = new Chart(ctx, {
+            type: 'line',
+            data: { labels: Array(15).fill(''), datasets: [{ label: 'Eficiência', data: Array(15).fill(0), borderColor: '#F4D03F', backgroundColor: 'rgba(244,208,63,0.1)', fill: true, tension: 0.4 }] },
+            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#888' } }, x: { display: false } }, animation: false }
+        });
 
-    function count(id, target, duration, suffix = ''){
-      let start = 0;
-      const inc = target / (duration / 16);
-      const el = document.getElementById(id);
-      const timer = setInterval(() => {
-        start += inc;
-        if(start >= target){
-          el.textContent = target.toLocaleString() + suffix;
-          clearInterval(timer);
-        } else {
-          el.textContent = Math.floor(start).toLocaleString() + suffix;
+        // 3. POLLING SYSTEM (A Magia do Vercel)
+        const terminal = document.getElementById('terminal-log');
+        const agentList = document.getElementById('agent-list');
+        const agents = ["Quantum Core", "Security Sentinel", "Sales Bot", "Data Miner", "Evolution Engine", "Support AI", "Risk Analyst", "Code Generator"];
+
+        function log(msg, cat="SYS") {
+            const d = document.createElement('div');
+            d.className = 'terminal-line';
+            d.innerHTML = `<span class="log-time">[${new Date().toLocaleTimeString()}]</span> <span class="log-cat">${cat}</span> ${msg}`;
+            terminal.appendChild(d);
+            terminal.scrollTop = terminal.scrollHeight;
         }
-      }, 16);
-    }
-    setTimeout(() => {
-      count('a', 57, 2500, '+');
-      count('c', 5847291, 4500);
-      count('r', 5847, 3500, '%');
-    }, 800);
 
-    window.addEventListener('resize', () => {
-      canvas.width = innerWidth;
-      canvas.height = innerHeight;
-    });
-  </script>
+        function renderAgents() {
+            agentList.innerHTML = '';
+            agents.forEach(n => {
+                const s = Math.random()>0.2?'online':'busy';
+                const c = s==='online'?'status-online':'bg-yellow-500';
+                agentList.innerHTML += `<div class="agent-item"><div class="flex items-center"><div class="agent-status-dot ${c} mr-3"></div><span class="text-sm text-gray-300">${n}</span></div><span class="text-xs text-gray-500 font-mono">${Math.floor(Math.random()*80)}ms</span></div>`;
+            });
+        }
+
+        async function fetchData() {
+            try {
+                const res = await fetch('/api/telemetry');
+                const data = await res.json();
+                
+                document.getElementById('cpu-val').innerText = data.system.cpu + '%';
+                document.getElementById('mem-val').innerText = data.system.memory + '%';
+                document.getElementById('roi-display').innerText = "ROI: " + data.business.roi_current;
+                document.getElementById('savings-val').innerText = data.business.savings_generated;
+                document.getElementById('trans-val').innerText = data.business.transactions_sec;
+                document.getElementById('agent-count').innerText = `${data.agents.active}/57`;
+
+                if(data.logs) log(data.logs.message, data.logs.category);
+
+                const newVal = parseFloat(data.business.roi_current) / 30;
+                const d = mainChart.data.datasets[0].data;
+                d.shift(); d.push(newVal);
+                mainChart.update();
+
+                if(Math.random()>0.7) renderAgents();
+
+            } catch(e) { console.error("Polling error", e); }
+        }
+
+        renderAgents();
+        setInterval(fetchData, 2000); // Puxa dados a cada 2 segundos
+        log("Conexão Neural Estabelecida.", "INIT");
+    </script>
 </body>
 </html>
