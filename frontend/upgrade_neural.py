@@ -1,4 +1,6 @@
-'use client';
+import os
+
+code = r"""'use client';
 
 import { useMemo, useRef, useState } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
@@ -173,3 +175,9 @@ export default function NeuralGraph() {
     </div>
   );
 }
+"""
+
+with open("src/components/quantum/NeuralGraph.tsx", "w") as f:
+    f.write(code)
+
+print("✅ Neural Nexus atualizado com dados reais.")
