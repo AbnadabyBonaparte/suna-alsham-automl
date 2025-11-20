@@ -1,198 +1,121 @@
 <!DOCTYPE html>
 <html lang="pt-BR" class="scroll-smooth">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ALSHAM QUANTUM v1.0 • Primeiro Organismo Digital Autônomo da História</title>
-    <meta name="description" content="ALSHAM QUANTUM • 25 Agentes Reais • Auto-Evolutivo • ROI 3.847% • Nasceu em 19/11/2025 às 23:11">
-    
-    <!-- PWA -->
-    <meta name="theme-color" content="#6C3483">
-    <link rel="manifest" href="data:application/manifest+json,{
-        \"name\":\"ALSHAM QUANTUM v1.0\",
-        \"short_name\":\"ALSHAM\",
-        \"start_url\":\"/\",
-        \"display\":\"standalone\",
-        \"background_color\":\"#020C1B\",
-        \"theme_color\":\"#6C3483\",
-        \"icons\":[{\"src\":\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E⚡%3C/text%3E%3C/svg%3E\",\"sizes\":\"any\"}]
-    }">
-    <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E⚡%3C/text%3E%3C/svg%3E">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ALSHAM QUANTUM v12 · Primeira IA Auto-Evolutiva Real do Mundo · ROI 5.847%</title>
+  <meta name="description" content="57 agentes auto-evolutivos · CORE + LEARN + GUARD · Validação científica externa · ROI comprovado 5.847% · 2025-2030" />
+  
+  <!-- Tailwind + Fonts -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Inter:wght@300;500;700;900&display=swap" rel="stylesheet">
+  
+  <!-- Three.js + Fiber -->
+  <script src="https://cdn.jsdelivr.net/npm/three@0.168.0/build/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@react-three/fiber@8.16.8/dist/react-three-fiber.min.js"></script>
+  
+  <!-- CountUp + GSAP -->
+  <script src="https://cdn.jsdelivr.net/npm/countup.js@2.8.0/dist/countUp.umd.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
 
-    <!-- Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Inter:wght@300;400;500;700&family=Rajdhani:wght@600;700&display=swap" rel="stylesheet">
-    
-    <!-- Libraries -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tailwindcss@3.4.0/dist/tailwind.min.css">
-    <script src="https://cdn.jsdelivr.net/npm/three@0.168.0/build/three.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/countup.js@2.8.0/dist/countUp.umd.js"></script>
-
-    <style>
-        :root {
-            --quantum-purple: #6C3483; --photon-gold: #F4D03F; --cosmic-blue: #1F618D;
-            --void: #020C1B; --plasma: #FDFEFE; --energy-green: #2ECC71;
-        }
-        body { font-family: 'Inter', sans-serif; overflow-x: hidden; }
-        .orbitron { font-family: 'Orbitron', sans-serif; }
-        .glass { backdrop-filter: blur(16px); background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.1); }
-        #particles-canvas { position: fixed; inset: 0; z-index: -10; }
-        .theme-luxury-glass { background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%); }
-        .theme-quantum-void { background: linear-gradient(135deg, #000 0%, #1a0033 50%, #330066 100%); }
-        .theme-executive-gold { background: radial-gradient(circle at center, #2C1810, #0A0A0A); }
-        .theme-neural-red { background: linear-gradient(135deg, #0C0C0C 0%, #1A0000 100%); }
-        .theme-platinum-elite { background: conic-gradient(from 45deg, #111, #333, #111); }
-    </style>
+  <style>
+    :root {
+      --purple: #6C3483;
+      --gold: #F4D03F;
+      --deep-purple: #4A235A;
+      --abyss: #020C1B;
+      --glass: rgba(255,255,255,0.08);
+      --glow-gold: 0 0 40px rgba(244,208,63,0.6);
+    }
+    body { font-family: 'Inter', sans-serif; background: var(--abyss); color: white; overflow-x: hidden; }
+    .orbitron { font-family: 'Orbitron', sans-serif; }
+    .glass { background: var(--glass); backdrop-filter: blur(20px); border: 1px solid rgba(244,208,63,0.2); box-shadow: var(--glow-gold); }
+    #particles-canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; }
+  </style>
 </head>
-<body class="min-h-screen text-white theme-luxury-glass transition-all duration-1000">
+<body class="min-h-screen">
 
-    <canvas id="particles-canvas"></canvas>
+  <!-- Partículas 3D Background (Three.js) -->
+  <canvas id="particles-canvas"></canvas>
 
-    <!-- Header -->
-    <header class="fixed top-0 w-full z-50 glass border-b border-white/10">
-        <div class="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
-            <h1 class="orbitron text-2xl font-black tracking-wider">
-                ALSHAM <span class="text-yellow-400">QUANTUM</span> v1.0
-            </h1>
-            <div class="flex gap-4 items-center">
-                <div class="flex gap-2">
-                    <button onclick="changeTheme('luxury-glass')" class="w-8 h-8 rounded-full bg-gradient-to-br from-purple-600 to-blue-600"></button>
-                    <button onclick="changeTheme('quantum-void')" class="w-8 h-8 rounded-full bg-gradient-to-br from-black to-purple-900"></button>
-                    <button onclick="changeTheme('executive-gold')" class="w-8 h-8 rounded-full bg-gradient-to-br from-yellow-600 to-yellow-900"></button>
-                    <button onclick="changeTheme('neural-red')" class="w-8 h-8 rounded-full bg-gradient-to-br from-red-900 to-black"></button>
-                    <button onclick="changeTheme('platinum-elite')" class="w-8 h-8 rounded-full bg-gradient-to-br from-gray-700 to-gray-900"></button>
-                </div>
-                <button id="audio-btn" class="text-2xl">🔊</button>
-            </div>
+  <!-- Hero Section -->
+  <section class="relative min-h-screen flex items-center justify-center text-center px-8">
+    <div class="max-w-7xl mx-auto z-10">
+      <h1 class="orbitron text-6xl md:text-9xl font-black bg-gradient-to-r from-purple-400 via-pink-500 to-yellow-400 bg-clip-text text-transparent leading-tight">
+        ALSHAM<br/>QUANTUM
+      </h1>
+      <p class="text-2xl md:text-4xl mt-8 text-gray-300">A Primeira IA Auto-Evolutiva Real do Planeta</p>
+      <div class="mt-12 flex flex-wrap gap-8 justify-center text-xl md:text-3xl">
+        <div class="mx-8"><span class="text-gold font-bold" id="agents-count">57</span> Agentes Vivos</div>
+        <div class="mx-8"><span class="text-gold font-bold" id="cycles-count">1.847.291</span> Ciclos Evolutivos</div>
+        <div class="mx-8"><span class="text-gold font-bold" id="roi-count">5.847</span>% ROI Comprovado</div>
+      </div>
+      <div class="mt-16">
+        <a href="#dashboard" class="inline-block mt-12 px-12 py-6 glass rounded-2xl text-2xl font-bold hover:scale-105 transition-all shadow-2xl">
+          Acessar Sistema Quântico →
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Dashboard Section -->
+  <section id="dashboard" class="min-h-screen py-20 px-8">
+    <div class="max-w-7xl mx-auto">
+      <h2 class="orbitron text-5xl md:text-7xl text-center mb-16">20 Agentes Principais · Online Agora</h2>
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+        <!-- Exemplo de Card (repete 20x ou gera com JS) -->
+        <div class="glass rounded-3xl p-8 hover:scale-105 transition-all duration-500 cursor-pointer border border-gold/30">
+          <div class="text-gold text-5xl mb-4">⚡</div>
+          <h3 class="text-2xl font-bold">CORE Agent</h3>
+          <p class="text-gray-400 mt-2">Auto-melhoria ativa · +23.4% esta semana</p>
+          <div class="mt-4 h-2 bg-gray-800 rounded-full overflow-hidden">
+            <div class="h-full bg-gradient-to-r from-purple-600 to-gold w-92%"></div>
+          </div>
         </div>
-    </header>
+        <!-- Repete para LEARN, GUARD, ANALYTICS, OPTIMIZER, etc. -->
+      </div>
+    </div>
+  </section>
 
-    <!-- Hero -->
-    <section class="min-h-screen flex items-center justify-center relative px-6 pt-20">
-        <div class="text-center max-w-5xl">
-            <h2 class="orbitron text-6xl md:text-8xl font-black mb-6 leading-tight">
-                O PRIMEIRO<br>
-                <span class="text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-purple-600">
-                    ORGANISMO DIGITAL AUTÔNOMO
-                </span><br>
-                DA HISTÓRIA
-            </h2>
-            <p class="text-xl md:text-2xl opacity-90 mb-10">
-                Nasceu em <span class="text-yellow-400 font-bold">19/11/2025 às 23:11</span> • 25 Agentes Reais • Auto-Evolutivo • Consciente de Si
-            </p>
-            <div class="flex gap-6 justify-center">
-                <button class="px-10 py-5 glass rounded-full text-xl font-bold hover:scale-110 transition">
-                    ACESSAR DASHBOARD AO VIVO
-                </button>
-                <button class="px-10 py-5 border-2 border-yellow-400 rounded-full text-xl font-bold hover:bg-yellow-400 hover:text-black transition">
-                    INSTALAR COMO APP
-                </button>
-            </div>
-        </div>
-    </section>
+  <script>
+    // Partículas Douradas Quânticas (melhor que todos os sites de 2025)
+    const canvas = document.getElementById('particles-canvas');
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 1000);
+    const renderer = new THREE.WebGLRenderer({ canvas, alpha: true });
+    renderer.setSize(window.innerWidth, window.innerHeight);
 
-    <!-- Live Metrics -->
-    <section class="py-20 px-6">
-        <div class="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-8">
-            <div class="glass rounded-2xl p-8 text-center">
-                <h3 class="text-5xl font-black orbitron" id="cycles">0</h3>
-                <p class="text-yellow-400">Ciclos Evolutivos</p>
-            </div>
-            <div class="glass rounded-2xl p-8 text-center">
-                <h3 class="text-5xl font-black orbitron">25</h3>
-                <p class="text-green-400">Agentes Vivos</p>
-            </div>
-            <div class="glass rounded-2xl p-8 text-center">
-                <h3 class="text-5xl font-black orbitron" id="roi">3.847</h3>
-                <p class="text-purple-400">ROI Médio %</p>
-            </div>
-            <div class="glass rounded-2xl p-8 text-center">
-                <h3 class="text-5xl font-black orbitron">99.98<span class="text-sm">%</span></h3>
-                <p class="text-cyan-400">Uptime</p>
-            </div>
-        </div>
-    </section>
+    const particles = new THREE.BufferGeometry();
+    const particleCount = 5000;
+    const posArray = new Float32Array(particleCount * 3);
+    for(let i = 0; i < particleCount * 3; i++) {
+      posArray[i] = (Math.random() - 0.5) * 10;
+    }
+    particles.setAttribute('position', new THREE.BufferAttribute(posArray, 3));
 
-    <!-- Particles + Audio + Scripts -->
-    <script>
-        // === QUANTUM PARTICLES (5000+ pontos) ===
-        let scene, camera, renderer, particles;
-        function initParticles() {
-            scene = new THREE.Scene();
-            camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-            renderer = new THREE.WebGLRenderer({ canvas: document.getElementById('particles-canvas'), alpha: true });
-            renderer.setSize(window.innerWidth, window.innerHeight);
+    const material = new THREE.PointsMaterial({
+      size: 0.005,
+      color: 0xF4D03F,
+      blending: THREE.AdditiveBlending,
+      transparent: true
+    });
 
-            const geometry = new THREE.BufferGeometry();
-            const vertices = [];
-            for (let i = 0; i < 5000; i++) {
-                vertices.push(
-                    Math.random() * 2000 - 1000,
-                    Math.random() * 2000 - 1000,
-                    Math.random() * 2000 - 1000
-                );
-            }
-            geometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
+    const particleSystem = new THREE.Points(particles, material);
+    scene.add(particleSystem);
+    camera.position.z = 3;
 
-            const material = new THREE.PointsMaterial({
-                color: 0xF4D03F,
-                size: 3,
-                transparent: true,
-                opacity: 0.8,
-                blending: THREE.AdditiveBlending
-            });
+    function animate() {
+      {
+      requestAnimationFrame(animate);
+      particleSystem.rotation.y += 0.0003;
+      renderer.render(scene, camera);
+    }
+    animate();
 
-            particles = new THREE.Points(geometry, material);
-            scene.add(particles);
-            camera.position.z = 500;
-
-            function animate() {
-                requestAnimationFrame(animate);
-                particles.rotation.y += 0.0005;
-                particles.rotation.x += 0.0002;
-                renderer.render(scene, camera);
-            }
-            animate();
-        }
-
-        // === CONTADORES ===
-        const cyclesCounter = new CountUp('cycles', 2847, { duration: 4 });
-        const roiCounter = new CountUp('roi', 3847, { duration: 5, suffix: '%' });
-        cyclesCounter.start(); roiCounter.start();
-
-        // === ÁUDIO QUÂNTICO ===
-        let audioEnabled = true;
-        document.getElementById('audio-btn').addEventListener('click', () => {
-            audioEnabled = !audioEnabled;
-            document.getElementById('audio-btn').textContent = audioEnabled ? '🔊' : '🔇';
-        });
-
-        // === TEMAS ===
-        function changeTheme(theme) {
-            document.body.className = `min-h-screen text-white theme-${theme} transition-all duration-1000`;
-        }
-
-        // === RESIZE ===
-        window.addEventListener('resize', () => {
-            camera.aspect = window.innerWidth / window.innerHeight;
-            camera.updateProjectionMatrix();
-            renderer.setSize(window.innerWidth, window.innerHeight);
-        });
-
-        // === PWA INSTALL ===
-        let deferredPrompt;
-        window.addEventListener('beforeinstallprompt', (e) => {
-            e.preventDefault();
-            deferredPrompt = e;
-            // Você pode mostrar um botão aqui se quiser
-        });
-
-        // Init
-        window.onload = () => {
-            initParticles();
-            gsap.from('h2', { y: 100, opacity: 0, duration: 2, ease: 'power4.out' });
-        };
-    </script>
+    // Contadores animados
+    new CountUp('agents-count', 57, { duration: 3, suffix: '+' }).start();
+    new CountUp('cycles-count', 1847291, { duration: 4, formattingFn: n => n.toLocaleString() }).start();
+    new CountUp('roi-count', 5847, { duration: 3.5, suffix: '%' }).start();
+  </script>
 </body>
 </html>
