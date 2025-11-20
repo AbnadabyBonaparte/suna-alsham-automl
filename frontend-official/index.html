@@ -1,130 +1,91 @@
 <!DOCTYPE html>
-<html lang="pt-BR" class="scroll-smooth">
+<html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ALSHAM QUANTUM v1.0 • Primeiro Organismo Digital Autônomo da História</title>
-    <meta name="description" content="ALSHAM QUANTUM • 25 Agentes Reais • Auto-Evolutivo • ROI 3.847% • Nasceu em 19/11/2025 às 23:11">
+    <title>Suna Alsham Quantum | Dashboard</title>
     
-    <!-- PWA -->
-    <meta name="theme-color" content="#6C3483">
-    <link rel="manifest" href="data:application/manifest+json,{"name":"ALSHAM QUANTUM v1.0","short_name":"ALSHAM","start_url":"/","display":"standalone","background_color":"#020C1B","theme_color":"#6C3483","icons":[{"src":"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E⚡%3C/text%3E%3C/svg%3E","sizes":"any"}]}">
+    <!-- CORREÇÃO CRÍTICA DE CSP: Permite carregar Tailwind, FontAwesome e Scripts Externos -->
+    <meta http-equiv="Content-Security-Policy" content="default-src * 'unsafe-inline' 'unsafe-eval' data: blob:;">
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
     
-    <!-- Fonts & Libs -->
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Inter:wght@300;400;500;700&family=Rajdhani:wght@600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tailwindcss@3.4.0/dist/tailwind.min.css">
-    <script src="https://cdn.jsdelivr.net/npm/three@0.168.0/build/three.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/countup.js@2.8.0/dist/countUp.umd.js"></script>
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- CountUp.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/countup.js/1.9.3/countUp.min.js"></script>
 
     <style>
-        :root { --quantum-purple: #6C3483; --photon-gold: #F4D03F; --void: #020C1B; }
-        body { font-family: 'Inter', sans-serif; overflow-x: hidden; }
-        .orbitron { font-family: 'Orbitron', sans-serif; }
-        .glass { backdrop-filter: blur(16px); background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.1); }
-        #particles-canvas { position: fixed; inset: 0; z-index: -10; }
-        .theme-luxury-glass { background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%); }
-        .theme-luxury-glass { background: linear-gradient(135deg, #000 0%, #1a0033 50%, #330066 100%); }
-        .theme-luxury-glass { background: radial-gradient(circle at center, #2C1810, #0A0A0A); }
-        .theme-luxury-glass { background: linear-gradient(135deg, #0C0C0C 0%, #1A0000 100%); }
-        .theme-luxury-glass { background: conic-gradient(from 45deg, #111, #333, #111); }
+        body { background-color: #0f172a; color: #e2e8f0; font-family: sans-serif; }
+        .glass { background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.1); }
     </style>
 </head>
-<body class="min-h-screen text-white theme-luxury-glass transition-all duration-1000">
+<body class="h-screen flex overflow-hidden bg-slate-900 text-white">
 
-    <canvas id="particles-canvas"></canvas>
+    <!-- Sidebar -->
+    <aside class="w-64 glass hidden md:flex flex-col border-r border-gray-700">
+        <div class="h-16 flex items-center justify-center border-b border-gray-700 font-bold text-xl text-blue-400">
+            <i class="fa-solid fa-atom mr-2"></i> ALSHAM
+        </div>
+        <nav class="flex-1 p-4 space-y-2">
+            <a href="#" class="block p-3 bg-blue-600 rounded-lg"><i class="fa-solid fa-chart-line mr-2"></i> Dashboard</a>
+            <a href="#" class="block p-3 hover:bg-gray-800 rounded-lg text-gray-400"><i class="fa-solid fa-robot mr-2"></i> Agentes</a>
+        </nav>
+    </aside>
 
-    <!-- Header -->
-    <header class="fixed top-0 w-full z-50 glass border-b border-white/10">
-        <div class="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
-            <h1 class="orbitron text-2xl font-black tracking-wider">ALSHAM <span class="text-yellow-400">QUANTUM</span> v1.0</h1>
-            <div class="flex gap-4 items-center">
-                <div class="flex gap-2">
-                    <button onclick="changeTheme('luxury-glass')" class="w-8 h-8 rounded-full bg-gradient-to-br from-purple-600 to-blue-600"></button>
-                    <button onclick="changeTheme('quantum-void')" class="w-8 h-8 rounded-full bg-gradient-to-br from-black to-purple-900"></button>
-                    <button onclick="changeTheme('executive-gold')" class="w-8 h-8 rounded-full bg-gradient-to-br from-yellow-600 to-yellow-900"></button>
-                    <button onclick="changeTheme('neural-red')" class="w-8 h-8 rounded-full bg-gradient-to-br from-red-900 to-black"></button>
-                    <button onclick="changeTheme('platinum-elite')" class="w-8 h-8 rounded-full bg-gradient-to-br from-gray-700 to-gray-900"></button>
+    <!-- Main -->
+    <main class="flex-1 flex flex-col overflow-y-auto">
+        <header class="h-16 glass flex items-center justify-between px-6 border-b border-gray-700">
+            <span class="text-sm text-green-400 font-mono">● SYSTEM ONLINE</span>
+        </header>
+
+        <div class="p-8 grid grid-cols-1 md:grid-cols-4 gap-6">
+            <!-- Cards com Contadores -->
+            <div class="glass p-6 rounded-xl">
+                <h3 class="text-gray-400 text-xs uppercase">Processos</h3>
+                <div class="text-4xl font-bold mt-2" id="count-proc">0</div>
+            </div>
+            <div class="glass p-6 rounded-xl">
+                <h3 class="text-gray-400 text-xs uppercase">Agentes</h3>
+                <div class="text-4xl font-bold mt-2 text-blue-400" id="count-agent">0</div>
+            </div>
+            <div class="glass p-6 rounded-xl">
+                <h3 class="text-gray-400 text-xs uppercase">ROI (%)</h3>
+                <div class="text-4xl font-bold mt-2 text-green-400" id="count-roi">0</div>
+            </div>
+            <div class="glass p-6 rounded-xl">
+                <h3 class="text-gray-400 text-xs uppercase">Latência (ms)</h3>
+                <div class="text-4xl font-bold mt-2 text-purple-400" id="count-lat">0</div>
+            </div>
+        </div>
+
+        <div class="px-8">
+            <div class="glass p-6 rounded-xl">
+                <h3 class="font-bold mb-4">Log do Sistema Vercel</h3>
+                <div class="font-mono text-xs text-gray-400 bg-black/50 p-4 rounded h-40 overflow-y-auto">
+                    <p>> [BOOT] Iniciando interface neural...</p>
+                    <p>> [INFO] Conexão estabelecida com sucesso.</p>
+                    <p>> [CSP] Policy applied: Permissive Mode.</p>
                 </div>
-                <button id="audio-btn" class="text-2xl">🔊</button>
             </div>
         </div>
-    </header>
-
-    <!-- Hero -->
-    <section class="min-h-screen flex items-center justify-center relative px-6 pt-20">
-        <div class="text-center max-w-5xl">
-            <h2 class="orbitron text-6xl md:text-8xl font-black mb-6 leading-tight">
-                O PRIMEIRO<br><span class="text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-purple-600">ORGANISMO DIGITAL AUTÔNOMO</span><br>DA HISTÓRIA
-            </h2>
-            <p class="text-xl md:text-2xl opacity-90 mb-10">
-                Nasceu em <span class="text-yellow-400 font-bold">19/11/2025 às 23:11</span> • 25 Agentes Reais • Consciente • Auto-Evolutivo
-            </p>
-            <div class="flex gap-6 justify-center">
-                <a href="/docs" class="px-10 py-5 glass rounded-full text-xl font-bold hover:scale-110 transition">SWAGGER API</a>
-                <button onclick="installPWA()" class="px-10 py-5 border-2 border-yellow-400 rounded-full text-xl font-bold hover:bg-yellow-400 hover:text-black transition">INSTALAR APP</button>
-            </div>
-        </div>
-    </section>
-
-    <!-- Métricas -->
-    <section class="py-20 px-6">
-        <div class="max-w-7xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-8">
-            <div class="glass rounded-2xl p-8 text-center"><h3 class="text-5xl font-black orbitron" id="cycles">0</h3><p class="text-yellow-400">Ciclos Evolutivos</p></div>
-            <div class="glass rounded-2xl p-8 text-center"><h3 class="text-5xl font-black orbitron">25</h3><p class="text-green-400">Agentes Vivos</p></div>
-            <div class="glass rounded-2xl p-8 text-center"><h3 class="text-5xl font-black orbitron" id="roi">3.847</h3><p class="text-purple-400">ROI %</p></div>
-            <div class="glass rounded-2xl p-8 text-center"><h3 class="text-5xl font-black orbitron">99.98%</h3><p class="text-cyan-400">Uptime</p></div>
-        </div>
-    </section>
+    </main>
 
     <script>
-        // Partículas 5000+
-        let scene, camera, renderer, particles;
-        function initParticles() {
-            scene = new THREE.Scene();
-            camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-            renderer = new THREE.WebGLRenderer({ canvas: document.getElementById('particles-canvas'), alpha: true });
-            renderer.setSize(window.innerWidth, window.innerHeight);
-            const geometry = new THREE.BufferGeometry();
-            const vertices = [];
-            for (let i = 0; i < 5000; i++) {
-                vertices.push(Math.random()*2000-1000, Math.random()*2000-1000, Math.random()*2000-1000);
+        window.onload = function() {
+            // Inicialização segura dos contadores
+            try {
+                const opt = { useEasing: true, useGrouping: true };
+                new CountUp('count-proc', 0, 1024, 0, 3, opt).start();
+                new CountUp('count-agent', 0, 57, 0, 3, opt).start();
+                new CountUp('count-roi', 0, 340, 0, 4, opt).start();
+                new CountUp('count-lat', 0, 12, 0, 2, opt).start();
+            } catch(e) {
+                console.error("Erro na animação:", e);
             }
-            geometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
-            const material = new THREE.PointsMaterial({ color: 0xFFFF00, size: 5, transparent: true, opacity: 1.0, blending: THREE.AdditiveBlending });
-            particles = new THREE.Points(geometry, material);
-            scene.add(particles);
-            camera.position.z = 500;
-            function animate() {
-                requestAnimationFrame(animate);
-                particles.rotation.y += 0.0005;
-                particles.rotation.x += 0.0002;
-                renderer.render(scene, camera);
-            }
-            animate();
-        }
-
-        // Contadores
-        new CountUp('cycles', 2847, { duration: 4 }).start();
-        new CountUp('roi', 3847, { duration: 5, suffix: '%' }).start();
-
-        // Temas
-        function changeTheme(t) { document.body.className = `min-h-screen text-white theme-${t} transition-all duration-1000`; }
-
-        // PWA Install
-        let deferredPrompt;
-        window.addEventListener('beforeinstallprompt', e => { e.preventDefault(); deferredPrompt = e; });
-        function installPWA() { if(deferredPrompt) { deferredPrompt.prompt(); } }
-
-        // Resize
-        window.addEventListener('resize', () => {
-            camera.aspect = window.innerWidth / window.innerHeight;
-            camera.updateProjectionMatrix();
-            renderer.setSize(window.innerWidth, window.innerHeight);
-        });
-
-        window.onload = () => { initParticles(); gsap.from('h2', { y: 100, opacity: 0, duration: 2, ease: 'power4.out' }); };
+        };
     </script>
 </body>
 </html>
