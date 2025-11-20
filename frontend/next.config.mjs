@@ -1,25 +1,15 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // Ativa o modo standalone: gera um pacote autossuficiente
-  output: 'standalone',
-  
-  // Garante que imagens externas funcionem
-  images: {
-    remotePatterns: [
-      {
-        protocol: 'https',
-        hostname: '**',
-      },
-    ],
-  },
-  
-  // Ignora erros de verificação para garantir o deploy
-  eslint: {
-    ignoreDuringBuilds: true,
-  },
+  reactStrictMode: false,
   typescript: {
+    // Ignora erros de TS no build para garantir o deploy
     ignoreBuildErrors: true,
   },
+  eslint: {
+    // Ignora erros de lint no build
+    ignoreDuringBuilds: true,
+  },
+  // Desabilita a chave antiga que estava dando erro e usa a nova estrutura se necessário
 };
 
 export default nextConfig;
