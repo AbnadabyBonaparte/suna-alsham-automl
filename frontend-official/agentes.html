@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Suna Alsham | Rede Neural</title>
+    <meta http-equiv="Content-Security-Policy" content="default-src * 'unsafe-inline' 'unsafe-eval' data: blob:;">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body { background-color: #0f172a; color: #e2e8f0; font-family: sans-serif; }
+        .glass { background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.1); }
+        .agent-card:hover { transform: translateY(-5px); border-color: #3b82f6; transition: all 0.3s; }
+    </style>
+</head>
+<body class="h-screen flex overflow-hidden bg-slate-900 text-white">
+
+    <!-- Sidebar -->
+    <aside class="w-64 glass hidden md:flex flex-col border-r border-gray-700">
+        <div class="h-16 flex items-center justify-center border-b border-gray-700 font-bold text-xl text-blue-400">
+            <i class="fa-solid fa-atom mr-2"></i> ALSHAM
+        </div>
+        <nav class="flex-1 p-4 space-y-2">
+            <a href="/" class="block p-3 hover:bg-gray-800 rounded-lg text-gray-400"><i class="fa-solid fa-chart-line mr-2"></i> Dashboard</a>
+            <a href="/agentes" class="block p-3 bg-blue-600 rounded-lg"><i class="fa-solid fa-robot mr-2"></i> Agentes</a>
+        </nav>
+    </aside>
+
+    <!-- Main -->
+    <main class="flex-1 flex flex-col overflow-y-auto p-8">
+        <h2 class="text-2xl font-bold mb-6">Rede de Agentes Ativos (57 Nodes)</h2>
+        
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <!-- Agente 1 -->
+            <div class="glass p-6 rounded-xl agent-card border border-transparent">
+                <div class="flex items-center justify-between mb-4">
+                    <div class="bg-green-500/20 text-green-400 p-2 rounded-lg"><i class="fa-solid fa-brain"></i></div>
+                    <span class="text-xs bg-green-900 text-green-300 px-2 py-1 rounded">Online</span>
+                </div>
+                <h3 class="font-bold text-lg">Orchestrator Core</h3>
+                <p class="text-sm text-gray-400 mt-2">Gerencia a distribuição de tarefas entre os subsistemas.</p>
+            </div>
+
+            <!-- Agente 2 -->
+            <div class="glass p-6 rounded-xl agent-card border border-transparent">
+                <div class="flex items-center justify-between mb-4">
+                    <div class="bg-blue-500/20 text-blue-400 p-2 rounded-lg"><i class="fa-solid fa-database"></i></div>
+                    <span class="text-xs bg-blue-900 text-blue-300 px-2 py-1 rounded">Processando</span>
+                </div>
+                <h3 class="font-bold text-lg">Data Collector</h3>
+                <p class="text-sm text-gray-400 mt-2">Coletando dados de mercado em tempo real.</p>
+            </div>
+
+            <!-- Agente 3 -->
+            <div class="glass p-6 rounded-xl agent-card border border-transparent">
+                <div class="flex items-center justify-between mb-4">
+                    <div class="bg-purple-500/20 text-purple-400 p-2 rounded-lg"><i class="fa-solid fa-shield-halved"></i></div>
+                    <span class="text-xs bg-purple-900 text-purple-300 px-2 py-1 rounded">Vigilante</span>
+                </div>
+                <h3 class="font-bold text-lg">Security Guardian</h3>
+                <p class="text-sm text-gray-400 mt-2">Monitorando integridade do sistema e CSP.</p>
+            </div>
+
+             <!-- Agente 4 -->
+            <div class="glass p-6 rounded-xl agent-card border border-transparent">
+                <div class="flex items-center justify-between mb-4">
+                    <div class="bg-yellow-500/20 text-yellow-400 p-2 rounded-lg"><i class="fa-solid fa-code"></i></div>
+                    <span class="text-xs bg-yellow-900 text-yellow-300 px-2 py-1 rounded">Standby</span>
+                </div>
+                <h3 class="font-bold text-lg">Code Generator</h3>
+                <p class="text-sm text-gray-400 mt-2">Aguardando solicitação de nova funcionalidade.</p>
+            </div>
+        </div>
+    </main>
+</body>
+</html>

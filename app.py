@@ -5,8 +5,8 @@ from flask import Flask, send_from_directory, jsonify
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 FRONTEND_FOLDER = 'frontend-official'
 
+# Verificação de segurança da pasta
 if not os.path.exists(os.path.join(BASE_DIR, FRONTEND_FOLDER)):
-    # Tenta achar outras pastas se a oficial nao existir
     for f in ['frontend-alsham', 'frontend']:
         if os.path.exists(os.path.join(BASE_DIR, f)):
             FRONTEND_FOLDER = f
@@ -17,6 +17,10 @@ app = Flask(__name__, static_folder=FRONTEND_FOLDER)
 @app.route('/')
 def home():
     return send_from_directory(FRONTEND_FOLDER, 'index.html')
+
+@app.route('/agentes')
+def agentes():
+    return send_from_directory(FRONTEND_FOLDER, 'agentes.html')
 
 @app.route('/manifest.json')
 def manifest():
