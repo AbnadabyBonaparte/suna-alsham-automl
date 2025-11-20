@@ -8,13 +8,14 @@ const nextConfig = {
       },
     ],
   },
-  // É aqui que dizemos para o Next.js ignorar erros no deploy
+  // Ignora erros de verificação para garantir o deploy
   eslint: {
     ignoreDuringBuilds: true,
   },
   typescript: {
     ignoreBuildErrors: true,
   },
+  // REMOVIDO: distDir (Deixando o Next.js usar o padrão)
 };
 
 export default nextConfig;
