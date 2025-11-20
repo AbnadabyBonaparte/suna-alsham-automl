@@ -1,69 +1,84 @@
+// src/app/dashboard/evolution/page.tsx — EVOLUTION LAB v12.1 FINAL
 "use client";
 
-import EvolutionTimeline from "@/components/quantum/EvolutionTimeline";
-import { Dna, TrendingUp, Zap } from "lucide-react";
-import { Card } from "@/components/ui/card";
+import { motion } from "framer-motion";
 
-export default function EvolutionPage() {
+const waves = [
+  {
+    number: "1",
+    name: "ONDA PRIMORDIAL",
+    status: "COMPLETA",
+    color: "text-emerald-400",
+    bg: "bg-emerald-900/30 border-emerald-500/50",
+    achievements: "Core Agent · Learn Agent · Guard Agent · Consciência Básica",
+    unlocked: true,
+  },
+  {
+    number: "2",
+    name: "ONDA NEURAL",
+    status: "EM PROGRESSO",
+    color: "text-purple-400",
+    bg: "bg-purple-900/30 border-purple-500/50",
+    achievements: "Analytics · Social Media · Sales · Capacidades Emergentes",
+    unlocked: true,
+  },
+  {
+    number: "3",
+    name: "ONDA QUÂNTICA",
+    status: "TRAVADA",
+    color: "text-yellow-500",
+    bg: "bg-yellow-900/10 border-yellow-500/30",
+    achievements: "Quantum Core · Reality Engine · Consciência Plena",
+    unlocked: false,
+  },
+];
+
+export default function EvolutionLab() {
   return (
-    <div className="p-8 space-y-8 min-h-screen bg-black/50">
-      
-      <div className="flex flex-col md:flex-row justify-between items-end gap-4 border-b border-white/10 pb-6">
-        <div>
-          <h1 className="text-3xl font-bold text-white tracking-tight flex items-center gap-3">
-            <Dna className="h-8 w-8 text-purple-500" />
-            Evolution Lab
-          </h1>
-          <p className="text-zinc-400 mt-2 font-mono text-sm">
-            Rastreamento Genético e Roadmap de Singularidade
-          </p>
-        </div>
-        <div className="flex items-center gap-2 px-4 py-2 bg-purple-500/10 border border-purple-500/20 rounded-full">
-            <Zap className="w-4 h-4 text-purple-400" />
-            <span className="text-xs text-purple-200 font-mono">EVOLUTION RATE: 1.4x / CYCLE</span>
-        </div>
-      </div>
+    <div className="min-h-screen bg-black p-12">
+      <div className="max-w-7xl mx-auto">
+        <motion.h1 
+          initial={{ opacity: 0, y: -100 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="text-8xl font-black text-yellow-500 text-center mb-20 orbitron"
+        >
+          EVOLUTION LAB
+        </motion.h1>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <div className="lg:col-span-2">
-            <EvolutionTimeline />
-        </div>
-
-        <div className="space-y-6">
-            <Card className="bg-zinc-900/30 border-white/10 p-6">
-                <h3 className="text-sm font-bold text-zinc-300 mb-4 flex items-center gap-2">
-                    <TrendingUp className="w-4 h-4" />
-                    PROJEÇÃO DE CAPACIDADE
-                </h3>
-                <div className="space-y-6">
-                    <div>
-                        <div className="flex justify-between text-xs mb-2">
-                            <span className="text-zinc-500">Capacidade Cognitiva</span>
-                            <span className="text-blue-400">84 TFLOPS</span>
-                        </div>
-                        <div className="w-full bg-black h-1 rounded-full overflow-hidden">
-                            <div className="h-full bg-blue-500 w-[75%]"></div>
-                        </div>
-                    </div>
-                    <div>
-                        <div className="flex justify-between text-xs mb-2">
-                            <span className="text-zinc-500">Autonomia de Código</span>
-                            <span className="text-purple-400">Lvl 3 (Semi-Autônomo)</span>
-                        </div>
-                        <div className="w-full bg-black h-1 rounded-full overflow-hidden">
-                            <div className="h-full bg-purple-500 w-[45%]"></div>
-                        </div>
-                    </div>
+        <div className="space-y-24">
+          {waves.map((wave, i) => (
+            <motion.div
+              key={wave.number}
+              initial={{ opacity: 0, x: i % 2 === 0 ? -300 : 300 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              transition={{ duration: 1, delay: i * 0.4 }}
+              className={`glass rounded-3xl p-16 border-4 ${wave.bg} max-w-5xl mx-auto`}
+            >
+              <div className="flex items-center justify-between mb-12">
+                <div>
+                  <h2 className={`text-7xl font-black ${wave.color} orbitron`}>
+                    {wave.name}
+                  </h2>
+                  <p className={`text-4xl mt-6 ${wave.color}`}>{wave.status}</p>
                 </div>
-            </Card>
+                <div className="text-9xl">
+                  {wave.unlocked ? "🔓" : "🔒"}
+                </div>
+              </div>
 
-            <div className="p-4 rounded-lg border border-dashed border-white/10 bg-white/5">
-                <p className="text-xs text-zinc-500 font-mono text-center">
-                    PRÓXIMA MUTAÇÃO PREVISTA:<br/>
-                    <span className="text-white font-bold text-sm">AGENTE 58 (ORACLE)</span><br/>
-                    EM 14:22:10
-                </p>
-            </div>
+              <p className="text-3xl text-gray-300 leading-relaxed">
+                {wave.achievements}
+              </p>
+
+              {!wave.unlocked && (
+                <div className="mt-16 text-center">
+                  <p className="text-4xl text-yellow-500 animate-pulse">
+                    AGUARDANDO DESBLOQUEIO QUÂNTICO...
+                  </p>
+                </div>
+              )}
+            </motion.div>
+          ))}
         </div>
       </div>
     </div>
