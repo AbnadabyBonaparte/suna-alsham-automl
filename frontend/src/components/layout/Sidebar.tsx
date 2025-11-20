@@ -7,6 +7,7 @@ import { usePathname } from "next/navigation";
 
 const menuItems = [
   { name: "Cockpit", icon: LayoutDashboard, path: "/dashboard", color: "text-white" },
+    { name: "Evolution Lab", icon: Dna, path: "/dashboard/evolution", color: "text-purple-500" },
   { name: "Neural Nexus", icon: Network, path: "/dashboard/network", color: "text-pink-500" },
   { name: "Sentinelas", icon: Shield, path: "/dashboard/agents", color: "text-red-400" },
   { name: "Matrix / Logs", icon: Terminal, path: "/dashboard/matrix", color: "text-green-500" },
