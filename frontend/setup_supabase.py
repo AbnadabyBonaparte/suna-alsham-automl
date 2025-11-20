@@ -1,3 +1,21 @@
+import os
+
+# 1. CLIENTE SUPABASE
+supabase_client_code = """
+import { createClient } from '@supabase/supabase-js';
+
+// Tenta pegar as chaves do ambiente
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+// Se não tiver chaves (ainda não configuradas na Vercel), cria um cliente nulo para não quebrar o build
+export const supabase = (supabaseUrl && supabaseAnonKey) 
+  ? createClient(supabaseUrl, supabaseAnonKey)
+  : null;
+"""
+
+# 2. NOVA API.TS (Lê do Banco de Dados, não de uma API Python)
+api_ts_code = """
 import { supabase } from './supabase';
 import { Agent } from '@/types/quantum';
 
@@ -54,3 +72,18 @@ export async function fetchSystemStatus() {
         health: "OPTIMAL"
     };
 }
+"""
+
+def write_file(path, content):
+    try:
+        os.makedirs(os.path.dirname(path), exist_ok=True)
+        with open(path, "w", encoding="utf-8") as f:
+            f.write(content.strip())
+        print(f"✅ Configurado: {path}")
+    except Exception as e:
+        print(f"❌ Erro: {e}")
+
+print("🔗 Configurando conexão direta Vercel <-> Supabase...")
+write_file("src/lib/supabase.ts", supabase_client_code)
+write_file("src/lib/api.ts", api_ts_code)
+print("🏁 Arquitetura Serverless aplicada.")
