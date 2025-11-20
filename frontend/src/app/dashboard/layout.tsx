@@ -7,17 +7,17 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="flex min-h-screen bg-black">
-      {/* O Ouvido do Sistema (Easter Egg) */}
+    <div className="flex min-h-screen bg-black w-full">
+      {/* Listener Secreto */}
       <GlobalKeyListener />
 
-      {/* Sidebar Fixa */}
-      <div className="fixed inset-y-0 z-50 w-64 hidden md:flex flex-col">
+      {/* Sidebar Fixa - Desktop */}
+      <div className="hidden md:flex h-screen w-64 flex-col fixed left-0 top-0 z-50 border-r border-white/10 bg-black/90 backdrop-blur-xl">
         <Sidebar />
       </div>
 
-      {/* Conteúdo Principal */}
-      <main className="flex-1 md:pl-64 relative overflow-y-auto h-screen">
+      {/* Conteúdo Principal - Com Margem para Sidebar */}
+      <main className="flex-1 md:pl-64 relative w-full">
         {children}
       </main>
     </div>

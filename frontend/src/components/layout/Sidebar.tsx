@@ -20,8 +20,8 @@ export function Sidebar() {
   const pathname = usePathname();
 
   return (
-    <div className="h-screen w-64 bg-black/95 border-r border-white/10 flex flex-col p-4 backdrop-blur-xl z-50">
-      <div className="mb-8 flex items-center gap-3 px-2">
+    <div className="flex flex-col h-full p-4">
+      <div className="mb-8 flex items-center gap-3 px-2 pt-2">
         <div className="h-8 w-8 rounded-full bg-gradient-to-br from-purple-600 to-blue-600 animate-pulse shadow-[0_0_15px_rgba(168,85,247,0.5)]" />
         <div>
             <h2 className="font-bold text-white tracking-wider">ALSHAM</h2>

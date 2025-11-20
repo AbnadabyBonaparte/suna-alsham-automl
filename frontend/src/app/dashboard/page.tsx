@@ -11,16 +11,14 @@ export default function DashboardPage() {
   const { agents, metrics, isLive, simulatePulse, toggleLiveMode } = useQuantumStore();
 
   useEffect(() => {
-    const interval = setInterval(() => {
-      simulatePulse();
-    }, 2000); 
+    const interval = setInterval(() => simulatePulse(), 2000); 
     return () => clearInterval(interval);
   }, [simulatePulse]);
 
   return (
-    <div className="p-8 space-y-8 text-white/90 font-sans selection:bg-purple-500/30">
+    <div className="p-8 space-y-8 w-full max-w-[1600px] mx-auto">
       
-      {/* Header Section */}
+      {/* Header */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-white/10 pb-6 bg-black/20 backdrop-blur-sm sticky top-0 z-40">
         <div>
           <h1 className="text-4xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-purple-400 via-fuchsia-300 to-white tracking-tight">
