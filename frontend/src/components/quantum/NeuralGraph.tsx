@@ -3,91 +3,111 @@
 import { useMemo, useRef } from "react";
 import { Canvas, useFrame } from "@react-three/fiber";
 import { OrbitControls, Sphere, Line } from "@react-three/drei";
-import * as THREE from "three";
 
-function Node({ position, color, size = 0.1 }: any) {
+function Node({ position, color }: any) {
   const ref = useRef<any>();
   
   useFrame((state) => {
+    // Animação leve baseada no tempo
     const t = state.clock.getElapsedTime();
-    // Efeito de "respiração" (pulso)
     if (ref.current) {
-      ref.current.scale.setScalar(1 + Math.sin(t * 2 + position[0]) * 0.1);
+      ref.current.scale.setScalar(1 + Math.sin(t * 1.5 + position[0]) * 0.15);
     }
   });
 
   return (
-    <Sphere ref={ref} args={[size, 16, 16]} position={position}>
-      <meshStandardMaterial color={color} emissive={color} emissiveIntensity={2} toneMapped={false} />
+    <Sphere ref={ref} args={[0.15, 16, 16]} position={position}>
+      <meshStandardMaterial color={color} emissive={color} emissiveIntensity={1.5} toneMapped={false} />
     </Sphere>
   );
 }
 
-function Connection({ start, end, color }: any) {
+function Connections({ nodes }: { nodes: any[] }) {
+  // Otimização: Gera todas as linhas como um único objeto se possível, 
+  // mas aqui manteremos Lines individuais por simplicidade visual, com geometria leve.
+  const lines = useMemo(() => {
+    const connections = [];
+    for (let i = 0; i < nodes.length; i++) {
+      // Conecta apenas aos vizinhos mais próximos para evitar caos visual
+      const targets = nodes.slice(i + 1, i + 3); 
+      for (const target of targets) {
+        connections.push({ start: nodes[i].position, end: target.position });
+      }
+    }
+    return connections;
+  }, [nodes]);
+
   return (
-    <Line
-      points={[start, end]}
-      color={color}
-      lineWidth={1}
-      transparent
-      opacity={0.2}
-    />
+    <>
+      {lines.map((line, i) => (
+        <Line
+          key={i}
+          points={[line.start, line.end]}
+          color="white"
+          lineWidth={0.5}
+          transparent
+          opacity={0.15}
+        />
+      ))}
+    </>
   );
 }
 
-function NeuralNetwork() {
-  // Gera 57 nós (Agentes)
+function Brain() {
   const agents = useMemo(() => {
     return new Array(57).fill(0).map(() => ({
       position: [
-        (Math.random() - 0.5) * 10,
-        (Math.random() - 0.5) * 10,
-        (Math.random() - 0.5) * 10
+        (Math.random() - 0.5) * 8,
+        (Math.random() - 0.5) * 8,
+        (Math.random() - 0.5) * 8
       ] as [number, number, number],
-      // Cores baseadas na função (Roxo=Core, Azul=Intel, Verde=Infra)
       color: Math.random() > 0.6 ? "#a855f7" : Math.random() > 0.3 ? "#3b82f6" : "#22c55e"
     }));
   }, []);
 
-  // Gera conexões aleatórias (Sinapses)
-  const connections = useMemo(() => {
-    const lines = [];
-    for (let i = 0; i < agents.length; i++) {
-      // Conecta cada agente a 2 outros aleatórios
-      const target1 = agents[Math.floor(Math.random() * agents.length)];
-      const target2 = agents[Math.floor(Math.random() * agents.length)];
-      lines.push({ start: agents[i].position, end: target1.position });
-      lines.push({ start: agents[i].position, end: target2.position });
-    }
-    return lines;
-  }, [agents]);
-
   return (
-    <group rotation={[0, 0, Math.PI / 4]}>
+    <group>
       {agents.map((agent, i) => (
         <Node key={i} position={agent.position} color={agent.color} />
       ))}
-      {connections.map((conn, i) => (
-        <Connection key={i} start={conn.start} end={conn.end} color="#ffffff" />
-      ))}
+      <Connections nodes={agents} />
     </group>
   );
 }
 
 export default function NeuralGraph() {
   return (
-    <div className="h-[calc(100vh-4rem)] w-full bg-black relative overflow-hidden rounded-xl border border-white/10">
+    <div className="h-[calc(100vh-6rem)] w-full bg-black/50 relative overflow-hidden rounded-xl border border-white/10 backdrop-blur-sm">
       
       <div className="absolute top-4 left-4 z-10 pointer-events-none">
-        <h2 className="text-2xl font-bold text-white/90">Neural Nexus</h2>
-        <p className="text-xs text-purple-400 font-mono">57 Active Nodes • Realtime</p>
+        <h2 className="text-2xl font-bold text-white/90 tracking-tight">Neural Nexus</h2>
+        <div className="flex items-center gap-2">
+            <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"/>
+            <p className="text-xs text-purple-300 font-mono">57 Active Nodes • GPU Optimized</p>
+        </div>
       </div>
 
-      <Canvas camera={{ position: [0, 0, 15], fov: 50 }}>
+      {/* Configurações Robustas de GPU */}
+      <Canvas 
+        camera={{ position: [0, 0, 12], fov: 50 }} 
+        dpr={[1, 1.5]} // Limita resolução em telas retina para performance
+        gl={{ 
+            antialias: true, 
+            powerPreference: "default",
+            preserveDrawingBuffer: true 
+        }}
+      >
         <ambientLight intensity={0.5} />
         <pointLight position={[10, 10, 10]} intensity={1} />
-        <NeuralNetwork />
-        <OrbitControls autoRotate autoRotateSpeed={0.5} enableZoom={true} />
+        <Brain />
+        <OrbitControls 
+            autoRotate 
+            autoRotateSpeed={0.8} 
+            enableZoom={true} 
+            enablePan={false}
+            maxDistance={20}
+            minDistance={5}
+        />
       </Canvas>
     </div>
   );
