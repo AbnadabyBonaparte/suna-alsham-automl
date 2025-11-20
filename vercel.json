@@ -1,10 +1,17 @@
 {
+  "version": 2,
   "builds": [
-    { "src": "start.py", "use": "@vercel/python" },
-    { "src": "frontend-official/**", "use": "@vercel/static" }
+    {
+      "src": "*.html",
+      "use": "@vercel/static"
+    }
   ],
   "routes": [
-    { "src": "/api/(.*)", "dest": "/start.py" },
-    { "src": "/(.*)", "dest": "/frontend-official/index.html" }
-  ]
+    {
+      "src": "/(.*)",
+      "dest": "/index.html"
+    }
+  ],
+  "cleanUrls": true,
+  "trailingSlash": false
 }
