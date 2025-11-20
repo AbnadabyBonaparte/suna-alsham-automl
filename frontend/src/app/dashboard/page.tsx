@@ -4,7 +4,7 @@ import { useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Activity, Shield, Zap, Database, Terminal } from "lucide-react";
+import { Activity, Shield, Zap, Database, Terminal, Cpu } from "lucide-react";
 import { useQuantumStore } from "@/lib/store";
 
 export default function DashboardPage() {
@@ -18,71 +18,81 @@ export default function DashboardPage() {
   }, [simulatePulse]);
 
   return (
-    <div className="p-8 space-y-8 min-h-screen bg-black text-white/90 font-sans selection:bg-purple-500/30">
+    <div className="p-8 space-y-8 text-white/90 font-sans selection:bg-purple-500/30">
       
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-white/10 pb-6">
+      {/* Header Section */}
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-white/10 pb-6 bg-black/20 backdrop-blur-sm sticky top-0 z-40">
         <div>
           <h1 className="text-4xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-purple-400 via-fuchsia-300 to-white tracking-tight">
             Cockpit de Deus
           </h1>
-          <p className="text-white/50 mt-1 font-light tracking-wide">
-            Sistema ALSHAM QUANTUM v11.0 <span className="text-green-500 mx-2">•</span> Online
+          <p className="text-zinc-400 mt-1 font-light tracking-wide flex items-center gap-2">
+            <span className="inline-block w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
+            ALSHAM QUANTUM v11.0 <span className="text-zinc-600">|</span> Operacional
           </p>
         </div>
         <div className="flex gap-3">
           <Button 
             variant="outline" 
-            className={`border-purple-500/30 hover:bg-purple-900/20 transition-all ${isLive ? 'text-green-400 border-green-500/30 animate-pulse' : 'text-gray-400'}`}
+            className={`border-purple-500/30 bg-purple-500/10 hover:bg-purple-500/20 transition-all ${isLive ? 'text-green-400 border-green-500/30' : 'text-gray-400'}`}
             onClick={toggleLiveMode}
           >
             <Activity className="mr-2 h-4 w-4" />
-            {isLive ? "LIVE STREAM: ON" : "STREAM PAUSED"}
-          </Button>
-          <Button className="bg-white text-black hover:bg-gray-200 font-medium">
-            <Zap className="mr-2 h-4 w-4 fill-black" /> Iniciar Onda 2
+            {isLive ? "LIVE STREAM" : "PAUSED"}
           </Button>
         </div>
       </div>
 
+      {/* KPI Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <KpiCard title="ROI Total" value={`${metrics.roi}%`} sub="+12% hoje" icon={Activity} color="text-purple-400" />
-        <KpiCard title="Economia Gerada" value={`R$ ${metrics.savings}B`} sub="Acumulado Global" icon={Database} color="text-green-400" />
-        <KpiCard title="Carga do Sistema" value={`${metrics.systemLoad.toFixed(1)}%`} sub="Capacidade Neural" icon={Zap} color="text-amber-400" />
-        <KpiCard title="Agentes Ativos" value={metrics.activeAgents.toString()} sub="Rede Neural" icon={Shield} color="text-blue-400" />
+        <KpiCard title="Economia" value={`R$ ${metrics.savings}B`} sub="Acumulado Global" icon={Database} color="text-green-400" />
+        <KpiCard title="Carga Neural" value={`${metrics.systemLoad.toFixed(1)}%`} sub="Capacidade de CPU" icon={Cpu} color="text-amber-400" />
+        <KpiCard title="Agentes" value={metrics.activeAgents.toString()} sub="Rede Ativa" icon={Shield} color="text-blue-400" />
       </div>
 
-      <div className="space-y-4">
+      {/* Agents Grid */}
+      <div className="space-y-6">
         <div className="flex items-center justify-between">
-          <h2 className="text-xl font-semibold text-white/80 flex items-center gap-2">
-            <Terminal className="h-5 w-5 text-purple-500" />
-            Status da Rede Neural
+          <h2 className="text-2xl font-bold text-white flex items-center gap-3">
+            <Terminal className="h-6 w-6 text-purple-500" />
+            Rede Neural Ativa
           </h2>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
           {agents.map((agent) => (
             <Card 
               key={agent.id} 
-              className="bg-black/40 border-white/10 backdrop-blur-md hover:border-purple-500/50 transition-all duration-500 group"
+              className="bg-zinc-900/40 border-white/5 backdrop-blur-sm hover:border-purple-500/50 hover:bg-zinc-900/60 transition-all duration-300 group"
             >
               <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-sm font-medium text-white/70 group-hover:text-purple-300 transition-colors">
-                  {agent.name}
-                </CardTitle>
+                <div className="space-y-1">
+                  <CardTitle className="text-sm font-medium text-zinc-200 group-hover:text-purple-300 transition-colors">
+                    {agent.name}
+                  </CardTitle>
+                  <p className="text-[10px] text-zinc-500 uppercase tracking-wider">{agent.role}</p>
+                </div>
                 <StatusBadge status={agent.status} />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold text-white mb-1">
-                  {agent.efficiency.toFixed(1)}% <span className="text-xs font-normal text-white/30">Eficiência</span>
+                <div className="flex items-end justify-between mb-2">
+                   <div className="text-2xl font-bold text-white">
+                     {agent.efficiency.toFixed(1)}%
+                   </div>
+                   <span className="text-xs text-zinc-500 mb-1">Eficiência</span>
                 </div>
-                <p className="text-xs text-white/40 font-mono mt-2">
-                  Task: <span className="text-purple-300/80">{agent.currentTask}</span>
-                </p>
-                <div className="w-full bg-white/5 h-1 mt-4 rounded-full overflow-hidden">
+                
+                <div className="w-full bg-black/50 h-1.5 rounded-full overflow-hidden">
                     <div 
-                        className="bg-purple-500 h-full transition-all duration-1000 ease-in-out" 
+                        className={`h-full transition-all duration-1000 ease-in-out ${getBarColor(agent.efficiency)}`}
                         style={{ width: `${agent.efficiency}%` }}
                     />
+                </div>
+                
+                <div className="mt-4 flex items-center gap-2 text-xs text-zinc-400 bg-black/20 p-2 rounded border border-white/5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-purple-500/50"></span>
+                  <span className="truncate font-mono text-purple-200/70">{agent.currentTask}</span>
                 </div>
               </CardContent>
             </Card>
@@ -95,14 +105,14 @@ export default function DashboardPage() {
 
 function KpiCard({ title, value, sub, icon: Icon, color }: any) {
   return (
-    <Card className="bg-black/40 border-white/10 backdrop-blur-md hover:bg-white/5 transition-colors">
+    <Card className="bg-zinc-900/40 border-white/5 backdrop-blur-sm">
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-        <CardTitle className="text-sm font-medium text-white/60">{title}</CardTitle>
+        <CardTitle className="text-sm font-medium text-zinc-400">{title}</CardTitle>
         <Icon className={`h-4 w-4 ${color}`} />
       </CardHeader>
       <CardContent>
         <div className="text-2xl font-bold text-white">{value}</div>
-        <p className="text-xs text-white/40">{sub}</p>
+        <p className="text-xs text-zinc-500 mt-1">{sub}</p>
       </CardContent>
     </Card>
   );
@@ -110,15 +120,21 @@ function KpiCard({ title, value, sub, icon: Icon, color }: any) {
 
 function StatusBadge({ status }: { status: string }) {
     const colors: Record<string, string> = {
-        IDLE: "bg-gray-500/10 text-gray-400 border-gray-500/20",
+        IDLE: "bg-zinc-500/10 text-zinc-400 border-zinc-500/20",
         PROCESSING: "bg-blue-500/10 text-blue-400 border-blue-500/20 animate-pulse",
         LEARNING: "bg-purple-500/10 text-purple-400 border-purple-500/20",
         WARNING: "bg-amber-500/10 text-amber-400 border-amber-500/20",
         ERROR: "bg-red-500/10 text-red-400 border-red-500/20",
     };
     return (
-        <Badge variant="outline" className={`${colors[status] || colors.IDLE} border font-mono text-[10px]`}>
+        <Badge variant="outline" className={`${colors[status] || colors.IDLE} border font-mono text-[10px] uppercase`}>
             {status}
         </Badge>
     );
+}
+
+function getBarColor(efficiency: number) {
+  if (efficiency > 90) return "bg-gradient-to-r from-purple-500 to-blue-500";
+  if (efficiency > 70) return "bg-blue-500";
+  return "bg-amber-500";
 }
