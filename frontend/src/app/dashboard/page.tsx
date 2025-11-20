@@ -1,94 +1,124 @@
+"use client";
+
+import { useEffect } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Activity, Cpu, ShieldAlert, Zap, Brain, Globe, Database } from "lucide-react";
+import { Activity, Shield, Zap, Database, Terminal } from "lucide-react";
+import { useQuantumStore } from "@/lib/store";
 
-// Dados Reais baseados no seu README
-const agents = [
-  { id: 1, name: "Core Agent Evolution", role: "CORE V3", status: "active", load: 88, type: "core" },
-  { id: 2, name: "Guard Agent Sentinel", role: "SECURITY", status: "active", load: 42, type: "security" },
-  { id: 3, name: "Specialist Alpha", role: "SPECIALIZED", status: "thinking", load: 91, type: "special" },
-  { id: 4, name: "Analytics Prime", role: "DATA INTEL", status: "active", load: 65, type: "data" },
-  { id: 5, name: "Predictor Omega", role: "FORECASTING", status: "idle", load: 12, type: "data" },
-  { id: 6, name: "AI Analyzer Supreme", role: "AI POWERED", status: "active", load: 78, type: "ai" },
-  { id: 7, name: "Monitor Vigilant", role: "SYSTEM", status: "active", load: 23, type: "sys" },
-  { id: 8, name: "WebSearch Explorer", role: "INTEL", status: "active", load: 56, type: "web" },
-];
+export default function DashboardPage() {
+  const { agents, metrics, isLive, simulatePulse, toggleLiveMode } = useQuantumStore();
 
-export default function Dashboard() {
+  useEffect(() => {
+    const interval = setInterval(() => {
+      simulatePulse();
+    }, 2000); 
+    return () => clearInterval(interval);
+  }, [simulatePulse]);
+
   return (
-    <div className="min-h-screen p-8 space-y-8 animate-in fade-in duration-700">
-      {/* Header */}
-      <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-        <div>
-          <div className="flex items-center gap-2">
-             <h2 className="text-3xl font-bold tracking-tight text-white text-glow">COCKPIT SUPREMO</h2>
-             <span className="px-2 py-1 rounded-full bg-[#6C3483]/20 text-[#6C3483] text-xs border border-[#6C3483]/50">v11.0</span>
-          </div>
-          <p className="text-muted-foreground">Monitorando Organismo Digital • 57 Agentes Totais</p>
-        </div>
-        <Button variant="outline" className="bg-black/40 border-[#F4D03F] text-[#F4D03F] hover:bg-[#F4D03F]/10">
-          <Zap className="mr-2 h-4 w-4" /> INICIAR ONDA 2
-        </Button>
-      </div>
-
-      {/* KPIs Reais */}
-      <div className="grid gap-4 md:grid-cols-4">
-        {[
-          { label: "ROI GLOBAL", value: "+2.847%", icon: Activity, color: "text-[#F4D03F]" },
-          { label: "CICLOS EVOLUTIVOS", value: "1,847", icon: Zap, color: "text-purple-400" },
-          { label: "UPTIME SLA", value: "99.98%", icon: ShieldAlert, color: "text-green-400" },
-          { label: "ECONOMIA TOTAL", value: "R$ 4.7B", icon: Database, color: "text-blue-400" },
-        ].map((metric, i) => (
-          <div key={i} className="glass-panel p-6 rounded-xl flex flex-col justify-between hover:bg-white/5 transition-colors cursor-default">
-            <div className="flex items-center justify-between space-y-0 pb-2">
-              <span className="text-xs font-medium text-muted-foreground tracking-wider">{metric.label}</span>
-              <metric.icon className={`h-4 w-4 ${metric.color}`} />
-            </div>
-            <div className="text-2xl font-bold text-white">{metric.value}</div>
-          </div>
-        ))}
-      </div>
-
-      {/* Grid de Agentes */}
-      <h3 className="text-xl font-semibold text-white mt-8 mb-4 flex items-center gap-2">
-        <Brain className="h-5 w-5 text-[#6C3483]" /> Agentes Ativos (Live Feed)
-      </h3>
+    <div className="p-8 space-y-8 min-h-screen bg-black text-white/90 font-sans selection:bg-purple-500/30">
       
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-        {agents.map((agent) => (
-          <div key={agent.id} className="group relative overflow-hidden rounded-xl border border-white/5 bg-black/20 p-5 hover:border-[#F4D03F]/30 hover:bg-black/40 transition-all duration-300">
-            
-            {/* Status Dot */}
-            <div className="absolute top-4 right-4 flex items-center gap-2">
-              <span className={`h-1.5 w-1.5 rounded-full ${agent.status === 'active' ? 'bg-[#2ECC71] shadow-[0_0_8px_#2ECC71]' : 'bg-yellow-500'}`} />
-            </div>
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-white/10 pb-6">
+        <div>
+          <h1 className="text-4xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-purple-400 via-fuchsia-300 to-white tracking-tight">
+            Cockpit de Deus
+          </h1>
+          <p className="text-white/50 mt-1 font-light tracking-wide">
+            Sistema ALSHAM QUANTUM v11.0 <span className="text-green-500 mx-2">•</span> Online
+          </p>
+        </div>
+        <div className="flex gap-3">
+          <Button 
+            variant="outline" 
+            className={`border-purple-500/30 hover:bg-purple-900/20 transition-all ${isLive ? 'text-green-400 border-green-500/30 animate-pulse' : 'text-gray-400'}`}
+            onClick={toggleLiveMode}
+          >
+            <Activity className="mr-2 h-4 w-4" />
+            {isLive ? "LIVE STREAM: ON" : "STREAM PAUSED"}
+          </Button>
+          <Button className="bg-white text-black hover:bg-gray-200 font-medium">
+            <Zap className="mr-2 h-4 w-4 fill-black" /> Iniciar Onda 2
+          </Button>
+        </div>
+      </div>
 
-            <div className="mb-4">
-              <div className="text-xs font-mono text-blue-400 mb-1">{agent.role}</div>
-              <h3 className="text-lg font-bold text-white group-hover:text-[#F4D03F] transition-colors">{agent.name}</h3>
-            </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <KpiCard title="ROI Total" value={`${metrics.roi}%`} sub="+12% hoje" icon={Activity} color="text-purple-400" />
+        <KpiCard title="Economia Gerada" value={`R$ ${metrics.savings}B`} sub="Acumulado Global" icon={Database} color="text-green-400" />
+        <KpiCard title="Carga do Sistema" value={`${metrics.systemLoad.toFixed(1)}%`} sub="Capacidade Neural" icon={Zap} color="text-amber-400" />
+        <KpiCard title="Agentes Ativos" value={metrics.activeAgents.toString()} sub="Rede Neural" icon={Shield} color="text-blue-400" />
+      </div>
 
-            {/* Barra de Carga */}
-            <div className="space-y-1.5">
-              <div className="flex justify-between text-[10px] text-muted-foreground uppercase tracking-wider">
-                <span>Carga Neural</span>
-                <span>{agent.load}%</span>
-              </div>
-              <div className="h-1 w-full rounded-full bg-white/5">
-                <div 
-                  className="h-full rounded-full bg-gradient-to-r from-[#6C3483] to-[#F4D03F] opacity-80" 
-                  style={{ width: `${agent.load}%` }}
-                />
-              </div>
-            </div>
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <h2 className="text-xl font-semibold text-white/80 flex items-center gap-2">
+            <Terminal className="h-5 w-5 text-purple-500" />
+            Status da Rede Neural
+          </h2>
+        </div>
 
-            {/* Footer do Card */}
-            <div className="mt-4 pt-4 border-t border-white/5 flex justify-between items-center opacity-50 group-hover:opacity-100 transition-opacity">
-               <span className="text-[10px] text-gray-400">ID: {agent.type}_{agent.id}</span>
-               <span className="text-[10px] text-[#F4D03F] cursor-pointer hover:underline">LOGS &rarr;</span>
-            </div>
-          </div>
-        ))}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {agents.map((agent) => (
+            <Card 
+              key={agent.id} 
+              className="bg-black/40 border-white/10 backdrop-blur-md hover:border-purple-500/50 transition-all duration-500 group"
+            >
+              <CardHeader className="flex flex-row items-center justify-between pb-2">
+                <CardTitle className="text-sm font-medium text-white/70 group-hover:text-purple-300 transition-colors">
+                  {agent.name}
+                </CardTitle>
+                <StatusBadge status={agent.status} />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold text-white mb-1">
+                  {agent.efficiency.toFixed(1)}% <span className="text-xs font-normal text-white/30">Eficiência</span>
+                </div>
+                <p className="text-xs text-white/40 font-mono mt-2">
+                  Task: <span className="text-purple-300/80">{agent.currentTask}</span>
+                </p>
+                <div className="w-full bg-white/5 h-1 mt-4 rounded-full overflow-hidden">
+                    <div 
+                        className="bg-purple-500 h-full transition-all duration-1000 ease-in-out" 
+                        style={{ width: `${agent.efficiency}%` }}
+                    />
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
       </div>
     </div>
   );
+}
+
+function KpiCard({ title, value, sub, icon: Icon, color }: any) {
+  return (
+    <Card className="bg-black/40 border-white/10 backdrop-blur-md hover:bg-white/5 transition-colors">
+      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+        <CardTitle className="text-sm font-medium text-white/60">{title}</CardTitle>
+        <Icon className={`h-4 w-4 ${color}`} />
+      </CardHeader>
+      <CardContent>
+        <div className="text-2xl font-bold text-white">{value}</div>
+        <p className="text-xs text-white/40">{sub}</p>
+      </CardContent>
+    </Card>
+  );
+}
+
+function StatusBadge({ status }: { status: string }) {
+    const colors: Record<string, string> = {
+        IDLE: "bg-gray-500/10 text-gray-400 border-gray-500/20",
+        PROCESSING: "bg-blue-500/10 text-blue-400 border-blue-500/20 animate-pulse",
+        LEARNING: "bg-purple-500/10 text-purple-400 border-purple-500/20",
+        WARNING: "bg-amber-500/10 text-amber-400 border-amber-500/20",
+        ERROR: "bg-red-500/10 text-red-400 border-red-500/20",
+    };
+    return (
+        <Badge variant="outline" className={`${colors[status] || colors.IDLE} border font-mono text-[10px]`}>
+            {status}
+        </Badge>
+    );
 }
