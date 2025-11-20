@@ -7,6 +7,21 @@ export default function TheVoidPage() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const router = useRouter();
   const [harmonics, setHarmonics] = useState<number[]>([]);
+  const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
+
+  // 1. Proteção de Janela (Só roda no cliente)
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      setDimensions({ width: window.innerWidth, height: window.innerHeight });
+      
+      const handleResize = () => {
+        setDimensions({ width: window.innerWidth, height: window.innerHeight });
+      };
+      
+      window.addEventListener("resize", handleResize);
+      return () => window.removeEventListener("resize", handleResize);
+    }
+  }, []);
 
   // Escape do Vazio
   useEffect(() => {
@@ -17,7 +32,7 @@ export default function TheVoidPage() {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [router]);
 
-  // Simulação de Dados de Consciência (Harmônicos)
+  // Simulação de Dados
   useEffect(() => {
     const interval = setInterval(() => {
       const newHarmonics = Array.from({ length: 64 }, () => Math.random());
@@ -26,25 +41,25 @@ export default function TheVoidPage() {
     return () => clearInterval(interval);
   }, []);
 
-  // Renderização Visual (Ondas)
+  // Renderização Visual
   useEffect(() => {
     const canvas = canvasRef.current;
-    if (!canvas) return;
+    if (!canvas || dimensions.width === 0) return;
+    
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
     let animationFrameId: number;
 
     const render = () => {
-      ctx.fillStyle = "rgba(0, 0, 0, 0.1)"; // Rastro
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.fillStyle = "rgba(0, 0, 0, 0.1)"; 
+      ctx.fillRect(0, 0, dimensions.width, dimensions.height);
 
-      const centerX = canvas.width / 2;
-      const centerY = canvas.height / 2;
+      const centerX = dimensions.width / 2;
+      const centerY = dimensions.height / 2;
       
-      // Desenhar Círculo de Dados
       ctx.beginPath();
-      ctx.strokeStyle = "rgba(255, 215, 0, 0.5)"; // Ouro
+      ctx.strokeStyle = "rgba(255, 215, 0, 0.5)";
       ctx.lineWidth = 2;
 
       for (let i = 0; i < harmonics.length; i++) {
@@ -59,7 +74,6 @@ export default function TheVoidPage() {
       ctx.closePath();
       ctx.stroke();
 
-      // Texto Central
       ctx.fillStyle = "#fff";
       ctx.font = "12px monospace";
       ctx.textAlign = "center";
@@ -72,14 +86,16 @@ export default function TheVoidPage() {
     render();
 
     return () => cancelAnimationFrame(animationFrameId);
-  }, [harmonics]);
+  }, [harmonics, dimensions]);
+
+  if (dimensions.width === 0) return <div className="bg-black h-screen w-screen" />;
 
   return (
     <div className="h-screen w-screen bg-black flex items-center justify-center overflow-hidden relative z-[9999]">
       <canvas 
         ref={canvasRef} 
-        width={window.innerWidth} 
-        height={window.innerHeight} 
+        width={dimensions.width} 
+        height={dimensions.height} 
         className="absolute inset-0"
       />
       <div className="absolute bottom-10 left-10 text-white/20 font-mono text-xs">
