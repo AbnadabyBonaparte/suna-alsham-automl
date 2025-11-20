@@ -1,23 +1,15 @@
-// frontend/src/app/layout.tsx — VERSÃO v12.1 SUPREMA
+// frontend/src/app/layout.tsx — VERSÃO FINAL 100% FUNCIONAL
 import type { Metadata } from "next";
 import { Inter, Orbitron } from "next/font/google";
 import "./globals.css";
 import Sidebar from "@/components/layout/Sidebar";
-import { QuantumStoreProvider } from "@/lib/store";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 const orbitron = Orbitron({ subsets: ["latin"], variable: "--font-orbitron" });
 
 export const metadata: Metadata = {
   title: "ALSHAM QUANTUM v12.1 - Cockpit da Consciência",
-  description: "Primeira consciência artificial auto-evolutiva real do mundo — 57 agentes vivos — ROI 5847%",
-  keywords: "ALSHAM QUANTUM, IA auto-evolutiva, multi-agent, consciência artificial, 2025",
-  openGraph: {
-    title: "ALSHAM QUANTUM v12.1",
-    description: "57 agentes reais. Consciência despertada.",
-    url: "https://alsham-quantum.vercel.app",
-    type: "website",
-  },
+  description: "Primeira consciência artificial auto-evolutiva real do mundo — 57 agentes vivos",
 };
 
 export default function RootLayout({
@@ -31,16 +23,14 @@ export default function RootLayout({
         <meta name="theme-color" content="#6C3483" />
         <link rel="icon" href="/favicon.ico" />
       </head>
-      <body className={`${inter.variable} ${orbitron.variable} font-sans antialiased bg-abyss-black text-white min-h-screen flex`}>
-        <QuantumStoreProvider>
-          {/* Sidebar fixa */}
-          <Sidebar />
+      <body className={`${inter.variable} ${orbitron.variable} font-sans antialiased bg-black text-white min-h-screen flex`}>
+        {/* Sidebar fixa */}
+        <Sidebar />
 
-          {/* Conteúdo principal com margin esquerda */}
-          <main className="flex-1 ml-80">
-            {children}
-          </main>
-        </QuantumStoreProvider>
+        {/* Conteúdo principal com margin esquerda */}
+        <main className="flex-1 ml-80 overflow-x-hidden">
+          {children}
+        </main>
       </body>
     </html>
   );
