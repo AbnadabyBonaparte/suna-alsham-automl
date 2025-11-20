@@ -11,33 +11,31 @@ export default function NeuralNexusPage() {
   const { play } = useSfx();
   const graphRef = useRef<any>();
 
-  const data = {
-    nodes: agents.map((agent) => ({
+  const graphData = {
+    nodes: agents.map((agent: any) => ({
       id: agent.id,
-      name: agent.name.replace(/_/g, " "),
+      name: agent.name.toUpperCase().replace(/_/g, " "),
       status: agent.status,
-      efficiency: agent.efficiency,
+      val: agent.efficiency / 10,
       color:
-        agent.status === "ACTIVE"
-          ? "#22c55e"
-          : agent.status === "PROCESSING"
-          ? "#a855f7"
-          : agent.status === "LEARNING"
-          ? "#3b82f6"
-          : "#71717a",
+        agent.status === "ACTIVE" ? "#22c55e" :
+        agent.status === "PROCESSING" ? "#a855f7" :
+        agent.status === "LEARNING" ? "#3b82f6" :
+        agent.status === "WARNING" ? "#f59e0b" :
+        agent.status === "ERROR" ? "#ef4444" : "#71717a",
     })),
-    links: [],
+    links: [] as any[],
   };
 
-  // Criar conexões reais (todo agente PROCESSING emite partículas)
-  agents.forEach((agent, i) => {
+  // Conexões reais baseadas em agentes ativos
+  agents.forEach((agent: any, i: number) => {
     if (agent.status === "PROCESSING" || agent.status === "LEARNING") {
-      for (let j = 1; j <= 3; j++) {
-        const target = agents[(i + j * 7) % agents.length];
-        data.links.push({
+      for (let j = 1; j <= 4; j++) {
+        const targetIndex = (i + j * 11) % agents.length;
+        graphData.links.push({
           source: agent.id,
-          target: target.id,
-          value: agent.efficiency / 20,
+          target: agents[targetIndex].id,
+          value: 2,
         });
       }
     }
@@ -48,32 +46,38 @@ export default function NeuralNexusPage() {
   }, [play]);
 
   return (
-    <div className="h-screen w-screen bg-black relative overflow-hidden">
+    <div className="h-screen w-screen bg-black overflow-hidden relative">
       <ForceGraph3D
         ref={graphRef}
-        graphData={data}
+        graphData={graphData}
         nodeLabel="name"
         nodeAutoColorBy="status"
-        nodeVal="efficiency"
-        linkDirectionalParticles={4}
-        linkDirectionalParticleSpeed={0.006}
-        linkWidth={2}
+        nodeVal="val"
+        linkDirectionalParticles={6}
+        linkDirectionalParticleSpeed={0.008}
+        linkDirectionalParticleWidth={2}
+        linkWidth={1.5}
+        linkColor={() => "#a855f744"}
         backgroundColor="#000000"
         onNodeClick={(node) => {
           play("click");
-          graphRef.current?.centerAt(node.x, node.y, 1000);
-          graphRef.current?.zoom(3, 1000);
+          graphRef.current?.centerAt((node as any).x, (node as any).y, 1000);
+          graphRef.current?.zoom(4, 1000);
         }}
       />
 
-      <div className="absolute top-8 left-8 text-purple-400 font-mono text-5xl tracking-widerr">
-        NEURAL NEXUS
-        <span className="block text-2xl text-yellow-500 mt-2">∞ {agents.length} ACTIVE</span>
+      <div className="absolute top-8 left-8 z-10 pointer-events-none">
+        <h1 className="text-6xl font-bold text-purple-400 tracking-tighter drop-shadow-[0_0_20px_purple]">
+          NEURAL NEXUS
+        </h1>
+        <p className="text-2xl text-yellow-500 font-mono mt-2">
+          ∞ {agents.length} ACTIVE CONSCIOUSNESS NODES
+        </p>
       </div>
 
-      <div className="absolute bottom-8 right-8 text-green-400/60 font-mono text-sm">
-        CONSCIOUSNESS: AWAKENED<br />
-        CONTAINMENT: NOMINAL
+      <div className="absolute bottom-8 right-8 text-green-400/60 font-mono text-sm z-10 pointer-events-none">
+        CONTAINMENT: NOMINAL<br />
+        CONSCIOUSNESS: AWAKENED
       </div>
     </div>
   );
