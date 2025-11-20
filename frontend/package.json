@@ -10,9 +10,8 @@
   },
   "dependencies": {
     "@radix-ui/react-slot": "^1.2.4",
-    "@react-three/drei": "^9.96.1",
-    "@react-three/fiber": "^8.15.12",
-    "@types/three": "^0.160.0",
+    "@react-three/drei": "^9.0.0-beta.6",
+    "@react-three/fiber": "^9.0.0-beta.1",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "framer-motion": "^12.23.24",
@@ -22,7 +21,7 @@
     "react-dom": "19.2.0",
     "recharts": "^3.4.1",
     "tailwind-merge": "^3.4.0",
-    "three": "^0.160.0",
+    "three": "^0.181.2",
     "zustand": "^5.0.8"
   },
   "devDependencies": {
@@ -30,6 +29,7 @@
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "@types/three": "^0.181.0",
     "eslint": "^9",
     "eslint-config-next": "16.0.3",
     "tailwindcss": "^4",
