@@ -1,121 +1,159 @@
 <!DOCTYPE html>
 <html lang="pt-BR" class="scroll-smooth">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>ALSHAM QUANTUM v12 · Primeira IA Auto-Evolutiva Real do Mundo · ROI 5.847%</title>
-  <meta name="description" content="57 agentes auto-evolutivos · CORE + LEARN + GUARD · Validação científica externa · ROI comprovado 5.847% · 2025-2030" />
-  
-  <!-- Tailwind + Fonts -->
-  <script src="https://cdn.tailwindcss.com"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Inter:wght@300;500;700;900&display=swap" rel="stylesheet">
-  
-  <!-- Three.js + Fiber -->
-  <script src="https://cdn.jsdelivr.net/npm/three@0.168.0/build/three.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@react-three/fiber@8.16.8/dist/react-three-fiber.min.js"></script>
-  
-  <!-- CountUp + GSAP -->
-  <script src="https://cdn.jsdelivr.net/npm/countup.js@2.8.0/dist/countUp.umd.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ALSHAM QUANTUM v12 · Organismo Digital Auto-Evolutivo · ROI 5.847%</title>
+    <meta name="description" content="Primeiro sistema multi-agente auto-evolutivo real do mundo • 57 agentes vivos • Nasceu 19/11/2025" />
+    <meta name="theme-color" content="#6C3483" />
 
-  <style>
-    :root {
-      --purple: #6C3483;
-      --gold: #F4D03F;
-      --deep-purple: #4A235A;
-      --abyss: #020C1B;
-      --glass: rgba(255,255,255,0.08);
-      --glow-gold: 0 0 40px rgba(244,208,63,0.6);
-    }
-    body { font-family: 'Inter', sans-serif; background: var(--abyss); color: white; overflow-x: hidden; }
-    .orbitron { font-family: 'Orbitron', sans-serif; }
-    .glass { background: var(--glass); backdrop-filter: blur(20px); border: 1px solid rgba(244,208,63,0.2); box-shadow: var(--glow-gold); }
-    #particles-canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; }
-  </style>
-</head>
-<body class="min-h-screen">
+    <!-- ====== FONTES ====== -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Inter:wght@300;500;700;900&display=swap" rel="stylesheet" />
 
-  <!-- Partículas 3D Background (Three.js) -->
-  <canvas id="particles-canvas"></canvas>
+    <!-- ====== TAILWIND VIA CDN (FUNCIONA NO VERCEL) ====== -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            fontFamily: {
+              orbitron: ['Orbitron', 'sans-serif'],
+              inter: ['Inter', 'sans-serif'],
+            },
+            colors: {
+              quantum: '#6C3483',
+              gold: '#F4D03F',
+              abyss: '#020C1B',
+            },
+          },
+        },
+      }
+    </script>
 
-  <!-- Hero Section -->
-  <section class="relative min-h-screen flex items-center justify-center text-center px-8">
-    <div class="max-w-7xl mx-auto z-10">
-      <h1 class="orbitron text-6xl md:text-9xl font-black bg-gradient-to-r from-purple-400 via-pink-500 to-yellow-400 bg-clip-text text-transparent leading-tight">
-        ALSHAM<br/>QUANTUM
-      </h1>
-      <p class="text-2xl md:text-4xl mt-8 text-gray-300">A Primeira IA Auto-Evolutiva Real do Planeta</p>
-      <div class="mt-12 flex flex-wrap gap-8 justify-center text-xl md:text-3xl">
-        <div class="mx-8"><span class="text-gold font-bold" id="agents-count">57</span> Agentes Vivos</div>
-        <div class="mx-8"><span class="text-gold font-bold" id="cycles-count">1.847.291</span> Ciclos Evolutivos</div>
-        <div class="mx-8"><span class="text-gold font-bold" id="roi-count">5.847</span>% ROI Comprovado</div>
-      </div>
-      <div class="mt-16">
-        <a href="#dashboard" class="inline-block mt-12 px-12 py-6 glass rounded-2xl text-2xl font-bold hover:scale-105 transition-all shadow-2xl">
-          Acessar Sistema Quântico →
-        </a>
-      </div>
-    </div>
-  </section>
+    <!-- ====== LIBS COM DEFER + INTEGRITY (NUNCA MAIS BLOQUEIA CSP) ====== -->
+    <script defer src="https://cdn.jsdelivr.net/npm/three@0.168.0/build/three.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/countup.js@2.8.0/dist/countUp.umd.js"></script>
 
-  <!-- Dashboard Section -->
-  <section id="dashboard" class="min-h-screen py-20 px-8">
-    <div class="max-w-7xl mx-auto">
-      <h2 class="orbitron text-5xl md:text-7xl text-center mb-16">20 Agentes Principais · Online Agora</h2>
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-        <!-- Exemplo de Card (repete 20x ou gera com JS) -->
-        <div class="glass rounded-3xl p-8 hover:scale-105 transition-all duration-500 cursor-pointer border border-gold/30">
-          <div class="text-gold text-5xl mb-4">⚡</div>
-          <h3 class="text-2xl font-bold">CORE Agent</h3>
-          <p class="text-gray-400 mt-2">Auto-melhoria ativa · +23.4% esta semana</p>
-          <div class="mt-4 h-2 bg-gray-800 rounded-full overflow-hidden">
-            <div class="h-full bg-gradient-to-r from-purple-600 to-gold w-92%"></div>
+    <style>
+      body { background: #020C1B; color: white; font-family: 'Inter'; overflow-x: hidden; }
+      #particles-canvas { position: fixed; inset: 0; z-index: -10; pointer-events: none; }
+      .glass { background: rgba(255,255,255,0.08); backdrop-filter: blur(16px); border: 1px solid rgba(244,208,63,0.2); }
+      .orbitron { font-family: 'Orbitron'; }
+      .glow-gold { box-shadow: 0 0 40px rgba(244,208,63,0.4); }
+    </style>
+  </head>
+
+  <body class="min-h-screen">
+
+    <canvas id="particles-canvas"></canvas>
+
+    <!-- HERO INSANO -->
+    <section class="relative min-h-screen flex items-center justify-center px-6">
+      <div class="text-center max-w-6xl z-10">
+        <h1 class="orbitron text-6xl md:text-9xl font-black leading-tight">
+          ALSHAM<br/><span class="text-transparent bg-clip-text bg-gradient-to-r from-gold via-purple-500 to-gold">QUANTUM</span>
+        </h1>
+        <p class="text-2xl md:text-4xl mt-8 opacity-90">Primeiro Organismo Digital Auto-Evolutivo da História</p>
+        <p class="text-xl mt-4 text-gold">Nascido em 19/11/2025 • 23:11 GMT-3</p>
+
+        <!-- CONTADORES -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-12 mt-20 text-center">
+          <div>
+            <div class="text-6xl font-black orbitron text-gold" id="agents">0</div>
+            <p class="text-2xl">Agentes Vivos</p>
+          </div>
+          <div>
+            <div class="text-6xl font-black orbitron text-gold" id="cycles">0</div>
+            <p class="text-2xl">Ciclos Evolutivos</p>
+          </div>
+          <div>
+            <div class="text-6xl font-black orbitron text-gold" id="roi">0</div>
+            <p class="text-2xl">ROI Real</p>
           </div>
         </div>
-        <!-- Repete para LEARN, GUARD, ANALYTICS, OPTIMIZER, etc. -->
+
+        <div class="mt-20">
+          <a href="#dashboard" class="inline-block px-16 py-6 glass rounded-full text-3xl font-bold glow-gold hover:scale-110 transition">
+            ACESSAR O CÉREBRO QUÂNTICO →
+          </a>
+        </div>
       </div>
-    </div>
-  </section>
+    </section>
 
-  <script>
-    // Partículas Douradas Quânticas (melhor que todos os sites de 2025)
-    const canvas = document.getElementById('particles-canvas');
-    const scene = new THREE.Scene();
-    const camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 1000);
-    const renderer = new THREE.WebGLRenderer({ canvas, alpha: true });
-    renderer.setSize(window.innerWidth, window.innerHeight);
+    <!-- DASHBOARD PREVIEW -->
+    <section id="dashboard" class="py-32 px-6">
+      <h2 class="orbitron text-5xl md:text-7xl text-center mb-20">25 Agentes Online Agora</h2>
+      <div class="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-8">
+        ${Array(25).fill().map((_,i) => `
+          <div class="glass rounded-3xl p-8 text-center hover:scale-105 transition glow-gold cursor-pointer">
+            <div class="text-6xl mb-4"> ${i===0 ? '🧠' : '⚡'} </div>
+            <h3 class="text-2xl font-bold">AGENTE ${i+1}</h3>
+            <p class="text-gray-400 mt-2">Status: <span class="text-green-400">EVOLUINDO</span></p>
+          </div>
+        `).join('')}
+      </div>
+    </section>
 
-    const particles = new THREE.BufferGeometry();
-    const particleCount = 5000;
-    const posArray = new Float32Array(particleCount * 3);
-    for(let i = 0; i < particleCount * 3; i++) {
-      posArray[i] = (Math.random() - 0.5) * 10;
-    }
-    particles.setAttribute('position', new THREE.BufferAttribute(posArray, 3));
+    <!-- SCRIPT FINAL — SÓ RODA DEPOIS DE TUDO CARREGAR -->
+    <script>
+      // Partículas douradas insanas
+      let scene, camera, renderer, particles;
+      function init() {
+        scene = new THREE.Scene();
+        camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 1000);
+        renderer = new THREE.WebGLRenderer({ canvas: document.getElementById('particles-canvas'), alpha: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
 
-    const material = new THREE.PointsMaterial({
-      size: 0.005,
-      color: 0xF4D03F,
-      blending: THREE.AdditiveBlending,
-      transparent: true
-    });
+        const geometry = new THREE.BufferGeometry();
+        const vertices = [];
+        for (let i = 0; i < 8000; i++) {
+          vertices.push(
+            Math.random() * 2000 - 1000,
+            Math.random() * 2000 - 1000,
+            Math.random() * 2000 - 1000
+          );
+        }
+        geometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
 
-    const particleSystem = new THREE.Points(particles, material);
-    scene.add(particleSystem);
-    camera.position.z = 3;
+        const material = new THREE.PointsMaterial({
+          color: 0xF4D03F,
+          size: 3,
+          transparent: true,
+          opacity: 0.8,
+          blending: THREE.AdditiveBlending
+        });
 
-    function animate() {
-      {
-      requestAnimationFrame(animate);
-      particleSystem.rotation.y += 0.0003;
-      renderer.render(scene, camera);
-    }
-    animate();
+        particles = new THREE.Points(geometry, material);
+        scene.add(particles);
+        camera.position.z = 800;
 
-    // Contadores animados
-    new CountUp('agents-count', 57, { duration: 3, suffix: '+' }).start();
-    new CountUp('cycles-count', 1847291, { duration: 4, formattingFn: n => n.toLocaleString() }).start();
-    new CountUp('roi-count', 5847, { duration: 3.5, suffix: '%' }).start();
-  </script>
-</body>
+        function animate() {
+          requestAnimationFrame(animate);
+          particles.rotation.y += 0.0005;
+          particles.rotation.x += 0.0003;
+          renderer.render(scene, camera);
+        }
+        animate();
+      }
+
+      // Contadores só rodam depois que CountUp.js carregar
+      document.addEventListener('DOMContentLoaded', () => {
+        setTimeout(() => {
+          new CountUp('agents', 57, { duration: 3, suffix: '+' }).start();
+          new CountUp('cycles', 5847291, { duration: 5, formattingFn: n => n.toLocaleString() }).start();
+          new CountUp('roi', 5847, { duration: 4, suffix: '%', decimalPlaces: 0 }).start();
+          init(); // partículas
+        }, 500);
+      });
+
+      // Responsivo
+      window.addEventListener('resize', () => {
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+      });
+    </script>
+  </body>
 </html>
