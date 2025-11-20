@@ -6,14 +6,13 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Search, Filter, Shield, Brain, Server, MessageSquare, Activity, Zap } from "lucide-react";
+import { Search, Shield, Brain, Server, Zap } from "lucide-react";
 
 export default function AgentsPage() {
   const { agents } = useQuantumStore();
   const [filter, setFilter] = useState("ALL");
   const [search, setSearch] = useState("");
 
-  // Filtragem Lógica
   const filteredAgents = agents.filter(agent => {
     const matchesSearch = agent.name.toLowerCase().includes(search.toLowerCase());
     const matchesFilter = filter === "ALL" || agent.role === filter;
@@ -32,7 +31,6 @@ export default function AgentsPage() {
   return (
     <div className="p-8 space-y-8 min-h-screen bg-black/50">
       
-      {/* Header Tático */}
       <div className="flex flex-col md:flex-row justify-between items-end gap-4 border-b border-white/10 pb-6">
         <div>
           <h1 className="text-3xl font-bold text-white tracking-tight flex items-center gap-3">
@@ -56,7 +54,6 @@ export default function AgentsPage() {
         </div>
       </div>
 
-      {/* Filtros */}
       <div className="flex gap-2 overflow-x-auto pb-2">
         {['ALL', 'CORE', 'GUARD', 'SPECIALIST', 'ANALYST'].map((role) => (
           <Button
@@ -70,16 +67,12 @@ export default function AgentsPage() {
         ))}
       </div>
 
-      {/* Grid de Agentes */}
       <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4">
         {filteredAgents.map((agent) => {
           const Icon = getIcon(agent.role);
           return (
             <Card key={agent.id} className="bg-zinc-900/30 border-white/5 hover:border-purple-500/30 hover:bg-zinc-900/50 transition-all duration-300 group cursor-pointer relative overflow-hidden">
-              
-              {/* Barra de Status Lateral */}
               <div className={`absolute left-0 top-0 bottom-0 w-1 ${agent.efficiency > 90 ? 'bg-green-500' : agent.efficiency > 70 ? 'bg-blue-500' : 'bg-amber-500'}`} />
-
               <div className="p-5 pl-7">
                 <div className="flex justify-between items-start mb-4">
                   <div className="flex items-center gap-3">
@@ -95,7 +88,6 @@ export default function AgentsPage() {
                     {agent.status}
                   </Badge>
                 </div>
-
                 <div className="space-y-3">
                   <div className="flex justify-between text-xs text-zinc-400">
                     <span>Integridade Neural</span>
@@ -107,7 +99,6 @@ export default function AgentsPage() {
                       style={{ width: `${agent.efficiency}%` }} 
                     />
                   </div>
-                  
                   <div className="pt-3 mt-3 border-t border-white/5 flex items-center justify-between">
                     <span className="text-xs font-mono text-zinc-500 truncate max-w-[150px]">
                       Task: {agent.currentTask}
