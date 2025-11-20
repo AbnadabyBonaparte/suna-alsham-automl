@@ -1,0 +1,407 @@
+================ ESTRUTURA DE DIRETÓRIOS ================
+.
+./dependency_installer.py
+./suna_alsham_core
+./suna_alsham_core/core
+./suna_alsham_core/core/__init__.py
+./suna_alsham_core/core/base_agent.py
+./suna_alsham_core/core/message.py
+./suna_alsham_core/core/agent_types.py
+./suna_alsham_core/core/core.py
+./suna_alsham_core/core/quantum_core.py
+./suna_alsham_core/configs 
+./suna_alsham_core/configs /client_default.yaml
+./suna_alsham_core/__init__.py
+./suna_alsham_core/agent_loader.py
+./suna_alsham_core/system.py
+./suna_alsham_core/agents
+./suna_alsham_core/agents/database_agent.py
+./suna_alsham_core/agents/security_guardian_agent.py
+./suna_alsham_core/agents/service_agents.py
+./suna_alsham_core/agents/__init__.py
+./suna_alsham_core/agents/plugin_manager_agent.py
+./suna_alsham_core/agents/visualization_agent.py
+./suna_alsham_core/agents/web_search_agent.py
+./suna_alsham_core/agents/core_agents_v3.py
+./suna_alsham_core/agents/notification_agent.py
+./suna_alsham_core/agents/logging_agent.py
+./suna_alsham_core/agents/debug_agent_creation.py
+./suna_alsham_core/agents/validation_sentinel_agent.py
+./suna_alsham_core/agents/code_corrector_agent.py
+./suna_alsham_core/agents/code_analyzer_agent.py
+./suna_alsham_core/agents/meta_cognitive_agents.py
+./suna_alsham_core/agents/computer_control_agent.py
+./suna_alsham_core/agents/api_gateway_agent.py
+./suna_alsham_core/agents/ai_powered_agents.py
+./suna_alsham_core/agents/real_evolution_engine.py
+./suna_alsham_core/agents/performance_monitor_agent.py
+./suna_alsham_core/agents/agent_registry.py
+./suna_alsham_core/agents/security_enhancements_agent.py
+./suna_alsham_core/agents/disaster_recovery_agent.py
+./suna_alsham_core/agents/system_agents.py
+./suna_alsham_core/agents/deployment_agent.py
+./suna_alsham_core/agents/specialized_agents.py
+./suna_alsham_core/agents/backup_agent.py
+./suna_alsham_core/agents/testing_agent.py
+./suna_alsham_core/agents/structure_analyzer_agent.py
+./suna_alsham_core/quantum_bootstrap.py
+./suna_alsham_core/multi_agent_network.py
+./test_main_direct.py
+./README.md
+./Criar Script de Diagnóstico Completo
+./tests
+./deploy_optimization.py
+./docs
+./docs/DOSSIÊ COMPLETO ALSHAM QUANTUM.md
+./PROJETO_SUNA_ALSHAM.md
+./diagnostico_agentes.py
+./backups
+./backups/backup_catalog.db
+./deployment_report.json
+./emergency_test.py
+./requirements.txt
+./add_agent.sh
+./RAIO_X_SISTEMA.txt
+./PROJETO_SUNA_ALSHAM_V3.md
+./railway.toml
+./fix_missing_modules.py
+./fix_imports.py
+./urgent_fix.py
+./agent_audit.py
+./central
+./central/README.md
+./central/railway.json
+./central/api_routes.py
+./central/server.py
+./central/requirements.txt
+./central/cliente-portal
+./central/cliente-portal/README.md
+./central/cliente-portal/requirements.txt
+./central/cliente-portal/index.html
+./central/cliente-portal/app.py
+./central/index.html
+./central/market_valuation_system.py
+./central/dashboard-metrics
+./central/dashboard-metrics/README.md
+./central/dashboard-metrics/requirements.txt
+./central/dashboard-metrics/index.html
+./central/dashboard-metrics/app.py
+./central/Procfile
+./central/pwa-mobile
+./central/pwa-mobile/README.md
+./central/pwa-mobile/manifest.json
+./central/pwa-mobile/requirements.txt
+./central/pwa-mobile/index.html
+./central/pwa-mobile/service-worker.js
+./central/pwa-mobile/app.py
+./Procfile
+./frontend-alsham
+./frontend-alsham/index.html
+./railway_fix.py
+./create_core_module.py
+./vercel.json
+./deploy.sh
+./start.py
+./suna_alsham
+./suna_alsham/tests
+./suna_alsham/tests/multi_agent_test_suite.py
+./suna_alsham/tests/comprehensive_test_suite.py
+./suna_alsham/tests/results
+./suna_alsham/tests/results/suna_test_results_20250722_113519.json
+./suna_alsham/monitoring
+./suna_alsham/monitoring/real_time_monitoring.py
+./suna_alsham/monitoring/enhanced_monitoring.py
+./suna_alsham/docs
+./suna_alsham/docs/deployment_guide.md
+./suna_alsham/docs/multi_agent_system_documentation.md
+./suna_alsham/demo
+./suna_alsham/demo/multi_agent_demo.py
+./suna_alsham/ai_powered_agents.py
+./suna_alsham/coordination
+./suna_alsham/coordination/multi_agent_coordinator.py
+./suna_alsham/coordination/network_orchestrator.py
+./suna_alsham/multi_agent_network.py
+./suna_alsham/security
+./suna_alsham/security/security_enhancements.py
+./suna_alsham/specialized_agents.py
+./backend
+./backend/init.py
+./frontend-official
+./frontend-official/manifest.json
+./frontend-official/index.html
+./frontend-official/agentes.html
+./runtime.txt
+./LICENSE
+./agent_loader_plugin_aware.py
+./domain_modules
+./domain_modules/__init__.py
+./domain_modules/analytics
+./domain_modules/analytics/predictive_analysis_agent.py
+./domain_modules/analytics/__init__.py
+./domain_modules/analytics/data_processing_agent.py
+./domain_modules/analytics/reporting_visualization_agent.py
+./domain_modules/analytics/analytics_orchestrator_agent.py
+./domain_modules/analytics/data_collector_agent.py
+./domain_modules/sales
+./domain_modules/sales/sales_funnel_agent.py
+./domain_modules/sales/payment_processing_agent.py
+./domain_modules/sales/__init__.py
+./domain_modules/sales/pricing_optimizer_agent.py
+./domain_modules/sales/revenue_optimization_agent.py
+./domain_modules/sales/sales_orchestrator_agent.py
+./domain_modules/sales/customer_success_agent.py
+./domain_modules/suporte
+./domain_modules/suporte/__init__.py
+./domain_modules/suporte/chatbot_agent.py
+./domain_modules/suporte/support_orchestrator_agent.py
+./domain_modules/suporte/ticket_manager_agent.py
+./domain_modules/suporte/satisfaction_analyzer_agent.py
+./domain_modules/suporte/knowledge_base_agent.py
+./domain_modules/social_media
+./domain_modules/social_media/engagement_maximizer_agent.py
+./domain_modules/social_media/__init__.py
+./domain_modules/social_media/social_media_orchestrator_agent.py
+./domain_modules/social_media/content_creator_agent.py
+./domain_modules/social_media/influencer_network_agent.py
+./domain_modules/social_media/video_automation_agent.py
+./app.py
+./Dockerfile
+./config
+
+================ CATÁLOGO DE AGENTES (CÉREBROS) ================
+./suna_alsham_core/core/base_agent.py:class BaseAgent(ABC):
+./suna_alsham_core/core/base_agent.py:class QuantumAgent(BaseAgent):
+./suna_alsham_core/core/base_agent.py:class StandardAgent(BaseAgent):
+./suna_alsham_core/core/base_agent.py:class ServiceAgent(BaseAgent):
+./suna_alsham_core/core/agent_types.py:class AgentType(Enum):
+./suna_alsham_core/core/agent_types.py:class AgentStatus(Enum):
+./suna_alsham_core/core/agent_types.py:class AgentConfig:
+./suna_alsham_core/core/agent_types.py:class AgentMessage:
+./suna_alsham_core/core/agent_types.py:class AgentMetrics:
+./suna_alsham_core/system.py:class MultiAgentNetwork:
+./suna_alsham_core/agents/database_agent.py:class QuantumDatabaseAgent(BaseNetworkAgent):
+./suna_alsham_core/agents/database_agent.py:class QuantumDatabaseAgentTestCase(unittest.TestCase):
+./suna_alsham_core/agents/security_guardian_agent.py:class SecurityGuardianAgent(BaseAgent):
+./suna_alsham_core/agents/security_guardian_agent.py:class BasicSecurityAgent:
+./suna_alsham_core/agents/service_agents.py:class CommunicationAgent(BaseNetworkAgent):
+./suna_alsham_core/agents/service_agents.py:class DecisionAgent(BaseNetworkAgent):
+./suna_alsham_core/agents/plugin_manager_agent.py:class PluginManagerAgent:
+./suna_alsham_core/agents/visualization_agent.py:class VisualizationAgent(BaseNetworkAgent):
+./suna_alsham_core/agents/web_search_agent.py:class WebSearchAgent(BaseNetworkAgent):
+./suna_alsham_core/agents/core_agents_v3.py:class CoreAgent(BaseNetworkAgent):
+./suna_alsham_core/agents/notification_agent.py:class NotificationAgent(BaseNetworkAgent):
+./suna_alsham_core/agents/logging_agent.py:class LoggingAgent(BaseNetworkAgent):
+./suna_alsham_core/agents/debug_agent_creation.py:class DebugMasterAgent(BaseNetworkAgent):
+./suna_alsham_core/agents/validation_sentinel_agent.py:class ValidationSentinelAgent(BaseNetworkAgen
+./suna_alsham_core/agents/code_corrector_agent.py:class CodeCorrectorAgent(BaseNetworkAgent):
+./suna_alsham_core/agents/code_analyzer_agent.py:class CodeAnalyzerAgent(BaseNetworkAgent):
+./suna_alsham_core/agents/meta_cognitive_agents.py:class BaseMetaAgent:
+./suna_alsham_core/agents/meta_cognitive_agents.py:class WorkflowOrchestrator(BaseMetaAgent):
+./suna_alsham_core/agents/meta_cognitive_agents.py:class MetaCognitiveAgent001(BaseMetaAgent):
+./suna_alsham_core/agents/meta_cognitive_agents.py:class MetaCognitiveAgent002(BaseMetaAgent):
+./suna_alsham_core/agents/computer_control_agent.py:class ComputerControlAgent(BaseNetworkAgent):
+./suna_alsham_core/agents/api_gateway_agent.py:class QuantumAPIGatewayAgent(BaseNetworkAgent):
+./suna_alsham_core/agents/ai_powered_agents.py:class QuantumAIAnalyzerAgent(BaseNetworkAgent):
+./suna_alsham_core/agents/real_evolution_engine.py:class RealEvolutionEngine(BaseNetworkAgent):
+./suna_alsham_core/agents/performance_monitor_agent.py:class PerformanceMonitorAgent(BaseAgent):
+./suna_alsham_core/agents/performance_monitor_agent.py:class PerformanceMonitorAgent(BasicPerformanc
+./suna_alsham_core/agents/agent_registry.py:class AgentType(Enum):
+./suna_alsham_core/agents/agent_registry.py:class AgentStatus(Enum):
+./suna_alsham_core/agents/agent_registry.py:class AgentInfo:
+./suna_alsham_core/agents/agent_registry.py:class BaseAgent(ABC):
+./suna_alsham_core/agents/agent_registry.py:class RegistryAgent(BaseAgent):
+./suna_alsham_core/agents/agent_registry.py:class MockAgent(BaseAgent):
+./suna_alsham_core/agents/agent_registry.py:class AgentRegistry:
+./suna_alsham_core/agents/security_enhancements_agent.py:class SecurityEnhancementsAgent(BaseNetwork
+./suna_alsham_core/agents/disaster_recovery_agent.py:class DisasterRecoveryAgent(BaseNetworkAgent):
+./suna_alsham_core/agents/system_agents.py:class MonitorAgent(BaseNetworkAgent):
+./suna_alsham_core/agents/system_agents.py:class ControlAgent(BaseNetworkAgent):
+./suna_alsham_core/agents/system_agents.py:class RecoveryAgent(BaseNetworkAgent):
+./suna_alsham_core/agents/deployment_agent.py:class DeploymentAgent(BaseNetworkAgent):
+./suna_alsham_core/agents/specialized_agents.py:class TaskDelegatorAgent(BaseNetworkAgent):
+./suna_alsham_core/agents/specialized_agents.py:class NewAgentOnboardingAgent(BaseNetworkAgent):
+./suna_alsham_core/agents/backup_agent.py:class BackupAgent(BaseNetworkAgent):
+./suna_alsham_core/agents/testing_agent.py:class QuantumOrchestratorAgent(BaseNetworkAgent):
+./suna_alsham_core/agents/testing_agent.py:class QuantumMetaCognitiveAgent(BaseNetworkAgent):
+./suna_alsham_core/agents/structure_analyzer_agent.py:class StructureAnalyzerAgent(BaseNetworkAgent)
+./suna_alsham_core/multi_agent_network.py:class AgentType(Enum):
+./suna_alsham_core/multi_agent_network.py:class AgentMessage:
+./suna_alsham_core/multi_agent_network.py:class AgentConnectionInfo:
+./suna_alsham_core/multi_agent_network.py:class MultiAgentNetwork:
+./suna_alsham_core/multi_agent_network.py:class BaseNetworkAgent:
+./suna_alsham_core/multi_agent_network.py:class NetworkManagerAgent(BaseNetworkAgent):
+./agent_audit.py:class AgentAuditor:
+./central/api_routes.py:class MarketValuationAgent:
+./central/market_valuation_system.py:class MarketValuationAgent:
+./suna_alsham/tests/multi_agent_test_suite.py:class MultiAgentTestSuite:
+./suna_alsham/monitoring/enhanced_monitoring.py:class AgentMetrics:
+./suna_alsham/demo/multi_agent_demo.py:class MultiAgentDemo:
+./suna_alsham/ai_powered_agents.py:class AIAgent:
+./suna_alsham/ai_powered_agents.py:class IntelligentAnalyzer(AIAgent):
+./suna_alsham/ai_powered_agents.py:class SmartOptimizer(AIAgent):
+./suna_alsham/ai_powered_agents.py:class ConversationalAgent(AIAgent):
+./suna_alsham/coordination/multi_agent_coordinator.py:class MultiAgentCoordinator(BaseNetworkAgent):
+./suna_alsham/coordination/network_orchestrator.py:class AgentLoad:
+./suna_alsham/multi_agent_network.py:class MultiAgentNetwork:
+./suna_alsham/specialized_agents.py:class BaseSpecializedAgent:
+./suna_alsham/specialized_agents.py:class AnalyticsAgent(BaseSpecializedAgent):
+./suna_alsham/specialized_agents.py:class OptimizerAgent(BaseSpecializedAgent):
+./suna_alsham/specialized_agents.py:class CoordinatorAgent(BaseSpecializedAgent):
+./agent_loader_plugin_aware.py:class PluginAwareAgentLoader:
+./domain_modules/analytics/predictive_analysis_agent.py:class PredictiveAnalysisAgent(BaseNetworkAge
+./domain_modules/analytics/data_processing_agent.py:class DataProcessingAgent(BaseNetworkAgent):
+./domain_modules/analytics/reporting_visualization_agent.py:class ReportingVisualizationAgent(BaseNe
+./domain_modules/analytics/analytics_orchestrator_agent.py:class AnalyticsOrchestratorAgent(BaseNetw
+./domain_modules/analytics/data_collector_agent.py:class DataCollectorAgent(BaseNetworkAgent):
+./domain_modules/sales/sales_funnel_agent.py:class BaseNetworkAgent:
+./domain_modules/sales/sales_funnel_agent.py:class SalesFunnelAgent(BaseNetworkAgent):
+./domain_modules/sales/payment_processing_agent.py:class BaseNetworkAgent:
+./domain_modules/sales/payment_processing_agent.py:class PaymentProcessingAgent(BaseNetworkAgent):
+./domain_modules/sales/pricing_optimizer_agent.py:class BaseNetworkAgent:
+./domain_modules/sales/pricing_optimizer_agent.py:class PricingOptimizerAgent(BaseNetworkAgent):
+./domain_modules/sales/revenue_optimization_agent.py:class BaseNetworkAgent:
+./domain_modules/sales/revenue_optimization_agent.py:class RevenueOptimizationAgent(BaseNetworkAgent
+./domain_modules/sales/sales_orchestrator_agent.py:class BaseNetworkAgent:
+./domain_modules/sales/sales_orchestrator_agent.py:class AgentSpecialty(Enum):
+./domain_modules/sales/sales_orchestrator_agent.py:class SalesOrchestratorAgent(BaseNetworkAgent):
+./domain_modules/sales/customer_success_agent.py:class BaseNetworkAgent:
+./domain_modules/sales/customer_success_agent.py:class CustomerSuccessAgent(BaseNetworkAgent):
+./domain_modules/suporte/chatbot_agent.py:class BaseNetworkAgent:
+./domain_modules/suporte/chatbot_agent.py:class ChatbotAgent(BaseNetworkAgent):
+./domain_modules/suporte/support_orchestrator_agent.py:class BaseNetworkAgent:
+./domain_modules/suporte/support_orchestrator_agent.py:class SupportOrchestratorAgent(BaseNetworkAge
+./domain_modules/suporte/ticket_manager_agent.py:class BaseNetworkAgent:
+./domain_modules/suporte/ticket_manager_agent.py:class TicketManagerAgent(BaseNetworkAgent):
+./domain_modules/suporte/satisfaction_analyzer_agent.py:class BaseNetworkAgent:
+./domain_modules/suporte/satisfaction_analyzer_agent.py:class SatisfactionAnalyzerAgent(BaseNetworkA
+./domain_modules/suporte/knowledge_base_agent.py:class BaseNetworkAgent:
+./domain_modules/suporte/knowledge_base_agent.py:class KnowledgeBaseAgent(BaseNetworkAgent):
+./domain_modules/social_media/engagement_maximizer_agent.py:class BaseNetworkAgent:
+./domain_modules/social_media/engagement_maximizer_agent.py:class EngagementMaximizerAgent(BaseNetwo
+./domain_modules/social_media/social_media_orchestrator_agent.py:class BaseNetworkAgent:
+./domain_modules/social_media/social_media_orchestrator_agent.py:class AgentCapability:
+./domain_modules/social_media/social_media_orchestrator_agent.py:class SocialMediaOrchestratorAgent(
+./domain_modules/social_media/content_creator_agent.py:class BaseNetworkAgent:
+./domain_modules/social_media/content_creator_agent.py:class ContentCreatorAgent(BaseNetworkAgent):
+./domain_modules/social_media/influencer_network_agent.py:class BaseNetworkAgent:
+./domain_modules/social_media/influencer_network_agent.py:class InfluencerNetworkAgent(BaseNetworkAg
+./domain_modules/social_media/video_automation_agent.py:class BaseNetworkAgent:
+./domain_modules/social_media/video_automation_agent.py:class VideoAutomationAgent(BaseNetworkAgent)
+
+================ ORQUESTRADORES E CORE ================
+./suna_alsham_core/agents/meta_cognitive_agents.py:Orchestrator + MetaCognitive_001 + MetaCognitive_
+./suna_alsham_core/agents/meta_cognitive_agents.py:class WorkflowOrchestrator(BaseMetaAgent):
+./suna_alsham_core/agents/meta_cognitive_agents.py:    - Orchestrator (coordenação)
+./suna_alsham_core/agents/meta_cognitive_agents.py:        orchestrator = WorkflowOrchestrator(confi
+./suna_alsham_core/agents/meta_cognitive_agents.py:        print(f"✅ Orchestrator criado: {orchest
+./suna_alsham_core/agents/meta_cognitive_agents.py:        print("🧠 Sistema meta-cognitivo comple
+./suna_alsham_core/agents/meta_cognitive_agents.py:            basic_orchestrator = WorkflowOrchestr
+./suna_alsham_core/agents/testing_agent.py:class QuantumOrchestratorAgent(BaseNetworkAgent):
+./suna_alsham_core/agents/testing_agent.py:        logger.info(f"👑 {self.agent_id} (Quantum Orche
+./suna_alsham_core/agents/testing_agent.py:        logger.debug(f"👑 [Quantum Orchestrator] Mensag
+./suna_alsham_core/agents/testing_agent.py:        logger.info(f"👑 [Quantum Orchestrator] Nova Mi
+./suna_alsham_core/agents/testing_agent.py:        logger.info(f"🧠 [Quantum Orchestrator] Inician
+./suna_alsham_core/agents/testing_agent.py:            logger.error(f"❌ [Quantum Orchestrator] Pla
+./suna_alsham_core/agents/testing_agent.py:        logger.info(f"🧠 [Quantum Orchestrator] Plano r
+./suna_alsham_core/agents/testing_agent.py:        logger.info(f"🔧 [Quantum Orchestrator] Executa
+./suna_alsham_core/agents/testing_agent.py:            logger.info(f"✅ [Quantum Orchestrator] Pass
+./suna_alsham_core/agents/testing_agent.py:            logger.info(f"✅ [Quantum Orchestrator] Miss
+./suna_alsham_core/agents/testing_agent.py:            logger.error(f"❌ [Quantum Orchestrator] Mis
+./suna_alsham_core/agents/testing_agent.py:            logger.info(f"📊 [Quantum Orchestrator] Dad
+./suna_alsham_core/agents/testing_agent.py:        # Busca métricas reais do QuantumOrchestratorAge
+./suna_alsham_core/agents/testing_agent.py:        # Supondo que o Orchestrator publica métricas pe
+./suna_alsham_core/agents/testing_agent.py:    This function instantiates the QuantumOrchestratorAge
+./suna_alsham_core/agents/testing_agent.py:        orchestrator = QuantumOrchestratorAgent("orchestr
+./agent_audit.py:            'core_agents_v3.py': ['CoreOrchestratorAgent', 'MetaLearningAgent'],
+./agent_audit.py:            'workflow_orchestrator_agent.py': ['WorkflowOrchestratorAgent'],
+./central/api_routes.py:                ("workflow_orchestrator_001", "Workflow Orchestrator", "Orqu
+./central/dashboard-metrics/app.py:        {'id': 'orchestrator_001', 'name': 'Supreme Orchestrator'
+./suna_alsham/tests/multi_agent_test_suite.py:from network_orchestrator import NetworkOrchestrator
+./suna_alsham/demo/multi_agent_demo.py:from network_orchestrator import NetworkOrchestrator
+./suna_alsham/demo/multi_agent_demo.py:            self.orchestrator = NetworkOrchestrator()
+./suna_alsham/coordination/network_orchestrator.py:🎼 SUNA-ALSHAM Network Orchestrator
+./suna_alsham/coordination/network_orchestrator.py:class NetworkOrchestrator:
+./suna_alsham/coordination/network_orchestrator.py:            title="SUNA-ALSHAM Network Orchestrat
+./suna_alsham/coordination/network_orchestrator.py:            return {"message": "SUNA-ALSHAM Netwo
+./suna_alsham/coordination/network_orchestrator.py:        logger.info("🎼 Iniciando Network Orche
+./suna_alsham/coordination/network_orchestrator.py:        logger.info("✅ Network Orchestrator ini
+./suna_alsham/coordination/network_orchestrator.py:        logger.info("⏹️ Parando Network Orche
+./suna_alsham/coordination/network_orchestrator.py:        logger.info("✅ Network Orchestrator par
+./suna_alsham/coordination/network_orchestrator.py:    orchestrator = NetworkOrchestrator()
+./domain_modules/analytics/analytics_orchestrator_agent.py:Analytics Orchestrator Agent - Orquestrad
+./domain_modules/analytics/analytics_orchestrator_agent.py:class AnalyticsOrchestratorAgent(BaseNetw
+./domain_modules/analytics/analytics_orchestrator_agent.py:        logger.info(f"🧠 {self.agent_id
+./domain_modules/analytics/analytics_orchestrator_agent.py:    Factory function para criar o Analyti
+./domain_modules/analytics/analytics_orchestrator_agent.py:        List[BaseNetworkAgent]: Lista con
+./domain_modules/analytics/analytics_orchestrator_agent.py:        logger.info("🧠 [Factory] Crian
+./domain_modules/analytics/analytics_orchestrator_agent.py:        agent = AnalyticsOrchestratorAgen
+./domain_modules/analytics/analytics_orchestrator_agent.py:        logger.info(f"✅ AnalyticsOrches
+./domain_modules/analytics/analytics_orchestrator_agent.py:        logger.critical(f"❌ Erro ao cri
+./domain_modules/sales/sales_orchestrator_agent.py:ALSHAM QUANTUM - Sales Orchestrator Agent (Sales 
+./domain_modules/sales/sales_orchestrator_agent.py:class SalesOrchestratorAgent(BaseNetworkAgent):
+./domain_modules/sales/sales_orchestrator_agent.py:        super().__init__("sales_orchestrator_agen
+./domain_modules/sales/sales_orchestrator_agent.py:        self.logger.info("Sales Orchestrator Agen
+./domain_modules/sales/sales_orchestrator_agent.py:def create_agents() -> List[SalesOrchestratorAgen
+./domain_modules/sales/sales_orchestrator_agent.py:    Retorna lista de agentes Sales Orchestrator p
+./domain_modules/sales/sales_orchestrator_agent.py:    return [SalesOrchestratorAgent()]
+./domain_modules/sales/sales_orchestrator_agent.py:    """Inicializa o agente Sales Orchestrator"""
+./domain_modules/sales/sales_orchestrator_agent.py:    return SalesOrchestratorAgent()
+./domain_modules/sales/sales_orchestrator_agent.py:        agent = SalesOrchestratorAgent()
+./domain_modules/sales/sales_orchestrator_agent.py:        print("Teste Sales Orchestrator Agent - R
+./domain_modules/sales/sales_orchestrator_agent.py:        print("\nTeste Sales Orchestrator Agent -
+./domain_modules/sales/sales_orchestrator_agent.py:        print("\nTeste Sales Orchestrator Agent -
+./domain_modules/suporte/__init__.py:from .support_orchestrator_agent import SupportOrchestratorAgen
+./domain_modules/suporte/__init__.py:        "name": "SupportOrchestratorAgent",
+./domain_modules/suporte/__init__.py:        "class": SupportOrchestratorAgent,
+./domain_modules/suporte/__init__.py:        "description": "Support System Orchestrator Agent",
+./domain_modules/suporte/__init__.py:        # 1. Support Orchestrator Agent
+./domain_modules/suporte/__init__.py:        logger.info("🎯 Criando Support Orchestrator Agent...
+./domain_modules/suporte/__init__.py:        orchestrator_agent = SupportOrchestratorAgent(
+./domain_modules/suporte/__init__.py:        logger.info("✅ Support Orchestrator Agent criado com 
+./domain_modules/suporte/__init__.py:    'SupportOrchestratorAgent',
+./domain_modules/suporte/support_orchestrator_agent.py:ALSHAM QUANTUM - Support Orchestrator Agent
+./domain_modules/suporte/support_orchestrator_agent.py:class SupportOrchestratorAgent(BaseNetworkAge
+./domain_modules/suporte/support_orchestrator_agent.py:        logger.info(f"✅ Support Orchestrato
+./domain_modules/suporte/support_orchestrator_agent.py:        support_orchestrator_agent = SupportO
+./domain_modules/suporte/support_orchestrator_agent.py:        logger.info("✅ Support Orchestrator
+./domain_modules/suporte/support_orchestrator_agent.py:        logger.error(f"❌ Erro ao criar Supp
+./domain_modules/suporte/support_orchestrator_agent.py:        print("🧪 Testando Support Orchestr
+./domain_modules/suporte/support_orchestrator_agent.py:        print(f"🎯 Support Orchestrator Age
+./domain_modules/social_media/social_media_orchestrator_agent.py:Social Media Orchestrator Agent - A
+./domain_modules/social_media/social_media_orchestrator_agent.py:class SocialMediaOrchestratorAgent(
+./domain_modules/social_media/social_media_orchestrator_agent.py:        self.logger.info("🎭 Soci
+./domain_modules/social_media/social_media_orchestrator_agent.py:        'social_media_orchestrator'
+./domain_modules/social_media/social_media_orchestrator_agent.py:    logger.info(f"🎭 Social Media
+./domain_modules/social_media/social_media_orchestrator_agent.py:    'SocialMediaOrchestratorAgent',
+./domain_modules/social_media/social_media_orchestrator_agent.py:        agent = SocialMediaOrchestr
+
+================ ROTAS E ENDPOINTS ================
+./central/server.py:@app.route('/')
+./central/server.py:@app.route('/static/<path:path>')
+./central/server.py:@app.route('/health')
+./central/cliente-portal/app.py:@app.route('/')
+./central/cliente-portal/app.py:@app.route('/health')
+./central/cliente-portal/app.py:@app.route('/api/roi/calculate', methods=['POST'])
+./central/cliente-portal/app.py:@app.route('/api/demo/scenario', methods=['POST'])
+./central/cliente-portal/app.py:@app.route('/api/contact/submit', methods=['POST'])
+./central/cliente-portal/app.py:@app.route('/api/metrics/conversion')
+./central/cliente-portal/app.py:@app.route('/api/pricing/plans')
+./central/dashboard-metrics/app.py:@app.route('/')
+./central/dashboard-metrics/app.py:@app.route('/api/health')
+./central/dashboard-metrics/app.py:@app.route('/api/metrics')
+./central/dashboard-metrics/app.py:@app.route('/api/agents/')
+./central/dashboard-metrics/app.py:@app.route('/api/autoevolution/status')
+./central/dashboard-metrics/app.py:@app.route('/api/logs')
+./central/pwa-mobile/app.py:@app.route('/')
+./central/pwa-mobile/app.py:@app.route('/manifest.json')
+./central/pwa-mobile/app.py:@app.route('/sw.js')
+./central/pwa-mobile/app.py:@app.route('/api/mobile/agents')
+./central/pwa-mobile/app.py:@app.route('/api/mobile/metrics')
+./central/pwa-mobile/app.py:@app.route('/api/mobile/agent/')
+./central/pwa-mobile/app.py:@app.route('/api/mobile/refresh', methods=['POST'])
+./central/pwa-mobile/app.py:@app.route('/api/mobile/themes')
+./central/pwa-mobile/app.py:@app.route('/health')
+./app.py:@app.route('/')
+./app.py:@app.route('/agentes')
+./app.py:@app.route('/manifest.json')
+./app.py:@app.route('/<path:path>')

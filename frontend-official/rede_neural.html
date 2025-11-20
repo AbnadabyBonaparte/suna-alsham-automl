@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Suna Alsham | Neural Map</title>
+    
+    <!-- Security & Libs -->
+    <meta http-equiv="Content-Security-Policy" content="default-src * 'unsafe-inline' 'unsafe-eval' data: blob:;">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Vis.js (Biblioteca de Redes) -->
+    <script type="text/javascript" src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"></script>
+
+    <style>
+        body { background-color: #000000; color: #e2e8f0; margin: 0; overflow: hidden; }
+        #network-container { width: 100vw; height: 100vh; background: radial-gradient(circle, #0f172a 0%, #000000 100%); }
+        .hud-panel { position: absolute; z-index: 10; background: rgba(0, 0, 0, 0.7); border: 1px solid #333; backdrop-filter: blur(5px); }
+    </style>
+</head>
+<body>
+
+    <!-- Botão Voltar -->
+    <a href="/" class="absolute top-5 left-5 z-20 bg-blue-600 hover:bg-blue-700 text-white p-3 rounded-full shadow-lg transition">
+        <i class="fa-solid fa-arrow-left"></i>
+    </a>
+
+    <!-- HUD Superior -->
+    <div class="hud-panel top-5 right-5 p-4 rounded-lg text-right">
+        <h1 class="text-2xl font-bold text-blue-400 tracking-widest">NEURAL MAP v3.0</h1>
+        <p class="text-xs text-gray-400">VISUALIZAÇÃO DE TOPOLOGIA DE AGENTES</p>
+        <div class="mt-2 text-green-400 text-sm"><i class="fa-solid fa-circle-nodes animate-pulse"></i> 57 Nodes Active</div>
+    </div>
+
+    <!-- HUD Inferior (Legenda) -->
+    <div class="hud-panel bottom-5 left-5 p-4 rounded-lg">
+        <div class="flex gap-4 text-xs">
+            <div class="flex items-center"><span class="w-3 h-3 rounded-full bg-red-500 mr-2"></span> Core</div>
+            <div class="flex items-center"><span class="w-3 h-3 rounded-full bg-blue-500 mr-2"></span> Domain</div>
+            <div class="flex items-center"><span class="w-3 h-3 rounded-full bg-green-500 mr-2"></span> Agent</div>
+            <div class="flex items-center"><span class="w-3 h-3 rounded-full bg-purple-500 mr-2"></span> Creative</div>
+        </div>
+    </div>
+
+    <!-- Container da Rede -->
+    <div id="network-container"></div>
+
+    <script>
+        // Configuração da Rede
+        async function initNetwork() {
+            const container = document.getElementById('network-container');
+            
+            // Busca dados da API Python
+            try {
+                const response = await fetch('/api/network/map');
+                const data = await response.json();
+                
+                const nodes = new vis.DataSet(data.nodes.map(n => {
+                    // Estilização baseada no grupo
+                    let color = '#97c2fc';
+                    if(n.group === 'core') color = '#ef4444';
+                    if(n.group === 'domain') color = '#3b82f6';
+                    if(n.group === 'manager') color = '#f59e0b';
+                    if(n.group === 'security') color = '#6366f1';
+                    if(n.group === 'worker') color = '#10b981';
+                    
+                    return {
+                        id: n.id,
+                        label: n.label,
+                        title: n.title,
+                        value: n.value,
+                        color: { background: color, border: '#ffffff' },
+                        shape: 'dot',
+                        font: { color: '#ffffff', face: 'monospace' }
+                    };
+                }));
+
+                const edges = new vis.DataSet(data.edges.map(e => ({
+                    from: e.from,
+                    to: e.to,
+                    color: { color: 'rgba(255,255,255,0.1)' },
+                    smooth: { type: 'continuous' }
+                })));
+
+                const options = {
+                    nodes: {
+                        shape: 'dot',
+                        scaling: { min: 10, max: 30 }
+                    },
+                    physics: {
+                        stabilization: false,
+                        barnesHut: {
+                            gravitationalConstant: -8000,
+                            springConstant: 0.04,
+                            springLength: 95
+                        }
+                    },
+                    interaction: { hover: true, tooltipDelay: 200 }
+                };
+
+                const network = new vis.Network(container, { nodes, edges }, options);
+                
+                // Efeito de clique
+                network.on("click", function (params) {
+                    if(params.nodes.length > 0) {
+                        console.log("Agente selecionado:", params.nodes[0]);
+                    }
+                });
+
+            } catch (e) {
+                console.error("Erro ao carregar rede:", e);
+                container.innerHTML = "<div class='text-white p-10'>Erro ao carregar visualização neural. Verifique a API.</div>";
+            }
+        }
+
+        initNetwork();
+    </script>
+</body>
+</html>
