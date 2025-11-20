@@ -7,15 +7,18 @@ import * as random from "maath/random/dist/maath-random.esm";
 
 function Stars(props: any) {
   const ref = useRef<any>();
+  
+  // FIX: Usando 6000 (Múltiplo de 3) para garantir vetores X,Y,Z completos e evitar NaN
   const sphere = useMemo(() => {
     // @ts-ignore
-    return random.inSphere(new Float32Array(5000), { radius: 1.5 }) as Float32Array;
+    return random.inSphere(new Float32Array(6000), { radius: 1.5 }) as Float32Array;
   }, []);
 
   useFrame((state, delta) => {
     if (ref.current) {
-      ref.current.rotation.x -= delta / 10;
-      ref.current.rotation.y -= delta / 15;
+      // Rotação suave
+      ref.current.rotation.x -= delta / 15;
+      ref.current.rotation.y -= delta / 20;
     }
   });
 
@@ -25,7 +28,7 @@ function Stars(props: any) {
         <PointMaterial
           transparent
           color="#F4D03F"
-          size={0.002}
+          size={0.003}
           sizeAttenuation={true}
           depthWrite={false}
         />
@@ -36,7 +39,7 @@ function Stars(props: any) {
 
 export default function ParticleField() {
   return (
-    <div className="absolute inset-0 -z-10 h-full w-full">
+    <div className="absolute inset-0 -z-10 h-full w-full bg-[#020C1B]">
       <Canvas camera={{ position: [0, 0, 1] }}>
         <Stars />
       </Canvas>
