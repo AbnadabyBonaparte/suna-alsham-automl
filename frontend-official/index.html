@@ -25,10 +25,10 @@
         .glass { backdrop-filter: blur(16px); background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.1); }
         #particles-canvas { position: fixed; inset: 0; z-index: -10; }
         .theme-luxury-glass { background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%); }
-        .theme-quantum-void { background: linear-gradient(135deg, #000 0%, #1a0033 50%, #330066 100%); }
-        .theme-executive-gold { background: radial-gradient(circle at center, #2C1810, #0A0A0A); }
-        .theme-neural-red { background: linear-gradient(135deg, #0C0C0C 0%, #1A0000 100%); }
-        .theme-platinum-elite { background: conic-gradient(from 45deg, #111, #333, #111); }
+        .theme-luxury-glass { background: linear-gradient(135deg, #000 0%, #1a0033 50%, #330066 100%); }
+        .theme-luxury-glass { background: radial-gradient(circle at center, #2C1810, #0A0A0A); }
+        .theme-luxury-glass { background: linear-gradient(135deg, #0C0C0C 0%, #1A0000 100%); }
+        .theme-luxury-glass { background: conic-gradient(from 45deg, #111, #333, #111); }
     </style>
 </head>
 <body class="min-h-screen text-white theme-luxury-glass transition-all duration-1000">
@@ -92,7 +92,7 @@
                 vertices.push(Math.random()*2000-1000, Math.random()*2000-1000, Math.random()*2000-1000);
             }
             geometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
-            const material = new THREE.PointsMaterial({ color: 0xF4D03F, size: 3, transparent: true, opacity: 0.8, blending: THREE.AdditiveBlending });
+            const material = new THREE.PointsMaterial({ color: 0xFFFF00, size: 5, transparent: true, opacity: 1.0, blending: THREE.AdditiveBlending });
             particles = new THREE.Points(geometry, material);
             scene.add(particles);
             camera.position.z = 500;
