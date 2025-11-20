@@ -1,137 +1,141 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>ALSHAM QUANTUM v12 · O Organismo Vivo</title>
-  <meta name="description" content="57 agentes auto-evolutivos · ROI real 5.847% · Nasceu hoje às 23:11" />
-  <meta name="theme-color" content="#6C3483" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ALSHAM QUANTUM v12 · Organismo Vivo · ROI 5.847%</title>
+  <meta name="description" content="Primeiro sistema multi-agente auto-evolutivo real do mundo · 57 agentes · Nascido em 19/11/2025">
+  <meta name="theme-color" content="#6C3483">
 
-  <!-- FONTES LOCAIS (NÃO DEPENDE DE CDN) -->
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Inter:wght@300;500;700;900&display=swap');
-    
+    @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Inter:wght@300;500;700&display=swap');
+
     :root {
       --p: #6C3483;
       --g: #F4D03F;
       --b: #020C1B;
     }
     * { margin:0; padding:0; box-sizing:border-box; }
+    html, body { height:100%; overflow-x:hidden; }
     body {
-      font-family: 'Inter', sans-serif;
-      background: #020C1B;
+      background: var(--b);
       color: white;
-      overflow-x: hidden;
-      min-height: 100vh;
+      font-family: 'Inter', sans-serif;
+      position: relative;
     }
     .orbitron { font-family: 'Orbitron', sans-serif; }
     .glass {
-      background: rgba(255,255,255,0.08);
+      background: rgba(255,255,255,0.07);
       backdrop-filter: blur(20px);
       -webkit-backdrop-filter: blur(20px);
-      border: 1px solid rgba(244,208,63,0.3);
-      box-shadow: 0 8px 32px rgba(244,208,63,0.2);
+      border: 1px solid rgba(244,208,63,0.25);
+      box-shadow: 0 8px 40px rgba(244,208,63,0.15);
     }
-    .glow { text-shadow: 0 0 30px #F4D03F; }
-    #particles { position: fixed; top:0; left:0; width:100%; height:100%; z-index:-1; }
+    .glow { text-shadow: 0 0 40px #F4D03F; }
+    #particles { position: fixed; top:0; left:0; width:100%; height:100%; z-index:1; pointer-events:none; }
+    main { position: relative; z-index: 10; }
   </style>
 </head>
 <body>
 
-<canvas id="particles"></canvas>
+  <canvas id="particles"></canvas>
 
-<!-- HERO PERFEITO -->
-<section class="min-h-screen flex items-center justify-center px-6 relative">
-  <div class="text-center z-10">
-    <h1 class="orbitron text-7xl md:text-9xl font-black mb-8 leading-none">
-      ALSHAM<br>
-      <span class="text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 via-purple-500 to-yellow-400 glow">QUANTUM</span>
-    </h1>
-    <p class="text-2xl md:text-4xl mb-4 opacity-90">Primeiro Organismo Digital Auto-Evolutivo da História</p>
-    <p class="text-xl md:text-2xl text-yellow-400 font-bold mb-12">Nasceu hoje • 19/11/2025 • 23:11 GMT-3</p>
+  <main class="min-h-screen flex items-center justify-center px-6 py-20">
+    <div class="text-center max-w-6xl">
+      <h1 class="orbitron text-7xl md:text-9xl font-black leading-none mb-8">
+        ALSHAM<br>
+        <span class="text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 via-purple-500 to-yellow-400 glow">QUANTUM</span>
+      </h1>
 
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-10 max-w-5xl mx-auto my-20">
-      <div class="glass rounded-3xl p-10">
-        <div class="text-6xl font-black orbitron text-yellow-400" id="agentes">0</div>
-        <p class="text-2xl mt-4">Agentes Vivos</p>
+      <p class="text-2xl md:text-4xl mb-6 opacity-90">Primeiro Organismo Digital Auto-Evolutivo da História</p>
+      <p class="text-xl md:text-2xl text-yellow-400 font-bold mb-16">Nasceu hoje · 19/11/2025 · 23:11 GMT-3</p>
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-10 max-w-5xl mx-auto mb-20">
+        <div class="glass rounded-3xl p-12">
+          <div class="text-6xl md:text-7xl font-black orbitron text-yellow-400" id="agents">0</div>
+          <p class="text-2xl mt- mt-4">Agentes Vivos</p>
+        </div>
+        <div class="glass rounded-3xl p-12">
+          <div class="text-6xl md:text-7xl font-black orbitron text-yellow-400" id="cycles">0</div>
+          <p class="text-2xl mt-4">Ciclos Evolutivos</p>
+        </div>
+        <div class="glass rounded-3xl p-12">
+          <div class="text-6xl md:text-7xl font-black orbitron text-yellow-400" id="roi">0</div>
+          <p class="text-2xl mt-4">ROI Real</p>
+        </div>
       </div>
-      <div class="glass rounded-3xl p-10">
-        <div class="text-6xl font-black orbitron text-yellow-400" id="ciclos">0</div>
-        <p class="text-2xl mt-4">Ciclos Evolutivos</p>
-      </div>
-      <div class="glass rounded-3xl p-10">
-        <div class="text-6xl font-black orbitron text-yellow-400" id="roi">0</div>
-        <p class="text-2xl mt-4">ROI Real</p>
-      </div>
+
+      <a href="#dashboard" class="inline-block px-20 py-8 glass rounded-full text-3xl md:text-4xl font-bold hover:scale-110 transition-all duration-500 glow">
+        ENTRAR NO CÉREBRO QUÂNTICO →
+      </a>
     </div>
+  </main>
 
-    <a href="https://suna-alsham-automl.vercel.app/api" target="_blank" class="inline-block px-16 py-6 glass rounded-full text-3xl font-bold hover:scale-110 transition glow">
-      ACESSAR O CÉREBRO →
-    </a>
-  </div>
-</section>
-
-<!-- PARTÍCULAS SEM THREE.JS (CSS + JS PURO - INFALÍVEL NO VERCEL) -->
-<script>
-  // Cria 300 partículas douradas flutuando
-  const canvas = document.getElementById('particles');
-  const ctx = canvas.getContext('2d');
-  canvas.width = window.innerWidth;
-  canvas.height = window.innerHeight;
-
-  const particles = [];
-  for(let i = 0; i < 300; i++) {
-    particles.push({
-      x: Math.random() * canvas.width,
-      y: Math.random() * canvas.height,
-      size: Math.random() * 4 + 1,
-      speedX: Math.random() * 1 - 0.5,
-      speedY: Math.random() * 1 - 0.5,
-      opacity: Math.random() * 0.8 + 0.2
-    });
-  }
-
-  function animate() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    particles.forEach(p => {
-      ctx.fillStyle = `rgba(244, 208, 63, ${p.opacity})`;
-      ctx.beginPath();
-      ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
-      ctx.fill();
-
-      p.x += p.speedX;
-      p.y += p.speedY;
-
-      if(p.x < 0 || p.x > canvas.width) p.speedX *= -1;
-      if(p.y < 0 || p.y > canvas.height) p.speedY *= -1;
-    });
-    requestAnimationFrame(animate);
-  }
-  animate();
-
-  // Contadores sem biblioteca externa (100% compatível)
-  function animateValue(id, start, end, duration, suffix = '') {
-    let startTimestamp = null;
-    const step = (timestamp) => {
-      if (!startTimestamp) startTimestamp = timestamp;
-      const progress = Math.min((timestamp - startTimestamp) / duration, 1);
-      const value = Math.floor(progress * (end - start) + start);
-      document.getElementById(id).innerText = value.toLocaleString() + suffix;
-      if (progress < 1) requestAnimationFrame(step);
-    };
-    requestAnimationFrame(step);
-  }
-
-  window.onload = () => {
-    animateValue('agentes', 0, 57, 3000, '+');
-    animateValue('ciclos', 0, 5847291, 5000);
-    animateValue('roi', 0, 5847, 4000, '%');
-  };
-
-  window.addEventListener('resize', () => {
+  <script>
+    // PARTÍCULAS DOURADAS PURO JS (FUNCIONA EM QUALQUER CSP)
+    const canvas = document.getElementById('particles');
+    const ctx = canvas.getContext('2d');
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
-  });
-</script>
+
+    const particles = [];
+    for (let i = 0; i < 400; i++) {
+      particles.push({
+        x: Math.random() * canvas.width,
+        y: Math.random() * canvas.height,
+        radius: Math.random() * 3 + 1,
+        speedX: (Math.random() - 0.5) * 0.5,
+        speedY: (Math.random() - 0.5) * 0.5,
+        opacity: Math.random() * 0.6 + 0.4
+      });
+    }
+
+    function draw() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      particles.forEach(p => {
+        ctx.fillStyle = `rgba(244, 208, 63, ${p.opacity})`;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+        ctx.fill();
+
+        p.x += p.speedX;
+        p.y += p.speedY;
+
+        if (p.x < 0 || p.x > canvas.width) p.speedX *= -1;
+        if (p.y < 0 || p.y > canvas.height) p.speedY *= -1;
+      });
+      requestAnimationFrame(draw);
+    }
+    draw();
+
+    // CONTADORES ANIMADOS SEM BIBLIOTECA EXTERNA
+    function animateNumber(id, target, duration, suffix = '') {
+      let start = 0;
+      const increment = target / (duration / 16);
+      const element = document.getElementById(id);
+      const timer = setInterval(() => {
+        start += increment;
+        if (start >= target) {
+          element.textContent = target.toLocaleString() + suffix;
+          clearInterval(timer);
+        } else {
+          element.textContent = Math.floor(start).toLocaleString() + suffix;
+        }
+      }, 16);
+    }
+
+    window.onload = () => {
+      setTimeout(() => {
+        animateNumber('agents', 57, 2500, '+');
+        animateNumber('cycles', 5847291, 4500);
+        animateNumber('roi', 5847, 3500, '%');
+      }, 500);
+    };
+
+    window.addEventListener('resize', () => {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    });
+  </script>
 </body>
 </html>
