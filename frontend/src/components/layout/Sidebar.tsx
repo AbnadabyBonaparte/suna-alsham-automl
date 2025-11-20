@@ -8,7 +8,7 @@ import { usePathname } from "next/navigation";
 const menuItems = [
   { name: "Cockpit", icon: LayoutDashboard, path: "/dashboard", color: "text-white" },
   { name: "Neural Nexus", icon: Network, path: "/dashboard/network", color: "text-pink-500" },
-  { name: "Sentinelas", icon: Shield, path: "/dashboard/agents", color: "text-red-400" }, // Link Corrigido para /agents
+  { name: "Sentinelas", icon: Shield, path: "/dashboard/agents", color: "text-red-400" },
   { name: "Matrix / Logs", icon: Terminal, path: "/dashboard/matrix", color: "text-green-500" },
   { name: "Inteligência", icon: Brain, path: "/dashboard/intelligence", color: "text-blue-400" },
   { name: "Infraestrutura", icon: Server, path: "/dashboard/infrastructure", color: "text-green-400" },
