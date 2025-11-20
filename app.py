@@ -1,3 +1,7 @@
-from start import app  # Importa o app completo do start.py (os 57 agentes)
+# ALSHAM QUANTUM - Entry point oficial para Vercel
+# Importa o sistema completo do start.py (57 agentes reais)
+
+from start import app
 
 # Isso faz o Vercel rodar exatamente o mesmo sistema que roda localmente
+# Com todos os 57 agentes, evolution engine, meta-cognição, tudo
