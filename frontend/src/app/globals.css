@@ -4,7 +4,7 @@
 
 @layer base {
   :root {
-    --background: 0 0% 0%; /* Preto Puro */
+    --background: 0 0% 0%;
     --foreground: 0 0% 100%;
     --card: 0 0% 3%;
     --card-foreground: 0 0% 100%;
@@ -23,21 +23,21 @@
     --border: 240 4% 16%;
     --input: 240 4% 16%;
     --ring: 270 50% 40%;
+    --radius: 0.5rem;
   }
 }
 
 @layer base {
   * {
-    @apply border-border;
+    border-color: hsl(var(--border)); /* Correção: Usar variável direta em vez de @apply */
   }
   body {
-    @apply bg-black text-white antialiased;
-    /* Força o fundo preto mesmo se o Three.js falhar */
-    background-color: #000000 !important; 
+    background-color: #000000;
+    color: #ffffff;
   }
 }
 
-/* Barra de rolagem futurista */
+/* Scrollbar Customizada */
 ::-webkit-scrollbar {
   width: 8px;
 }
