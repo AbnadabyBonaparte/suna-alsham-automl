@@ -1,3 +1,48 @@
+import os
+
+# 1. ARQUIVO .ENV.LOCAL (Configurações)
+env_content = """
+# CONEXÃO COM O CÉREBRO (PYTHON/FASTAPI)
+NEXT_PUBLIC_API_URL=https://suna-alsham-automl-production.up.railway.app
+
+# CONEXÃO COM A MEMÓRIA (SUPABASE)
+NEXT_PUBLIC_SUPABASE_URL=https://sua-url-supabase.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=sua-chave-anonima
+
+# CONFIGURAÇÕES DO SISTEMA
+NEXT_PUBLIC_SYSTEM_VERSION=v11.0
+NEXT_PUBLIC_ENV=production
+"""
+
+# 2. ARQUIVO API.TS (Ponte de Dados)
+api_ts_content = """
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+
+export async function fetchSystemStatus() {
+  try {
+    // Tenta buscar do backend real
+    const res = await fetch(`${API_URL}/api/system/status`, { next: { revalidate: 10 } });
+    if (!res.ok) throw new Error('Falha na conexão neural');
+    return res.json();
+  } catch (error) {
+    console.warn("⚠️ Backend Offline. Usando dados de fallback holográficos.");
+    return null; // Retorna null para a UI saber que deve usar fallback
+  }
+}
+
+export async function fetchAgents() {
+  try {
+    const res = await fetch(`${API_URL}/api/agents`, { next: { revalidate: 5 } });
+    if (!res.ok) throw new Error('Falha ao listar agentes');
+    return res.json();
+  } catch (error) {
+    return [];
+  }
+}
+"""
+
+# 3. ARQUIVO STORE.TS (Cérebro Híbrido)
+store_ts_content = """
 import { create } from 'zustand';
 import { QuantumState, Agent } from '@/types/quantum';
 import { fetchAgents } from './api';
@@ -69,3 +114,20 @@ export const useQuantumStore = create<QuantumState>((set, get) => ({
     });
   }
 }));
+"""
+
+# FUNÇÃO PARA ESCREVER
+def write_file(path, content):
+    try:
+        os.makedirs(os.path.dirname(path) if os.path.dirname(path) else ".", exist_ok=True)
+        with open(path, "w", encoding="utf-8") as f:
+            f.write(content.strip())
+        print(f"✅ Arquivo RECRIADO: {path}")
+    except Exception as e:
+        print(f"❌ Erro em {path}: {e}")
+
+print("🛠️ Iniciando reparo da camada de conexão...")
+write_file(".env.local", env_content)
+write_file("src/lib/api.ts", api_ts_content)
+write_file("src/lib/store.ts", store_ts_content)
+print("🏁 Reparo concluído.")
