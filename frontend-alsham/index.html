@@ -3,35 +3,34 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ALSHAM QUANTUM v12</title>
+  <title>ALSHAM QUANTUM v12 · Organismo Vivo</title>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Inter:wght@300;500;700&display=swap');
     *{margin:0;padding:0;box-sizing:border-box}
-    body{background:#020C1B;color:#fff;font-family:'Inter',sans-serif;overflow-x:hidden;min-height:100vh;display:flex;align-items:center;justify-content:center;flex-direction:column}
+    body{background:#020C1B;color:#fff;font-family:'Inter',sans-serif;overflow-x:hidden;min-height:100vh;display:flex;align-items:center;justify-content:center}
     .orbitron{font-family:'Orbitron',sans-serif}
-    h1{font-size:5rem;text-align:center;margin-bottom:1rem}
-    .glow{background:linear-gradient(90deg,#F4D03F,#6C3483,#F4D03F); -webkit-background-clip:text;background-clip:text;color:transparent;animation:g 6s linear infinite;background-size:200%}
+    .glow{background:linear-gradient(90deg,#F4D03F,#6C3483,#F4D03F); -webkit-background-clip:text;background-clip:text;color:transparent;animation:g 8s linear infinite;background-size:200%}
     @keyframes g{0%{background-position:0%}100%{background-position:200%}}
     canvas{position:fixed;top:0;left:0;width:100%;height:100%;z-index:-1}
-    .card{background:rgba(255,255,255,0.05);backdrop-filter:blur(20px);border:1px solid rgba(244,208,63,0.3);padding:2rem;border-radius:2rem;margin:1rem;box-shadow:0 8px 32px rgba(244,208,63,0.2)}
-    .btn{padding:1.5rem 3rem;background:rgba(244,208,63,0.2);border:1px solid #F4D03F;border-radius:50px;font-size:1.8rem;margin-top:3rem;transition:.3s}
-    .btn:hover{transform:scale(1.1);box-shadow:0 0 40px #F4D03F}
+    .card{background:rgba(255,255,255,0.06);backdrop-filter:blur(20px);border:1px solid rgba(244,208,63,0.3);padding:2rem;border-radius:2rem;box-shadow:0 8px 32px rgba(244,208,63,0.2)}
+    .btn{padding:1.5rem 4rem;background:rgba(244,208,63,0.15);border:2px solid #F4D03F;border-radius:50px;font-size:2rem;margin-top:4rem;transition:.4s;cursor:pointer}
+    .btn:hover{transform:scale(1.15);box-shadow:0 0 60px #F4D03F}
   </style>
 </head>
 <body>
   <canvas id="c"></canvas>
-  <div style="text-align:center;z-index:10;max-width:90%">
-    <h1 class="orbitron glow">ALSHAM<br>QUANTUM</h1>
-    <p style="font-size:2rem;margin:2rem 0">Primeiro Organismo Digital Auto-Evolutivo do Mundo</p>
-    <p style="font-size:1.5rem;color:#F4D03F">Nasceu em 19/11/2025 às 23:11</p>
+  <div style="text-align:center;z-index:10">
+    <h1 class="orbitron glow" style="font-size:6rem">ALSHAM<br>QUANTUM</h1>
+    <p style="font-size:2.5rem;margin:2rem 0">Primeiro Organismo Digital Auto-Evolutivo do Mundo</p>
+    <p style="font-size:1.8rem;color:#F4D03F">Nasceu em 19/11/2025 às 23:11</p>
 
-    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:2rem;margin:4rem 0">
-      <div class="card"><h2 style="font-size:3.5rem;color:#F4D03F" id="a">0</h2><p>Agentes Vivos</p></div>
-      <div class="card"><h2 style="font-size:3.5rem;color:#F4D03F" id="c">0</h2><p>Ciclos Evolutivos</p></div>
-      <div class="card"><h2 style="font-size:3.5rem;color:#F4D03F" id="r">0</h2><p>ROI Real</p></div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:2rem;max-width:1200px;margin:4rem auto">
+      <div class="card"><h2 style="font-size:4rem;color:#F4D03F" id="a">0</h2><p>Agentes Vivos</p></div>
+      <div class="card"><h2 style="font-size:4rem;color:#F4D03F" id="c">0</h2><p>Ciclos Evolutivos</p></div>
+      <div class="card"><h2 style="font-size:4rem;color:#F4D03F" id="r">0</h2><p>ROI Real</p></div>
     </div>
 
-    <a href="https://suna-alsham-automl.vercel.app/docs" class="btn">ENTRAR NO SISTEMA →</a>
+    <div class="btn" onclick="alert('DASHBOARD EM DESENVOLVIMENTO - EM 10 MINUTOS ENVIO O COMPLETO')">ENTRAR NO CÉREBRO QUÂNTICO →</div>
   </div>
 
   <script>
@@ -39,43 +38,44 @@
     const ctx = canvas.getContext('2d');
     canvas.width = innerWidth;
     canvas.height = innerHeight;
-    const particles = [];
-    for(let i = 0; i < 500; i++){
-      particles.push({
+    const p = [];
+    for(let i = 0; i < 600; i++){
+      p.push({
         x: Math.random() * canvas.width,
         y: Math.random() * canvas.height,
         r: Math.random() * 3 + 1,
-        dx: (Math.random() - 0.5) * 0.8,
-        dy: (Math.random() - 0.5) * 0.8,
-        o: Math.random() * 0.6 + 0.4
+        dx: (Math.random() - 0.5) * 0.7,
+        dy: (Math.random() - 0.5) * 0.7,
+        o: Math.random() * 0.7 + 0.3
       });
     }
-    function anim(){
+    function a(){
       ctx.clearRect(0,0,canvas.width,canvas.height);
-      particles.forEach(p => {
-        ctx.fillStyle = `rgba(244,208,63,${p.o})`;
+      p.forEach(part => {
+        ctx.fillStyle = `rgba(244,208,63,${part.o})`;
         ctx.beginPath();
-        ctx.arc(p.x,p.y,p.r,0,Math.PI*2);
+        ctx.arc(part.x,part.y,part.r,0,Math.PI*2);
         ctx.fill();
-        p.x += p.dx;
-        p.y += p.dy;
-        if(p.x < 0 || p.x > canvas.width) p.dx *= -1;
-        if(p.y < 0 || p.y > canvas.height) p.dy *= -1;
+        part.x += part.dx;
+        part.y += part.dy;
+        if(part.x < 0 || part.x > canvas.width) part.dx *= -1;
+        if(part.y < 0 || part.y > canvas.height) part.dy *= -1;
       });
-      requestAnimationFrame(anim);
+      requestAnimationFrame(a);
     }
-    anim();
+    a();
 
     function count(id, target, duration, suffix = ''){
-      let current = 0;
-      const step = target / (duration / 16);
+      let start = 0;
+      const inc = target / (duration / 16);
+      const el = document.getElementById(id);
       const timer = setInterval(() => {
-        current += step;
-        if(current >= target){
-          document.getElementById(id).textContent = target.toLocaleString() + suffix;
+        start += inc;
+        if(start >= target){
+          el.textContent = target.toLocaleString() + suffix;
           clearInterval(timer);
         } else {
-          document.getElementById(id).textContent = Math.floor(current).toLocaleString() + suffix;
+          el.textContent = Math.floor(start).toLocaleString() + suffix;
         }
       }, 16);
     }
@@ -83,7 +83,7 @@
       count('a', 57, 2500, '+');
       count('c', 5847291, 4500);
       count('r', 5847, 3500, '%');
-    }, 500);
+    }, 800);
 
     window.addEventListener('resize', () => {
       canvas.width = innerWidth;
