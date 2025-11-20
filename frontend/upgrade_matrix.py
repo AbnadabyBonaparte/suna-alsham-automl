@@ -1,4 +1,6 @@
-'use client';
+import os
+
+code = r"""'use client';
 
 import { useEffect, useState, useRef } from 'react';
 import { useQuantumStore } from '@/lib/store';
@@ -82,3 +84,9 @@ export default function MatrixPage() {
     </div>
   );
 }
+"""
+
+with open("src/app/dashboard/matrix/page.tsx", "w") as f:
+    f.write(code)
+
+print("✅ Matrix atualizada com Protocolo 'Wake Up'.")

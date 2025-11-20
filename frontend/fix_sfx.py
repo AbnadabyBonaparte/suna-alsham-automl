@@ -1,4 +1,6 @@
-'use client';
+import os
+
+code = r"""'use client';
 
 import { useCallback } from 'react';
 
@@ -23,3 +25,9 @@ export function useSfx() {
 
   return { play };
 }
+"""
+
+with open("src/hooks/use-sfx.ts", "w") as f:
+    f.write(code)
+
+print("✅ Hook de Som (use-sfx.ts) restaurado com integridade.")
