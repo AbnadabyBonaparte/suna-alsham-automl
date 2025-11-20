@@ -1,5 +1,9 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // Ativa o modo standalone: gera um pacote autossuficiente
+  output: 'standalone',
+  
+  // Garante que imagens externas funcionem
   images: {
     remotePatterns: [
       {
@@ -8,6 +12,7 @@ const nextConfig = {
       },
     ],
   },
+  
   // Ignora erros de verificação para garantir o deploy
   eslint: {
     ignoreDuringBuilds: true,
@@ -15,7 +20,6 @@ const nextConfig = {
   typescript: {
     ignoreBuildErrors: true,
   },
-  // REMOVIDO: distDir (Deixando o Next.js usar o padrão)
 };
 
 export default nextConfig;
