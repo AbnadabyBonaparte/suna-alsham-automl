@@ -1,3 +1,6 @@
+import os
+
+layout_code = """
 import { Sidebar } from "@/components/layout/Sidebar";
 import { GlobalKeyListener } from "@/components/layout/GlobalKeyListener";
 
@@ -23,3 +26,16 @@ export default function DashboardLayout({
     </div>
   );
 }
+"""
+
+def write_file(path, content):
+    try:
+        os.makedirs(os.path.dirname(path), exist_ok=True)
+        with open(path, "w", encoding="utf-8") as f:
+            f.write(content.strip())
+        print(f"✅ Arquivo RECRIADO com sucesso: {path}")
+    except Exception as e:
+        print(f"❌ Erro: {e}")
+
+print("🛠️ Reparando Layout do Dashboard...")
+write_file("src/app/dashboard/layout.tsx", layout_code)
