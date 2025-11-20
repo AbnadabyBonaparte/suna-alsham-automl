@@ -1,26 +1,26 @@
-'use client';
+"use client";
 
 import { useCallback } from 'react';
 
-// Mapeamento simples de sons
-const SOUNDS = {
-  click: '/sounds/click_mechanical.mp3',
-  hover: '/sounds/hover_hum.mp3',
-  success: '/sounds/success_chime.mp3',
-  alert: '/sounds/alert_error.mp3',
-  boot: '/sounds/boot_sequence.mp3',
-};
+export function useSfx() {
+  const play = useCallback((sound: 'click' | 'hover' | 'alert' | 'ambient') => {
+    if (typeof window === 'undefined') return; // Proteção Server-Side
 
-export function useSFX() {
-  const play = useCallback((type: keyof typeof SOUNDS) => {
     try {
-      const audio = new Audio(SOUNDS[type]);
-      audio.volume = 0.3; 
-      audio.play().catch(() => {
-        // Ignora erros se o arquivo nao existir
-      });
-    } catch (err) {
-      console.warn('Audio playback failed', err);
+      // Tenta tocar o som da pasta public/sounds
+      const audio = new Audio(`/sounds/${sound}.mp3`);
+      audio.volume = 0.4; // Volume agradável (não muito alto)
+      
+      const playPromise = audio.play();
+      
+      if (playPromise !== undefined) {
+        playPromise.catch((error) => {
+          // Ignora erros de "user didn't interact yet" comuns em browsers
+          // console.warn("Audio playback prevented:", error);
+        });
+      }
+    } catch (e) {
+      // Falha silenciosa para não quebrar a UI
     }
   }, []);
 
