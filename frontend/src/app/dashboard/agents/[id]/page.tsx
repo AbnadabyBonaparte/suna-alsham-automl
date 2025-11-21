@@ -143,13 +143,13 @@ export default function AgentDetailPage() {
                             <div className="bg-black/80 rounded-lg p-4 font-mono text-xs h-[400px] overflow-y-auto space-y-2 text-green-400/80 border border-white/5">
                                 <p className="opacity-50">Initializing connection to {agent.name}...</p>
                                 <p className="opacity-70">Secure channel established.</p>
-                                <p>> Current task: {agent.currentTask}</p>
+                                <p>&gt; Current task: {agent.currentTask}</p>
                                 {Array.from({ length: 8 }).map((_, i) => (
                                     <p key={i} className="opacity-90">
-                                > [{(Math.random() * 1000).toFixed(3)}ms] Processing data chunk #{Math.floor(Math.random() * 9999)}...
+                                        &gt; [{(Math.random() * 1000).toFixed(3)}ms] Processing data chunk #{Math.floor(Math.random() * 9999)}...
                                     </p>
                                 ))}
-                                <p className="animate-pulse">> Awaiting next instruction_</p>
+                                <p className="animate-pulse">&gt; Awaiting next instruction_</p>
                             </div>
                         </CardContent>
                     </Card>
