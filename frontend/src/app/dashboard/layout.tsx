@@ -1,4 +1,9 @@
+"use client";
+
 import Sidebar from "@/components/layout/Sidebar";
+import MobileMenu from "@/components/layout/MobileMenu";
+import SkipToContent from "@/components/layout/SkipToContent";
+import ErrorBoundary from "@/components/ErrorBoundary";
 import { GlobalKeyListener } from "@/components/layout/GlobalKeyListener";
 
 export default function DashboardLayout({
@@ -7,19 +12,23 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="flex min-h-screen bg-black w-full">
-      {/* Listener Secreto */}
-      <GlobalKeyListener />
+    <ErrorBoundary>
+      <SkipToContent />
+      <div className="flex h-screen overflow-hidden bg-[#020C1B]">
+        {/* Listener Secreto */}
+        <GlobalKeyListener />
 
-      {/* Sidebar Fixa - Desktop */}
-      <div className="hidden md:flex h-screen w-64 flex-col fixed left-0 top-0 z-50 border-r border-white/10 bg-black/90 backdrop-blur-xl">
+        {/* Sidebar - Always visible on desktop */}
         <Sidebar />
-      </div>
 
-      {/* Conteúdo Principal - Com Margem para Sidebar */}
-      <main className="flex-1 md:pl-64 relative w-full">
-        {children}
-      </main>
-    </div>
+        {/* Mobile Menu */}
+        <MobileMenu />
+
+        {/* Main Content Area - Scrollable */}
+        <main id="main-content" className="flex-1 overflow-y-auto overflow-x-hidden relative">
+          {children}
+        </main>
+      </div>
+    </ErrorBoundary>
   );
 }

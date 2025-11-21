@@ -60,17 +60,72 @@ interface Agent {
   currentTask: string;
 }
 
-// Fallback data if Supabase connection fails
+// Fallback data if Supabase connection fails - 57 AGENTS COMPLETOS
 const AGENTS_DATA = [
+  // CORE AGENTS (7)
   { id: 1, name: "ORCHESTRATOR ALPHA", role: "CORE", status: "ACTIVE", efficiency: 99.9, currentTask: "Sincronizando 57 nós neurais" },
-  { id: 2, name: "REVENUE HUNTER", role: "SPECIALIST", status: "PROCESSING", efficiency: 94.2, currentTask: "Analisando padrões de compra globais" },
-  { id: 3, name: "SECURITY GUARDIAN", role: "GUARD", status: "ACTIVE", efficiency: 100.0, currentTask: "Varredura de ameaças quânticas" },
-  { id: 4, name: "CONTENT CREATOR", role: "ANALYST", status: "IDLE", efficiency: 87.5, currentTask: "Aguardando input criativo" },
-  { id: 5, name: "MARKET PREDICTOR", role: "ANALYST", status: "WARNING", efficiency: 76.1, currentTask: "Recalculando volatilidade do mercado" },
-  { id: 6, name: "SUPPORT SENTINEL", role: "SPECIALIST", status: "ACTIVE", efficiency: 98.3, currentTask: "Monitoramento de tickets em tempo real" },
-  { id: 7, name: "DEVOPS MASTER", role: "CORE", status: "ACTIVE", efficiency: 99.1, currentTask: "Otimizando pipeline CI/CD" },
-  { id: 8, name: "DATA MINER", role: "ANALYST", status: "PROCESSING", efficiency: 91.4, currentTask: "Extração de dados profundos" },
+  { id: 2, name: "DEVOPS MASTER", role: "CORE", status: "ACTIVE", efficiency: 99.1, currentTask: "Otimizando pipeline CI/CD" },
+  { id: 3, name: "SYSTEM ARCHITECT", role: "CORE", status: "ACTIVE", efficiency: 98.7, currentTask: "Planejamento de infraestrutura escalável" },
+  { id: 4, name: "QUANTUM COORDINATOR", role: "CORE", status: "PROCESSING", efficiency: 97.3, currentTask: "Balanceamento de carga quântica" },
+  { id: 5, name: "NEURAL BRIDGE", role: "CORE", status: "ACTIVE", efficiency: 96.8, currentTask: "Sincronização inter-agentes" },
+  { id: 6, name: "MEMORY MANAGER", role: "CORE", status: "ACTIVE", efficiency: 99.5, currentTask: "Otimização de cache distribuído" },
+  { id: 7, name: "RESOURCE ALLOCATOR", role: "CORE", status: "ACTIVE", efficiency: 98.2, currentTask: "Distribuição dinâmica de recursos" },
+
+  // GUARD AGENTS (12)
+  { id: 8, name: "SECURITY GUARDIAN", role: "GUARD", status: "ACTIVE", efficiency: 100.0, currentTask: "Varredura de ameaças quânticas" },
   { id: 9, name: "NETWORK WATCHER", role: "GUARD", status: "ACTIVE", efficiency: 100.0, currentTask: "Ping: 2ms - Latência Zero" },
+  { id: 10, name: "FIREWALL SENTINEL", role: "GUARD", status: "ACTIVE", efficiency: 99.9, currentTask: "Bloqueio de 247 tentativas maliciosas" },
+  { id: 11, name: "DATA PROTECTOR", role: "GUARD", status: "ACTIVE", efficiency: 100.0, currentTask: "Criptografia end-to-end ativa" },
+  { id: 12, name: "ACCESS CONTROLLER", role: "GUARD", status: "ACTIVE", efficiency: 99.6, currentTask: "Validação de permissões em tempo real" },
+  { id: 13, name: "THREAT HUNTER", role: "GUARD", status: "PROCESSING", efficiency: 98.4, currentTask: "Análise de padrões anômalos" },
+  { id: 14, name: "INTRUSION DETECTOR", role: "GUARD", status: "ACTIVE", efficiency: 99.8, currentTask: "Monitoramento de tráfego suspeito" },
+  { id: 15, name: "VULNERABILITY SCANNER", role: "GUARD", status: "PROCESSING", efficiency: 94.2, currentTask: "Auditoria de segurança completa" },
+  { id: 16, name: "INCIDENT RESPONDER", role: "GUARD", status: "IDLE", efficiency: 100.0, currentTask: "Standby para emergências" },
+  { id: 17, name: "COMPLIANCE AUDITOR", role: "GUARD", status: "ACTIVE", efficiency: 97.1, currentTask: "Verificação LGPD/GDPR contínua" },
+  { id: 18, name: "BACKUP GUARDIAN", role: "GUARD", status: "ACTIVE", efficiency: 99.3, currentTask: "Backup incremental 3-2-1" },
+  { id: 19, name: "RECOVERY SPECIALIST", role: "GUARD", status: "IDLE", efficiency: 100.0, currentTask: "Pronto para disaster recovery" },
+
+  // ANALYST AGENTS (18)
+  { id: 20, name: "DATA MINER", role: "ANALYST", status: "PROCESSING", efficiency: 91.4, currentTask: "Extração de dados profundos" },
+  { id: 21, name: "MARKET PREDICTOR", role: "ANALYST", status: "WARNING", efficiency: 76.1, currentTask: "Recalculando volatilidade do mercado" },
+  { id: 22, name: "CONTENT CREATOR", role: "ANALYST", status: "IDLE", efficiency: 87.5, currentTask: "Aguardando input criativo" },
+  { id: 23, name: "TREND ANALYZER", role: "ANALYST", status: "ACTIVE", efficiency: 93.7, currentTask: "Análise de tendências em 15 nichos" },
+  { id: 24, name: "SENTIMENT TRACKER", role: "ANALYST", status: "PROCESSING", efficiency: 89.2, currentTask: "Monitorando sentimento de marca" },
+  { id: 25, name: "BEHAVIOR PROFILER", role: "ANALYST", status: "ACTIVE", efficiency: 95.3, currentTask: "Mapeamento de jornada do usuário" },
+  { id: 26, name: "CONVERSION OPTIMIZER", role: "ANALYST", status: "ACTIVE", efficiency: 92.8, currentTask: "A/B testing de 8 variantes" },
+  { id: 27, name: "CHURN PREDICTOR", role: "ANALYST", status: "PROCESSING", efficiency: 88.6, currentTask: "Identificando usuários em risco" },
+  { id: 28, name: "REVENUE FORECASTER", role: "ANALYST", status: "ACTIVE", efficiency: 94.1, currentTask: "Projeção de receita Q1 2025" },
+  { id: 29, name: "COMPETITIVE INTEL", role: "ANALYST", status: "ACTIVE", efficiency: 90.5, currentTask: "Monitorando 23 concorrentes" },
+  { id: 30, name: "SEO STRATEGIST", role: "ANALYST", status: "PROCESSING", efficiency: 91.9, currentTask: "Otimização de 147 keywords" },
+  { id: 31, name: "SOCIAL LISTENER", role: "ANALYST", status: "ACTIVE", efficiency: 93.4, currentTask: "Rastreando menções em redes sociais" },
+  { id: 32, name: "PERFORMANCE ANALYST", role: "ANALYST", status: "ACTIVE", efficiency: 96.2, currentTask: "Análise de métricas de performance" },
+  { id: 33, name: "USER RESEARCHER", role: "ANALYST", status: "PROCESSING", efficiency: 87.8, currentTask: "Análise qualitativa de feedbacks" },
+  { id: 34, name: "PRICING STRATEGIST", role: "ANALYST", status: "ACTIVE", efficiency: 92.3, currentTask: "Otimização de modelo de precificação" },
+  { id: 35, name: "FUNNEL ANALYZER", role: "ANALYST", status: "PROCESSING", efficiency: 89.7, currentTask: "Identificando gargalos de conversão" },
+  { id: 36, name: "COHORT TRACKER", role: "ANALYST", status: "ACTIVE", efficiency: 91.1, currentTask: "Análise de retenção por coorte" },
+  { id: 37, name: "ANOMALY DETECTOR", role: "ANALYST", status: "WARNING", efficiency: 78.4, currentTask: "Investigando padrão anômalo" },
+
+  // SPECIALIST AGENTS (20)
+  { id: 38, name: "REVENUE HUNTER", role: "SPECIALIST", status: "PROCESSING", efficiency: 94.2, currentTask: "Analisando padrões de compra globais" },
+  { id: 39, name: "SUPPORT SENTINEL", role: "SPECIALIST", status: "ACTIVE", efficiency: 98.3, currentTask: "Monitoramento de tickets em tempo real" },
+  { id: 40, name: "EMAIL AUTOMATOR", role: "SPECIALIST", status: "ACTIVE", efficiency: 96.7, currentTask: "Enviando campanhas segmentadas" },
+  { id: 41, name: "LEAD QUALIFIER", role: "SPECIALIST", status: "PROCESSING", efficiency: 93.5, currentTask: "Scoring de 342 leads" },
+  { id: 42, name: "CRM SYNCHRONIZER", role: "SPECIALIST", status: "ACTIVE", efficiency: 97.8, currentTask: "Sincronizando dados multi-canal" },
+  { id: 43, name: "CHATBOT ORCHESTRATOR", role: "SPECIALIST", status: "ACTIVE", efficiency: 95.1, currentTask: "Gerenciando 47 conversas ativas" },
+  { id: 44, name: "PAYMENT PROCESSOR", role: "SPECIALIST", status: "ACTIVE", efficiency: 99.2, currentTask: "Processamento de transações seguras" },
+  { id: 45, name: "INVENTORY MANAGER", role: "SPECIALIST", status: "ACTIVE", efficiency: 94.6, currentTask: "Otimização de estoque Just-in-Time" },
+  { id: 46, name: "SHIPPING COORDINATOR", role: "SPECIALIST", status: "PROCESSING", efficiency: 92.9, currentTask: "Rastreamento de 128 envios" },
+  { id: 47, name: "REVIEW MANAGER", role: "SPECIALIST", status: "ACTIVE", efficiency: 88.3, currentTask: "Monitorando avaliações e feedback" },
+  { id: 48, name: "REFERRAL TRACKER", role: "SPECIALIST", status: "ACTIVE", efficiency: 91.7, currentTask: "Gerenciando programa de indicações" },
+  { id: 49, name: "LOYALTY OPTIMIZER", role: "SPECIALIST", status: "PROCESSING", efficiency: 89.4, currentTask: "Calculando pontos de fidelidade" },
+  { id: 50, name: "NOTIFICATION COMPOSER", role: "SPECIALIST", status: "ACTIVE", efficiency: 95.9, currentTask: "Enviando notificações personalizadas" },
+  { id: 51, name: "WORKFLOW AUTOMATOR", role: "SPECIALIST", status: "ACTIVE", efficiency: 96.4, currentTask: "Executando 18 workflows automáticos" },
+  { id: 52, name: "INTEGRATION MANAGER", role: "SPECIALIST", status: "ACTIVE", efficiency: 93.2, currentTask: "Sincronizando 12 integrações" },
+  { id: 53, name: "API ORCHESTRATOR", role: "SPECIALIST", status: "PROCESSING", efficiency: 97.1, currentTask: "Gerenciando 2.4k requisições/min" },
+  { id: 54, name: "CACHE OPTIMIZER", role: "SPECIALIST", status: "ACTIVE", efficiency: 98.6, currentTask: "Hit rate: 94.7%" },
+  { id: 55, name: "CDN MANAGER", role: "SPECIALIST", status: "ACTIVE", efficiency: 99.1, currentTask: "Distribuição global de assets" },
+  { id: 56, name: "LOG AGGREGATOR", role: "SPECIALIST", status: "PROCESSING", efficiency: 95.8, currentTask: "Processando 47k logs/segundo" },
+  { id: 57, name: "METRICS COLLECTOR", role: "SPECIALIST", status: "ACTIVE", efficiency: 97.5, currentTask: "Coletando métricas de sistema" },
 ];
 
 export default function AgentsPage() {

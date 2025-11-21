@@ -2,8 +2,10 @@ import type { Metadata } from "next";
 import { Orbitron, Inter } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/contexts/AuthContext";
+import { ThemeProvider } from "@/contexts/ThemeProvider";
 import QuantumBackground from "@/components/QuantumBackground";
 import OrionCopilot from "@/components/OrionCopilot";
+import ThemeSwitcher from "@/components/ThemeSwitcher";
 
 const orbitron = Orbitron({
   subsets: ["latin"],
@@ -30,17 +32,20 @@ export default function RootLayout({
   return (
     <html lang="pt-BR" className={`${orbitron.variable} ${inter.variable} dark`}>
       <body className="bg-[#020C1B] text-white antialiased min-h-screen relative">
-        <AuthProvider>
-          <div className="fixed inset-0 z-0">
-            <QuantumBackground />
-          </div>
+        <ThemeProvider>
+          <AuthProvider>
+            <div className="fixed inset-0 z-0">
+              <QuantumBackground />
+            </div>
 
-          <div className="relative z-10 min-h-screen">
-            {children}
-          </div>
+            <div className="relative z-10 min-h-screen">
+              {children}
+            </div>
 
-          <OrionCopilot />
-        </AuthProvider>
+            <ThemeSwitcher />
+            <OrionCopilot />
+          </AuthProvider>
+        </ThemeProvider>
       </body>
     </html>
   );
