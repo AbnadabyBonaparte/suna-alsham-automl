@@ -1,60 +1,54 @@
-// src/components/quantum/AgentCard.tsx
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Terminal } from "lucide-react";
+"use client";
 
-interface Agent {
-  id: string;
+import React from "react";
+
+interface AgentProps {
   name: string;
   role: string;
-  status: string;
+  status: "active" | "idle" | "warning";
   efficiency: number;
-  currentTask: string;
 }
 
-export default function AgentCard({ agent }: { agent: Agent }) {
-  const getBarColor = (eff: number) => {
-    if (eff >= 90) return "bg-gradient-to-r from-purple-500 to-blue-500 shadow-[0_0_20px_rgba(168,85,247,0.8)]";
-    if (eff >= 70) return "bg-blue-500 shadow-[0_0_15px_rgba(59,130,246,0.6)]";
-    if (eff >= 40) return "bg-amber-500";
-    return "bg-red-500";
-  };
+export default function AgentCard({ name, role, status, efficiency }: AgentProps) {
+  // Define cores baseadas no status sem usar bibliotecas externas
+  const statusColor = 
+    status === "active" ? "bg-[#2ECC71]" : 
+    status === "warning" ? "bg-[#E74C3C]" : "bg-[#F4D03F]";
 
   return (
-    <Card className="bg-black/40 border-photon-gold/20 backdrop-blur-xl hover:border-photon-gold/60 hover:scale-105 transition-all duration-500 group relative overflow-hidden">
-      <div className="absolute inset-0 bg-gradient-to-br from-purple-900/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+    <div className="relative group bg-[#020C1B]/80 border border-[#1F618D]/30 p-6 rounded-lg overflow-hidden transition-all duration-300 hover:border-[#F4D03F] hover:shadow-[0_0_20px_rgba(244,208,63,0.2)]">
       
-      <CardHeader className="pb-3">
-        <div className="flex justify-between items-start">
-          <CardTitle className="text-lg font-bold text-photon-gold orbitron">
-            {agent.name}
-          </CardTitle>
-          <Badge className={`text-xs ${
-            agent.status === "ACTIVE" ? "bg-emerald-action/20 text-emerald-action" :
-            agent.status === "PROCESSING" ? "bg-arcane-purple/20 text-arcane-purple animate-pulse" :
-            "bg-gray-500/20 text-gray-400"
-          }`}>
-            {agent.status}
-          </Badge>
+      {/* Header do Card */}
+      <div className="flex justify-between items-start mb-4">
+        <div>
+          <h3 className="text-lg font-bold text-white tracking-wider orbitron">{name}</h3>
+          <p className="text-xs text-[#1F618D] uppercase font-mono mt-1">{role}</p>
         </div>
-        <p className="text-xs text-gray-400">{agent.role}</p>
-      </CardHeader>
+        <div className={`w-3 h-3 rounded-full ${statusColor} shadow-[0_0_10px_currentColor] animate-pulse`} />
+      </div>
 
-      <CardContent>
-        <div className="flex items-end justify-between mb-3">
-          <span className="text-3xl font-black text-photon-gold">{agent.efficiency.toFixed(0)}%</span>
-          <span className="text-xs text-gray-500">Eficiência</span>
+      {/* Barra de Eficiência */}
+      <div className="mt-4">
+        <div className="flex justify-between text-xs font-mono text-gray-400 mb-1">
+          <span>EFICIÊNCIA</span>
+          <span className="text-white">{efficiency}%</span>
         </div>
-        
-        <div className="w-full bg-black/60 h-3 rounded-full overflow-hidden">
-          <div className={`h-full transition-all duration-1000 ${getBarColor(agent.efficiency)}`} style={{ width: `${agent.efficiency}%` }} />
+        <div className="w-full h-1 bg-[#1F618D]/20 rounded-full overflow-hidden">
+          <div 
+            className="h-full bg-gradient-to-r from-[#6C3483] to-[#F4D03F]" 
+            style={{ width: `${efficiency}%` }}
+          />
         </div>
+      </div>
 
-        <div className="mt-4 flex items-center gap-2 text-xs bg-black/40 p-3 rounded border border-photon-gold/10">
-          <Terminal className="w-4 h-4 text-arcane-purple" />
-          <span className="truncate text-gray-300">{agent.currentTask || "Aguardando comando..."}</span>
+      {/* Grid Decorativo (CSS Puro) */}
+      <div className="absolute bottom-0 right-0 p-2 opacity-10">
+        <div className="grid grid-cols-3 gap-1">
+          {[...Array(9)].map((_, i) => (
+            <div key={i} className="w-1 h-1 bg-white rounded-full" />
+          ))}
         </div>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 }
