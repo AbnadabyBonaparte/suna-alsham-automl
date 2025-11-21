@@ -3,6 +3,8 @@ import { Orbitron, Inter } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { ThemeProvider } from "@/contexts/ThemeProvider";
+import { GamificationProvider } from "@/contexts/GamificationProvider";
+import { ToastProvider } from "@/contexts/ToastProvider";
 import QuantumBackground from "@/components/QuantumBackground";
 import OrionCopilot from "@/components/OrionCopilot";
 import ThemeSwitcher from "@/components/ThemeSwitcher";
@@ -33,18 +35,22 @@ export default function RootLayout({
     <html lang="pt-BR" className={`${orbitron.variable} ${inter.variable} dark`}>
       <body className="bg-[#020C1B] text-white antialiased min-h-screen relative">
         <ThemeProvider>
-          <AuthProvider>
-            <div className="fixed inset-0 z-0">
-              <QuantumBackground />
-            </div>
+          <GamificationProvider>
+            <ToastProvider>
+              <AuthProvider>
+                <div className="fixed inset-0 z-0">
+                  <QuantumBackground />
+                </div>
 
-            <div className="relative z-10 min-h-screen">
-              {children}
-            </div>
+                <div className="relative z-10 min-h-screen">
+                  {children}
+                </div>
 
-            <ThemeSwitcher />
-            <OrionCopilot />
-          </AuthProvider>
+                <ThemeSwitcher />
+                <OrionCopilot />
+              </AuthProvider>
+            </ToastProvider>
+          </GamificationProvider>
         </ThemeProvider>
       </body>
     </html>
