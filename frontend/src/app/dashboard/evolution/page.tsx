@@ -1,7 +1,7 @@
 // src/app/dashboard/evolution/page.tsx — EVOLUTION LAB v12.1 FINAL
 "use client";
 
-import { motion } from "framer-motion";
+import { useState, useEffect } from "react";
 
 const waves = [
   {
@@ -34,25 +34,29 @@ const waves = [
 ];
 
 export default function EvolutionLab() {
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   return (
     <div className="min-h-screen bg-black p-12">
       <div className="max-w-7xl mx-auto">
-        <motion.h1 
-          initial={{ opacity: 0, y: -100 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="text-8xl font-black text-yellow-500 text-center mb-20 orbitron"
+        <h1
+          className={`text-8xl font-black text-yellow-500 text-center mb-20 orbitron transition-all duration-1000 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-24'
+            }`}
         >
           EVOLUTION LAB
-        </motion.h1>
+        </h1>
 
         <div className="space-y-24">
           {waves.map((wave, i) => (
-            <motion.div
+            <div
               key={wave.number}
-              initial={{ opacity: 0, x: i % 2 === 0 ? -300 : 300 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              transition={{ duration: 1, delay: i * 0.4 }}
-              className={`glass rounded-3xl p-16 border-4 ${wave.bg} max-w-5xl mx-auto`}
+              className={`glass rounded-3xl p-16 border-4 ${wave.bg} max-w-5xl mx-auto transition-all duration-1000 ${mounted ? 'opacity-100 translate-x-0' : `opacity-0 ${i % 2 === 0 ? '-translate-x-72' : 'translate-x-72'}`
+                }`}
+              style={{ transitionDelay: `${i * 400}ms` }}
             >
               <div className="flex items-center justify-between mb-12">
                 <div>
@@ -77,7 +81,7 @@ export default function EvolutionLab() {
                   </p>
                 </div>
               )}
-            </motion.div>
+            </div>
           ))}
         </div>
       </div>
