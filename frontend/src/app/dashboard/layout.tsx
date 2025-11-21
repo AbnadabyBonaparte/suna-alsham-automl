@@ -1,4 +1,4 @@
-import { Sidebar } from "@/components/layout/Sidebar";
+import Sidebar from "@/components/layout/Sidebar";
 import { GlobalKeyListener } from "@/components/layout/GlobalKeyListener";
 
 export default function DashboardLayout({

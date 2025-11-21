@@ -4,7 +4,7 @@
 import { useEffect, useState, useRef } from "react";
 import { useQuantumStore } from "@/lib/store";
 import { useSfx } from "@/hooks/use-sfx";
-import { Terminal } from "lucide-react";
+import { Terminal, Volume2, VolumeX } from "lucide-react";
 
 const BOOT_SEQUENCE = [
   "Initializing Neural Core v12.0...",
@@ -22,6 +22,8 @@ export default function MatrixPage() {
   const [logs, setLogs] = useState<string[]>([]);
   const [bootSequence, setBootSequence] = useState(true);
   const [currentLine, setCurrentLine] = useState("");
+  const [isMuted, setIsMuted] = useState(false);
+  const [soundCounter, setSoundCounter] = useState(0);
   const bottomRef = useRef<HTMLDivElement>(null);
   const { agents } = useQuantumStore();
   const { play } = useSfx();
@@ -33,7 +35,7 @@ export default function MatrixPage() {
       let i = 0;
       const typeChar = () => {
         if (i < wakeUpText.length) {
-          play("click");
+          if (!isMuted && i % 3 === 0) play("click");
           setCurrentLine(wakeUpText.substring(0, i + 1));
           i++;
           setTimeout(typeChar, 120 + Math.random() * 80);
@@ -55,14 +57,18 @@ export default function MatrixPage() {
 
       const addBootLine = () => {
         if (bootIndex < BOOT_SEQUENCE.length) {
-          play("click");
+          if (!isMuted) play("click");
           setLogs(prev => [...prev, `> ${BOOT_SEQUENCE[bootIndex]}`]);
           bootIndex++;
           setTimeout(addBootLine, 600 + Math.random() * 400);
         } else {
           // Depois do boot, entra no stream real
           const interval = setInterval(() => {
-            play("click");
+            setSoundCounter(prev => {
+              const newCount = prev + 1;
+              if (!isMuted && newCount % 5 === 0) play("click");
+              return newCount;
+            });
             const randomAgent = agents[Math.floor(Math.random() * agents.length)];
             const templates = [
               `[CORE] ${randomAgent?.name || "QUANTUM_ENTITY"} executing quantum routine ${Math.floor(Math.random() * 9999)}`,
@@ -103,10 +109,19 @@ export default function MatrixPage() {
         <div className="flex items-center gap-3 px-6 py-3 text-green-500">
           <Terminal className="w-5 h-5 animate-pulse" />
           <span className="text-sm tracking-wider">root@alsham-quantum:~#</span>
-          <div className="flex gap-2 ml-auto">
-            <div className="w-3 h-3 rounded-full bg-red-500 animate-pulse" />
-            <div className="w-3 h-3 rounded-full bg-yellow-500 animate-pulse delay-75" />
-            <div className="w-3 h-3 rounded-full bg-green-500 animate-pulse delay-150" />
+          <div className="flex gap-4 ml-auto items-center">
+            <button
+              onClick={() => setIsMuted(!isMuted)}
+              className="text-green-500 hover:text-green-300 transition-colors"
+              title={isMuted ? "Unmute" : "Mute"}
+            >
+              {isMuted ? <VolumeX className="w-5 h-5" /> : <Volume2 className="w-5 h-5" />}
+            </button>
+            <div className="flex gap-2">
+              <div className="w-3 h-3 rounded-full bg-red-500 animate-pulse" />
+              <div className="w-3 h-3 rounded-full bg-yellow-500 animate-pulse delay-75" />
+              <div className="w-3 h-3 rounded-full bg-green-500 animate-pulse delay-150" />
+            </div>
           </div>
         </div>
       </div>

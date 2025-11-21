@@ -2,9 +2,12 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useAuth } from "@/contexts/AuthContext";
+import { LogOut } from "lucide-react";
 
 export default function Sidebar() {
   const pathname = usePathname();
+  const { user, signOut } = useAuth();
 
   const menuItems = [
     { name: "COCKPIT", path: "/dashboard", icon: "M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" },
@@ -33,22 +36,21 @@ export default function Sidebar() {
             <Link
               key={item.path}
               href={item.path}
-              className={`relative flex items-center px-6 py-3 transition-all duration-300 group ${
-                isActive 
-                  ? "bg-[#6C3483]/20 text-[#F4D03F] border-r-4 border-[#F4D03F]" 
+              className={`relative flex items-center px-6 py-3 transition-all duration-300 group ${isActive
+                  ? "bg-[#6C3483]/20 text-[#F4D03F] border-r-4 border-[#F4D03F]"
                   : "text-gray-400 hover:text-white hover:bg-white/5"
-              }`}
+                }`}
             >
-              <svg 
-                className={`w-5 h-5 mr-3 transition-transform duration-300 ${isActive ? "scale-110 shadow-glow" : "group-hover:scale-110"}`} 
-                fill="none" 
-                viewBox="0 0 24 24" 
+              <svg
+                className={`w-5 h-5 mr-3 transition-transform duration-300 ${isActive ? "scale-110 shadow-glow" : "group-hover:scale-110"}`}
+                fill="none"
+                viewBox="0 0 24 24"
                 stroke="currentColor"
               >
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={item.icon} />
               </svg>
               <span className="text-sm font-bold tracking-wider orbitron">{item.name}</span>
-              
+
               {/* Glow Effect on Active */}
               {isActive && (
                 <div className="absolute inset-0 bg-[#F4D03F] opacity-5 blur-md"></div>
@@ -58,8 +60,21 @@ export default function Sidebar() {
         })}
       </nav>
 
-      {/* Footer */}
-      <div className="p-4 border-t border-[#1F618D]/20">
+      {/* Footer with User & Logout */}
+      <div className="p-4 border-t border-[#1F618D]/20 space-y-3">
+        {user && (
+          <div className="px-2 py-2 bg-white/5 rounded-lg border border-white/10">
+            <p className="text-[10px] text-zinc-500 uppercase tracking-wider">Operator</p>
+            <p className="text-xs text-white font-mono truncate">{user.email}</p>
+          </div>
+        )}
+        <button
+          onClick={() => signOut()}
+          className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-red-500/10 hover:bg-red-500/20 border border-red-500/50 rounded-lg text-red-400 text-sm font-medium transition-all"
+        >
+          <LogOut className="w-4 h-4" />
+          Logout
+        </button>
         <div className="flex items-center space-x-3">
           <div className="w-2 h-2 bg-[#2ECC71] rounded-full animate-pulse shadow-[0_0_10px_#2ECC71]"></div>
           <span className="text-xs font-mono text-[#2ECC71]">SYSTEM ONLINE</span>
