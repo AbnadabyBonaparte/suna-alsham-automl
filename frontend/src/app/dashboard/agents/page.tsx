@@ -1,7 +1,8 @@
 // frontend/src/app/dashboard/agents/page.tsx — VERSÃO SVG PURO (INDESTRUTÍVEL V2)
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { createClient } from "@supabase/supabase-js";
 
 // ÍCONES SVG NATIVOS (Zero dependências externas)
 const IconSearch = () => (
@@ -47,6 +48,24 @@ const IconServer = () => (
   </svg>
 );
 
+// Initialize Supabase client
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL || "",
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ""
+);
+
+// Agent type definition matching Supabase schema
+interface Agent {
+  id: string | number;
+  name: string;
+  role: string;
+  status: string;
+  efficiency: number;
+  current_task?: string;
+  currentTask?: string;
+}
+
+// Fallback data if Supabase connection fails
 const AGENTS_DATA = [
   { id: 1, name: "ORCHESTRATOR ALPHA", role: "CORE", status: "ACTIVE", efficiency: 99.9, currentTask: "Sincronizando 57 nós neurais" },
   { id: 2, name: "REVENUE HUNTER", role: "SPECIALIST", status: "PROCESSING", efficiency: 94.2, currentTask: "Analisando padrões de compra globais" },
@@ -62,8 +81,41 @@ const AGENTS_DATA = [
 export default function AgentsPage() {
   const [filter, setFilter] = useState("ALL");
   const [search, setSearch] = useState("");
+  const [agents, setAgents] = useState<Agent[]>(AGENTS_DATA);
+  const [loading, setLoading] = useState(true);
 
-  const filteredAgents = AGENTS_DATA.filter((agent) => {
+  // Fetch agents from Supabase on mount
+  useEffect(() => {
+    async function fetchAgents() {
+      try {
+        const { data, error } = await supabase
+          .from("agents")
+          .select("*")
+          .order("created_at", { ascending: true });
+
+        if (error) {
+          console.error("Error fetching agents from Supabase:", error);
+          // Keep fallback data
+        } else if (data && data.length > 0) {
+          // Normalize data: map current_task to currentTask for consistency
+          const normalizedData = data.map((agent: any) => ({
+            ...agent,
+            currentTask: agent.current_task || agent.currentTask || "Aguardando comando",
+          }));
+          setAgents(normalizedData);
+        }
+      } catch (err) {
+        console.error("Failed to connect to Supabase:", err);
+        // Keep fallback data
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchAgents();
+  }, []);
+
+  const filteredAgents = agents.filter((agent) => {
     const matchesSearch = agent.name.toLowerCase().includes(search.toLowerCase()) ||
       agent.currentTask.toLowerCase().includes(search.toLowerCase());
     const matchesFilter = filter === "ALL" || agent.role === filter;
@@ -100,7 +152,7 @@ export default function AgentsPage() {
               SENTINELAS
             </h1>
             <p className="text-xl md:text-3xl text-[#2ECC71] mt-4 font-mono tracking-widest">
-              {AGENTS_DATA.length} UNIDADES NEURAIS ATIVAS
+              {agents.length} UNIDADES NEURAIS ATIVAS
             </p>
           </div>
 
@@ -204,4 +256,3 @@ export default function AgentsPage() {
     </div>
   );
 }
-
