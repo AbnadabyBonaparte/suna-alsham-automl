@@ -24,6 +24,16 @@
   --input: 240 3.7% 15.9%;
   --ring: 240 4.9% 83.9%;
   --radius: 0.5rem;
+
+  /* Responsive Font Sizes using clamp() */
+  --font-xs: clamp(0.75rem, 0.7rem + 0.25vw, 0.875rem);
+  --font-sm: clamp(0.875rem, 0.8rem + 0.375vw, 1rem);
+  --font-base: clamp(1rem, 0.9rem + 0.5vw, 1.125rem);
+  --font-lg: clamp(1.125rem, 1rem + 0.625vw, 1.25rem);
+  --font-xl: clamp(1.25rem, 1.1rem + 0.75vw, 1.5rem);
+  --font-2xl: clamp(1.5rem, 1.3rem + 1vw, 2rem);
+  --font-3xl: clamp(1.875rem, 1.5rem + 1.875vw, 2.5rem);
+  --font-4xl: clamp(2.25rem, 1.8rem + 2.25vw, 3rem);
 }
 
 @layer base {
@@ -60,4 +70,69 @@
 
 .neon-border {
   box-shadow: 0 0 10px var(--color-neon-blue), inset 0 0 5px var(--color-neon-blue);
+}
+
+/* Responsive Typography Utilities */
+.text-responsive-xs {
+  font-size: var(--font-xs);
+}
+
+.text-responsive-sm {
+  font-size: var(--font-sm);
+}
+
+.text-responsive-base {
+  font-size: var(--font-base);
+}
+
+.text-responsive-lg {
+  font-size: var(--font-lg);
+}
+
+.text-responsive-xl {
+  font-size: var(--font-xl);
+}
+
+.text-responsive-2xl {
+  font-size: var(--font-2xl);
+}
+
+.text-responsive-3xl {
+  font-size: var(--font-3xl);
+}
+
+.text-responsive-4xl {
+  font-size: var(--font-4xl);
+}
+
+/* Orbitron Font Class */
+.orbitron {
+  font-family: var(--font-orbitron), sans-serif;
+}
+
+/* Custom Scrollbar */
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* Smooth Animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fadeIn {
+  animation: fadeIn 0.3s ease-out forwards;
 }

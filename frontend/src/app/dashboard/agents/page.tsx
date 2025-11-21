@@ -187,7 +187,7 @@ export default function AgentsPage() {
         </div>
 
         {/* GRID */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
           {filteredAgents.map((agent) => {
             const { color, glow } = getStyles(agent.role);
 
@@ -197,19 +197,20 @@ export default function AgentsPage() {
                 className="group relative bg-black/60 border-2 border-[#F4D03F]/20 backdrop-blur-xl hover:border-[#F4D03F]/80 hover:shadow-[0_0_50px_rgba(250,204,21,0.2)] transition-all duration-500 rounded-xl overflow-hidden cursor-pointer transform hover:-translate-y-2"
               >
                 <div className="p-8">
-                  <div className="flex items-start justify-between mb-6">
-                    <div className="flex items-center gap-6">
-                      <div className={`p-4 rounded-2xl bg-black/80 border border-[#F4D03F]/30 group-hover:scale-110 transition-all ${glow} ${color}`}>
-                        {renderIcon(agent.role)}
-                      </div>
-                      <div>
-                        <h3 className="text-2xl font-black text-white group-hover:text-[#F4D03F] transition-colors orbitron tracking-wide">
-                          {agent.name}
-                        </h3>
-                        <span className="inline-block mt-2 text-xs px-3 py-1 bg-black/80 border border-[#F4D03F]/40 text-[#F4D03F] rounded uppercase font-bold tracking-widest">
-                          {agent.role} UNIT
-                        </span>
-                      </div>
+                  <div className="flex flex-col items-center mb-6">
+                    {/* Icon centered at top */}
+                    <div className={`p-4 rounded-2xl bg-black/80 border border-[#F4D03F]/30 group-hover:scale-110 transition-all mb-4 ${glow} ${color}`}>
+                      {renderIcon(agent.role)}
+                    </div>
+
+                    {/* Name and role with full width */}
+                    <div className="w-full text-center">
+                      <h3 className="text-xl md:text-2xl font-black text-white group-hover:text-[#F4D03F] transition-colors orbitron tracking-wide mb-2" title={agent.name}>
+                        {agent.name}
+                      </h3>
+                      <span className="inline-block text-xs px-3 py-1 bg-black/80 border border-[#F4D03F]/40 text-[#F4D03F] rounded uppercase font-bold tracking-widest">
+                        {agent.role} UNIT
+                      </span>
                     </div>
                   </div>
 

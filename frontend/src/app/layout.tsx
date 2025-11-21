@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { Orbitron, Inter } from "next/font/google";
 import "./globals.css";
-import Sidebar from "@/components/layout/Sidebar";
 import { AuthProvider } from "@/contexts/AuthContext";
 import QuantumBackground from "@/components/QuantumBackground";
 import OrionCopilot from "@/components/OrionCopilot";
@@ -30,19 +29,15 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="pt-BR" className={`${orbitron.variable} ${inter.variable} dark`}>
-      <body className="bg-[#020C1B] text-white antialiased min-h-screen relative overflow-hidden flex">
+      <body className="bg-[#020C1B] text-white antialiased min-h-screen relative">
         <AuthProvider>
           <div className="fixed inset-0 z-0">
             <QuantumBackground />
           </div>
 
-          <aside className="flex-shrink-0 z-50 hidden md:block relative">
-            <Sidebar />
-          </aside>
-
-          <main className="flex-1 relative z-10 h-full overflow-y-auto overflow-x-hidden">
+          <div className="relative z-10 min-h-screen">
             {children}
-          </main>
+          </div>
 
           <OrionCopilot />
         </AuthProvider>
