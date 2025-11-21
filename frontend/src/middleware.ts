@@ -1,40 +1,90 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
-export function middleware(request: NextRequest) {
-    // Get the pathname
-    const path = request.nextUrl.pathname;
+import { createServerClient, type CookieOptions } from '@supabase/ssr'
 
-    // Define public paths that don't require authentication
-    const isPublicPath = path === '/login' || path === '/signup' || path === '/';
+export async function middleware(request: NextRequest) {
+    let response = NextResponse.next({
+        request: {
+            headers: request.headers,
+        },
+    })
 
-    // Get the token from cookies (Supabase stores it as 'sb-access-token')
-    const token = request.cookies.get('sb-access-token')?.value || '';
+    const supabase = createServerClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+        {
+            cookies: {
+                get(name: string) {
+                    return request.cookies.get(name)?.value
+                },
+                set(name: string, value: string, options: CookieOptions) {
+                    request.cookies.set({
+                        name,
+                        value,
+                        ...options,
+                    })
+                    response = NextResponse.next({
+                        request: {
+                            headers: request.headers,
+                        },
+                    })
+                    response.cookies.set({
+                        name,
+                        value,
+                        ...options,
+                    })
+                },
+                remove(name: string, options: CookieOptions) {
+                    request.cookies.set({
+                        name,
+                        value: '',
+                        ...options,
+                    })
+                    response = NextResponse.next({
+                        request: {
+                            headers: request.headers,
+                        },
+                    })
+                    response.cookies.set({
+                        name,
+                        value: '',
+                        ...options,
+                    })
+                },
+            },
+        }
+    )
 
-    // Redirect logic
-    if (isPublicPath && token && path !== '/') {
-        // If user is logged in and tries to access login/signup, redirect to dashboard
-        return NextResponse.redirect(new URL('/dashboard', request.url));
+    const { data: { user } } = await supabase.auth.getUser()
+
+    // Protected routes
+    if (request.nextUrl.pathname.startsWith('/dashboard')) {
+        if (!user) {
+            return NextResponse.redirect(new URL('/login', request.url))
+        }
     }
 
-    if (!isPublicPath && !token) {
-        // If user is not logged in and tries to access protected route, redirect to login
-        return NextResponse.redirect(new URL('/login', request.url));
+    // Auth routes (redirect to dashboard if already logged in)
+    if (request.nextUrl.pathname === '/login' || request.nextUrl.pathname === '/signup') {
+        if (user) {
+            return NextResponse.redirect(new URL('/dashboard', request.url))
+        }
     }
 
-    return NextResponse.next();
+    return response
 }
 
-// Configure which routes use this middleware
 export const config = {
     matcher: [
         /*
-         * Match all request paths except:
+         * Match all request paths except for the ones starting with:
          * - _next/static (static files)
          * - _next/image (image optimization files)
          * - favicon.ico (favicon file)
          * - public folder
+         * - auth/callback (auth callback route)
          */
-        '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
+        '/((?!_next/static|_next/image|favicon.ico|auth/callback|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
     ],
-};
+}
