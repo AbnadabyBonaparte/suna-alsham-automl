@@ -1,40 +1,63 @@
-    --muted: 240 3.7% 15.9%;
-    --muted-foreground: 240 5% 64.9%;
-    @tailwind base;
-    @tailwind components;
-    @tailwind utilities;
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
-    :root {
-      /* Quantum Palette */
-      --color-void-black: #020C1B;
-      --color-quantum-purple: #6C3483;
-      --color-photon-gold: #F4D03F;
-      --color-neon-blue: #00f3ff;
-      --color-glass-border: rgba(255, 255, 255, 0.1);
+:root {
+  /* Quantum Palette */
+  --color-void-black: #020C1B;
+  --color-quantum-purple: #6C3483;
+  --color-photon-gold: #F4D03F;
+  --color-neon-blue: #00f3ff;
+  --color-glass-border: rgba(255, 255, 255, 0.1);
 
-      --background: var(--color-void-black);
-      --foreground: #ffffff;
+  --background: var(--color-void-black);
+  --foreground: #ffffff;
 
-      --muted: 240 3.7% 15.9%;
-      --muted-foreground: 240 5% 64.9%;
-      --accent: 240 3.7% 15.9%;
-      --accent-foreground: 0 0% 98%;
-      --destructive: 0 62.8% 30.6%;
-      --destructive-foreground: 0 0% 98%;
-      --border: 240 3.7% 15.9%;
-      --input: 240 3.7% 15.9%;
-      --ring: 240 4.9% 83.9%;
-      --radius: 0.5rem;
-    }
-    }
+  /* Shadcn/Tailwind defaults */
+  --muted: 240 3.7% 15.9%;
+  --muted-foreground: 240 5% 64.9%;
+  --accent: 240 3.7% 15.9%;
+  --accent-foreground: 0 0% 98%;
+  --destructive: 0 62.8% 30.6%;
+  --destructive-foreground: 0 0% 98%;
+  --border: 240 3.7% 15.9%;
+  --input: 240 3.7% 15.9%;
+  --ring: 240 4.9% 83.9%;
+  --radius: 0.5rem;
+}
 
-    @layer base {
-      * {
-        border-color: hsl(var(--border));
-      }
+@layer base {
+  * {
+    border-color: hsl(var(--border));
+  }
 
-      body {
-        background-color: #000000;
-        color: #ffffff;
-      }
-    }
+  body {
+    background-color: var(--background);
+    color: var(--foreground);
+    font-family: var(--font-orbitron), sans-serif;
+  }
+}
+
+/* Glassmorphism Utilities */
+.glass-panel {
+  background: rgba(2, 12, 27, 0.7);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--color-glass-border);
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+}
+
+.glass-card {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.01) 100%);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 1rem;
+}
+
+.neon-text {
+  text-shadow: 0 0 10px var(--color-neon-blue), 0 0 20px var(--color-neon-blue);
+}
+
+.neon-border {
+  box-shadow: 0 0 10px var(--color-neon-blue), inset 0 0 5px var(--color-neon-blue);
+}
