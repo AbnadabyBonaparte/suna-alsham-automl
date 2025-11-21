@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Efeito 3D Original - ALSHAM QUANTUM</title>
+    
+    <!-- Incluindo a biblioteca Three.js via CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/three@0.158.0/build/three.min.js"></script>
+    
+    <style>
+        /* Estilos básicos para a página */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            color: white;
+            font-family: Arial, sans-serif;
+            overflow-x: hidden; /* Esconde a barra de rolagem horizontal */
+        }
+
+        /* ESTILOS FIÉIS AO CÓDIGO ORIGINAL */
+
+        /* 1. O fundo gradiente sobre o qual o efeito é renderizado */
+        .quantum-bg {
+            background: linear-gradient(135deg, #020C1B 0%, #1a1a2e 50%, #1F618D 100%);
+            position: relative; /* Essencial para o posicionamento do container das partículas */
+            overflow: hidden;
+        }
+
+        /* 2. O container para o canvas 3D, posicionado sobre o fundo */
+        #particles-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1; /* Fica acima do gradiente, mas abaixo do conteúdo */
+        }
+        
+        /* Conteúdo de exemplo para ficar na frente do efeito */
+        .content {
+            position: relative;
+            z-index: 2; /* Garante que o conteúdo fique na frente das partículas */
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100vh; /* Ocupa a primeira tela */
+            text-align: center;
+            padding: 20px;
+        }
+
+        h1 {
+            font-size: 5rem;
+            font-weight: 900;
+            text-shadow: 0 0 20px rgba(255, 255, 255, 0.3);
+            margin-bottom: 2rem;
+        }
+        
+        p {
+            font-size: 1.5rem;
+        }
+        
+        /* Espaço extra para permitir a rolagem e ver o efeito parallax */
+        .scroll-spacer {
+            height: 150vh;
+        }
+
+    </style>
+</head>
+<body>
+
+    <!-- A estrutura HTML é uma seção com a classe de fundo e o container das partículas dentro dela -->
+    <section class="quantum-bg">
+        <!-- O container para o nosso canvas 3D -->
+        <div id="particles-container"></div>
+
+        <!-- Conteúdo de exemplo para ficar na frente do efeito e testar o scroll -->
+        <div class="content">
+            <h1>Efeito Original</h1>
+            <p>Role a página para baixo para ver o efeito parallax.</p>
+        </div>
+    </section>
+    
+    <div class="scroll-spacer"></div>
+
+    <script>
+        // --- INÍCIO DO CÓDIGO JAVASCRIPT FIEL AO ORIGINAL ---
+
+        // Variáveis globais da cena 3D
+        let scene, camera, renderer, particlesMesh;
+
+        // Função de inicialização
+        function initParticles() {
+            const container = document.getElementById('particles-container');
+            if (!container) return;
+
+            scene = new THREE.Scene();
+            camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+            renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
+            
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setClearColor(0x000000, 0); // Fundo transparente
+            container.appendChild(renderer.domElement);
+
+            // Geometria e dados das partículas
+            const particlesGeometry = new THREE.BufferGeometry();
+            const particlesCount = 3000; // Número exato de partículas do original
+            const posArray = new Float32Array(particlesCount * 3);
+            const colorArray = new Float32Array(particlesCount * 3);
+
+            // Paleta de cores exata do original
+            const colors = [
+                [0.424, 0.208, 0.514], // Roxo (var(--quantum-primary))
+                [0.957, 0.816, 0.247], // Amarelo (var(--quantum-accent))
+                [0.122, 0.584, 0.878], // Azul (var(--quantum-neural))
+                [0.180, 0.800, 0.443]  // Verde (var(--quantum-secondary))
+            ];
+
+            for (let i = 0; i < particlesCount * 3; i++) {
+                // Posições aleatórias em um cubo
+                posArray[i] = (Math.random() - 0.5) * 100;
+                
+                // Escolhe uma cor aleatória da paleta
+                const colorSet = colors[Math.floor(Math.random() * colors.length)];
+                colorArray[i] = colorSet[i % 3];
+            }
+
+            particlesGeometry.setAttribute('position', new THREE.BufferAttribute(posArray, 3));
+            particlesGeometry.setAttribute('color', new THREE.BufferAttribute(colorArray, 3));
+
+            // Material das partículas - Chave para o visual de "quadrados"
+            const particlesMaterial = new THREE.PointsMaterial({
+                size: 2.5,                 // <<<<<< PONTO-CHAVE: Tamanho grande para parecer um quadrado
+                vertexColors: true,        // Habilita as cores da paleta
+                transparent: true,
+                opacity: 0.9,
+                blending: THREE.AdditiveBlending // <<<<<< PONTO-CHAVE: Cria o brilho onde as partículas se sobrepõem
+            });
+
+            particlesMesh = new THREE.Points(particlesGeometry, particlesMaterial);
+            scene.add(particlesMesh);
+            
+            camera.position.z = 50;
+            
+            // Inicia o loop de animação
+            animateParticles();
+        }
+
+        // Função de animação (loop)
+        function animateParticles() {
+            requestAnimationFrame(animateParticles);
+            
+            if (particlesMesh) {
+                // 1. Rotação constante e lenta
+                particlesMesh.rotation.x += 0.0002;
+                particlesMesh.rotation.y += 0.0004;
+                
+                // 2. Movimento orgânico de flutuação (para cima/baixo e para os lados)
+                const time = Date.now() * 0.0003;
+                // A posição Y da nuvem de partículas é alterada pelo scroll, então não mexemos nela aqui
+                particlesMesh.position.x = Math.sin(time * 0.7) * 1;
+            }
+            
+            renderer.render(scene, camera);
+        }
+        
+        // Função para o efeito de parallax ao rolar a página
+        function handleScroll() {
+            const scrolled = window.pageYOffset;
+            const rate = scrolled * -0.5; // Fator de movimento
+            
+            if (particlesMesh) {
+                // Altera a posição Y da nuvem de partículas com base na rolagem
+                particlesMesh.position.y = rate * 0.002;
+            }
+        }
+
+        // Listeners de eventos
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        }, false);
+        
+        window.addEventListener('scroll', handleScroll);
+
+        // Inicializa o efeito
+        initParticles();
+
+    </script>
+
+</body>
+</html>

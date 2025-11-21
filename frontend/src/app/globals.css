@@ -1,38 +1,40 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
-
-@layer base {
-  :root {
-    --background: 240 10% 3.9%;
-    --foreground: 0 0% 98%;
-    --card: 240 10% 3.9%;
-    --card-foreground: 0 0% 98%;
-    --popover: 240 10% 3.9%;
-    --popover-foreground: 0 0% 98%;
-    --primary: 263.4 70% 50.4%;
-    --primary-foreground: 210 40% 98%;
-    --secondary: 240 3.7% 15.9%;
-    --secondary-foreground: 0 0% 98%;
     --muted: 240 3.7% 15.9%;
     --muted-foreground: 240 5% 64.9%;
-    --accent: 240 3.7% 15.9%;
-    --accent-foreground: 0 0% 98%;
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 240 3.7% 15.9%;
-    --input: 240 3.7% 15.9%;
-    --ring: 240 4.9% 83.9%;
-    --radius: 0.5rem;
-  }
-}
+    @tailwind base;
+    @tailwind components;
+    @tailwind utilities;
 
-@layer base {
-  * {
-    border-color: hsl(var(--border));
-  }
-  body {
-    background-color: #000000;
-    color: #ffffff;
-  }
-}
+    :root {
+      /* Quantum Palette */
+      --color-void-black: #020C1B;
+      --color-quantum-purple: #6C3483;
+      --color-photon-gold: #F4D03F;
+      --color-neon-blue: #00f3ff;
+      --color-glass-border: rgba(255, 255, 255, 0.1);
+
+      --background: var(--color-void-black);
+      --foreground: #ffffff;
+
+      --muted: 240 3.7% 15.9%;
+      --muted-foreground: 240 5% 64.9%;
+      --accent: 240 3.7% 15.9%;
+      --accent-foreground: 0 0% 98%;
+      --destructive: 0 62.8% 30.6%;
+      --destructive-foreground: 0 0% 98%;
+      --border: 240 3.7% 15.9%;
+      --input: 240 3.7% 15.9%;
+      --ring: 240 4.9% 83.9%;
+      --radius: 0.5rem;
+    }
+    }
+
+    @layer base {
+      * {
+        border-color: hsl(var(--border));
+      }
+
+      body {
+        background-color: #000000;
+        color: #ffffff;
+      }
+    }
