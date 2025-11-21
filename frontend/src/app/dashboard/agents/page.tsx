@@ -49,7 +49,6 @@ const IconServer = () => (
 );
 
 
-
 // Agent type definition matching Supabase schema
 interface Agent {
   id: string | number;

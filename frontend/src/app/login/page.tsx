@@ -199,3 +199,23 @@ export default function LoginPage() {
         </div>
     );
 }
+
+{/* Signup Link */ }
+<div className="mt-6 text-center">
+    <p className="text-zinc-400 text-sm">
+        New operator?{' '}
+        <Link href="/signup" className="text-purple-400 hover:text-purple-300 font-medium transition-colors">
+            Request Access
+        </Link>
+    </p>
+</div>
+                </div >
+
+    {/* Footer */ }
+    < p className = "text-center text-zinc-600 text-xs mt-6" >
+        Secured by Quantum Encryption • ALSHAM Neural Core
+                </p >
+            </div >
+        </div >
+    );
+}
