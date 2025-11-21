@@ -50,11 +50,14 @@ export default function EvolutionLab() {
           EVOLUTION LAB
         </h1>
 
-        <div className="space-y-24">
+        <div className="space-y-24 relative">
+          {/* Vertical Line Connector */}
+          <div className="absolute left-1/2 top-0 bottom-0 w-1 bg-gradient-to-b from-emerald-500 via-purple-500 to-yellow-900 -translate-x-1/2 hidden lg:block opacity-30" />
+
           {waves.map((wave, i) => (
             <div
               key={wave.number}
-              className={`glass rounded-3xl p-16 border-4 ${wave.bg} max-w-5xl mx-auto transition-all duration-1000 ${mounted ? 'opacity-100 translate-x-0' : `opacity-0 ${i % 2 === 0 ? '-translate-x-72' : 'translate-x-72'}`
+              className={`glass rounded-3xl p-16 border-4 ${wave.bg} max-w-5xl mx-auto transition-all duration-1000 relative z-10 ${mounted ? 'opacity-100 translate-x-0' : `opacity-0 ${i % 2 === 0 ? '-translate-x-72' : 'translate-x-72'}`
                 }`}
               style={{ transitionDelay: `${i * 400}ms` }}
             >
@@ -65,19 +68,19 @@ export default function EvolutionLab() {
                   </h2>
                   <p className={`text-4xl mt-6 ${wave.color}`}>{wave.status}</p>
                 </div>
-                <div className="text-9xl">
+                <div className="text-9xl filter drop-shadow-[0_0_20px_rgba(255,255,255,0.3)]">
                   {wave.unlocked ? "🔓" : "🔒"}
                 </div>
               </div>
 
-              <p className="text-3xl text-gray-300 leading-relaxed">
+              <p className="text-3xl text-gray-300 leading-relaxed font-light">
                 {wave.achievements}
               </p>
 
               {!wave.unlocked && (
-                <div className="mt-16 text-center">
-                  <p className="text-4xl text-yellow-500 animate-pulse">
-                    AGUARDANDO DESBLOQUEIO QUÂNTICO...
+                <div className="mt-16 text-center p-8 bg-black/40 rounded-2xl border border-yellow-500/30">
+                  <p className="text-4xl text-yellow-500 animate-pulse font-mono tracking-widest">
+                    ⚠️ AGUARDANDO DESBLOQUEIO QUÂNTICO...
                   </p>
                 </div>
               )}
