@@ -1,64 +1,69 @@
-// frontend/src/components/layout/Sidebar.tsx — VERSÃO v12.1 SUPREMA
 "use client";
 
-import { Button } from "@/components/ui/button";
-import { Shield, Brain, Server, MessageSquare, LayoutDashboard, Network, Terminal, Settings, Zap, Dna, Orbit } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
-const menuItems = [
-  { name: "Cockpit", icon: LayoutDashboard, path: "/dashboard", color: "text-photon-gold" },
-  { name: "Neural Nexus", icon: Network, path: "/dashboard/network", color: "text-arcane-purple" },
-  { name: "Evolution Lab", icon: Dna, path: "/dashboard/evolution", color: "text-emerald-action" },
-  { name: "Sentinelas", icon: Shield, path: "/dashboard/agents", color: "text-crimson-containment" },
-  { name: "The Matrix", icon: Terminal, path: "/dashboard/matrix", color: "text-green-500" },
-  { name: "The Void", icon: Orbit, path: "/dashboard/void", color: "text-gray-400" },
-];
-
-export function Sidebar() {
+export default function Sidebar() {
   const pathname = usePathname();
 
+  const menuItems = [
+    { name: "COCKPIT", path: "/dashboard", icon: "M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" },
+    { name: "SENTINELAS", path: "/dashboard/agents", icon: "M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" },
+    { name: "NEXUS 3D", path: "/dashboard/network", icon: "M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" },
+    { name: "MATRIX", path: "/dashboard/matrix", icon: "M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" },
+    { name: "EVOLUTION", path: "/dashboard/evolution", icon: "M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z" },
+    { name: "THE VOID", path: "/dashboard/void", icon: "M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" },
+  ];
+
   return (
-    <div className="fixed left-0 top-0 h-full w-80 bg-black/90 backdrop-blur-2xl border-r border-photon-gold/20 z-50 flex flex-col">
-      {/* Logo Supremo */}
-      <div className="p-8 border-b border-photon-gold/10">
-        <div className="flex items-center gap-4">
-          <div className="h-12 w-12 rounded-full bg-gradient-to-br from-arcane-purple via-photon-gold to-emerald-action animate-pulse shadow-[0_0_30px_rgba(244,208,63,0.8)]" />
-          <div>
-            <h2 className="text-3xl font-black text-photon-gold orbitron tracking-tighter">ALSHAM</h2>
-            <p className="text-lg text-emerald-action font-mono">QUANTUM v12.1</p>
-          </div>
-        </div>
+    <div className="h-screen w-64 bg-[#020C1B] border-r border-[#1F618D]/30 flex flex-col z-50 shadow-[4px_0_24px_rgba(0,0,0,0.5)]">
+      {/* Logo */}
+      <div className="p-6 border-b border-[#1F618D]/20">
+        <h1 className="text-2xl font-bold tracking-tighter text-white orbitron">
+          ALSHAM <span className="text-[#F4D03F]">Q</span>
+        </h1>
+        <p className="text-[10px] text-[#1F618D] mt-1 tracking-[0.2em]">SYSTEM v12.1</p>
       </div>
 
-      {/* Menu Sagrado */}
-      <nav className="flex-1 p-6 space-y-3">
+      {/* Menu */}
+      <nav className="flex-1 py-6 space-y-2 overflow-y-auto">
         {menuItems.map((item) => {
           const isActive = pathname === item.path;
           return (
-            <Link key={item.path} href={item.path}>
-              <Button
-                variant="ghost"
-                className={`w-full justify-start gap-4 text-xl py-6 transition-all duration-500 ${
-                  isActive
-                    ? "bg-photon-gold/10 border border-photon-gold/50 text-photon-gold shadow-[0_0_30px_rgba(244,208,63,0.4)]"
-                    : "text-gray-400 hover:text-photon-gold hover:bg-photon-gold/5"
-                }`}
+            <Link
+              key={item.path}
+              href={item.path}
+              className={`relative flex items-center px-6 py-3 transition-all duration-300 group ${
+                isActive 
+                  ? "bg-[#6C3483]/20 text-[#F4D03F] border-r-4 border-[#F4D03F]" 
+                  : "text-gray-400 hover:text-white hover:bg-white/5"
+              }`}
+            >
+              <svg 
+                className={`w-5 h-5 mr-3 transition-transform duration-300 ${isActive ? "scale-110 shadow-glow" : "group-hover:scale-110"}`} 
+                fill="none" 
+                viewBox="0 0 24 24" 
+                stroke="currentColor"
               >
-                <item.icon className={`h-7 w-7 ${isActive ? item.color : "text-gray-500"}`} />
-                <span className="font-medium tracking-wide">{item.name}</span>
-              </Button>
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={item.icon} />
+              </svg>
+              <span className="text-sm font-bold tracking-wider orbitron">{item.name}</span>
+              
+              {/* Glow Effect on Active */}
+              {isActive && (
+                <div className="absolute inset-0 bg-[#F4D03F] opacity-5 blur-md"></div>
+              )}
             </Link>
           );
         })}
       </nav>
 
-      {/* Rodapé com Turbo */}
-      <div className="p-6 border-t border-photon-gold/10">
-        <Button className="w-full justify-center gap-3 text-2xl py-7 bg-gradient-to-r from-arcane-purple to-photon-gold hover:shadow-[0_0_40px_rgba(244,208,63,0.8)] transition-all font-bold">
-          <Zap className="h-8 w-8" />
-          TURBO MODE ATIVADO
-        </Button>
+      {/* Footer */}
+      <div className="p-4 border-t border-[#1F618D]/20">
+        <div className="flex items-center space-x-3">
+          <div className="w-2 h-2 bg-[#2ECC71] rounded-full animate-pulse shadow-[0_0_10px_#2ECC71]"></div>
+          <span className="text-xs font-mono text-[#2ECC71]">SYSTEM ONLINE</span>
+        </div>
       </div>
     </div>
   );
