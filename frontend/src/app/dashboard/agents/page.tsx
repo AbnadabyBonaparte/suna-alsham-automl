@@ -2,7 +2,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { createClient } from "@supabase/supabase-js";
+import { supabase } from "@/lib/supabase";
 
 // ÍCONES SVG NATIVOS (Zero dependências externas)
 const IconSearch = () => (
@@ -48,11 +48,7 @@ const IconServer = () => (
   </svg>
 );
 
-// Initialize Supabase client
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL || "",
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ""
-);
+
 
 // Agent type definition matching Supabase schema
 interface Agent {
@@ -62,7 +58,7 @@ interface Agent {
   status: string;
   efficiency: number;
   current_task?: string;
-  currentTask?: string;
+  currentTask: string;
 }
 
 // Fallback data if Supabase connection fails
@@ -87,6 +83,11 @@ export default function AgentsPage() {
   // Fetch agents from Supabase on mount
   useEffect(() => {
     async function fetchAgents() {
+      if (!supabase) {
+        console.error("Supabase client not initialized");
+        setLoading(false);
+        return;
+      }
       try {
         const { data, error } = await supabase
           .from("agents")

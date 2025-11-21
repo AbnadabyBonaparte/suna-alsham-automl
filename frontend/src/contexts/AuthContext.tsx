@@ -46,16 +46,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }, []);
 
     const signIn = async (email: string, password: string) => {
+        console.log("AuthContext: signIn called for", email);
         if (!supabase) {
+            console.error("AuthContext: Supabase not configured");
             return { error: { message: 'Supabase not configured', name: 'ConfigError', status: 500 } as AuthError };
         }
 
+        console.log("AuthContext: Calling supabase.auth.signInWithPassword");
         const { error } = await supabase.auth.signInWithPassword({
             email,
             password,
         });
+        console.log("AuthContext: signInWithPassword result error:", error);
 
         if (!error) {
+            console.log("AuthContext: Login successful, redirecting to /dashboard");
             router.push('/dashboard');
         }
 

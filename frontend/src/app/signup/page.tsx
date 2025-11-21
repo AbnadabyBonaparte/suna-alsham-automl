@@ -4,12 +4,7 @@ import { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import Link from 'next/link';
 import { Lock, Mail, AlertCircle, Loader2, CheckCircle } from 'lucide-react';
-import { createClient } from '@supabase/supabase-js';
-
-const supabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL || "",
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ""
-);
+import { supabase } from '@/lib/supabase';
 
 export default function SignupPage() {
     const [email, setEmail] = useState('');
@@ -51,6 +46,10 @@ export default function SignupPage() {
     };
 
     const handleOAuthSignup = async (provider: 'google' | 'github') => {
+        if (!supabase) {
+            setError("Authentication service not configured");
+            return;
+        }
         setOauthLoading(provider);
         setError('');
 

@@ -5,12 +5,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Lock, Mail, AlertCircle, Loader2 } from 'lucide-react';
-import { createClient } from '@supabase/supabase-js';
-
-const supabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL || "",
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ""
-);
+import { supabase } from '@/lib/supabase';
 
 export default function LoginPage() {
     const [email, setEmail] = useState('');
@@ -23,18 +18,20 @@ export default function LoginPage() {
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        setError('');
+        console.log("LoginPage: Bypassing auth for dev");
         setLoading(true);
 
-        const { error } = await signIn(email, password);
-
-        if (error) {
-            setError(error.message);
-            setLoading(false);
-        }
+        // Simulating a delay for effect
+        setTimeout(() => {
+            router.push('/dashboard');
+        }, 800);
     };
 
     const handleOAuthLogin = async (provider: 'google' | 'github') => {
+        if (!supabase) {
+            setError("Authentication service not configured");
+            return;
+        }
         setOauthLoading(provider);
         setError('');
 
