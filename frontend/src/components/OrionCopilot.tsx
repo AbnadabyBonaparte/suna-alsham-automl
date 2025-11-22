@@ -26,7 +26,7 @@ export default function OrionCopilot() {
     };
 
     return (
-        <div className="fixed bottom-6 right-6 z-[100] flex flex-col items-end">
+        <div className="fixed bottom-10 right-10 z-[100] flex flex-col items-end">
             <AnimatePresence>
                 {isOpen && (
                     <motion.div
@@ -51,8 +51,8 @@ export default function OrionCopilot() {
                             {messages.map((msg, idx) => (
                                 <div key={idx} className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
                                     <div className={`max-w-[80%] p-3 rounded-xl text-sm ${msg.role === "user"
-                                            ? "bg-[var(--color-quantum-purple)] text-white rounded-br-none"
-                                            : "bg-[var(--color-glass-border)] text-gray-200 rounded-bl-none border border-white/10"
+                                        ? "bg-[var(--color-quantum-purple)] text-white rounded-br-none"
+                                        : "bg-[var(--color-glass-border)] text-gray-200 rounded-bl-none border border-white/10"
                                         }`}>
                                         {msg.content}
                                     </div>

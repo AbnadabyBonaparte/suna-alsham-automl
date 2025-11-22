@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import MegaCounter from "@/components/MegaCounter";
 import AgentCard from "@/components/AgentCard";
 import { Sparkles, TrendingUp, Shield, Zap } from "lucide-react";
+import Link from "next/link";
 
 export default function Dashboard() {
   const agents = [
@@ -56,9 +57,9 @@ export default function Dashboard() {
               <Sparkles className="text-[var(--color-photon-gold)]" />
               Agentes Ativos
             </h2>
-            <button className="text-sm text-[var(--color-neon-blue)] hover:underline">
+            <Link href="/dashboard/agents" className="text-sm text-[var(--color-neon-blue)] hover:underline">
               Ver Todos
-            </button>
+            </Link>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

@@ -25,6 +25,7 @@ const MOCK_LOGS = [
 export default function MatrixTerminal() {
   const [logs, setLogs] = useState<any[]>([]);
   const [booted, setBooted] = useState(false);
+  const [isMuted, setIsMuted] = useState(false);
   const [showIntro, setShowIntro] = useState(true);
   const [introText, setIntroText] = useState("");
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -39,8 +40,8 @@ export default function MatrixTerminal() {
       if (i > text.length) {
         clearInterval(timer);
         setTimeout(() => {
-            setShowIntro(false); // Sai da intro
-            setBooted(true);     // Inicia o boot
+          setShowIntro(false); // Sai da intro
+          setBooted(true);     // Inicia o boot
         }, 2000);
       }
     }, 100); // Velocidade de digitação
@@ -50,7 +51,7 @@ export default function MatrixTerminal() {
   // Efeito 2: Boot Sequence
   useEffect(() => {
     if (!booted) return;
-    
+
     let i = 0;
     const timer = setInterval(() => {
       if (i < INITIAL_BOOT_SEQUENCE.length) {
@@ -71,7 +72,7 @@ export default function MatrixTerminal() {
       const randomLog = MOCK_LOGS[Math.floor(Math.random() * MOCK_LOGS.length)];
       const timestamp = new Date().toLocaleTimeString();
       setLogs(prev => [...prev.slice(-50), { ...randomLog, timestamp }]); // Mantém últimos 50 logs
-      
+
       // Auto-scroll
       if (scrollRef.current) {
         scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
@@ -95,25 +96,32 @@ export default function MatrixTerminal() {
     <div className="h-full w-full bg-black border border-green-500/20 rounded-lg p-4 font-mono text-sm relative overflow-hidden shadow-[0_0_30px_rgba(34,197,94,0.1)]">
       {/* Scanline Effect */}
       <div className="absolute inset-0 bg-[linear-gradient(transparent_50%,rgba(0,0,0,0.25)_50%)] bg-[length:100%_4px] pointer-events-none z-10 opacity-20"></div>
-      
+
       <div className="flex justify-between items-center border-b border-green-500/30 pb-2 mb-4">
-         <h3 className="text-green-400 font-bold flex items-center gap-2">
-            <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
-            LIVE KERNEL STREAM
-         </h3>
-         <Badge variant="outline" className="border-green-500/50 text-green-500">SECURE CONNECTION</Badge>
+        <h3 className="text-green-400 font-bold flex items-center gap-2">
+          <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
+          LIVE KERNEL STREAM
+        </h3>
+        <div className="flex items-center gap-4">
+          <button
+            onClick={() => setIsMuted(!isMuted)}
+            className={`text-xs font-mono border px-2 py-1 rounded hover:bg-green-500/10 transition-colors ${isMuted ? 'border-red-500/50 text-red-400' : 'border-green-500/50 text-green-400'}`}
+          >
+            {isMuted ? '[MUTE ACTIVE]' : '[AUDIO ON]'}
+          </button>
+          <Badge variant="outline" className="border-green-500/50 text-green-500">SECURE CONNECTION</Badge>
+        </div>
       </div>
 
       <div className="h-[calc(100%-3rem)] overflow-y-auto space-y-2 scrollbar-hide" ref={scrollRef}>
         {logs.map((log, i) => (
           <div key={i} className="flex gap-3 animate-in fade-in slide-in-from-bottom-1 duration-300">
             <span className="text-green-800">[{log.timestamp || "INIT"}]</span>
-            <span className={`font-bold w-24 ${
-                log.type === 'ERROR' ? 'text-red-500' : 
-                log.type === 'WARNING' ? 'text-yellow-500' : 
+            <span className={`font-bold w-24 ${log.type === 'ERROR' ? 'text-red-500' :
+              log.type === 'WARNING' ? 'text-yellow-500' :
                 log.type === 'SUCCESS' ? 'text-blue-400' : 'text-green-600'
-            }`}>
-                {log.type}
+              }`}>
+              {log.type}
             </span>
             <span className="text-green-700 w-32">@{log.source}:</span>
             <span className="text-green-400 flex-1">{log.msg}</span>

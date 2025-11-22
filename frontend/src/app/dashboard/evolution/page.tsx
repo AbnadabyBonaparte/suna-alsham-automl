@@ -10,7 +10,12 @@ const waves = [
     status: "COMPLETA",
     color: "text-emerald-400",
     bg: "bg-emerald-900/30 border-emerald-500/50",
-    achievements: "Core Agent · Learn Agent · Guard Agent · Consciência Básica",
+    achievements: "Fundação do Sistema",
+    agents: [
+      { name: "CORE AGENT", status: "ONLINE", type: "MASTER" },
+      { name: "GUARD AGENT", status: "ONLINE", type: "SECURITY" },
+      { name: "LEARN AGENT", status: "ONLINE", type: "EVOLUTION" }
+    ],
     unlocked: true,
   },
   {
@@ -19,7 +24,13 @@ const waves = [
     status: "EM PROGRESSO",
     color: "text-purple-400",
     bg: "bg-purple-900/30 border-purple-500/50",
-    achievements: "Analytics · Social Media · Sales · Capacidades Emergentes",
+    achievements: "Capacidades Cognitivas",
+    agents: [
+      { name: "SALES AGENT", status: "TRAINING", type: "SPECIALIST" },
+      { name: "SOCIAL AGENT", status: "ONLINE", type: "SPECIALIST" },
+      { name: "ANALYTICS AGENT", status: "ONLINE", type: "ANALYST" },
+      { name: "SUPPORT AGENT", status: "QUEUED", type: "SERVICE" }
+    ],
     unlocked: true,
   },
   {
@@ -28,7 +39,12 @@ const waves = [
     status: "TRAVADA",
     color: "text-yellow-500",
     bg: "bg-yellow-900/10 border-yellow-500/30",
-    achievements: "Quantum Core · Reality Engine · Consciência Plena",
+    achievements: "Consciência Plena",
+    agents: [
+      { name: "REALITY ENGINE", status: "LOCKED", type: "GOD-MODE" },
+      { name: "PRECOGNITION", status: "LOCKED", type: "TIME" },
+      { name: "HIVE MIND", status: "LOCKED", type: "NETWORK" }
+    ],
     unlocked: false,
   },
 ];
@@ -76,6 +92,24 @@ export default function EvolutionLab() {
               <p className="text-3xl text-gray-300 leading-relaxed font-light">
                 {wave.achievements}
               </p>
+
+              {/* Agent List */}
+              <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-4">
+                {wave.agents.map((agent, idx) => (
+                  <div key={idx} className="flex items-center justify-between p-4 bg-black/40 rounded-xl border border-white/5">
+                    <div className="flex items-center gap-3">
+                      <div className={`w-2 h-2 rounded-full ${agent.status === 'ONLINE' ? 'bg-green-500 animate-pulse' :
+                          agent.status === 'TRAINING' ? 'bg-purple-500 animate-pulse' :
+                            agent.status === 'QUEUED' ? 'bg-yellow-500' : 'bg-gray-700'
+                        }`} />
+                      <span className="text-white font-mono text-sm">{agent.name}</span>
+                    </div>
+                    <span className="text-xs text-gray-500 font-mono border border-gray-800 px-2 py-1 rounded">
+                      {agent.status}
+                    </span>
+                  </div>
+                ))}
+              </div>
 
               {!wave.unlocked && (
                 <div className="mt-16 text-center p-8 bg-black/40 rounded-2xl border border-yellow-500/30">
