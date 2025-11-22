@@ -19,7 +19,7 @@ export default function Sidebar() {
   ];
 
   return (
-    <div className="h-screen w-64 bg-[#020C1B] border-r border-[#1F618D]/30 flex flex-col z-50 shadow-[4px_0_24px_rgba(0,0,0,0.5)]">
+    <div className="hidden md:flex h-screen w-64 bg-[#020C1B] border-r border-[#1F618D]/30 flex-col z-50 shadow-[4px_0_24px_rgba(0,0,0,0.5)]">
       {/* Logo */}
       <div className="p-6 border-b border-[#1F618D]/20">
         <h1 className="text-2xl font-bold tracking-tighter text-white orbitron">
@@ -37,8 +37,8 @@ export default function Sidebar() {
               key={item.path}
               href={item.path}
               className={`relative flex items-center px-6 py-3 transition-all duration-300 group ${isActive
-                  ? "bg-[#6C3483]/20 text-[#F4D03F] border-r-4 border-[#F4D03F]"
-                  : "text-gray-400 hover:text-white hover:bg-white/5"
+                ? "bg-[#6C3483]/20 text-[#F4D03F] border-r-4 border-[#F4D03F]"
+                : "text-gray-400 hover:text-white hover:bg-white/5"
                 }`}
             >
               <svg

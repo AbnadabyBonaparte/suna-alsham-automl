@@ -1,5 +1,5 @@
 export type AgentRole = 'CORE' | 'GUARD' | 'SPECIALIST' | 'ANALYST';
-export type AgentStatus = 'IDLE' | 'PROCESSING' | 'LEARNING' | 'WARNING' | 'ERROR';
+export type AgentStatus = 'IDLE' | 'PROCESSING' | 'LEARNING' | 'WARNING' | 'ERROR' | 'ACTIVE';
 
 export interface Agent {
   id: string;
@@ -27,4 +27,5 @@ export interface QuantumState {
   updateMetrics: (newMetrics: Partial<SystemMetrics>) => void;
   updateAgent: (id: string, data: Partial<Agent>) => void;
   simulatePulse: () => void;
+  connectToQuantumCore: () => Promise<void>;
 }
