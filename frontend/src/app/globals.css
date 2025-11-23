@@ -2,6 +2,9 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ═══════════════════════════════════════════════════════════
+   SHADCN/UI BASE VARIABLES (mantendo compatibilidade)
+   ═══════════════════════════════════════════════════════════ */
 @layer base {
   :root {
     --background: 240 10% 3.9%;
@@ -27,12 +30,214 @@
   }
 }
 
+/* ═══════════════════════════════════════════════════════════
+   🔬 QUANTUM LAB THEME
+   ═══════════════════════════════════════════════════════════ */
+:root[data-theme="quantum"] {
+  /* Core */
+  --theme-bg-core: #000000;
+  --theme-bg-gradient: radial-gradient(circle at center, #051015 0%, #000 70%);
+  --theme-bg-panel: rgba(0, 255, 200, 0.04);
+  
+  /* Text */
+  --theme-text-primary: #00FFC8;
+  --theme-text-secondary: #00D4AA;
+  --theme-text-muted: #66B8A8;
+  
+  /* Accent */
+  --theme-accent: #00FFC8;
+  --theme-accent-hover: #00FFE5;
+  --theme-accent-glow: rgba(0, 255, 200, 0.5);
+  --theme-accent-subtle: rgba(0, 255, 200, 0.1);
+  
+  /* Borders */
+  --theme-border: rgba(0, 255, 200, 0.25);
+  --theme-border-hover: rgba(0, 255, 200, 0.5);
+  --theme-border-focus: rgba(0, 255, 200, 0.8);
+  
+  /* Status */
+  --theme-success: #10B981;
+  --theme-error: #EF4444;
+  --theme-warning: #F59E0B;
+  
+  /* Components */
+  --theme-card-bg: rgba(0, 255, 200, 0.04);
+  --theme-card-hover: rgba(0, 255, 200, 0.08);
+  --theme-card-border: rgba(0, 255, 200, 0.2);
+  --theme-button-bg: rgba(0, 255, 200, 0.1);
+  --theme-button-hover: rgba(0, 255, 200, 0.2);
+  --theme-input-bg: rgba(0, 0, 0, 0.5);
+  --theme-input-border: rgba(0, 255, 200, 0.3);
+  
+  /* Layout */
+  --theme-sidebar-bg: rgba(0, 10, 15, 0.95);
+  --theme-header-bg: rgba(0, 10, 15, 0.9);
+  --theme-modal-bg: rgba(5, 16, 21, 0.98);
+  --theme-modal-overlay: rgba(0, 0, 0, 0.8);
+  
+  /* Effects */
+  --theme-shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.3);
+  --theme-shadow-md: 0 4px 16px rgba(0, 0, 0, 0.4);
+  --theme-shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.5);
+  --theme-glow: 0 0 30px rgba(0, 255, 200, 0.15);
+  --theme-glow-intense: 0 0 60px rgba(0, 255, 200, 0.3);
+  
+  /* Particles */
+  --theme-particle-color: #00FFC8;
+  --theme-particle-glow: rgba(0, 255, 200, 0.6);
+  --theme-grid-color: rgba(0, 255, 200, 0.03);
+  
+  /* Typography */
+  --theme-font-display: 'Orbitron', system-ui, sans-serif;
+  --theme-font-body: 'Rajdhani', system-ui, sans-serif;
+  --theme-radius: 16px;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   ✨ LUMINOUS ASCENSION THEME
+   ═══════════════════════════════════════════════════════════ */
+:root[data-theme="ascension"] {
+  /* Core */
+  --theme-bg-core: #FFFFFF;
+  --theme-bg-gradient: linear-gradient(180deg, #FFFFFF 0%, #F8FAFC 50%, #F1F5F9 100%);
+  --theme-bg-panel: rgba(0, 0, 0, 0.02);
+  
+  /* Text */
+  --theme-text-primary: #1E293B;
+  --theme-text-secondary: #475569;
+  --theme-text-muted: #64748B;
+  
+  /* Accent */
+  --theme-accent: #D97706;
+  --theme-accent-hover: #B45309;
+  --theme-accent-glow: rgba(217, 119, 6, 0.3);
+  --theme-accent-subtle: rgba(217, 119, 6, 0.1);
+  
+  /* Borders */
+  --theme-border: rgba(0, 0, 0, 0.1);
+  --theme-border-hover: rgba(0, 0, 0, 0.2);
+  --theme-border-focus: rgba(217, 119, 6, 0.5);
+  
+  /* Status */
+  --theme-success: #059669;
+  --theme-error: #DC2626;
+  --theme-warning: #D97706;
+  
+  /* Components */
+  --theme-card-bg: rgba(255, 255, 255, 1);
+  --theme-card-hover: rgba(255, 255, 255, 1);
+  --theme-card-border: rgba(0, 0, 0, 0.08);
+  --theme-button-bg: rgba(217, 119, 6, 0.1);
+  --theme-button-hover: rgba(217, 119, 6, 0.2);
+  --theme-input-bg: rgba(255, 255, 255, 1);
+  --theme-input-border: rgba(0, 0, 0, 0.15);
+  
+  /* Layout */
+  --theme-sidebar-bg: rgba(248, 250, 252, 1);
+  --theme-header-bg: rgba(255, 255, 255, 0.95);
+  --theme-modal-bg: rgba(255, 255, 255, 1);
+  --theme-modal-overlay: rgba(0, 0, 0, 0.5);
+  
+  /* Effects */
+  --theme-shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.08);
+  --theme-shadow-md: 0 4px 12px rgba(0, 0, 0, 0.1);
+  --theme-shadow-lg: 0 10px 30px rgba(0, 0, 0, 0.12);
+  --theme-glow: 0 0 20px rgba(217, 119, 6, 0.15);
+  --theme-glow-intense: 0 0 40px rgba(217, 119, 6, 0.25);
+  
+  /* Particles */
+  --theme-particle-color: rgba(217, 119, 6, 0.6);
+  --theme-ray-color: rgba(217, 119, 6, 0.08);
+  --theme-grid-color: rgba(0, 0, 0, 0.03);
+  
+  /* Typography */
+  --theme-font-display: 'Inter', system-ui, sans-serif;
+  --theme-font-body: 'Inter', system-ui, sans-serif;
+  --theme-radius: 12px;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   ANIMATIONS
+   ═══════════════════════════════════════════════════════════ */
+@keyframes gridPulse {
+  0%, 100% { opacity: 0.2; }
+  50% { opacity: 0.5; }
+}
+
+@keyframes particleFloat {
+  0%, 100% {
+    transform: translate(0, 0) scale(1);
+    opacity: 0.4;
+  }
+  25% {
+    transform: translate(10px, -15px) scale(1.1);
+    opacity: 0.7;
+  }
+  50% {
+    transform: translate(-5px, 10px) scale(0.9);
+    opacity: 0.5;
+  }
+  75% {
+    transform: translate(15px, 5px) scale(1.05);
+    opacity: 0.6;
+  }
+}
+
+@keyframes rayMove {
+  0%, 100% {
+    transform: scaleX(1) translateX(0);
+    opacity: 0.8;
+  }
+  50% {
+    transform: scaleX(1.1) translateX(20px);
+    opacity: 1;
+  }
+}
+
+@keyframes particleRise {
+  0% {
+    transform: translateY(100vh) translateX(0);
+    opacity: 0;
+  }
+  10% { opacity: 0.8; }
+  90% { opacity: 0.8; }
+  100% {
+    transform: translateY(-10vh) translateX(20px);
+    opacity: 0;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════
+   ACCESSIBILITY - Reduced Motion
+   ═══════════════════════════════════════════════════════════ */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════
+   FOCUS VISIBLE (Accessibility)
+   ═══════════════════════════════════════════════════════════ */
+*:focus-visible {
+  outline: 3px solid var(--theme-accent, #00FFC8);
+  outline-offset: 2px;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   BASE STYLES
+   ═══════════════════════════════════════════════════════════ */
 @layer base {
   * {
     border-color: hsl(var(--border));
   }
+  
   body {
-    background-color: #000000;
-    color: #ffffff;
+    background: var(--theme-bg-gradient, #000000);
+    background-color: var(--theme-bg-core, #000000);
+    color: var(--theme-text-primary, #ffffff);
+    font-family: var(--theme-font-body, system-ui, sans-serif);
   }
 }
