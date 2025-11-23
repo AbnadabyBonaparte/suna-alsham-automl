@@ -9,50 +9,126 @@ export default function Home() {
       <ParticleField />
       <div className="z-10 flex flex-col items-center text-center px-4 animate-in fade-in zoom-in duration-1000">
         
-        <div className="mb-6 inline-flex items-center rounded-full border border-[#F4D03F]/30 bg-[#F4D03F]/10 px-3 py-1 text-xs font-medium text-[#F4D03F] backdrop-blur-md">
+        {/* Status Badge - Usando variáveis do tema */}
+        <div 
+          className="mb-6 inline-flex items-center rounded-full px-3 py-1 text-xs font-medium backdrop-blur-md"
+          style={{
+            border: '1px solid var(--accent-subtle)',
+            background: 'var(--accent-subtle)',
+            color: 'var(--accent)',
+          }}
+        >
           <span className="mr-2 flex h-1.5 w-1.5 relative">
-            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#F4D03F] opacity-75"></span>
-            <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-[#F4D03F]"></span>
+            <span 
+              className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75"
+              style={{ background: 'var(--accent)' }}
+            />
+            <span 
+              className="relative inline-flex rounded-full h-1.5 w-1.5"
+              style={{ background: 'var(--accent)' }}
+            />
           </span>
-          SISTEMA ONLINE • v11.0 ENTERPRISE
+          SISTEMA ONLINE • v13.3 REALITY CODEX
         </div>
 
-        <h1 className="text-5xl md:text-8xl font-bold tracking-tighter text-white mb-6 text-glow">
-          ALSHAM <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#6C3483] to-[#F4D03F]">QUANTUM</span>
+        {/* Title - Usando variáveis do tema */}
+        <h1 
+          className="text-5xl md:text-8xl font-bold tracking-tighter mb-6"
+          style={{ 
+            color: 'var(--text-primary)',
+            textShadow: 'var(--glow-text)',
+            fontFamily: 'var(--font-display)',
+          }}
+        >
+          ALSHAM{' '}
+          <span 
+            className="text-transparent bg-clip-text"
+            style={{
+              backgroundImage: 'linear-gradient(to right, var(--accent), var(--accent-hover))',
+              WebkitBackgroundClip: 'text',
+            }}
+          >
+            QUANTUM
+          </span>
         </h1>
 
-        <p className="max-w-[600px] text-lg text-gray-400 mb-8 leading-relaxed">
+        {/* Description */}
+        <p 
+          className="max-w-[600px] text-lg mb-8 leading-relaxed"
+          style={{ color: 'var(--text-muted)' }}
+        >
           O Primeiro Organismo Digital Auto-Evolutivo.
           <br/>
-          <span className="text-white">57 Agentes Reais. ROI de 2.847%.</span>
+          <span style={{ color: 'var(--text-primary)' }}>
+            139 Agentes Reais. 21 Páginas. ROI de 2.847%.
+          </span>
         </p>
 
+        {/* Buttons */}
         <div className="flex flex-col sm:flex-row gap-4">
           <Link href="/dashboard">
-            <Button className="bg-[#F4D03F] text-[#020C1B] hover:bg-[#F4D03F]/80 text-lg px-8 py-6 font-bold shadow-[0_0_20px_rgba(244,208,63,0.3)] transition-all hover:scale-105">
+            <Button 
+              className="text-lg px-8 py-6 font-bold transition-all hover:scale-105"
+              style={{
+                background: 'var(--accent)',
+                color: 'var(--text-inverse)',
+                boxShadow: 'var(--glow)',
+              }}
+            >
               ACESSAR COCKPIT
             </Button>
           </Link>
-          <Button variant="outline" className="border-[#6C3483] text-[#6C3483] hover:bg-[#6C3483]/10 text-lg px-8 py-6 backdrop-blur-sm bg-black/40">
+          <Button 
+            variant="outline" 
+            className="text-lg px-8 py-6 backdrop-blur-sm"
+            style={{
+              border: '1px solid var(--border)',
+              color: 'var(--text-secondary)',
+              background: 'var(--bg-panel)',
+            }}
+          >
             DOCUMENTAÇÃO
           </Button>
         </div>
 
-        <div className="mt-16 grid grid-cols-3 gap-8 text-gray-500 text-sm glass-panel p-6 rounded-xl w-full max-w-2xl border-t border-white/10">
+        {/* Stats Grid */}
+        <div 
+          className="mt-16 grid grid-cols-3 gap-8 text-sm p-6 rounded-xl w-full max-w-2xl"
+          style={{
+            background: 'var(--card-bg)',
+            border: '1px solid var(--card-border)',
+            backdropFilter: 'var(--backdrop-blur)',
+          }}
+        >
           <div className="flex flex-col items-center gap-2">
-            <Activity className="h-5 w-5 text-[#2ECC71]" />
-            <span className="font-mono font-bold text-white">R$ 4.7B</span>
-            <span className="text-xs">ECONOMIA</span>
+            <Activity className="h-5 w-5" style={{ color: 'var(--success)' }} />
+            <span 
+              className="font-mono font-bold"
+              style={{ color: 'var(--text-primary)' }}
+            >
+              R$ 4.7B
+            </span>
+            <span style={{ color: 'var(--text-muted)' }}>ECONOMIA</span>
           </div>
           <div className="flex flex-col items-center gap-2">
-            <Zap className="h-5 w-5 text-[#F4D03F]" />
-            <span className="font-mono font-bold text-white">99.98%</span>
-            <span className="text-xs">UPTIME</span>
+            <Zap className="h-5 w-5" style={{ color: 'var(--accent)' }} />
+            <span 
+              className="font-mono font-bold"
+              style={{ color: 'var(--text-primary)' }}
+            >
+              99.98%
+            </span>
+            <span style={{ color: 'var(--text-muted)' }}>UPTIME</span>
           </div>
           <div className="flex flex-col items-center gap-2">
-            <ShieldCheck className="h-5 w-5 text-[#6C3483]" />
-            <span className="font-mono font-bold text-white">57</span>
-            <span className="text-xs">AGENTES</span>
+            <ShieldCheck className="h-5 w-5" style={{ color: 'var(--accent-hover)' }} />
+            <span 
+              className="font-mono font-bold"
+              style={{ color: 'var(--text-primary)' }}
+            >
+              139
+            </span>
+            <span style={{ color: 'var(--text-muted)' }}>AGENTES</span>
           </div>
         </div>
       </div>
