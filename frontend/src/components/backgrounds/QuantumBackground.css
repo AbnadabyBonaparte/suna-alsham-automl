@@ -1,0 +1,115 @@
+/* frontend/src/components/backgrounds/QuantumBackground.css */
+/* Reality Codex - Quantum Lab Background Animations */
+/* Source: ALSHAM_QUANTUM_REALIDADES_VISUAIS_ULTIMATE_v3.md */
+
+/* Grid pulse animation */
+@keyframes quantumGridPulse {
+  0%, 100% { opacity: 0.2; }
+  50% { opacity: 0.5; }
+}
+
+/* Particle float animation */
+@keyframes quantumParticleFloat {
+  0%, 100% {
+    transform: translate(0, 0) scale(1);
+    opacity: 0.4;
+  }
+  25% {
+    transform: translate(10px, -15px) scale(1.1);
+    opacity: 0.7;
+  }
+  50% {
+    transform: translate(-5px, 10px) scale(0.9);
+    opacity: 0.5;
+  }
+  75% {
+    transform: translate(15px, 5px) scale(1.05);
+    opacity: 0.6;
+  }
+}
+
+/* Core glow pulse */
+@keyframes quantumCorePulse {
+  0%, 100% {
+    opacity: 0.15;
+    transform: translate(-50%, -50%) scale(1);
+  }
+  50% {
+    opacity: 0.25;
+    transform: translate(-50%, -50%) scale(1.1);
+  }
+}
+
+/* Quantum Background Container */
+.quantum-bg {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  overflow: hidden;
+  background: var(--bg-gradient);
+}
+
+/* Grid base */
+.quantum-grid {
+  position: absolute;
+  inset: 0;
+  opacity: 0.3;
+  background-image: 
+    linear-gradient(90deg, var(--grid-color) 1px, transparent 1px),
+    linear-gradient(0deg, var(--grid-color) 1px, transparent 1px);
+  background-size: 80px 80px;
+  animation: quantumGridPulse 6s ease-in-out infinite;
+}
+
+/* CSS Particle */
+.quantum-particle {
+  position: absolute;
+  border-radius: 50%;
+  background: var(--particle-color);
+  box-shadow: 0 0 6px var(--particle-glow);
+  animation: quantumParticleFloat var(--duration, 15s) ease-in-out infinite;
+  animation-delay: var(--delay, 0s);
+}
+
+/* Core glow */
+.quantum-core-glow {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 600px;
+  height: 600px;
+  opacity: 0.2;
+  background: radial-gradient(circle, var(--accent-glow) 0%, transparent 70%);
+  filter: blur(60px);
+  animation: quantumCorePulse 8s ease-in-out infinite;
+}
+
+/* Vignette */
+.quantum-vignette {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at center, transparent 0%, rgba(0,0,0,0.4) 100%);
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .quantum-grid,
+  .quantum-particle,
+  .quantum-core-glow {
+    animation: none;
+  }
+  
+  .quantum-grid {
+    opacity: 0.3;
+  }
+  
+  .quantum-particle {
+    opacity: 0.5;
+  }
+  
+  .quantum-core-glow {
+    opacity: 0.15;
+  }
+}
