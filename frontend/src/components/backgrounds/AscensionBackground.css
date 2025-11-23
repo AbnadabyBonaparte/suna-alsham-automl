@@ -1,0 +1,123 @@
+/* frontend/src/components/backgrounds/AscensionBackground.css */
+/* Reality Codex - Luminous Ascension Background Animations */
+/* Source: ALSHAM_QUANTUM_REALIDADES_VISUAIS_ULTIMATE_v3.md */
+
+/* God Ray animation */
+@keyframes ascensionRayMove {
+  0%, 100% {
+    transform: scaleX(1) translateX(0);
+    opacity: 0.8;
+  }
+  50% {
+    transform: scaleX(1.1) translateX(20px);
+    opacity: 1;
+  }
+}
+
+/* Particle rise animation */
+@keyframes ascensionParticleRise {
+  0% {
+    transform: translateY(100vh) translateX(0);
+    opacity: 0;
+  }
+  10% { opacity: 0.8; }
+  90% { opacity: 0.8; }
+  100% {
+    transform: translateY(-10vh) translateX(20px);
+    opacity: 0;
+  }
+}
+
+/* Gentle glow pulse */
+@keyframes ascensionGlowPulse {
+  0%, 100% {
+    opacity: 0.25;
+    transform: translate(-50%, -50%) scale(1);
+  }
+  50% {
+    opacity: 0.35;
+    transform: translate(-50%, -50%) scale(1.05);
+  }
+}
+
+/* Ascension Background Container */
+.ascension-bg {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  overflow: hidden;
+  background: var(--bg-gradient);
+}
+
+/* God Ray */
+.ascension-ray {
+  position: absolute;
+  top: 0;
+  height: 120%;
+  background: linear-gradient(180deg, var(--ray-color) 0%, transparent 80%);
+  transform-origin: top center;
+  animation: ascensionRayMove var(--duration, 8s) ease-in-out infinite;
+  animation-delay: var(--delay, 0s);
+}
+
+/* Golden particle */
+.ascension-particle {
+  position: absolute;
+  border-radius: 50%;
+  background: radial-gradient(circle, var(--particle-color) 0%, transparent 70%);
+  animation: ascensionParticleRise var(--duration, 10s) linear infinite;
+  animation-delay: var(--delay, 0s);
+}
+
+/* Central glow */
+.ascension-glow {
+  position: absolute;
+  top: 25%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 800px;
+  height: 800px;
+  opacity: 0.3;
+  background: radial-gradient(circle, rgba(217, 119, 6, 0.15) 0%, transparent 60%);
+  animation: ascensionGlowPulse 6s ease-in-out infinite;
+}
+
+/* Soft vignette */
+.ascension-vignette {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at center, transparent 0%, rgba(241, 245, 249, 0.3) 100%);
+}
+
+/* Subtle grid pattern */
+.ascension-grid {
+  position: absolute;
+  inset: 0;
+  opacity: 0.03;
+  background-image: 
+    linear-gradient(90deg, var(--grid-color) 1px, transparent 1px),
+    linear-gradient(0deg, var(--grid-color) 1px, transparent 1px);
+  background-size: 60px 60px;
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .ascension-ray,
+  .ascension-particle,
+  .ascension-glow {
+    animation: none;
+  }
+  
+  .ascension-ray {
+    opacity: 0.5;
+  }
+  
+  .ascension-particle {
+    display: none;
+  }
+  
+  .ascension-glow {
+    opacity: 0.2;
+  }
+}
