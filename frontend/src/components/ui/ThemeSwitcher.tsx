@@ -38,14 +38,14 @@ export function ThemeSwitcher() {
 
   return (
     <>
-      {/* Floating Button */}
+     {/* Floating Button */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="fixed bottom-6 right-6 w-14 h-14 rounded-full bg-gradient-to-br from-primary/80 to-accent/80 backdrop-blur-xl border border-primary/30 shadow-2xl shadow-primary/20 flex items-center justify-center transition-all hover:scale-110 hover:shadow-primary/40 z-[100]"
+        className="fixed bottom-6 right-6 w-14 h-14 rounded-full bg-gradient-to-br from-primary to-accent backdrop-blur-xl border-2 border-primary shadow-2xl shadow-primary/20 flex items-center justify-center transition-all hover:scale-110 hover:shadow-primary/40 z-[100]"
         title="Trocar Realidade Visual (Alt+Shift+T)"
         aria-label="Abrir seletor de temas"
       >
-        <Palette className="w-6 h-6 text-white" />
+        <Palette className="w-6 h-6 text-white drop-shadow-lg" />
       </button>
 
       {/* Modal Overlay */}
