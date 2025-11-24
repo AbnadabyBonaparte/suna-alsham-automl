@@ -57,7 +57,7 @@ export interface ThemeConfig {
 export const QUANTUM_THEME: ThemeConfig = {
   id: 'quantum',
   name: 'Quantum Lab',
-  description: 'O nascimento do pensamento dentro de um reator',
+  description: 'O nascimento do pensamento dentro de um reator.',
   icon: '⚛️',
   colors: {
     primary: '#00FFD0',
@@ -85,7 +85,7 @@ export const QUANTUM_THEME: ThemeConfig = {
 export const ASCENSION_THEME: ThemeConfig = {
   id: 'ascension',
   name: 'Luminous Ascension',
-  description: 'O pós-vida da tecnologia. Minimalismo divino',
+  description: 'O pós-vida da tecnologia. Minimalismo divino.',
   icon: '✨',
   colors: {
     primary: '#FFD700',
@@ -108,31 +108,31 @@ export const ASCENSION_THEME: ThemeConfig = {
 };
 
 // ═══════════════════════════════════════════════════════════════
-// 3. MILITARY OPS (O General)
+// 3. MILITARY OPS (O General - PENTAGON WAR ROOM)
 // ═══════════════════════════════════════════════════════════════
 export const MILITARY_THEME: ThemeConfig = {
   id: 'military',
   name: 'Military Ops',
-  description: 'O Pentágono durante o apocalipse digital',
-  icon: '⚔️',
+  description: 'War Room do Pentágono. Camuflagem digital e fibra de carbono.',
+  icon: '🎯', // Ícone de Sniper
   colors: {
-    primary: '#F4D03F',
-    secondary: '#52C41A',
-    accent: '#389E0D',
-    background: '#0A0A0A',
-    surface: '#141414',
-    text: '#FFFFFF',
-    textSecondary: '#8C8C8C',
-    border: '#F4D03F',
-    success: '#52C41A',
-    warning: '#FAAD14',
-    error: '#FF4D4F',
-    glow: '#F4D03F',
+    primary: '#FFD600',      // Amarelo Tático de Alto Contraste (HUD)
+    secondary: '#333333',    // Gunmetal Grey
+    accent: '#EF4444',       // Vermelho Alerta/Laser
+    background: '#050505',   // Preto Fosco Absoluto (Stealth)
+    surface: '#111111',      // Textura Fibra de Carbono (Simulada)
+    text: '#E5E5E5',         // Branco Gelo Sujo
+    textSecondary: '#6B7280', // Cinza Tático
+    border: '#404040',       // Aço Escovado Escuro
+    success: '#10B981',      // Verde Radar
+    warning: '#F59E0B',      // Laranja Perigo
+    error: '#DC2626',        // Vermelho Crítico
+    glow: '#FFD600',         // Glow Amarelo HUD
   },
-  gradient: 'linear-gradient(135deg, #0A0A0A 0%, #1A1A1A 100%)',
+  gradient: 'linear-gradient(180deg, #050505 0%, #111111 100%)', // Fundo Stealth
   backgroundType: 'military',
-  animation: { speed: 'fast', intensity: 'medium' },
-  sound: { ambient: '/sounds/tactical-beep.mp3', click: '/sounds/military-click.mp3' },
+  animation: { speed: 'fast', intensity: 'high' },
+  sound: { ambient: '/sounds/radar-sweep.mp3', click: '/sounds/tactical-switch.mp3' },
 };
 
 // ═══════════════════════════════════════════════════════════════
@@ -141,7 +141,7 @@ export const MILITARY_THEME: ThemeConfig = {
 export const NEURAL_THEME: ThemeConfig = {
   id: 'neural',
   name: 'Neural Singularity',
-  description: 'Estar dentro do cérebro da IA. Biologia digital',
+  description: 'Estar dentro do cérebro da IA. Biologia digital.',
   icon: '🧠',
   colors: {
     primary: '#8B5CF6',
@@ -164,31 +164,31 @@ export const NEURAL_THEME: ThemeConfig = {
 };
 
 // ═══════════════════════════════════════════════════════════════
-// 5. TITANIUM EXECUTIVE (Apple Style)
+// 5. TITANIUM EXECUTIVE (Dubai 127º Andar)
 // ═══════════════════════════════════════════════════════════════
 export const TITANIUM_THEME: ThemeConfig = {
   id: 'titanium',
   name: 'Titanium Executive',
-  description: 'Minimalismo industrial. O luxo do grafite e metal.',
-  icon: '🛡️',
+  description: 'Dubai Penthouse. Couro Saffiano, Ouro Líquido e Platina.',
+  icon: '🤵',
   colors: {
-    primary: '#E5E7EB',
-    secondary: '#9CA3AF',
-    accent: '#FFFFFF',
-    background: '#111111',
-    surface: '#1C1C1E',
-    text: '#F3F4F6',
-    textSecondary: '#9CA3AF',
-    border: '#374151',
-    success: '#10B981',
-    warning: '#F59E0B',
-    error: '#EF4444',
-    glow: '#E5E7EB',
+    primary: '#F1F5F9',      // Platina Pura
+    secondary: '#1E293B',    // Azul Meia-Noite
+    accent: '#D4AF37',       // Ouro Metálico Real (Champagne Gold)
+    background: '#020617',   // Azul Marinho Profundo (Deep Navy)
+    surface: '#0F172A',      // Couro Azulado
+    text: '#F8FAFC',         // Branco Titânio
+    textSecondary: '#94A3B8', // Prata Fosco
+    border: '#334155',       // Borda Metálica Fina
+    success: '#D4AF37',      // Sucesso é Ouro
+    warning: '#B45309',      // Bronze
+    error: '#991B1B',        // Rubi Escuro
+    glow: '#D4AF37',         // Brilho Dourado Sutil
   },
-  gradient: 'linear-gradient(145deg, #111111 0%, #1C1C1E 100%)',
+  gradient: 'linear-gradient(135deg, #020617 0%, #0F172A 100%)',
   backgroundType: 'titanium',
   animation: { speed: 'medium', intensity: 'low' },
-  sound: { ambient: '/sounds/executive-ambient.mp3', click: '/sounds/titanium-click.mp3' },
+  sound: { ambient: '/sounds/vault-ambience.mp3', click: '/sounds/heavy-metal-click.mp3' },
 };
 
 // ═══════════════════════════════════════════════════════════════
@@ -248,7 +248,7 @@ export const ZEN_THEME: ThemeConfig = {
 };
 
 // ═══════════════════════════════════════════════════════════════
-// 8. COBALT PRIME (Microsoft/IBM Style)
+// 8. COBALT PRIME (Enterprise Trust)
 // ═══════════════════════════════════════════════════════════════
 export const COBALT_THEME: ThemeConfig = {
   id: 'cobalt',
@@ -276,7 +276,7 @@ export const COBALT_THEME: ThemeConfig = {
 };
 
 // ═══════════════════════════════════════════════════════════════
-// 9. CRIMSON VELOCITY (Tesla/Netflix Style)
+// 9. CRIMSON VELOCITY (High Performance)
 // ═══════════════════════════════════════════════════════════════
 export const CRIMSON_THEME: ThemeConfig = {
   id: 'crimson',
@@ -304,7 +304,7 @@ export const CRIMSON_THEME: ThemeConfig = {
 };
 
 // ═══════════════════════════════════════════════════════════════
-// 10. AGRUPAMENTO FINAL (IMPORTANTE: MANTENHA NO FINAL)
+// 10. AGRUPAMENTO FINAL (ORDEM CORRIGIDA)
 // ═══════════════════════════════════════════════════════════════
 export const THEMES: Record<ThemeId, ThemeConfig> = {
   quantum: QUANTUM_THEME,
@@ -323,11 +323,11 @@ export const DEFAULT_THEME: ThemeId = 'quantum';
 export const THEME_ORDER: ThemeId[] = [
   'quantum',
   'ascension',
+  'military', // O General (Novo)
+  'titanium', // O Bilionário (Novo)
   'cobalt',
-  'military',
   'crimson',
   'neural',
-  'titanium',
   'vintage',
   'zen',
 ];
