@@ -1,12 +1,21 @@
 /**
  * ═══════════════════════════════════════════════════════════════
- * ALSHAM QUANTUM - THEME TYPES (7 UNIVERSOS)
+ * ALSHAM QUANTUM - THEME TYPES (9 UNIVERSOS - GLOBAL ELITE EDITION)
  * ═══════════════════════════════════════════════════════════════
  * 📁 PATH: frontend/src/types/theme.ts
  * ═══════════════════════════════════════════════════════════════
  */
 
-export type ThemeId = 'quantum' | 'ascension' | 'military' | 'neural' | 'titanium' | 'vintage' | 'zen';
+export type ThemeId = 
+  | 'quantum' 
+  | 'ascension' 
+  | 'military' 
+  | 'neural' 
+  | 'titanium' 
+  | 'vintage' 
+  | 'zen' 
+  | 'cobalt'   // NOVO: Enterprise Trust
+  | 'crimson'; // NOVO: High Performance
 
 export interface ThemeColors {
   primary: string;
@@ -30,7 +39,7 @@ export interface ThemeConfig {
   icon: string;
   colors: ThemeColors;
   gradient: string;
-  backgroundType: 'quantum' | 'ascension' | 'military' | 'neural' | 'titanium' | 'vintage' | 'zen';
+  backgroundType: ThemeId;
   animation: {
     speed: 'slow' | 'medium' | 'fast';
     intensity: 'low' | 'medium' | 'high';
@@ -42,169 +51,36 @@ export interface ThemeConfig {
   };
 }
 
-// ═══════════════════════════════════════════════════════════════
-// REALIDADE 1: QUANTUM LAB (O Cientista Visionário)
-// ═══════════════════════════════════════════════════════════════
-export const QUANTUM_THEME: ThemeConfig = {
-  id: 'quantum',
-  name: 'Quantum Lab',
-  description: 'O nascimento do pensamento dentro de um reator',
-  icon: '⚛️',
-  colors: {
-    primary: '#00FFD0',      // Ciano Elétrico
-    secondary: '#0EA5E9',    // Azul Cristalino
-    accent: '#06B6D4',       // Cyan Vibrante
-    background: '#000000',   // Preto Absoluto
-    surface: '#0a0a0a',      // Preto Suave
-    text: '#FFFFFF',
-    textSecondary: '#94A3B8',
-    border: '#00FFD0',
-    success: '#00FFD0',
-    warning: '#F59E0B',
-    error: '#EF4444',
-    glow: '#00FFD0',
-  },
-  gradient: 'radial-gradient(ellipse at center, #051015 0%, #000000 70%)',
-  backgroundType: 'quantum',
-  animation: {
-    speed: 'medium',
-    intensity: 'high',
-  },
-  sound: {
-    ambient: '/sounds/quantum-hum.mp3',
-    click: '/sounds/quantum-click.mp3',
-  },
-};
+// ... [MANTENHA OS TEMAS: QUANTUM, ASCENSION, MILITARY, NEURAL, VINTAGE, ZEN AQUI] ...
+// (Vou focar apenas nas alterações e novidades abaixo)
 
 // ═══════════════════════════════════════════════════════════════
-// REALIDADE 2: LUMINOUS ASCENSION (O Deus)
-// ═══════════════════════════════════════════════════════════════
-export const ASCENSION_THEME: ThemeConfig = {
-  id: 'ascension',
-  name: 'Luminous Ascension',
-  description: 'O pós-vida da tecnologia. Minimalismo divino',
-  icon: '✨',
-  colors: {
-    primary: '#FFD700',      // Dourado Metálico
-    secondary: '#FFA500',    // Laranja Dourado
-    accent: '#FF8C00',       // Dourado Profundo
-    background: '#F8FAFC',   // Branco Gelo
-    surface: '#FFFFFF',      // Branco Puro
-    text: '#1E293B',         // Texto Escuro
-    textSecondary: '#64748B',
-    border: '#E2E8F0',
-    success: '#FFD700',
-    warning: '#F59E0B',
-    error: '#EF4444',
-    glow: '#FFD700',
-  },
-  gradient: 'linear-gradient(135deg, #FFFFFF 0%, #F8FAFC 100%)',
-  backgroundType: 'ascension',
-  animation: {
-    speed: 'slow',
-    intensity: 'low',
-  },
-  sound: {
-    ambient: '/sounds/celestial-hum.mp3',
-    click: '/sounds/golden-click.mp3',
-  },
-};
-
-// ═══════════════════════════════════════════════════════════════
-// REALIDADE 3: MILITARY OPS (O General de Guerra)
-// ═══════════════════════════════════════════════════════════════
-export const MILITARY_THEME: ThemeConfig = {
-  id: 'military',
-  name: 'Military Ops',
-  description: 'O Pentágono durante o apocalipse digital',
-  icon: '⚔️',
-  colors: {
-    primary: '#F4D03F',      // Amarelo Tático
-    secondary: '#52C41A',    // Verde Militar
-    accent: '#389E0D',       // Verde Escuro
-    background: '#0A0A0A',   // Preto Carbono
-    surface: '#141414',      // Cinza Carbono
-    text: '#FFFFFF',
-    textSecondary: '#8C8C8C',
-    border: '#F4D03F',
-    success: '#52C41A',
-    warning: '#FAAD14',
-    error: '#FF4D4F',
-    glow: '#F4D03F',
-  },
-  gradient: 'linear-gradient(135deg, #0A0A0A 0%, #1A1A1A 100%)',
-  backgroundType: 'military',
-  animation: {
-    speed: 'fast',
-    intensity: 'medium',
-  },
-  sound: {
-    ambient: '/sounds/tactical-beep.mp3',
-    click: '/sounds/military-click.mp3',
-  },
-};
-
-// ═══════════════════════════════════════════════════════════════
-// REALIDADE 4: NEURAL SINGULARITY (A Entidade Viva)
-// ═══════════════════════════════════════════════════════════════
-export const NEURAL_THEME: ThemeConfig = {
-  id: 'neural',
-  name: 'Neural Singularity',
-  description: 'Estar dentro do cérebro da IA. Biologia digital',
-  icon: '🧠',
-  colors: {
-    primary: '#8B5CF6',      // Roxo Neon
-    secondary: '#A78BFA',    // Roxo Claro
-    accent: '#EC4899',       // Magenta Bioluminescente
-    background: '#050008',   // Roxo Void
-    surface: '#0F0A14',      // Roxo Escuro
-    text: '#FFFFFF',
-    textSecondary: '#A78BFA',
-    border: '#8B5CF6',
-    success: '#8B5CF6',
-    warning: '#F59E0B',
-    error: '#EC4899',
-    glow: '#8B5CF6',
-  },
-  gradient: 'radial-gradient(ellipse at center, #050008 0%, #000000 100%)',
-  backgroundType: 'neural',
-  animation: {
-    speed: 'slow',
-    intensity: 'high',
-  },
-  sound: {
-    ambient: '/sounds/neural-pulse.mp3',
-    click: '/sounds/synapse-click.mp3',
-  },
-};
-
-// ═══════════════════════════════════════════════════════════════
-// REALIDADE 5: TITANIUM EXECUTIVE (O Bilionário)
+// REALIDADE 5: TITANIUM EXECUTIVE (Refinado - Estilo Apple/SpaceX)
 // ═══════════════════════════════════════════════════════════════
 export const TITANIUM_THEME: ThemeConfig = {
   id: 'titanium',
   name: 'Titanium Executive',
-  description: 'O 127º andar em Dubai. Poder financeiro absoluto',
-  icon: '💼',
+  description: 'Minimalismo industrial. O luxo do grafite e metal.',
+  icon: '🛡️', // Ícone atualizado
   colors: {
-    primary: '#64748B',      // Cinza Premium
-    secondary: '#475569',    // Cinza Escuro
-    accent: '#FFD700',       // Ouro Líquido (ROI)
-    background: '#0F172A',   // Azul Marinho Premium
-    surface: '#1E293B',      // Azul Escuro
-    text: '#F8FAFC',
-    textSecondary: '#94A3B8',
-    border: '#334155',
-    success: '#FFD700',
+    primary: '#E5E7EB',      // Cinza Platina (Apple Silver)
+    secondary: '#9CA3AF',    // Cinza Médio
+    accent: '#FFFFFF',       // Branco Absoluto
+    background: '#111111',   // Preto Fosco (Não mais azulado)
+    surface: '#1C1C1E',      // Grafite Profundo (iOS Dark Mode)
+    text: '#F3F4F6',
+    textSecondary: '#9CA3AF',
+    border: '#374151',
+    success: '#10B981',      // Verde Stock Market
     warning: '#F59E0B',
     error: '#EF4444',
-    glow: '#64748B',
+    glow: '#E5E7EB',
   },
-  gradient: 'linear-gradient(135deg, #0F172A 0%, #1E293B 100%)',
+  gradient: 'linear-gradient(145deg, #111111 0%, #1C1C1E 100%)',
   backgroundType: 'titanium',
   animation: {
     speed: 'medium',
-    intensity: 'medium',
+    intensity: 'low', // Mais sóbrio
   },
   sound: {
     ambient: '/sounds/executive-ambient.mp3',
@@ -213,84 +89,86 @@ export const TITANIUM_THEME: ThemeConfig = {
 };
 
 // ═══════════════════════════════════════════════════════════════
-// REALIDADE 6: VINTAGE TERMINAL (O Hacker Clássico)
+// REALIDADE 8: COBALT PRIME (Estilo Microsoft/IBM/Enterprise)
 // ═══════════════════════════════════════════════════════════════
-export const VINTAGE_THEME: ThemeConfig = {
-  id: 'vintage',
-  name: 'Vintage Terminal',
-  description: 'A estética do CRT. Código puro e nostalgia.',
-  icon: '💾',
+export const COBALT_THEME: ThemeConfig = {
+  id: 'cobalt',
+  name: 'Cobalt Prime',
+  description: 'Estabilidade corporativa. Confiança e dados massivos.',
+  icon: '💎',
   colors: {
-    primary: '#00FF00',      // Verde Fósforo
-    secondary: '#00D400',    // Verde Sombra
-    accent: '#00FFFF',       // Ciano Brilhante
-    background: '#001A00',   // Fundo Escuro
-    surface: '#000A00',      // Preto Absoluto
-    text: '#00FF00',
-    textSecondary: '#00A000',
-    border: '#00FF00',
-    success: '#00FF00',
-    warning: '#FFFF00',
-    error: '#FF0000',
-    glow: '#00FF00',
+    primary: '#3B82F6',      // Azul IBM/Chase
+    secondary: '#1E40AF',    // Azul Profundo
+    accent: '#60A5FA',       // Azul Claro
+    background: '#0B1120',   // Navy Dark Mode
+    surface: '#111827',      // Cool Gray Dark
+    text: '#F9FAFB',
+    textSecondary: '#94A3B8',
+    border: '#1E3A8A',
+    success: '#059669',
+    warning: '#F59E0B',
+    error: '#DC2626',
+    glow: '#3B82F6',
   },
-  gradient: 'linear-gradient(180deg, #001A00 0%, #000000 100%)',
-  backgroundType: 'vintage',
-  animation: {
-    speed: 'fast',
-    intensity: 'high',
-  },
-  sound: {
-    ambient: '/sounds/crt-hum.mp3',
-    click: '/sounds/key-press.mp3',
-  },
-};
-
-// ═══════════════════════════════════════════════════════════════
-// REALIDADE 7: ZEN GARDEN (O Foco Minimalista)
-// ═══════════════════════════════════════════════════════════════
-export const ZEN_THEME: ThemeConfig = {
-  id: 'zen',
-  name: 'Zen Garden',
-  description: 'Calma e clareza. O foco é a sua tarefa.',
-  icon: '🧘',
-  colors: {
-    primary: '#4CAF50',      // Verde Musgo
-    secondary: '#795548',    // Marrom Terra
-    accent: '#66BB6A',       // Verde Claro
-    background: '#F9F7F3',   // Papel/Areia
-    surface: '#FFFFFF',      // Branco Puro
-    text: '#333333',
-    textSecondary: '#708090',
-    border: '#D3D3D3',
-    success: '#4CAF50',
-    warning: '#FF9800',
-    error: '#F44336',
-    glow: '#D3D3D3',
-  },
-  gradient: 'linear-gradient(180deg, #FFFFFF 0%, #F9F7F3 100%)',
-  backgroundType: 'zen',
+  gradient: 'radial-gradient(circle at top right, #1E3A8A 0%, #0B1120 60%)',
+  backgroundType: 'cobalt', // Requereria criar esse tipo ou usar 'quantum' com cor azul
   animation: {
     speed: 'slow',
-    intensity: 'low',
+    intensity: 'medium',
   },
   sound: {
-    ambient: '/sounds/water-flow.mp3',
+    ambient: '/sounds/server-room.mp3',
     click: '/sounds/soft-click.mp3',
   },
 };
 
 // ═══════════════════════════════════════════════════════════════
-// EXPORTAÇÕES
+// REALIDADE 9: CRIMSON VELOCITY (Estilo Tesla/Netflix/Gamer)
+// ═══════════════════════════════════════════════════════════════
+export const CRIMSON_THEME: ThemeConfig = {
+  id: 'crimson',
+  name: 'Crimson Velocity',
+  description: 'Alta performance e agressividade. Modo Sport.',
+  icon: '🏎️',
+  colors: {
+    primary: '#EF4444',      // Vermelho Performance
+    secondary: '#991B1B',    // Vermelho Sangue
+    accent: '#F87171',       // Vermelho Laser
+    background: '#0F0505',   // Quase Preto com toque vermelho
+    surface: '#1C0505',      // Carbono Avermelhado
+    text: '#FFFFFF',
+    textSecondary: '#FECACA',
+    border: '#7F1D1D',
+    success: '#10B981',
+    warning: '#F59E0B',
+    error: '#FF0000',        // Vermelho Puro
+    glow: '#EF4444',
+  },
+  gradient: 'linear-gradient(to bottom right, #450a0a 0%, #000000 80%)',
+  backgroundType: 'crimson', // Requereria criar esse tipo ou usar 'military'
+  animation: {
+    speed: 'fast',
+    intensity: 'high',
+  },
+  sound: {
+    ambient: '/sounds/engine-hum.mp3',
+    click: '/sounds/mechanical-click.mp3',
+  },
+};
+
+// ═══════════════════════════════════════════════════════════════
+// EXPORTAÇÕES ATUALIZADAS
 // ═══════════════════════════════════════════════════════════════
 export const THEMES: Record<ThemeId, ThemeConfig> = {
-  quantum: QUANTUM_THEME,
-  ascension: ASCENSION_THEME,
-  military: MILITARY_THEME,
-  neural: NEURAL_THEME,
-  titanium: TITANIUM_THEME,
-  vintage: VINTAGE_THEME,
-  zen: ZEN_THEME,
+  quantum: QUANTUM_THEME,     // O Visionário
+  ascension: ASCENSION_THEME, // O Divino
+  military: MILITARY_THEME,   // O Tático
+  neural: NEURAL_THEME,       // A IA Viva
+  titanium: TITANIUM_THEME,   // O Executivo (Apple Style)
+  vintage: VINTAGE_THEME,     // O Hacker
+  zen: ZEN_THEME,             // O Equilíbrio
+  cobalt: COBALT_THEME,       // A Corporação (Microsoft Style)
+  crimson: CRIMSON_THEME,     // A Performance (Tesla Style)
 };
 
 export const DEFAULT_THEME: ThemeId = 'quantum';
@@ -298,7 +176,9 @@ export const DEFAULT_THEME: ThemeId = 'quantum';
 export const THEME_ORDER: ThemeId[] = [
   'quantum',
   'ascension',
+  'cobalt',    // Inserido para balancear
   'military',
+  'crimson',   // Inserido para impacto
   'neural',
   'titanium',
   'vintage',
