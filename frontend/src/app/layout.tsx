@@ -10,6 +10,7 @@ import type { Metadata } from 'next';
 import { Inter, Orbitron, Rajdhani } from 'next/font/google';
 import './globals.css';
 import { ThemeProvider } from '@/contexts/ThemeContext';
+import { AuthProvider } from '@/contexts/AuthContext';
 import { GlobalKeyListener } from '@/components/layout/GlobalKeyListener';
 import RealityBackground from '@/components/backgrounds/RealityBackground';
 import { ThemeSwitcher } from '@/components/ui/ThemeSwitcher';
@@ -57,21 +58,23 @@ export default function RootLayout({
         <link rel="icon" href="/favicon.ico" />
       </head>
       <body className="antialiased">
-        <ThemeProvider>
-          {/* Background Animado (muda com o tema) */}
-          <RealityBackground />
-          
-          {/* Keyboard Shortcuts (Alt+Shift+T para trocar tema) */}
-          <GlobalKeyListener />
-          
-          {/* Conteúdo Principal */}
-          <main className="relative z-10">
-            {children}
-          </main>
-          
-          {/* Theme Switcher (Botão Floating) */}
-          <ThemeSwitcher />
-        </ThemeProvider>
+        <AuthProvider>
+          <ThemeProvider>
+            {/* Background Animado (muda com o tema) */}
+            <RealityBackground />
+            
+            {/* Keyboard Shortcuts (Alt+Shift+T para trocar tema) */}
+            <GlobalKeyListener />
+            
+            {/* Conteúdo Principal */}
+            <main className="relative z-10">
+              {children}
+            </main>
+            
+            {/* Theme Switcher (Botão Floating) */}
+            <ThemeSwitcher />
+          </ThemeProvider>
+        </AuthProvider>
       </body>
     </html>
   );
