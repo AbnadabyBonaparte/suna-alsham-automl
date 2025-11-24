@@ -1,114 +1,121 @@
 /**
  * ═══════════════════════════════════════════════════════════════
- * ALSHAM QUANTUM - NEURAL NEXUS: ELASTIC WEB EDITION
+ * ALSHAM QUANTUM - NEURAL NEXUS: CELESTIAL SPHERE EDITION
  * ═══════════════════════════════════════════════════════════════
  * 📁 PATH: frontend/src/app/dashboard/nexus/page.tsx
- * 📋 Física de molas, sinapses ativas e interação de "puxar"
+ * 📋 Visualização Holoesférica 3D com Campo Estelar e UI de Vidro
  * ═══════════════════════════════════════════════════════════════
  */
 
 "use client";
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { 
-    Network, Play, Pause, RefreshCw, 
-    Cpu, Zap, Activity, MousePointer2, Expand 
+    Network, Search, Filter, Maximize2, 
+    Cpu, Shield, Zap, Database, Activity,
+    Globe, Radio, Scan, MousePointer2
 } from 'lucide-react';
 
-// Tipos para o sistema de física avançada
-interface Node {
+// --- CONFIGURAÇÕES CÓSMICAS ---
+const NODE_COUNT = 200;
+const SPHERE_RADIUS = 300;
+const ROTATION_SPEED = 0.002;
+
+interface Node3D {
     id: string;
     name: string;
-    type: 'core' | 'specialist' | 'observer' | 'chaos';
-    x: number;
-    y: number;
-    vx: number;
-    vy: number;
-    mass: number;
-    radius: number;
-    connections: string[]; // IDs dos vizinhos
-    efficiency: number;
+    role: 'CORE' | 'GUARD' | 'ANALYST' | 'CHAOS';
+    x: number; y: number; z: number; // Posição 3D original
+    px: number; py: number; // Posição 2D projetada
+    scale: number; // Escala baseada na profundidade (Z)
+    active: boolean;
+    connections: number[]; // Índices dos vizinhos
 }
 
-// Partícula de dados que viaja na linha (Sinapse)
-interface Synapse {
-    fromId: string;
-    toId: string;
-    progress: number; // 0 a 1
+interface Star {
+    x: number; y: number; z: number;
+    size: number;
     speed: number;
-    color: string;
 }
 
 export default function NexusPage() {
     const canvasRef = useRef<HTMLCanvasElement>(null);
     
-    // Estado da simulação (usando Refs para performance máxima 60fps sem re-renders)
-    const nodesRef = useRef<Node[]>([]);
-    const synapsesRef = useRef<Synapse[]>([]);
-    const draggingNodeRef = useRef<Node | null>(null);
-    const mouseRef = useRef({ x: 0, y: 0 });
+    // Estado
+    const [nodes, setNodes] = useState<Node3D[]>([]);
+    const [stars, setStars] = useState<Star[]>([]);
+    const [rotation, setRotation] = useState({ x: 0, y: 0 });
+    const [filter, setFilter] = useState('ALL');
+    const [hoveredNode, setHoveredNode] = useState<Node3D | null>(null);
+    const [selectedNode, setSelectedNode] = useState<Node3D | null>(null);
     
-    // Estado de UI (React)
-    const [isAnimating, setIsAnimating] = useState(true);
-    const [stats, setStats] = useState({ active: 0, traffic: 0 });
-    const [hoveredNodeName, setHoveredNodeName] = useState<string | null>(null);
+    const mouseRef = useRef({ x: 0, y: 0, isDown: false });
 
-    const animationRef = useRef<number>();
-
-    // 1. INICIALIZAÇÃO (O Big Bang Neural)
+    // 1. GERAÇÃO DO UNIVERSO (BIG BANG)
     useEffect(() => {
-        const initNodes = () => {
-            const types: Node['type'][] = ['core', 'specialist', 'observer', 'chaos'];
-            const newNodes: Node[] = [];
-            const width = window.innerWidth;
-            const height = window.innerHeight;
+        // Criar Agentes na Esfera (Fibonacci Sphere Algorithm para distribuição perfeita)
+        const newNodes: Node3D[] = [];
+        const phi = Math.PI * (3 - Math.sqrt(5)); // Golden Angle
 
-            // Criar 80 nós (menos nós para física mais fluida e elástica)
-            for (let i = 0; i < 80; i++) {
-                const type = types[Math.floor(Math.random() * types.length)];
-                newNodes.push({
-                    id: `node_${i}`,
-                    name: `NEURON_${String(i + 1).padStart(3, '0')}`,
-                    type,
-                    x: width / 2 + (Math.random() - 0.5) * 400,
-                    y: height / 2 + (Math.random() - 0.5) * 400,
-                    vx: (Math.random() - 0.5) * 2,
-                    vy: (Math.random() - 0.5) * 2,
-                    mass: type === 'core' ? 5 : 2, // Cores são mais pesados
-                    radius: type === 'core' ? 12 : type === 'chaos' ? 8 : 5,
-                    connections: [],
-                    efficiency: Math.random() * 100
-                });
-            }
+        for (let i = 0; i < NODE_COUNT; i++) {
+            const y = 1 - (i / (NODE_COUNT - 1)) * 2; // y vai de 1 a -1
+            const radius = Math.sqrt(1 - y * y); // raio no y
+            const theta = phi * i; // ângulo dourado
 
-            // Criar conexões orgânicas (Vizinhos próximos)
-            newNodes.forEach((node, i) => {
-                // Conectar com os 3 vizinhos mais próximos iniciais
-                const neighbors = newNodes
-                    .map((n, idx) => ({ idx, dist: Math.hypot(n.x - node.x, n.y - node.y) }))
-                    .sort((a, b) => a.dist - b.dist)
-                    .slice(1, 4); // Pula o próprio nó (índice 0)
+            const x = Math.cos(theta) * radius;
+            const z = Math.sin(theta) * radius;
 
-                neighbors.forEach(neighbor => {
-                    const targetId = newNodes[neighbor.idx].id;
-                    if (!node.connections.includes(targetId)) {
-                        node.connections.push(targetId);
-                        // Conexão bidirecional para física estável
-                        const target = newNodes[neighbor.idx];
-                        if (!target.connections.includes(node.id)) {
-                            target.connections.push(node.id);
-                        }
-                    }
-                });
+            // Definir Role aleatória
+            const rand = Math.random();
+            let role: Node3D['role'] = 'ANALYST';
+            if (rand > 0.9) role = 'CORE';
+            else if (rand > 0.7) role = 'GUARD';
+            else if (rand > 0.6) role = 'CHAOS';
+
+            newNodes.push({
+                id: `agt-${i}`,
+                name: `${role}_${String(i).padStart(3, '0')}`,
+                role,
+                x: x * SPHERE_RADIUS,
+                y: y * SPHERE_RADIUS,
+                z: z * SPHERE_RADIUS,
+                px: 0, py: 0, scale: 0,
+                active: Math.random() > 0.1,
+                connections: []
             });
+        }
 
-            nodesRef.current = newNodes;
-        };
+        // Criar conexões (Vizinhos mais próximos na esfera 3D)
+        newNodes.forEach((node, i) => {
+            const neighbors = newNodes
+                .map((n, idx) => ({ 
+                    idx, 
+                    dist: Math.pow(n.x - node.x, 2) + Math.pow(n.y - node.y, 2) + Math.pow(n.z - node.z, 2) 
+                }))
+                .sort((a, b) => a.dist - b.dist)
+                .slice(1, 4); // 3 vizinhos mais próximos
+            
+            node.connections = neighbors.map(n => n.idx);
+        });
 
-        initNodes();
+        setNodes(newNodes);
+
+        // Criar Campo Estelar de Fundo
+        const newStars: Star[] = [];
+        for(let i=0; i<300; i++) {
+            newStars.push({
+                x: (Math.random() - 0.5) * 2000,
+                y: (Math.random() - 0.5) * 2000,
+                z: Math.random() * 2000,
+                size: Math.random() * 2,
+                speed: 0.5 + Math.random()
+            });
+        }
+        setStars(newStars);
+
     }, []);
 
-    // 2. LOOP DE FÍSICA E RENDERIZAÇÃO
+    // 2. ENGINE DE RENDERIZAÇÃO 3D
     useEffect(() => {
         const canvas = canvasRef.current;
         if (!canvas) return;
@@ -122,297 +129,320 @@ export default function NexusPage() {
         window.addEventListener('resize', resize);
         resize();
 
-        // Configurações de Física
-        const SPRING_LENGTH = 150;
-        const SPRING_STRENGTH = 0.05; // Quão forte a teia puxa de volta
-        const REPULSION = 200; // Força de repulsão (evita bolos)
-        const DAMPING = 0.95; // Fricção do ar (para parar devagar)
-        const MOUSE_INFLUENCE = 0.2; // Suavidade do arrasto
+        let frameId: number;
+        let autoRotateX = 0;
 
-        const animate = () => {
-            if (!isAnimating) return;
+        const render = () => {
+            // Configuração Básica
+            const w = canvas.width;
+            const h = canvas.height;
+            const cx = w / 2;
+            const cy = h / 2;
 
-            // Limpar com rastro (Motion Blur cinematográfico)
-            ctx.fillStyle = 'rgba(0, 0, 0, 0.15)'; 
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            // Limpar com rastro suave (Motion Blur Cósmico)
+            ctx.fillStyle = 'rgba(2, 6, 23, 0.2)'; // Azul muito escuro quase preto
+            ctx.fillRect(0, 0, w, h);
 
-            // --- FÍSICA ---
-            nodesRef.current.forEach(node => {
-                // Se estiver sendo arrastado, ignora física e segue o mouse
-                if (draggingNodeRef.current?.id === node.id) {
-                    node.x += (mouseRef.current.x - node.x) * MOUSE_INFLUENCE;
-                    node.y += (mouseRef.current.y - node.y) * MOUSE_INFLUENCE;
-                    node.vx = 0;
-                    node.vy = 0;
-                    return;
+            // --- 1. DESENHAR ESTRELAS (FUNDO) ---
+            stars.forEach(star => {
+                star.z -= star.speed;
+                if (star.z <= 0) {
+                    star.z = 2000;
+                    star.x = (Math.random() - 0.5) * 2000;
+                    star.y = (Math.random() - 0.5) * 2000;
                 }
-
-                let fx = 0;
-                let fy = 0;
-
-                // 1. Repulsão (Coulomb) - Nós se odeiam
-                nodesRef.current.forEach(other => {
-                    if (node.id === other.id) return;
-                    const dx = node.x - other.x;
-                    const dy = node.y - other.y;
-                    const dist = Math.sqrt(dx * dx + dy * dy) || 1;
-                    
-                    if (dist < 300) {
-                        const force = REPULSION / (dist * dist);
-                        fx += (dx / dist) * force;
-                        fy += (dy / dist) * force;
-                    }
-                });
-
-                // 2. Atração (Hooke) - Conexões se amam (Molas)
-                node.connections.forEach(connId => {
-                    const target = nodesRef.current.find(n => n.id === connId);
-                    if (!target) return;
-
-                    const dx = target.x - node.x;
-                    const dy = target.y - node.y;
-                    const dist = Math.sqrt(dx * dx + dy * dy);
-                    
-                    // Força elástica
-                    const force = (dist - SPRING_LENGTH) * SPRING_STRENGTH;
-                    fx += (dx / dist) * force;
-                    fy += (dy / dist) * force;
-                });
-
-                // 3. Gravidade Central (Para não sumirem da tela)
-                const dxCenter = (canvas.width / 2) - node.x;
-                const dyCenter = (canvas.height / 2) - node.y;
-                fx += dxCenter * 0.0005;
-                fy += dyCenter * 0.0005;
-
-                // Aplicar forças
-                node.vx = (node.vx + fx / node.mass) * DAMPING;
-                node.vy = (node.vy + fy / node.mass) * DAMPING;
-                node.x += node.vx;
-                node.y += node.vy;
-
-                // Bordas
-                const margin = 50;
-                if (node.x < margin) node.vx += 1;
-                if (node.x > canvas.width - margin) node.vx -= 1;
-                if (node.y < margin) node.vy += 1;
-                if (node.y > canvas.height - margin) node.vy -= 1;
+                
+                const scale = 500 / (500 + star.z); // Perspectiva
+                const sx = cx + star.x * scale;
+                const sy = cy + star.y * scale;
+                
+                const alpha = (1 - star.z / 2000);
+                ctx.fillStyle = `rgba(255, 255, 255, ${alpha})`;
+                ctx.beginPath();
+                ctx.arc(sx, sy, star.size * scale, 0, Math.PI * 2);
+                ctx.fill();
             });
 
-            // --- GERAÇÃO DE SINAPSES (DADOS) ---
-            // Chance aleatória de disparar um dado entre conexões
-            if (Math.random() > 0.85) {
-                const sourceNode = nodesRef.current[Math.floor(Math.random() * nodesRef.current.length)];
-                if (sourceNode.connections.length > 0) {
-                    const targetId = sourceNode.connections[Math.floor(Math.random() * sourceNode.connections.length)];
-                    synapsesRef.current.push({
-                        fromId: sourceNode.id,
-                        toId: targetId,
-                        progress: 0,
-                        speed: 0.02 + Math.random() * 0.03, // Velocidade variável
-                        color: sourceNode.type === 'chaos' ? '#EF4444' : '#00FFD0'
-                    });
-                }
+            // --- 2. CÁLCULO DE ROTAÇÃO 3D DA ESFERA ---
+            if (!mouseRef.current.isDown) {
+                autoRotateX += ROTATION_SPEED; // Rotação automática lenta
             }
-
-            // --- RENDERIZAÇÃO ---
             
-            // A. Desenhar Conexões (Teia)
-            ctx.lineWidth = 1;
-            nodesRef.current.forEach(node => {
-                node.connections.forEach(connId => {
-                    const target = nodesRef.current.find(n => n.id === connId);
-                    if (!target) return;
+            // Matrizes de Rotação
+            const rotX = rotation.x + (mouseRef.current.isDown ? 0 : 0); 
+            const rotY = rotation.y + autoRotateX;
 
-                    // Desenhar linha apenas uma vez por par
-                    if (node.id < target.id) {
-                        const dist = Math.hypot(target.x - node.x, target.y - node.y);
-                        const opacity = Math.max(0.05, 1 - dist / 400); // Mais transparente se longe (esticado)
-                        
-                        ctx.beginPath();
-                        ctx.strokeStyle = `rgba(0, 255, 200, ${opacity * 0.5})`;
-                        ctx.moveTo(node.x, node.y);
-                        ctx.lineTo(target.x, target.y);
-                        ctx.stroke();
-                    }
+            const sinX = Math.sin(rotX);
+            const cosX = Math.cos(rotX);
+            const sinY = Math.sin(rotY);
+            const cosY = Math.cos(rotY);
+
+            // Projetar Nós 3D -> 2D
+            nodes.forEach(node => {
+                // Rotação Y
+                const x1 = node.x * cosY - node.z * sinY;
+                const z1 = node.z * cosY + node.x * sinY;
+                // Rotação X
+                const y2 = node.y * cosX - z1 * sinX;
+                const z2 = z1 * cosX + node.y * sinX;
+
+                // Perspectiva
+                const scale = 600 / (600 + z2); // Fator de profundidade
+                node.px = cx + x1 * scale;
+                node.py = cy + y2 * scale;
+                node.scale = scale;
+                node.z = z2; // Salvar Z para ordenação (Z-Index)
+            });
+
+            // Ordenar para desenhar o que está atrás primeiro (Z-Buffer fake)
+            nodes.sort((a, b) => b.z - a.z);
+
+            // --- 3. DESENHAR CONEXÕES (TEIA NEURAL) ---
+            ctx.lineWidth = 1;
+            nodes.forEach(node => {
+                if (filter !== 'ALL' && node.role !== filter) return;
+                if (node.scale < 0.5) return; // Ocultar conexões muito distantes
+
+                node.connections.forEach(targetIdx => {
+                    const target = nodes[targetIdx];
+                    if (!target) return;
+                    if (filter !== 'ALL' && target.role !== filter) return;
+
+                    // Só desenha se o alvo também estiver visível
+                    if (target.scale < 0.5) return;
+
+                    // Distância para Alpha (Fade out)
+                    const dist = Math.sqrt(Math.pow(node.px - target.px, 2) + Math.pow(node.py - target.py, 2));
+                    if (dist > 100) return;
+
+                    ctx.beginPath();
+                    ctx.moveTo(node.px, node.py);
+                    ctx.lineTo(target.px, target.py);
+                    
+                    // Cor da conexão baseada na profundidade
+                    const alpha = (node.scale - 0.5) * (1 - dist / 100) * 0.3;
+                    ctx.strokeStyle = `rgba(0, 255, 208, ${alpha})`; // Ciano padrão
+                    ctx.stroke();
                 });
             });
 
-            // B. Desenhar e Atualizar Sinapses (Partículas na linha)
-            for (let i = synapsesRef.current.length - 1; i >= 0; i--) {
-                const synapse = synapsesRef.current[i];
-                synapse.progress += synapse.speed;
+            // --- 4. DESENHAR NÓS (AGENTES) ---
+            // Configuração de Glow
+            ctx.shadowBlur = 15;
+            ctx.globalCompositeOperation = 'lighter'; // Adição de luz (Bloom)
 
-                const from = nodesRef.current.find(n => n.id === synapse.fromId);
-                const to = nodesRef.current.find(n => n.id === synapse.toId);
+            nodes.forEach(node => {
+                if (filter !== 'ALL' && node.role !== filter) return;
 
-                if (!from || !to || synapse.progress >= 1) {
-                    synapsesRef.current.splice(i, 1); // Remover se chegou ou nó sumiu
-                    continue;
-                }
+                // Cor baseada no Role (usando RGB para alpha)
+                let color = '0, 255, 208'; // Ciano (Core/Padrão)
+                if (node.role === 'GUARD') color = '16, 185, 129'; // Verde Tático
+                if (node.role === 'ANALYST') color = '139, 92, 246'; // Roxo
+                if (node.role === 'CHAOS') color = '239, 68, 68'; // Vermelho
 
-                const x = from.x + (to.x - from.x) * synapse.progress;
-                const y = from.y + (to.y - from.y) * synapse.progress;
-
-                // Desenhar "Pacote de Dados"
+                // Opacidade baseada na profundidade (Z)
+                const alpha = Math.max(0.1, (node.scale - 0.4) * 1.5);
+                
+                // Desenhar Glow
+                ctx.shadowColor = `rgb(${color})`;
+                ctx.fillStyle = `rgba(${color}, ${alpha})`;
+                
                 ctx.beginPath();
-                ctx.fillStyle = synapse.color;
-                ctx.shadowBlur = 10;
-                ctx.shadowColor = synapse.color;
-                ctx.arc(x, y, 3, 0, Math.PI * 2);
-                ctx.fill();
-                ctx.shadowBlur = 0; // Reset
-            }
-
-            // C. Desenhar Nós
-            nodesRef.current.forEach(node => {
-                const isHovered = hoveredNodeName === node.name;
-                const isDragging = draggingNodeRef.current?.id === node.id;
-
-                // Cor baseada no tipo
-                let color = '#374151';
-                if (node.type === 'core') color = '#00FFD0';
-                else if (node.type === 'specialist') color = '#A855F7';
-                else if (node.type === 'observer') color = '#F59E0B';
-                else if (node.type === 'chaos') color = '#EF4444';
-
-                // Glow
-                ctx.beginPath();
-                const glowSize = isDragging ? 30 : isHovered ? 20 : 0;
-                if (glowSize > 0) {
-                    const glow = ctx.createRadialGradient(node.x, node.y, node.radius, node.x, node.y, node.radius + glowSize);
-                    glow.addColorStop(0, color);
-                    glow.addColorStop(1, 'transparent');
-                    ctx.fillStyle = glow;
-                    ctx.arc(node.x, node.y, node.radius + glowSize, 0, Math.PI * 2);
-                    ctx.fill();
-                }
-
-                // Corpo do Nó
-                ctx.beginPath();
-                ctx.fillStyle = isDragging ? '#FFFFFF' : color;
-                ctx.arc(node.x, node.y, node.radius, 0, Math.PI * 2);
+                // Tamanho varia com a profundidade e se está selecionado
+                const size = node.role === 'CORE' ? 6 : 3;
+                const finalSize = size * node.scale * (hoveredNode?.id === node.id ? 1.5 : 1);
+                
+                ctx.arc(node.px, node.py, finalSize, 0, Math.PI * 2);
                 ctx.fill();
 
-                // Label (só se hover ou drag)
-                if (isHovered || isDragging) {
-                    ctx.fillStyle = '#FFFFFF';
-                    ctx.font = 'bold 12px monospace';
-                    ctx.fillText(node.name, node.x + 15, node.y - 5);
-                    ctx.fillStyle = '#AAAAAA';
-                    ctx.font = '10px monospace';
-                    ctx.fillText(node.type.toUpperCase(), node.x + 15, node.y + 8);
-                }
+                // Desenhar Núcleo Branco
+                ctx.fillStyle = `rgba(255, 255, 255, ${alpha})`;
+                ctx.beginPath();
+                ctx.arc(node.px, node.py, finalSize * 0.5, 0, Math.PI * 2);
+                ctx.fill();
             });
 
-            // Atualizar Stats UI
-            setStats({
-                active: nodesRef.current.length,
-                traffic: synapsesRef.current.length
-            });
+            // Resetar configs de contexto
+            ctx.shadowBlur = 0;
+            ctx.globalCompositeOperation = 'source-over';
 
-            animationRef.current = requestAnimationFrame(animate);
+            frameId = requestAnimationFrame(render);
         };
 
-        animate();
+        render();
 
         return () => {
             window.removeEventListener('resize', resize);
-            if (animationRef.current) cancelAnimationFrame(animationRef.current);
+            cancelAnimationFrame(frameId);
         };
-    }, [isAnimating, hoveredNodeName]);
+    }, [nodes, rotation, filter, hoveredNode, stars]);
 
-    // 3. CONTROLES DO MOUSE (INTERAÇÃO FÍSICA)
+    // --- INTERAÇÃO DO MOUSE (ROTAÇÃO) ---
     const handleMouseDown = (e: React.MouseEvent) => {
-        const canvas = canvasRef.current;
-        if (!canvas) return;
-        const rect = canvas.getBoundingClientRect();
-        const mouseX = e.clientX - rect.left;
-        const mouseY = e.clientY - rect.top;
-
-        // Encontrar nó clicado (Hit Test)
-        const clickedNode = nodesRef.current.find(n => {
-            const dist = Math.hypot(n.x - mouseX, n.y - mouseY);
-            return dist < n.radius * 2; // Área de clique generosa
-        });
-
-        if (clickedNode) {
-            draggingNodeRef.current = clickedNode;
-            mouseRef.current = { x: mouseX, y: mouseY };
-        }
+        mouseRef.current.isDown = true;
+        mouseRef.current.x = e.clientX;
+        mouseRef.current.y = e.clientY;
     };
 
     const handleMouseMove = (e: React.MouseEvent) => {
+        // 1. Detectar Hover em Nós (Raycasting 2D simplificado)
         const canvas = canvasRef.current;
         if (!canvas) return;
         const rect = canvas.getBoundingClientRect();
-        const mouseX = e.clientX - rect.left;
-        const mouseY = e.clientY - rect.top;
+        const mx = e.clientX - rect.left;
+        const my = e.clientY - rect.top;
 
-        mouseRef.current = { x: mouseX, y: mouseY };
+        // Encontrar nó mais próximo do mouse (que esteja na frente Z > 0)
+        let found: Node3D | null = null;
+        // Percorre reverso porque nós desenhados por último estão na frente
+        for (let i = nodes.length - 1; i >= 0; i--) {
+            const n = nodes[i];
+            if (n.scale < 0.8) continue; // Ignora nós muito ao fundo
+            const dist = Math.sqrt(Math.pow(mx - n.px, 2) + Math.pow(my - n.py, 2));
+            if (dist < 15 * n.scale) {
+                found = n;
+                break;
+            }
+        }
+        setHoveredNode(found);
+        canvas.style.cursor = found ? 'pointer' : mouseRef.current.isDown ? 'grabbing' : 'grab';
 
-        // Lógica de Hover (apenas visual)
-        if (!draggingNodeRef.current) {
-            const node = nodesRef.current.find(n => Math.hypot(n.x - mouseX, n.y - mouseY) < n.radius + 5);
-            setHoveredNodeName(node ? node.name : null);
-            canvas.style.cursor = node ? 'grab' : 'default';
-        } else {
-            canvas.style.cursor = 'grabbing';
+        // 2. Rotação da Esfera
+        if (mouseRef.current.isDown) {
+            const dx = e.clientX - mouseRef.current.x;
+            const dy = e.clientY - mouseRef.current.y;
+            
+            setRotation(prev => ({
+                x: prev.x + dy * 0.005,
+                y: prev.y + dx * 0.005
+            }));
+
+            mouseRef.current.x = e.clientX;
+            mouseRef.current.y = e.clientY;
         }
     };
 
     const handleMouseUp = () => {
-        draggingNodeRef.current = null;
+        mouseRef.current.isDown = false;
+        if (hoveredNode) {
+            setSelectedNode(hoveredNode);
+        }
+    };
+
+    // Renderização de Cores para UI (Helper)
+    const getRoleColor = (role: string) => {
+        switch(role) {
+            case 'CORE': return 'text-[var(--color-primary)] border-[var(--color-primary)]';
+            case 'GUARD': return 'text-emerald-400 border-emerald-400';
+            case 'ANALYST': return 'text-purple-400 border-purple-400';
+            case 'CHAOS': return 'text-red-400 border-red-400';
+            default: return 'text-white border-white';
+        }
     };
 
     return (
-        <div className="h-[calc(100vh-6rem)] flex flex-col rounded-3xl overflow-hidden border border-[var(--color-border)]/20 bg-black relative">
+        <div className="relative h-[calc(100vh-6rem)] w-full overflow-hidden rounded-3xl border border-white/10 bg-[#020617] group">
             
-            {/* OVERLAY DE INFORMAÇÕES */}
-            <div className="absolute top-6 left-6 z-20 pointer-events-none">
-                <div className="bg-black/60 backdrop-blur-md border border-white/10 rounded-2xl p-5 shadow-2xl">
-                    <div className="flex items-center gap-3 mb-4">
-                        <Activity className="w-5 h-5 text-[var(--color-primary)] animate-pulse" />
-                        <h2 className="text-white font-bold tracking-widest">NEURAL TRAFFIC</h2>
-                    </div>
-                    <div className="flex gap-6">
-                        <div>
-                            <div className="text-[10px] text-gray-500 uppercase font-mono">Nodes Online</div>
-                            <div className="text-2xl font-mono text-white">{stats.active}</div>
-                        </div>
-                        <div>
-                            <div className="text-[10px] text-gray-500 uppercase font-mono">Synapses/Sec</div>
-                            <div className="text-2xl font-mono text-[var(--color-accent)]">{stats.traffic * 12}</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            {/* CANVAS PRINCIPAL */}
+            {/* CANVAS CÓSMICO */}
             <canvas
                 ref={canvasRef}
                 onMouseDown={handleMouseDown}
                 onMouseMove={handleMouseMove}
                 onMouseUp={handleMouseUp}
                 onMouseLeave={handleMouseUp}
-                className="w-full h-full cursor-crosshair active:cursor-grabbing"
+                className="w-full h-full block"
             />
 
-            {/* DICA DE INTERAÇÃO */}
-            <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-20 pointer-events-none">
-                <div className="px-4 py-2 rounded-full bg-black/40 border border-white/10 backdrop-blur text-xs text-gray-400 font-mono flex items-center gap-2">
-                    <MousePointer2 className="w-3 h-3" />
-                    <span>CLIQUE E ARRASTE PARA INTERAGIR COM A TEIA</span>
+            {/* UI FLUTUANTE: HEADER */}
+            <div className="absolute top-6 left-6 pointer-events-none">
+                <div className="bg-black/40 backdrop-blur-xl border border-white/10 p-6 rounded-2xl shadow-2xl">
+                    <div className="flex items-center gap-3 mb-2">
+                        <Globe className="w-6 h-6 text-[var(--color-primary)] animate-pulse" />
+                        <h1 className="text-2xl font-black text-white tracking-tight font-display">
+                            CELESTIAL NEXUS
+                        </h1>
+                    </div>
+                    <div className="flex items-center gap-4 text-xs font-mono text-[var(--color-text-secondary)]">
+                        <span className="flex items-center gap-1"><Activity className="w-3 h-3" /> LIVE FEED</span>
+                        <span className="flex items-center gap-1"><Database className="w-3 h-3" /> {nodes.length} NODES</span>
+                    </div>
                 </div>
             </div>
 
-            {/* CONTROLES DE REFRESH */}
-            <button 
-                onClick={() => window.location.reload()} // Maneira preguiçosa mas eficaz de resetar o big bang
-                className="absolute top-6 right-6 z-20 p-3 rounded-xl bg-black/60 border border-white/10 hover:bg-white/10 transition-colors text-white"
-            >
-                <RefreshCw className="w-5 h-5" />
-            </button>
+            {/* UI FLUTUANTE: FILTROS (GLASSMORPHISM) */}
+            <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex items-center gap-2 bg-black/30 backdrop-blur-xl p-2 rounded-full border border-white/10 shadow-[0_0_30px_rgba(0,0,0,0.5)]">
+                {['ALL', 'CORE', 'GUARD', 'ANALYST', 'CHAOS'].map(f => (
+                    <button
+                        key={f}
+                        onClick={() => setFilter(f)}
+                        className={`px-6 py-2 rounded-full text-xs font-bold tracking-widest transition-all ${
+                            filter === f 
+                            ? 'bg-[var(--color-primary)] text-black shadow-[0_0_20px_var(--color-primary)] scale-105' 
+                            : 'text-white/60 hover:bg-white/10 hover:text-white'
+                        }`}
+                    >
+                        {f}
+                    </button>
+                ))}
+            </div>
+
+            {/* UI FLUTUANTE: PAINEL DE DETALHES (SLIDE IN) */}
+            {selectedNode && (
+                <div className="absolute top-6 right-6 w-80 bg-black/60 backdrop-blur-2xl border border-white/10 p-6 rounded-2xl shadow-2xl animate-slideInRight">
+                    <div className="flex justify-between items-start mb-6">
+                        <div>
+                            <h2 className={`text-xl font-bold mb-1 ${getRoleColor(selectedNode.role).split(' ')[0]}`}>
+                                {selectedNode.name}
+                            </h2>
+                            <span className="text-xs font-mono text-white/50 bg-white/5 px-2 py-1 rounded">
+                                ID: {selectedNode.id}
+                            </span>
+                        </div>
+                        <button onClick={() => setSelectedNode(null)} className="text-white/40 hover:text-white">
+                            <Maximize2 className="w-5 h-5" />
+                        </button>
+                    </div>
+
+                    <div className="space-y-4">
+                        <div className="bg-white/5 rounded-xl p-4 border border-white/5">
+                            <div className="flex justify-between mb-2 text-sm text-gray-400">
+                                <span>Neural Load</span>
+                                <span>87%</span>
+                            </div>
+                            <div className="h-1 w-full bg-white/10 rounded-full overflow-hidden">
+                                <div className="h-full bg-[var(--color-primary)] w-[87%]" />
+                            </div>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-3">
+                            <div className="bg-white/5 rounded-xl p-3 border border-white/5 flex flex-col items-center text-center">
+                                <Radio className="w-5 h-5 text-emerald-400 mb-2" />
+                                <span className="text-xs text-gray-400">Latency</span>
+                                <span className="text-lg font-mono text-white">12ms</span>
+                            </div>
+                            <div className="bg-white/5 rounded-xl p-3 border border-white/5 flex flex-col items-center text-center">
+                                <Scan className="w-5 h-5 text-purple-400 mb-2" />
+                                <span className="text-xs text-gray-400">Conns</span>
+                                <span className="text-lg font-mono text-white">{selectedNode.connections.length}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* HINT DE NAVEGAÇÃO */}
+            <div className="absolute bottom-8 right-8 text-white/20 text-xs font-mono flex items-center gap-2 pointer-events-none">
+                <MousePointer2 className="w-4 h-4" />
+                DRAG TO ROTATE
+            </div>
+
+            <style jsx>{`
+                @keyframes slideInRight {
+                    from { transform: translateX(20px); opacity: 0; }
+                    to { transform: translateX(0); opacity: 1; }
+                }
+                .animate-slideInRight { animation: slideInRight 0.3s cubic-bezier(0.16, 1, 0.3, 1); }
+            `}</style>
         </div>
     );
 }
