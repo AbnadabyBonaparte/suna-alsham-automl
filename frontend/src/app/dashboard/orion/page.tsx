@@ -65,8 +65,12 @@ export default function OrionPage() {
         const particleCount = 150; // Densidade do núcleo
 
         const resize = () => {
-            canvas.width = canvas.parentElement?.clientWidth || 400;
-            canvas.height = canvas.parentElement?.clientHeight || 400;
+            // Ajusta para o tamanho do container pai
+            const parent = canvas.parentElement;
+            if (parent) {
+                canvas.width = parent.clientWidth;
+                canvas.height = parent.clientHeight;
+            }
         };
         window.addEventListener('resize', resize);
         resize();
@@ -88,6 +92,7 @@ export default function OrionPage() {
             // Velocidade e amplitude reagem ao estado
             let speed = 0.02;
             let amplitude = 60;
+            // Pega a cor do tema do CSS global
             let color = getComputedStyle(document.documentElement).getPropertyValue('--color-primary').trim() || '#00FFD0';
 
             if (isSpeaking) {
@@ -180,7 +185,6 @@ export default function OrionPage() {
         recognition.onresult = (event: any) => {
             const transcript = event.results[0][0].transcript;
             setInput(transcript);
-            // Auto-enviar após falar (opcional, aqui deixei manual para revisão)
         };
 
         recognition.onerror = (event: any) => {
@@ -197,13 +201,12 @@ export default function OrionPage() {
     // 3. SÍNTESE DE VOZ (Text-to-Speech)
     const speakText = (text: string) => {
         if ('speechSynthesis' in window) {
-            // Cancelar fala anterior
             window.speechSynthesis.cancel();
 
             const utterance = new SpeechSynthesisUtterance(text);
             utterance.lang = 'pt-BR';
-            utterance.pitch = 0.9; // Voz um pouco mais grave (IA séria)
-            utterance.rate = 1.1;  // Um pouco mais rápido
+            utterance.pitch = 0.9;
+            utterance.rate = 1.1;
 
             utterance.onstart = () => setIsSpeaking(true);
             utterance.onend = () => setIsSpeaking(false);
@@ -227,10 +230,10 @@ export default function OrionPage() {
         setMessages(prev => [...prev, newMsg]);
         setInput('');
 
-        // Simular Resposta da IA (Aqui você conectaria com sua API Real)
-        setIsSpeaking(true); // Ativa animação de "pensando/falando"
+        // Simular Resposta da IA
+        setIsSpeaking(true);
         setTimeout(() => {
-            const aiResponse = `Processando sua solicitação no modelo ${selectedModel.name}... A análise indica uma probabilidade de 94% de sucesso na operação quântica.`;
+            const aiResponse = `Entendido. Utilizando o modelo ${selectedModel.name} para processar sua solicitação. A análise preliminar indica sucesso.`;
             
             const aiMsg: Message = {
                 id: Date.now() + 1,
@@ -239,28 +242,28 @@ export default function OrionPage() {
                 timestamp: new Date().toLocaleTimeString()
             };
             setMessages(prev => [...prev, aiMsg]);
-            speakText(aiResponse); // Falar a resposta
+            speakText(aiResponse);
         }, 1500);
     };
 
     return (
-        <div className="h-[calc(100vh-6rem)] flex flex-col md:flex-row gap-6 overflow-hidden relative">
+        <div className="h-[calc(100vh-6rem)] flex flex-col md:flex-row gap-6 overflow-hidden relative p-4">
             
-            {/* --- COLUNA DA ESQUERDA: O NÚCLEO DA IA --- */}
-            <div className="w-full md:w-1/3 flex flex-col gap-4 relative z-10">
+            {/* --- COLUNA DA ESQUERDA: O NÚCLEO DA IA (ROSTO) --- */}
+            <div className="w-full md:w-1/3 flex flex-col gap-4 relative z-10 h-full">
                 
                 {/* 3D CORE VISUALIZER */}
-                <div className="flex-1 bg-black/40 backdrop-blur-xl border border-white/10 rounded-3xl relative overflow-hidden group shadow-2xl">
+                <div className="flex-1 bg-black/40 backdrop-blur-xl border border-white/10 rounded-3xl relative overflow-hidden group shadow-2xl min-h-[300px]">
                     <div className="absolute top-4 left-4 z-20 flex items-center gap-2 bg-black/60 px-3 py-1 rounded-full border border-white/10">
                         <div className={`w-2 h-2 rounded-full ${isSpeaking ? 'bg-green-500 animate-pulse' : 'bg-gray-500'}`} />
                         <span className="text-xs font-mono text-white uppercase tracking-wider">
-                            {isSpeaking ? 'TRANSMITTING' : isRecording ? 'LISTENING' : 'IDLE'}
+                            {isSpeaking ? 'FALANDO' : isRecording ? 'OUVINDO' : 'AGUARDANDO'}
                         </span>
                     </div>
 
                     <canvas 
                         ref={canvasRef} 
-                        className="w-full h-full absolute inset-0"
+                        className="w-full h-full absolute inset-0 block"
                     />
                     
                     {/* Efeito Vignette */}
@@ -278,7 +281,7 @@ export default function OrionPage() {
                                 <Cpu className="w-5 h-5 text-[var(--color-primary)]" />
                             </div>
                             <div className="text-left">
-                                <div className="text-[10px] text-gray-400 font-mono uppercase">Active Model</div>
+                                <div className="text-[10px] text-gray-400 font-mono uppercase">Modelo Ativo</div>
                                 <div className="font-bold text-sm">{selectedModel.name}</div>
                             </div>
                         </div>
@@ -313,7 +316,7 @@ export default function OrionPage() {
             </div>
 
             {/* --- COLUNA DA DIREITA: INTERFACE DE CHAT --- */}
-            <div className="flex-1 flex flex-col bg-black/20 backdrop-blur-md border border-white/5 rounded-3xl overflow-hidden relative">
+            <div className="flex-1 flex flex-col bg-black/20 backdrop-blur-md border border-white/5 rounded-3xl overflow-hidden relative h-full">
                 
                 {/* CHAT HISTORY */}
                 <div className="flex-1 overflow-y-auto p-6 space-y-6 scrollbar-thin scrollbar-thumb-[var(--color-primary)]/20 scrollbar-track-transparent">
@@ -329,13 +332,8 @@ export default function OrionPage() {
                                     : 'bg-white/5 border border-white/10 text-gray-200 rounded-tl-none'
                                 }
                             `}>
-                                {/* Icon Header */}
                                 <div className="flex items-center gap-2 mb-2 opacity-50">
-                                    {msg.role === 'ai' ? (
-                                        <Bot className="w-3 h-3" />
-                                    ) : (
-                                        <User className="w-3 h-3" />
-                                    )}
+                                    {msg.role === 'ai' ? <Bot className="w-3 h-3" /> : <User className="w-3 h-3" />}
                                     <span className="text-[10px] font-mono uppercase">
                                         {msg.role === 'ai' ? 'Orion Core' : 'Commander'} • {msg.timestamp}
                                     </span>
@@ -343,7 +341,6 @@ export default function OrionPage() {
                                 
                                 <p className="leading-relaxed whitespace-pre-wrap">{msg.text}</p>
 
-                                {/* TTS Button for AI messages */}
                                 {msg.role === 'ai' && (
                                     <button 
                                         onClick={() => speakText(msg.text)}
@@ -359,9 +356,9 @@ export default function OrionPage() {
                     <div ref={messagesEndRef} />
                 </div>
 
-                {/* INPUT AREA (Sci-Fi Console) */}
+                {/* INPUT AREA */}
                 <div className="p-4 bg-black/40 border-t border-white/5 backdrop-blur-xl">
-                    <div className="relative flex items-center gap-2 bg-black/50 border border-white/10 rounded-2xl p-2 focus-within:border-[var(--color-primary)]/50 focus-within:shadow-[0_0_20px_rgba(var(--color-primary-rgb),0.1)] transition-all">
+                    <div className="relative flex items-center gap-2 bg-black/50 border border-white/10 rounded-2xl p-2 focus-within:border-[var(--color-primary)]/50 transition-all">
                         
                         {/* Voice Button */}
                         <button
@@ -382,7 +379,7 @@ export default function OrionPage() {
                             value={input}
                             onChange={(e) => setInput(e.target.value)}
                             onKeyDown={(e) => e.key === 'Enter' && handleSend()}
-                            placeholder={isRecording ? "Ouvindo..." : "Digite sua diretiva para Orion..."}
+                            placeholder={isRecording ? "Ouvindo..." : "Digite ou fale sua diretiva..."}
                             className="flex-1 bg-transparent border-none outline-none text-white placeholder-gray-600 font-mono text-sm"
                             autoFocus
                         />
@@ -391,17 +388,10 @@ export default function OrionPage() {
                         <button
                             onClick={handleSend}
                             disabled={!input.trim()}
-                            className="p-3 bg-[var(--color-primary)] hover:bg-[var(--color-accent)] disabled:opacity-50 disabled:cursor-not-allowed rounded-xl text-black transition-all"
+                            className="p-3 bg-[var(--color-primary)] hover:bg-[var(--color-accent)] disabled:opacity-50 rounded-xl text-black transition-all"
                         >
                             <Send className="w-5 h-5" />
                         </button>
-                    </div>
-                    
-                    {/* Footer Hint */}
-                    <div className="text-center mt-2">
-                        <p className="text-[10px] text-gray-600 font-mono">
-                            ORION AI v4.2 • SECURE CHANNEL ENCRYPTED
-                        </p>
                     </div>
                 </div>
             </div>
