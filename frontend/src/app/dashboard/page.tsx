@@ -1,451 +1,232 @@
 /**
  * ═══════════════════════════════════════════════════════════════
- * ALSHAM QUANTUM - COCKPIT PRINCIPAL
+ * ALSHAM QUANTUM - COCKPIT SUPREMO (HOME)
  * ═══════════════════════════════════════════════════════════════
  * 📁 PATH: frontend/src/app/dashboard/page.tsx
- * 📋 ROTA: /dashboard
+ * 📋 Visão geral tática com estética HUD cinematográfica
  * ═══════════════════════════════════════════════════════════════
  */
 
-"use client";
+'use client';
 
-import { useState, useEffect } from 'react';
-import Link from 'next/link';
 import { 
   Activity, 
   Users, 
+  Server, 
+  Shield, 
   Zap, 
-  TrendingUp, 
-  AlertCircle,
-  CheckCircle,
+  Cpu, 
+  ArrowUpRight, 
+  Globe, 
   Clock,
-  DollarSign,
-  Sparkles,
-  Network,
   Terminal,
-  Shield,
-  Trophy,
-  MessageSquare,
-  Eye,
-  ArrowUpRight,
-  ArrowDownRight,
-  Brain
+  AlertCircle
 } from 'lucide-react';
 
-export default function DashboardPage() {
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-    console.log('✅ Dashboard carregado com sucesso!');
-  }, []);
-
-  // Stats principais
-  const mainStats = [
-    {
-      label: 'Agentes Ativos',
-      value: '139',
-      change: '+12',
-      trend: 'up',
-      icon: Users,
-      color: 'var(--color-primary)',
-      href: '/dashboard/agents'
+export default function CockpitPage() {
+  // Dados simulados (no futuro virão do backend)
+  const stats = [
+    { 
+      label: 'Agentes Ativos', 
+      value: '139', 
+      sub: '+12 na última hora',
+      icon: Users, 
+      trend: 'up'
     },
-    {
-      label: 'ROI Total',
-      value: '2.847%',
-      change: '+0.3%',
-      trend: 'up',
-      icon: TrendingUp,
-      color: 'var(--color-success)',
-      href: '/dashboard/value'
+    { 
+      label: 'Eficiência Neural', 
+      value: '98.2%', 
+      sub: 'Otimização máxima',
+      icon: Zap, 
+      trend: 'stable'
     },
-    {
-      label: 'Economia Gerada',
-      value: 'R$ 4.7B',
-      change: '+R$ 890M',
-      trend: 'up',
-      icon: DollarSign,
-      color: 'var(--color-warning)',
-      href: '/dashboard/value'
+    { 
+      label: 'Requests/Seg', 
+      value: '4.2k', 
+      sub: 'Pico de tráfego',
+      icon: Activity, 
+      trend: 'up'
     },
-    {
-      label: 'Uptime Sistema',
-      value: '99.98%',
-      change: '0.00%',
-      trend: 'neutral',
-      icon: Zap,
-      color: 'var(--color-accent)',
-      href: '/dashboard/evolution'
-    }
+    { 
+      label: 'Ameaças Neutralizadas', 
+      value: '0', 
+      sub: 'Perímetro seguro',
+      icon: Shield, 
+      trend: 'safe'
+    },
   ];
-
-  // Quick Links
-  const quickLinks = [
-    {
-      title: 'Neural Nexus 3D',
-      description: 'Rede neural interativa',
-      icon: Network,
-      color: 'var(--color-primary)',
-      href: '/dashboard/nexus'
-    },
-    {
-      title: 'The Matrix',
-      description: 'Terminal de código vivo',
-      icon: Terminal,
-      color: '#00FF00',
-      href: '/dashboard/matrix'
-    },
-    {
-      title: 'Evolution Lab',
-      description: 'Ondas de evolução',
-      icon: Activity,
-      color: '#FF6B00',
-      href: '/dashboard/evolution'
-    },
-    {
-      title: 'The Void',
-      description: 'Análise do inconsciente',
-      icon: Eye,
-      color: '#8B5CF6',
-      href: '/dashboard/void'
-    },
-    {
-      title: 'Gamification',
-      description: 'Pontos e conquistas',
-      icon: Trophy,
-      color: '#FFD700',
-      href: '/dashboard/gamification'
-    },
-    {
-      title: 'Orion AI',
-      description: 'Assistente inteligente',
-      icon: MessageSquare,
-      color: '#06B6D4',
-      href: '/dashboard/orion'
-    },
-    {
-      title: 'Containment',
-      description: 'Segurança e contenção',
-      icon: Shield,
-      color: '#EF4444',
-      href: '/dashboard/containment'
-    },
-    {
-      title: 'Singularity',
-      description: 'O núcleo da consciência',
-      icon: Brain,
-      color: '#FFD700',
-      href: '/dashboard/singularity'
-    }
-  ];
-
-  // Atividade recente
-  const recentActivity = [
-    { agent: 'UNIT_24', action: 'Análise de mercado concluída', time: '2 min atrás', status: 'success' },
-    { agent: 'UNIT_29', action: 'Integração HubSpot em progresso', time: '15 min atrás', status: 'progress' },
-    { agent: 'ORION', action: 'Relatório mensal gerado', time: '1h atrás', status: 'success' },
-    { agent: 'UNIT_15', action: 'Bug crítico detectado', time: '2h atrás', status: 'alert' },
-    { agent: 'UNIT_08', action: 'Atualização de segurança', time: '3h atrás', status: 'progress' }
-  ];
-
-  if (!mounted) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-pulse text-2xl" style={{ color: 'var(--color-primary)' }}>
-          Carregando Cockpit...
-        </div>
-      </div>
-    );
-  }
 
   return (
-    <div className="min-h-screen p-6 space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 
-            className="text-4xl font-bold mb-2"
-            style={{ color: 'var(--color-text)' }}
-          >
-            Cockpit Principal
-          </h1>
-          <p style={{ color: 'var(--color-textSecondary)' }}>
-            Visão geral do organismo digital auto-evolutivo
-          </p>
-        </div>
-        <div 
-          className="px-4 py-2 rounded-lg border backdrop-blur-sm"
-          style={{
-            backgroundColor: 'var(--color-surface)',
-            borderColor: 'var(--color-border)',
-          }}
-        >
-          <div className="flex items-center gap-2">
-            <div 
-              className="w-2 h-2 rounded-full animate-pulse"
-              style={{ backgroundColor: 'var(--color-success)' }}
-            />
-            <span style={{ color: 'var(--color-text)' }}>Sistema Online</span>
+    <div className="space-y-8 pb-10">
+      
+      {/* 1. HEADER CINEMATOGRÁFICO */}
+      <div className="relative overflow-hidden rounded-3xl border border-[var(--color-primary)]/20 bg-[var(--color-surface)]/40 p-8 backdrop-blur-xl">
+        {/* Background Glow */}
+        <div className="absolute top-0 right-0 -mt-20 -mr-20 h-96 w-96 rounded-full bg-[var(--color-primary)]/10 blur-[100px]" />
+        
+        <div className="relative z-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+          <div>
+            <div className="flex items-center gap-2 text-[var(--color-primary)] mb-2">
+              <span className="relative flex h-3 w-3">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[var(--color-primary)] opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-3 w-3 bg-[var(--color-primary)]"></span>
+              </span>
+              <span className="text-xs font-mono tracking-widest uppercase">Sistema Online • Modo Deus Ativo</span>
+            </div>
+            <h1 className="text-4xl md:text-5xl font-bold text-[var(--color-text)] tracking-tight font-display">
+              Bem-vindo ao <span className="text-transparent bg-clip-text bg-gradient-to-r from-[var(--color-primary)] to-[var(--color-accent)]">Comando Central</span>
+            </h1>
+            <p className="text-[var(--color-text-secondary)] mt-2 max-w-xl">
+              A Singularidade está estável. 139 Agentes operando em harmonia quântica.
+            </p>
+          </div>
+
+          {/* Mini Status Widget */}
+          <div className="flex gap-4">
+            <div className="px-4 py-2 rounded-xl bg-black/20 border border-[var(--color-border)]/30 backdrop-blur-md text-center">
+              <div className="text-[10px] text-[var(--color-text-secondary)] uppercase font-mono">Latência</div>
+              <div className="text-xl font-bold text-[var(--color-primary)] font-mono">12ms</div>
+            </div>
+            <div className="px-4 py-2 rounded-xl bg-black/20 border border-[var(--color-border)]/30 backdrop-blur-md text-center">
+              <div className="text-[10px] text-[var(--color-text-secondary)] uppercase font-mono">Uptime</div>
+              <div className="text-xl font-bold text-[var(--color-success)] font-mono">99.9%</div>
+            </div>
           </div>
         </div>
       </div>
 
-      {/* Main Stats Grid */}
+      {/* 2. STATS GRID (Holographic Cards) */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {mainStats.map((stat, index) => {
-          const Icon = stat.icon;
-          return (
-            <Link href={stat.href} key={index}>
-              <div 
-                className="p-6 rounded-xl border backdrop-blur-sm transition-all hover:scale-105 cursor-pointer"
-                style={{
-                  backgroundColor: 'var(--color-surface)',
-                  borderColor: 'var(--color-border)',
-                  boxShadow: '0 4px 12px rgba(0, 0, 0, 0.3)'
-                }}
-              >
-                <div className="flex items-start justify-between mb-4">
-                  <div 
-                    className="p-3 rounded-lg"
-                    style={{ backgroundColor: `${stat.color}20` }}
-                  >
-                    <Icon 
-                      className="w-6 h-6" 
-                      style={{ color: stat.color }}
-                    />
-                  </div>
-                  <div className="flex items-center gap-1 text-sm">
-                    {stat.trend === 'up' && (
-                      <>
-                        <ArrowUpRight className="w-4 h-4" style={{ color: 'var(--color-success)' }} />
-                        <span style={{ color: 'var(--color-success)' }}>{stat.change}</span>
-                      </>
-                    )}
-                    {stat.trend === 'down' && (
-                      <>
-                        <ArrowDownRight className="w-4 h-4" style={{ color: 'var(--color-error)' }} />
-                        <span style={{ color: 'var(--color-error)' }}>{stat.change}</span>
-                      </>
-                    )}
-                    {stat.trend === 'neutral' && (
-                      <span style={{ color: 'var(--color-textSecondary)' }}>{stat.change}</span>
-                    )}
-                  </div>
-                </div>
-                <p 
-                  className="text-sm mb-1"
-                  style={{ color: 'var(--color-textSecondary)' }}
-                >
-                  {stat.label}
-                </p>
-                <p 
-                  className="text-3xl font-bold"
-                  style={{ color: 'var(--color-text)' }}
-                >
-                  {stat.value}
-                </p>
-              </div>
-            </Link>
-          );
-        })}
-      </div>
-
-      {/* Quick Links Grid */}
-      <div>
-        <h2 
-          className="text-2xl font-bold mb-4"
-          style={{ color: 'var(--color-text)' }}
-        >
-          <Sparkles className="inline w-6 h-6 mr-2" style={{ color: 'var(--color-primary)' }} />
-          Acesso Rápido
-        </h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          {quickLinks.map((link, index) => {
-            const Icon = link.icon;
-            return (
-              <Link href={link.href} key={index}>
-                <div 
-                  className="p-5 rounded-xl border backdrop-blur-sm transition-all hover:scale-105 cursor-pointer group"
-                  style={{
-                    backgroundColor: 'var(--color-surface)',
-                    borderColor: 'var(--color-border)',
-                  }}
-                >
-                  <Icon 
-                    className="w-8 h-8 mb-3 transition-transform group-hover:scale-110" 
-                    style={{ color: link.color }}
-                  />
-                  <h3 
-                    className="font-bold mb-1"
-                    style={{ color: 'var(--color-text)' }}
-                  >
-                    {link.title}
-                  </h3>
-                  <p 
-                    className="text-sm"
-                    style={{ color: 'var(--color-textSecondary)' }}
-                  >
-                    {link.description}
-                  </p>
-                </div>
-              </Link>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* Recent Activity */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div 
-          className="p-6 rounded-xl border backdrop-blur-sm"
-          style={{
-            backgroundColor: 'var(--color-surface)',
-            borderColor: 'var(--color-border)',
-          }}
-        >
-          <h3 
-            className="text-xl font-bold mb-4"
-            style={{ color: 'var(--color-text)' }}
+        {stats.map((stat, i) => (
+          <div 
+            key={i}
+            className="group relative p-6 rounded-2xl border border-[var(--color-border)]/20 bg-[var(--color-surface)]/30 backdrop-blur-sm hover:bg-[var(--color-surface)]/50 transition-all duration-300 hover:-translate-y-1 overflow-hidden"
           >
-            Atividade Recente
-          </h3>
-          <div className="space-y-3">
-            {recentActivity.map((activity, index) => (
-              <div 
-                key={index}
-                className="flex items-start gap-3 p-3 rounded-lg"
-                style={{ backgroundColor: 'rgba(0, 0, 0, 0.3)' }}
-              >
-                <div className="flex-shrink-0">
-                  {activity.status === 'success' && (
-                    <CheckCircle className="w-5 h-5" style={{ color: 'var(--color-success)' }} />
-                  )}
-                  {activity.status === 'progress' && (
-                    <Clock className="w-5 h-5" style={{ color: 'var(--color-warning)' }} />
-                  )}
-                  {activity.status === 'alert' && (
-                    <AlertCircle className="w-5 h-5" style={{ color: 'var(--color-error)' }} />
-                  )}
+            {/* Hover Glow */}
+            <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 bg-gradient-to-br from-[var(--color-primary)]/5 to-transparent pointer-events-none" />
+            
+            <div className="relative z-10">
+              <div className="flex justify-between items-start mb-4">
+                <div className="p-3 rounded-xl bg-[var(--color-primary)]/10 text-[var(--color-primary)] group-hover:scale-110 transition-transform duration-300">
+                  <stat.icon className="w-6 h-6" />
                 </div>
-                <div className="flex-1 min-w-0">
-                  <p 
-                    className="font-medium text-sm"
-                    style={{ color: 'var(--color-text)' }}
-                  >
-                    {activity.agent}
-                  </p>
-                  <p 
-                    className="text-sm"
-                    style={{ color: 'var(--color-textSecondary)' }}
-                  >
-                    {activity.action}
-                  </p>
-                  <p 
-                    className="text-xs mt-1"
-                    style={{ color: 'var(--color-textSecondary)' }}
-                  >
-                    {activity.time}
-                  </p>
-                </div>
+                <ArrowUpRight className="w-5 h-5 text-[var(--color-text-secondary)] opacity-50" />
               </div>
-            ))}
-          </div>
-        </div>
-
-        {/* System Status */}
-        <div 
-          className="p-6 rounded-xl border backdrop-blur-sm"
-          style={{
-            backgroundColor: 'var(--color-surface)',
-            borderColor: 'var(--color-border)',
-          }}
-        >
-          <h3 
-            className="text-xl font-bold mb-4"
-            style={{ color: 'var(--color-text)' }}
-          >
-            Status do Sistema
-          </h3>
-          <div className="space-y-4">
-            <div>
-              <div className="flex items-center justify-between mb-2">
-                <span style={{ color: 'var(--color-textSecondary)' }}>CPU Usage</span>
-                <span style={{ color: 'var(--color-text)' }}>47%</span>
+              
+              <div className="text-3xl font-bold text-[var(--color-text)] font-mono tracking-tighter mb-1">
+                {stat.value}
               </div>
-              <div 
-                className="h-2 rounded-full overflow-hidden"
-                style={{ backgroundColor: 'rgba(0, 0, 0, 0.3)' }}
-              >
-                <div 
-                  className="h-full rounded-full"
-                  style={{ 
-                    width: '47%',
-                    backgroundColor: 'var(--color-primary)',
-                  }}
-                />
+              <div className="text-sm font-medium text-[var(--color-text)] mb-1">
+                {stat.label}
               </div>
-            </div>
-
-            <div>
-              <div className="flex items-center justify-between mb-2">
-                <span style={{ color: 'var(--color-textSecondary)' }}>Memory</span>
-                <span style={{ color: 'var(--color-text)' }}>62%</span>
-              </div>
-              <div 
-                className="h-2 rounded-full overflow-hidden"
-                style={{ backgroundColor: 'rgba(0, 0, 0, 0.3)' }}
-              >
-                <div 
-                  className="h-full rounded-full"
-                  style={{ 
-                    width: '62%',
-                    backgroundColor: 'var(--color-warning)',
-                  }}
-                />
-              </div>
-            </div>
-
-            <div>
-              <div className="flex items-center justify-between mb-2">
-                <span style={{ color: 'var(--color-textSecondary)' }}>Network</span>
-                <span style={{ color: 'var(--color-text)' }}>89%</span>
-              </div>
-              <div 
-                className="h-2 rounded-full overflow-hidden"
-                style={{ backgroundColor: 'rgba(0, 0, 0, 0.3)' }}
-              >
-                <div 
-                  className="h-full rounded-full"
-                  style={{ 
-                    width: '89%',
-                    backgroundColor: 'var(--color-success)',
-                  }}
-                />
-              </div>
-            </div>
-
-            <div>
-              <div className="flex items-center justify-between mb-2">
-                <span style={{ color: 'var(--color-textSecondary)' }}>AI Processing</span>
-                <span style={{ color: 'var(--color-text)' }}>34%</span>
-              </div>
-              <div 
-                className="h-2 rounded-full overflow-hidden"
-                style={{ backgroundColor: 'rgba(0, 0, 0, 0.3)' }}
-              >
-                <div 
-                  className="h-full rounded-full"
-                  style={{ 
-                    width: '34%',
-                    backgroundColor: 'var(--color-accent)',
-                  }}
-                />
+              <div className="text-xs text-[var(--color-text-secondary)] font-mono opacity-80">
+                {stat.sub}
               </div>
             </div>
           </div>
+        ))}
+      </div>
+
+      {/* 3. MAIN DASHBOARD SECTION */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 h-full">
+        
+        {/* Left Column: Neural Activity Graph (Simulado Visualmente) */}
+        <div className="lg:col-span-2 rounded-3xl border border-[var(--color-border)]/20 bg-[var(--color-surface)]/20 backdrop-blur-md p-6 flex flex-col min-h-[400px]">
+          <div className="flex justify-between items-center mb-6">
+            <h3 className="flex items-center gap-2 text-lg font-bold text-[var(--color-text)]">
+              <Activity className="w-5 h-5 text-[var(--color-primary)]" />
+              Atividade Neural em Tempo Real
+            </h3>
+            <div className="flex gap-2">
+              <span className="px-3 py-1 rounded-full text-xs font-mono bg-[var(--color-primary)]/10 text-[var(--color-primary)] border border-[var(--color-primary)]/20">
+                LIVE
+              </span>
+            </div>
+          </div>
+          
+          {/* Visual Placeholder para o Gráfico (Futuro Recharts) */}
+          <div className="flex-1 rounded-2xl border border-dashed border-[var(--color-border)]/20 bg-black/10 flex items-center justify-center relative overflow-hidden group">
+            {/* Grid animado de fundo */}
+            <div className="absolute inset-0 opacity-10 bg-[url('/grid.svg')] animate-pulse" />
+            
+            {/* Onda central simulada */}
+            <div className="flex items-end justify-center gap-1 h-32 w-full px-10 opacity-70">
+              {Array.from({ length: 40 }).map((_, i) => (
+                <div 
+                  key={i} 
+                  className="w-full bg-[var(--color-primary)] rounded-t-sm transition-all duration-300 ease-in-out"
+                  style={{ 
+                    height: `${Math.random() * 100}%`, 
+                    opacity: Math.random() * 0.5 + 0.5,
+                    animation: `pulse-height ${0.5 + Math.random()}s infinite alternate`
+                  }}
+                />
+              ))}
+            </div>
+            
+            <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+              <p className="text-[var(--color-text)] font-mono text-sm bg-black/50 px-4 py-2 rounded-lg backdrop-blur">
+                Processando 4.2TB de dados...
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* Right Column: System Logs & Actions */}
+        <div className="space-y-6">
+          
+          {/* System Health */}
+          <div className="rounded-3xl border border-[var(--color-border)]/20 bg-[var(--color-surface)]/20 backdrop-blur-md p-6">
+            <h3 className="flex items-center gap-2 text-lg font-bold text-[var(--color-text)] mb-4">
+              <Cpu className="w-5 h-5 text-[var(--color-accent)]" />
+              Infraestrutura
+            </h3>
+            
+            <div className="space-y-4">
+              {[
+                { name: 'Database Clusters', status: 'Healthy', val: '4/4' },
+                { name: 'Quantum Core', status: 'Stable', val: '100%' },
+                { name: 'API Gateway', status: 'High Load', val: '89ms' },
+              ].map((item, i) => (
+                <div key={i} className="flex justify-between items-center p-3 rounded-xl bg-black/10 border border-white/5">
+                  <div className="flex items-center gap-3">
+                    <div className="w-2 h-2 rounded-full bg-[var(--color-success)] shadow-[0_0_10px_var(--color-success)]" />
+                    <span className="text-sm text-[var(--color-text)]">{item.name}</span>
+                  </div>
+                  <span className="text-xs font-mono text-[var(--color-text-secondary)]">{item.val}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Quick Actions */}
+          <div className="rounded-3xl border border-[var(--color-border)]/20 bg-[var(--color-surface)]/20 backdrop-blur-md p-6">
+            <h3 className="flex items-center gap-2 text-lg font-bold text-[var(--color-text)] mb-4">
+              <Terminal className="w-5 h-5 text-[var(--color-warning)]" />
+              Comandos Rápidos
+            </h3>
+            
+            <div className="grid grid-cols-2 gap-3">
+              <button className="p-3 rounded-xl border border-[var(--color-border)]/30 hover:bg-[var(--color-primary)]/10 hover:border-[var(--color-primary)] transition-all text-xs font-mono text-[var(--color-text)] flex flex-col items-center gap-2 group">
+                <Globe className="w-5 h-5 text-[var(--color-text-secondary)] group-hover:text-[var(--color-primary)]" />
+                SCAN NETWORK
+              </button>
+              <button className="p-3 rounded-xl border border-[var(--color-border)]/30 hover:bg-[var(--color-error)]/10 hover:border-[var(--color-error)] transition-all text-xs font-mono text-[var(--color-text)] flex flex-col items-center gap-2 group">
+                <AlertCircle className="w-5 h-5 text-[var(--color-text-secondary)] group-hover:text-[var(--color-error)]" />
+                PURGE LOGS
+              </button>
+            </div>
+          </div>
+
         </div>
       </div>
+      
+      <style jsx>{`
+        @keyframes pulse-height {
+          0% { transform: scaleY(0.5); }
+          100% { transform: scaleY(1); }
+        }
+      `}</style>
     </div>
   );
 }
