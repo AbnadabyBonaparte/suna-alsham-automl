@@ -1,327 +1,277 @@
 /**
  * ═══════════════════════════════════════════════════════════════
- * ALSHAM QUANTUM - SETTINGS
+ * ALSHAM QUANTUM - SETTINGS (SYSTEM BIOS)
  * ═══════════════════════════════════════════════════════════════
  * 📁 PATH: frontend/src/app/dashboard/settings/page.tsx
- * 📋 ROTA: /dashboard/settings
+ * 📋 Painel de configuração com ID Holográfico e controles táteis
  * ═══════════════════════════════════════════════════════════════
  */
 
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { 
-    Settings, 
-    Bell, 
-    Moon, 
-    Sun,
-    Globe,
-    Lock,
-    User,
-    Palette,
-    Volume2,
-    VolumeX,
-    Monitor,
-    Smartphone,
-    Mail,
-    Shield,
-    Key,
-    Save,
-    RotateCcw,
-    Zap,
-    Eye,
-    Languages
+    User, Volume2, Monitor, Cpu, Shield, 
+    Bell, Eye, Zap, Save, RefreshCw, 
+    Power, Fingerprint, CreditCard 
 } from 'lucide-react';
 
+const TABS = [
+    { id: 'profile', label: 'Identity', icon: User },
+    { id: 'system', label: 'System', icon: Cpu },
+    { id: 'neural', label: 'Neural Net', icon: Zap },
+    { id: 'notifications', label: 'Signals', icon: Bell },
+];
+
 export default function SettingsPage() {
-    const [notifications, setNotifications] = useState({
-        email: true,
-        push: true,
-        agentAlerts: true,
-        systemUpdates: false,
-        weeklyReport: true,
-    });
+    const [activeTab, setActiveTab] = useState('profile');
+    const [isSaving, setIsSaving] = useState(false);
+    
+    // Estados de Configuração
+    const [volume, setVolume] = useState(75);
+    const [performance, setPerformance] = useState(90);
+    const [notifications, setNotifications] = useState(true);
+    const [stealthMode, setStealthMode] = useState(false);
 
-    const [appearance, setAppearance] = useState({
-        theme: 'quantum',
-        reducedMotion: false,
-        soundEffects: true,
-        compactMode: false,
-    });
+    // Refs para Canvas (Audio Viz)
+    const audioCanvasRef = useRef<HTMLCanvasElement>(null);
 
-    const [privacy, setPrivacy] = useState({
-        analytics: true,
-        crashReports: true,
-        showActivity: true,
-    });
+    // 1. ENGINE VISUAL (AUDIO SPECTRUM)
+    useEffect(() => {
+        const canvas = audioCanvasRef.current;
+        if (!canvas) return;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) return;
 
-    const [language, setLanguage] = useState('pt-BR');
+        let animationId: number;
+        let time = 0;
 
-    const themes = [
-        { id: 'quantum', name: 'Quantum Lab', color: 'from-cyan-500 to-teal-500', description: 'Ciano futurista' },
-        { id: 'ascension', name: 'Ascension Protocol', color: 'from-amber-500 to-orange-500', description: 'Dourado celestial' },
-        { id: 'military', name: 'Military Ops', color: 'from-green-600 to-emerald-600', description: 'Verde tático' },
-        { id: 'neural', name: 'Neural Singularity', color: 'from-purple-500 to-pink-500', description: 'Roxo neural' },
-        { id: 'titanium', name: 'Titanium Executive', color: 'from-zinc-400 to-zinc-600', description: 'Cinza premium' },
-    ];
+        const render = () => {
+            const w = canvas.width = canvas.clientWidth;
+            const h = canvas.height = canvas.clientHeight;
+            
+            ctx.clearRect(0, 0, w, h);
+            time += 0.1;
 
-    const ToggleSwitch = ({ enabled, onChange }: { enabled: boolean; onChange: () => void }) => (
-        <button
-            onClick={onChange}
-            className={`relative w-12 h-6 rounded-full transition-colors ${
-                enabled ? 'bg-cyan-500' : 'bg-zinc-700'
-            }`}
-        >
-            <div className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-transform ${
-                enabled ? 'left-7' : 'left-1'
-            }`} />
-        </button>
-    );
+            const bars = 20;
+            const barWidth = w / bars;
+            const themeColor = getComputedStyle(document.documentElement).getPropertyValue('--color-primary').trim() || '#00FFD0';
+
+            for (let i = 0; i < bars; i++) {
+                // Simular onda baseada no volume
+                const height = (Math.sin(time + i * 0.5) * 0.5 + 0.5) * h * (volume / 100);
+                
+                const x = i * barWidth;
+                const y = h - height;
+
+                // Gradiente
+                const gradient = ctx.createLinearGradient(0, h, 0, y);
+                gradient.addColorStop(0, themeColor + '20');
+                gradient.addColorStop(1, themeColor);
+
+                ctx.fillStyle = gradient;
+                ctx.fillRect(x + 2, y, barWidth - 4, height);
+            }
+
+            animationId = requestAnimationFrame(render);
+        };
+        render();
+
+        return () => cancelAnimationFrame(animationId);
+    }, [volume]);
+
+    const handleSave = () => {
+        setIsSaving(true);
+        setTimeout(() => setIsSaving(false), 1500);
+    };
 
     return (
-        <div className="min-h-screen p-6 space-y-6 max-w-4xl mx-auto">
-            {/* Header */}
-            <div className="flex items-center gap-4">
-                <div className="p-3 bg-zinc-800 rounded-xl border border-zinc-700">
-                    <Settings className="w-8 h-8 text-zinc-400" />
-                </div>
-                <div>
-                    <h1 className="text-3xl font-bold text-white tracking-tight">
-                        Settings
-                    </h1>
-                    <p className="text-zinc-400">Configure your quantum experience</p>
-                </div>
-            </div>
-
-            {/* Profile Section */}
-            <div className="bg-zinc-900/50 border border-zinc-800 rounded-xl p-6">
-                <h2 className="text-lg font-semibold text-white flex items-center gap-2 mb-4">
-                    <User className="w-5 h-5 text-cyan-400" />
-                    Profile
-                </h2>
-                <div className="flex items-start gap-6">
-                    <div className="w-20 h-20 bg-gradient-to-br from-cyan-500 to-purple-500 rounded-full flex items-center justify-center text-white text-2xl font-bold">
-                        C
-                    </div>
-                    <div className="flex-1 space-y-4">
-                        <div>
-                            <label className="block text-sm text-zinc-400 mb-1">Display Name</label>
-                            <input 
-                                type="text" 
-                                defaultValue="ALSHAM Operator"
-                                className="w-full bg-black/50 border border-zinc-700 rounded-lg px-4 py-2 text-white focus:border-cyan-500 focus:outline-none transition-colors"
-                            />
-                        </div>
-                        <div>
-                            <label className="block text-sm text-zinc-400 mb-1">Email</label>
-                            <input 
-                                type="email" 
-                                defaultValue="casamondestore@gmail.com"
-                                disabled
-                                className="w-full bg-black/50 border border-zinc-700 rounded-lg px-4 py-2 text-zinc-500 cursor-not-allowed"
-                            />
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            {/* Appearance */}
-            <div className="bg-zinc-900/50 border border-zinc-800 rounded-xl p-6">
-                <h2 className="text-lg font-semibold text-white flex items-center gap-2 mb-4">
-                    <Palette className="w-5 h-5 text-purple-400" />
-                    Appearance
-                </h2>
-                
-                {/* Theme Selection */}
-                <div className="mb-6">
-                    <label className="block text-sm text-zinc-400 mb-3">Visual Reality Theme</label>
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                        {themes.map((theme) => (
-                            <button
-                                key={theme.id}
-                                onClick={() => setAppearance({ ...appearance, theme: theme.id })}
-                                className={`p-4 rounded-xl border transition-all ${
-                                    appearance.theme === theme.id 
-                                        ? 'border-cyan-500 bg-cyan-500/10' 
-                                        : 'border-zinc-700 hover:border-zinc-600'
-                                }`}
-                            >
-                                <div className={`w-full h-3 rounded-full bg-gradient-to-r ${theme.color} mb-3`} />
-                                <p className="text-white font-medium text-left">{theme.name}</p>
-                                <p className="text-sm text-zinc-500 text-left">{theme.description}</p>
-                            </button>
-                        ))}
-                    </div>
+        <div className="h-[calc(100vh-6rem)] flex flex-col lg:flex-row gap-8 p-4 overflow-hidden relative">
+            
+            {/* ESQUERDA: NAVEGAÇÃO (RACK) */}
+            <div className="w-full lg:w-64 flex flex-col gap-2">
+                <div className="mb-6 px-4">
+                    <h1 className="text-2xl font-black text-white tracking-tight font-display">CONFIG</h1>
+                    <p className="text-xs text-gray-500 font-mono uppercase tracking-widest">Bios v13.3</p>
                 </div>
 
-                {/* Other appearance settings */}
-                <div className="space-y-4">
-                    <div className="flex items-center justify-between py-3 border-t border-zinc-800">
-                        <div className="flex items-center gap-3">
-                            <Eye className="w-5 h-5 text-zinc-400" />
-                            <div>
-                                <p className="text-white">Reduced Motion</p>
-                                <p className="text-sm text-zinc-500">Disable animations for accessibility</p>
-                            </div>
-                        </div>
-                        <ToggleSwitch 
-                            enabled={appearance.reducedMotion}
-                            onChange={() => setAppearance({ ...appearance, reducedMotion: !appearance.reducedMotion })}
-                        />
-                    </div>
-
-                    <div className="flex items-center justify-between py-3 border-t border-zinc-800">
-                        <div className="flex items-center gap-3">
-                            {appearance.soundEffects ? (
-                                <Volume2 className="w-5 h-5 text-zinc-400" />
-                            ) : (
-                                <VolumeX className="w-5 h-5 text-zinc-400" />
-                            )}
-                            <div>
-                                <p className="text-white">Sound Effects</p>
-                                <p className="text-sm text-zinc-500">Enable quantum interface sounds</p>
-                            </div>
-                        </div>
-                        <ToggleSwitch 
-                            enabled={appearance.soundEffects}
-                            onChange={() => setAppearance({ ...appearance, soundEffects: !appearance.soundEffects })}
-                        />
-                    </div>
-
-                    <div className="flex items-center justify-between py-3 border-t border-zinc-800">
-                        <div className="flex items-center gap-3">
-                            <Monitor className="w-5 h-5 text-zinc-400" />
-                            <div>
-                                <p className="text-white">Compact Mode</p>
-                                <p className="text-sm text-zinc-500">Reduce spacing and padding</p>
-                            </div>
-                        </div>
-                        <ToggleSwitch 
-                            enabled={appearance.compactMode}
-                            onChange={() => setAppearance({ ...appearance, compactMode: !appearance.compactMode })}
-                        />
-                    </div>
-                </div>
-            </div>
-
-            {/* Notifications */}
-            <div className="bg-zinc-900/50 border border-zinc-800 rounded-xl p-6">
-                <h2 className="text-lg font-semibold text-white flex items-center gap-2 mb-4">
-                    <Bell className="w-5 h-5 text-yellow-400" />
-                    Notifications
-                </h2>
-                <div className="space-y-4">
-                    <div className="flex items-center justify-between py-3">
-                        <div className="flex items-center gap-3">
-                            <Mail className="w-5 h-5 text-zinc-400" />
-                            <div>
-                                <p className="text-white">Email Notifications</p>
-                                <p className="text-sm text-zinc-500">Receive updates via email</p>
-                            </div>
-                        </div>
-                        <ToggleSwitch 
-                            enabled={notifications.email}
-                            onChange={() => setNotifications({ ...notifications, email: !notifications.email })}
-                        />
-                    </div>
-
-                    <div className="flex items-center justify-between py-3 border-t border-zinc-800">
-                        <div className="flex items-center gap-3">
-                            <Smartphone className="w-5 h-5 text-zinc-400" />
-                            <div>
-                                <p className="text-white">Push Notifications</p>
-                                <p className="text-sm text-zinc-500">Browser push notifications</p>
-                            </div>
-                        </div>
-                        <ToggleSwitch 
-                            enabled={notifications.push}
-                            onChange={() => setNotifications({ ...notifications, push: !notifications.push })}
-                        />
-                    </div>
-
-                    <div className="flex items-center justify-between py-3 border-t border-zinc-800">
-                        <div className="flex items-center gap-3">
-                            <Zap className="w-5 h-5 text-zinc-400" />
-                            <div>
-                                <p className="text-white">Agent Alerts</p>
-                                <p className="text-sm text-zinc-500">Critical agent status updates</p>
-                            </div>
-                        </div>
-                        <ToggleSwitch 
-                            enabled={notifications.agentAlerts}
-                            onChange={() => setNotifications({ ...notifications, agentAlerts: !notifications.agentAlerts })}
-                        />
-                    </div>
-                </div>
-            </div>
-
-            {/* Privacy & Security */}
-            <div className="bg-zinc-900/50 border border-zinc-800 rounded-xl p-6">
-                <h2 className="text-lg font-semibold text-white flex items-center gap-2 mb-4">
-                    <Shield className="w-5 h-5 text-green-400" />
-                    Privacy & Security
-                </h2>
-                <div className="space-y-4">
-                    <div className="flex items-center justify-between py-3">
-                        <div className="flex items-center gap-3">
-                            <Key className="w-5 h-5 text-zinc-400" />
-                            <div>
-                                <p className="text-white">Change Password</p>
-                                <p className="text-sm text-zinc-500">Update your access credentials</p>
-                            </div>
-                        </div>
-                        <button className="px-4 py-2 bg-zinc-800 hover:bg-zinc-700 rounded-lg text-white text-sm transition-colors">
-                            Update
-                        </button>
-                    </div>
-
-                    <div className="flex items-center justify-between py-3 border-t border-zinc-800">
-                        <div className="flex items-center gap-3">
-                            <Globe className="w-5 h-5 text-zinc-400" />
-                            <div>
-                                <p className="text-white">Usage Analytics</p>
-                                <p className="text-sm text-zinc-500">Help improve ALSHAM Quantum</p>
-                            </div>
-                        </div>
-                        <ToggleSwitch 
-                            enabled={privacy.analytics}
-                            onChange={() => setPrivacy({ ...privacy, analytics: !privacy.analytics })}
-                        />
-                    </div>
-                </div>
-            </div>
-
-            {/* Language */}
-            <div className="bg-zinc-900/50 border border-zinc-800 rounded-xl p-6">
-                <h2 className="text-lg font-semibold text-white flex items-center gap-2 mb-4">
-                    <Languages className="w-5 h-5 text-blue-400" />
-                    Language & Region
-                </h2>
-                <div>
-                    <label className="block text-sm text-zinc-400 mb-2">Interface Language</label>
-                    <select 
-                        value={language}
-                        onChange={(e) => setLanguage(e.target.value)}
-                        className="w-full md:w-64 bg-black/50 border border-zinc-700 rounded-lg px-4 py-2 text-white focus:border-cyan-500 focus:outline-none"
+                {TABS.map((tab) => (
+                    <button
+                        key={tab.id}
+                        onClick={() => setActiveTab(tab.id)}
+                        className={`
+                            group relative flex items-center gap-4 px-4 py-4 rounded-xl transition-all duration-300 overflow-hidden
+                            ${activeTab === tab.id 
+                                ? 'bg-[var(--color-primary)]/10 text-white shadow-[inset_4px_0_0_0_var(--color-primary)]' 
+                                : 'text-gray-500 hover:bg-white/5 hover:text-gray-300'}
+                        `}
                     >
-                        <option value="pt-BR">Português (Brasil)</option>
-                        <option value="en-US">English (US)</option>
-                        <option value="es">Español</option>
-                    </select>
+                        <tab.icon className={`w-5 h-5 transition-colors ${activeTab === tab.id ? 'text-[var(--color-primary)]' : 'group-hover:text-white'}`} />
+                        <span className="font-bold text-sm tracking-wide">{tab.label}</span>
+                        
+                        {/* Hover Light */}
+                        <div className="absolute inset-0 bg-gradient-to-r from-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
+                    </button>
+                ))}
+            </div>
+
+            {/* DIREITA: CONTEÚDO (PAINEL DE CONTROLE) */}
+            <div className="flex-1 bg-black/40 backdrop-blur-xl border border-white/10 rounded-3xl p-8 relative overflow-hidden shadow-2xl flex flex-col">
+                
+                {/* Header da Tab */}
+                <div className="flex justify-between items-center mb-8 border-b border-white/5 pb-4">
+                    <h2 className="text-xl font-bold text-white flex items-center gap-3 uppercase tracking-widest">
+                        {activeTab === 'profile' && <User className="w-6 h-6 text-[var(--color-primary)]" />}
+                        {activeTab === 'system' && <Cpu className="w-6 h-6 text-[var(--color-primary)]" />}
+                        {activeTab === 'neural' && <Zap className="w-6 h-6 text-[var(--color-primary)]" />}
+                        {activeTab === 'notifications' && <Bell className="w-6 h-6 text-[var(--color-primary)]" />}
+                        {activeTab} SETTINGS
+                    </h2>
+                    <button 
+                        onClick={handleSave}
+                        disabled={isSaving}
+                        className="flex items-center gap-2 px-6 py-2 bg-[var(--color-primary)] hover:bg-[var(--color-accent)] text-black font-bold rounded-full transition-all disabled:opacity-50"
+                    >
+                        {isSaving ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+                        {isSaving ? 'OVERWRITING...' : 'SAVE CHANGES'}
+                    </button>
+                </div>
+
+                <div className="flex-1 overflow-y-auto pr-4 space-y-8 scrollbar-thin scrollbar-thumb-white/10">
+                    
+                    {/* --- CONTEÚDO: PROFILE --- */}
+                    {activeTab === 'profile' && (
+                        <div className="flex flex-col md:flex-row gap-8">
+                            {/* ID CARD HOLOGRÁFICO */}
+                            <div className="w-full md:w-80 h-48 rounded-2xl bg-gradient-to-br from-[#1a1a1a] to-black border border-white/10 relative overflow-hidden group shadow-2xl transform transition-transform hover:scale-[1.02]">
+                                {/* Efeito Holográfico (CSS Gradient) */}
+                                <div className="absolute inset-0 bg-[url('/noise.png')] opacity-10 mix-blend-overlay" />
+                                <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/5 to-transparent opacity-0 group-hover:opacity-30 transition-opacity duration-700" />
+                                
+                                <div className="absolute top-6 left-6">
+                                    <div className="w-16 h-16 rounded-xl bg-[var(--color-primary)]/20 border border-[var(--color-primary)] flex items-center justify-center mb-4">
+                                        <Fingerprint className="w-8 h-8 text-[var(--color-primary)]" />
+                                    </div>
+                                    <h3 className="text-lg font-bold text-white">Abnadaby Bonaparte</h3>
+                                    <p className="text-xs text-gray-500 font-mono uppercase tracking-widest">Supreme Architect</p>
+                                </div>
+
+                                <div className="absolute bottom-6 right-6 text-right">
+                                    <div className="text-[10px] text-gray-600 font-mono">ID: ORION-001</div>
+                                    <div className="flex items-center justify-end gap-1 mt-1">
+                                        <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                                        <span className="text-xs text-emerald-500 font-bold">AUTHORIZED</span>
+                                    </div>
+                                </div>
+                                
+                                {/* Scanline */}
+                                <div className="absolute inset-0 bg-gradient-to-b from-transparent via-[var(--color-primary)]/10 to-transparent h-[200%] w-full animate-scanline pointer-events-none" />
+                            </div>
+
+                            {/* Campos de Edição */}
+                            <div className="flex-1 space-y-4">
+                                <div className="space-y-2">
+                                    <label className="text-xs font-bold text-gray-500 uppercase tracking-widest">Codenames</label>
+                                    <input type="text" defaultValue="The Architect" className="w-full bg-white/5 border border-white/10 rounded-xl p-3 text-white focus:border-[var(--color-primary)] outline-none transition-all font-mono" />
+                                </div>
+                                <div className="space-y-2">
+                                    <label className="text-xs font-bold text-gray-500 uppercase tracking-widest">Secure Email</label>
+                                    <input type="email" defaultValue="admin@alsham.quantum" className="w-full bg-white/5 border border-white/10 rounded-xl p-3 text-white focus:border-[var(--color-primary)] outline-none transition-all font-mono" />
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* --- CONTEÚDO: SYSTEM --- */}
+                    {activeTab === 'system' && (
+                        <div className="space-y-8">
+                            {/* Audio Calibration */}
+                            <div className="bg-black/20 rounded-2xl p-6 border border-white/5">
+                                <div className="flex justify-between items-center mb-4">
+                                    <div className="flex items-center gap-3">
+                                        <Volume2 className="w-5 h-5 text-gray-400" />
+                                        <span className="text-sm font-bold text-white">Audio Output Level</span>
+                                    </div>
+                                    <span className="text-xs font-mono text-[var(--color-primary)]">{volume}%</span>
+                                </div>
+                                <div className="h-24 bg-black/40 rounded-xl border border-white/5 overflow-hidden mb-4 relative">
+                                    <canvas ref={audioCanvasRef} className="w-full h-full" />
+                                </div>
+                                <input 
+                                    type="range" min="0" max="100" value={volume} onChange={(e) => setVolume(Number(e.target.value))}
+                                    className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-[var(--color-primary)]"
+                                />
+                            </div>
+
+                            {/* Performance Mode */}
+                            <div className="bg-black/20 rounded-2xl p-6 border border-white/5">
+                                <div className="flex justify-between items-center mb-4">
+                                    <div className="flex items-center gap-3">
+                                        <Monitor className="w-5 h-5 text-gray-400" />
+                                        <span className="text-sm font-bold text-white">Graphics Quality</span>
+                                    </div>
+                                    <span className="text-xs font-mono text-yellow-400">ULTRA</span>
+                                </div>
+                                <div className="flex gap-2 mb-2">
+                                    {[20, 40, 60, 80, 100].map((val) => (
+                                        <div 
+                                            key={val} 
+                                            className={`h-2 flex-1 rounded-full transition-all ${performance >= val ? 'bg-[var(--color-primary)] shadow-[0_0_10px_var(--color-primary)]' : 'bg-gray-800'}`}
+                                        />
+                                    ))}
+                                </div>
+                                <input 
+                                    type="range" min="0" max="100" step="20" value={performance} onChange={(e) => setPerformance(Number(e.target.value))}
+                                    className="w-full h-2 bg-transparent rounded-lg appearance-none cursor-pointer accent-transparent relative z-10 opacity-0"
+                                />
+                            </div>
+                        </div>
+                    )}
+
+                    {/* --- CONTEÚDO: NEURAL NET --- */}
+                    {activeTab === 'neural' && (
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            {/* Switches Industriais */}
+                            {[
+                                { label: 'Stealth Mode', state: stealthMode, set: setStealthMode, icon: Eye, color: 'text-red-400' },
+                                { label: 'Auto-Training', state: true, set: () => {}, icon: BrainCircuit, color: 'text-purple-400' },
+                                { label: 'Quantum Sync', state: true, set: () => {}, icon: RefreshCw, color: 'text-cyan-400' },
+                                { label: 'Firewall Guard', state: true, set: () => {}, icon: Shield, color: 'text-emerald-400' },
+                            ].map((opt, i) => (
+                                <div 
+                                    key={i}
+                                    onClick={() => opt.set(!opt.state)}
+                                    className={`
+                                        cursor-pointer p-5 rounded-2xl border transition-all duration-300 flex items-center justify-between group
+                                        ${opt.state 
+                                            ? 'bg-white/5 border-[var(--color-primary)]/30' 
+                                            : 'bg-black/40 border-white/5 opacity-60'}
+                                    `}
+                                >
+                                    <div className="flex items-center gap-3">
+                                        <opt.icon className={`w-5 h-5 ${opt.color}`} />
+                                        <span className={`font-bold text-sm ${opt.state ? 'text-white' : 'text-gray-500'}`}>{opt.label}</span>
+                                    </div>
+                                    
+                                    {/* Toggle Switch Visual */}
+                                    <div className={`w-12 h-6 rounded-full p-1 transition-colors ${opt.state ? 'bg-[var(--color-primary)]' : 'bg-gray-700'}`}>
+                                        <div className={`w-4 h-4 bg-white rounded-full shadow-md transition-transform ${opt.state ? 'translate-x-6' : 'translate-x-0'}`} />
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+
                 </div>
             </div>
 
-            {/* Action Buttons */}
-            <div className="flex items-center justify-between pt-4">
-                <button className="flex items-center gap-2 px-4 py-2 text-zinc-400 hover:text-white transition-colors">
-                    <RotateCcw className="w-4 h-4" />
-                    Reset to Defaults
-                </button>
-                <button className="flex items-center gap-2 px-6 py-2 bg-cyan-500 hover:bg-cyan-600 text-black font-medium rounded-lg transition-colors">
-                    <Save className="w-4 h-4" />
-                    Save Changes
-                </button>
-            </div>
+            <style jsx>{`
+                @keyframes scanline {
+                    0% { transform: translateY(-100%); }
+                    100% { transform: translateY(100%); }
+                }
+                .animate-scanline { animation: scanline 3s linear infinite; }
+            `}</style>
         </div>
     );
 }
