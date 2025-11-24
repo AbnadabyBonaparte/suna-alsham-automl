@@ -1,9 +1,9 @@
 /**
  * ═══════════════════════════════════════════════════════════════
- * ALSHAM QUANTUM - ORION AI (SENTIENT CORE EDITION)
+ * ALSHAM QUANTUM - ORION AI (HOLOGRAM HEAD EDITION)
  * ═══════════════════════════════════════════════════════════════
  * 📁 PATH: frontend/src/app/dashboard/orion/page.tsx
- * 📋 Chat AI com Voz, Avatar 3D Reativo e Seletor de Modelos
+ * 📋 Rosto 3D Holográfico Procedural (Wireframe) + Voz + Chat
  * ═══════════════════════════════════════════════════════════════
  */
 
@@ -12,7 +12,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { 
     Mic, MicOff, Send, Bot, User, Sparkles, 
-    ChevronDown, Cpu, Volume2, StopCircle 
+    ChevronDown, Cpu, Volume2, BrainCircuit 
 } from 'lucide-react';
 
 // --- CONFIGURAÇÃO DOS MODELOS ---
@@ -30,14 +30,20 @@ interface Message {
     timestamp: string;
 }
 
+interface Point3D {
+    x: number; y: number; z: number;
+    baseX: number; baseY: number; baseZ: number;
+}
+
 export default function OrionPage() {
     // Estado
     const [input, setInput] = useState('');
     const [messages, setMessages] = useState<Message[]>([
-        { id: 1, role: 'ai', text: 'Sistemas online. Consciência Orion ativa. Como posso auxiliar na expansão do seu império hoje?', timestamp: 'Now' }
+        { id: 1, role: 'ai', text: 'Conexão neural estabelecida. Sou Orion. Estou pronto para processar seus dados.', timestamp: 'Now' }
     ]);
     const [isRecording, setIsRecording] = useState(false);
     const [isSpeaking, setIsSpeaking] = useState(false);
+    const [isThinking, setIsThinking] = useState(false);
     const [selectedModel, setSelectedModel] = useState(AI_MODELS[0]);
     const [isModelMenuOpen, setIsModelMenuOpen] = useState(false);
     
@@ -51,7 +57,7 @@ export default function OrionPage() {
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     }, [messages]);
 
-    // 1. ENGINE VISUAL 3D (O ROSTO DA IA)
+    // 1. ENGINE VISUAL 3D (CABEÇA HOLOGRÁFICA)
     useEffect(() => {
         const canvas = canvasRef.current;
         if (!canvas) return;
@@ -60,12 +66,9 @@ export default function OrionPage() {
 
         let animationId: number;
         let time = 0;
-
-        const particles: {x: number, y: number, radius: number, phase: number}[] = [];
-        const particleCount = 150; // Densidade do núcleo
+        let points: Point3D[] = [];
 
         const resize = () => {
-            // Ajusta para o tamanho do container pai
             const parent = canvas.parentElement;
             if (parent) {
                 canvas.width = parent.clientWidth;
@@ -75,79 +78,169 @@ export default function OrionPage() {
         window.addEventListener('resize', resize);
         resize();
 
-        // Inicializar partículas
-        for(let i=0; i<particleCount; i++) {
-            particles.push({
-                x: 0, y: 0, 
-                radius: Math.random() * 2,
-                phase: Math.random() * Math.PI * 2
-            });
-        }
+        // --- GERAÇÃO DA CABEÇA (MATEMÁTICA PROCEDURAL) ---
+        const initHead = () => {
+            points = [];
+            const layers = 20; // Camadas horizontais (fatias da cabeça)
+            const pointsPerLayer = 30; // Pontos por volta
+
+            for (let i = 0; i < layers; i++) {
+                // y vai de -1 (topo) a 1 (queixo)
+                const y = 1 - (i / (layers - 1)) * 2; 
+                
+                // Raio base da esfera
+                let radius = Math.sqrt(1 - y * y);
+                
+                // DEFORMAÇÃO CRANIANA (Criar formato de rosto)
+                // Alargar a parte de cima (crânio) e afinar a parte de baixo (queixo)
+                if (y < -0.5) radius *= 0.9; // Topo da cabeça
+                if (y > 0.2) radius *= 0.85; // Maxilar afinando
+                if (y > 0.6) radius *= 0.7; // Queixo
+
+                for (let j = 0; j < pointsPerLayer; j++) {
+                    const theta = (j / pointsPerLayer) * Math.PI * 2;
+                    
+                    // Deformação Facial (Nariz/Orelhas)
+                    let r = radius;
+                    // Nariz (Z positivo, Y central)
+                    const isFaceFront = Math.abs(theta - Math.PI/2) < 0.5;
+                    if (isFaceFront && Math.abs(y) < 0.2) r *= 1.1;
+
+                    const x = Math.cos(theta) * r * 100; // Escala 100
+                    const z = Math.sin(theta) * r * 100;
+                    const py = y * 130; // Altura alongada
+
+                    points.push({
+                        x, y: py, z,
+                        baseX: x, baseY: py, baseZ: z
+                    });
+                }
+            }
+        };
+        initHead();
 
         const render = () => {
-            // Configurações dinâmicas baseadas no estado (Falando/Ouvindo/Pensando)
-            const centerX = canvas.width / 2;
-            const centerY = canvas.height / 2;
-            
-            // Velocidade e amplitude reagem ao estado
-            let speed = 0.02;
-            let amplitude = 60;
-            // Pega a cor do tema do CSS global
-            let color = getComputedStyle(document.documentElement).getPropertyValue('--color-primary').trim() || '#00FFD0';
+            const w = canvas.width;
+            const h = canvas.height;
+            const cx = w / 2;
+            const cy = h / 2;
 
-            if (isSpeaking) {
-                speed = 0.1; // Vibra rápido
-                amplitude = 90 + Math.sin(time * 20) * 20; // Pulsa forte
-            } else if (isRecording) {
-                speed = 0.05;
-                amplitude = 70;
-                color = '#EF4444'; // Vermelho quando ouve (Gravação)
+            // Limpar
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.2)'; // Trail para suavidade
+            ctx.fillRect(0, 0, w, h);
+
+            time += 0.01;
+
+            // Cor do Tema
+            const colorHex = getComputedStyle(document.documentElement).getPropertyValue('--color-primary').trim() || '#00FFD0';
+            
+            // Rotação Automática Suave
+            const angleY = time * 0.5; // Gira no eixo Y
+            const angleX = Math.sin(time * 0.5) * 0.1; // Leve movimento de "sim/não"
+
+            const sinY = Math.sin(angleY);
+            const cosY = Math.cos(angleY);
+            const sinX = Math.sin(angleX);
+            const cosX = Math.cos(angleX);
+
+            // Desenhar Pontos e Linhas
+            const projectedPoints: {x: number, y: number, z: number}[] = [];
+
+            points.forEach(p => {
+                // Animação de Fala (Maxilar se move)
+                let animY = p.baseY;
+                if (isSpeaking && p.baseY > 30) { // Apenas parte de baixo (boca/queixo)
+                    animY += Math.sin(time * 30) * 10 * Math.random();
+                }
+
+                // Animação de Pensamento (Cabeça pulsa)
+                let animX = p.baseX;
+                let animZ = p.baseZ;
+                if (isThinking) {
+                    const pulse = 1 + Math.sin(time * 10) * 0.05;
+                    animX *= pulse;
+                    animY *= pulse;
+                    animZ *= pulse;
+                }
+
+                // Rotação Y
+                let x1 = animX * cosY - animZ * sinY;
+                let z1 = animZ * cosY + animX * sinY;
+
+                // Rotação X
+                let y2 = animY * cosX - z1 * sinX;
+                let z2 = z1 * cosX + animY * sinX;
+
+                // Perspectiva
+                const scale = 400 / (400 + z2);
+                const x2d = cx + x1 * scale;
+                const y2d = cy + y2 * scale;
+
+                projectedPoints.push({ x: x2d, y: y2d, z: z2 });
+            });
+
+            // Desenhar Linhas (Wireframe)
+            ctx.lineWidth = 0.5;
+            ctx.strokeStyle = `${colorHex}33`; // 20% opacidade
+
+            for (let i = 0; i < projectedPoints.length; i++) {
+                const p = projectedPoints[i];
+                if (p.z < -50) continue; // Ocultar parte de trás (backface culling simples)
+
+                // Conectar com vizinho da direita (anel)
+                const next = projectedPoints[(i + 1) % projectedPoints.length];
+                // Evitar conectar o último da camada com o primeiro da próxima (hack visual simples)
+                if ((i + 1) % 30 !== 0) {
+                    const dist = Math.hypot(p.x - next.x, p.y - next.y);
+                    if (dist < 50) {
+                        ctx.beginPath();
+                        ctx.moveTo(p.x, p.y);
+                        ctx.lineTo(next.x, next.y);
+                        ctx.stroke();
+                    }
+                }
+
+                // Conectar com vizinho de baixo (vertical)
+                if (i + 30 < projectedPoints.length) {
+                    const below = projectedPoints[i + 30];
+                    ctx.beginPath();
+                    ctx.moveTo(p.x, p.y);
+                    ctx.lineTo(below.x, below.y);
+                    ctx.stroke();
+                }
             }
 
-            // Limpar com rastro (Trail effect)
-            ctx.fillStyle = 'rgba(0, 0, 0, 0.2)';
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            // Desenhar Pontos (Vértices)
+            projectedPoints.forEach(p => {
+                if (p.z < -50) return;
 
-            time += speed;
-
-            // Converter cor HEX para RGB para manipular opacidade
-            ctx.fillStyle = color;
-            ctx.shadowBlur = 20;
-            ctx.shadowColor = color;
-
-            // Desenhar Esfera de Partículas
-            particles.forEach((p, i) => {
-                // Movimento orbital complexo
-                const theta = p.phase + time + (i * 0.1);
-                const radius = amplitude + Math.sin(theta * 3) * 20;
+                const size = Math.max(0.5, (200 - p.z) / 100);
+                ctx.fillStyle = colorHex;
                 
-                // Se estiver falando, adiciona ruído de áudio simulado
-                const audioNoise = isSpeaking ? (Math.random() - 0.5) * 30 : 0;
-
-                p.x = centerX + Math.cos(theta) * (radius + audioNoise);
-                p.y = centerY + Math.sin(theta * 1.5) * (radius + audioNoise) * 0.8; // Levemente oval
-
-                // Tamanho pulsa
-                const size = p.radius * (1 + Math.sin(time * 5) * 0.5);
+                // Efeito de "Mente Brilhante" (No centro da testa)
+                if (p.y < -20 && Math.abs(p.x - cx) < 40) {
+                    ctx.shadowBlur = 15;
+                    ctx.shadowColor = colorHex;
+                    ctx.fillStyle = '#FFFFFF';
+                } else {
+                    ctx.shadowBlur = 0;
+                }
 
                 ctx.beginPath();
                 ctx.arc(p.x, p.y, size, 0, Math.PI * 2);
-                ctx.globalAlpha = 0.6 + Math.sin(theta) * 0.4;
                 ctx.fill();
             });
-            ctx.globalAlpha = 1;
 
-            // Núcleo Brilhante Central
-            const coreSize = isSpeaking ? 30 + Math.random() * 10 : 20;
-            const gradient = ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, coreSize * 2);
-            gradient.addColorStop(0, '#FFFFFF');
-            gradient.addColorStop(0.5, color);
-            gradient.addColorStop(1, 'transparent');
-            
-            ctx.fillStyle = gradient;
-            ctx.beginPath();
-            ctx.arc(centerX, centerY, coreSize, 0, Math.PI * 2);
-            ctx.fill();
+            // Núcleo de Energia (Brilho Central)
+            if (isThinking || isSpeaking) {
+                const gradient = ctx.createRadialGradient(cx, cy - 20, 0, cx, cy - 20, 100);
+                gradient.addColorStop(0, `${colorHex}66`);
+                gradient.addColorStop(1, 'transparent');
+                ctx.fillStyle = gradient;
+                ctx.beginPath();
+                ctx.arc(cx, cy - 20, 100, 0, Math.PI * 2);
+                ctx.fill();
+            }
 
             animationId = requestAnimationFrame(render);
         };
@@ -158,9 +251,10 @@ export default function OrionPage() {
             window.removeEventListener('resize', resize);
             cancelAnimationFrame(animationId);
         };
-    }, [isSpeaking, isRecording]);
+    }, [isSpeaking, isThinking]);
 
-    // 2. RECONHECIMENTO DE VOZ (Speech-to-Text)
+    // --- FUNÇÕES DE ÁUDIO E CHAT ---
+
     const toggleRecording = () => {
         if (isRecording) {
             recognitionRef.current?.stop();
@@ -168,146 +262,99 @@ export default function OrionPage() {
             return;
         }
 
-        // Verificar suporte ao navegador
         const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
         if (!SpeechRecognition) {
-            alert("Seu navegador não suporta reconhecimento de voz. Tente Chrome ou Edge.");
+            alert("Navegador sem suporte a voz.");
             return;
         }
 
         const recognition = new SpeechRecognition();
         recognition.lang = 'pt-BR';
-        recognition.continuous = false;
-        recognition.interimResults = false;
-
         recognition.onstart = () => setIsRecording(true);
-        
-        recognition.onresult = (event: any) => {
-            const transcript = event.results[0][0].transcript;
-            setInput(transcript);
-        };
-
-        recognition.onerror = (event: any) => {
-            console.error("Erro no reconhecimento:", event.error);
-            setIsRecording(false);
-        };
-
+        recognition.onresult = (event: any) => setInput(event.results[0][0].transcript);
         recognition.onend = () => setIsRecording(false);
-
         recognitionRef.current = recognition;
         recognition.start();
     };
 
-    // 3. SÍNTESE DE VOZ (Text-to-Speech)
     const speakText = (text: string) => {
         if ('speechSynthesis' in window) {
             window.speechSynthesis.cancel();
-
             const utterance = new SpeechSynthesisUtterance(text);
             utterance.lang = 'pt-BR';
-            utterance.pitch = 0.9;
-            utterance.rate = 1.1;
-
+            utterance.pitch = 0.8; // Voz mais robótica/profunda
             utterance.onstart = () => setIsSpeaking(true);
             utterance.onend = () => setIsSpeaking(false);
-            utterance.onerror = () => setIsSpeaking(false);
-
             window.speechSynthesis.speak(utterance);
         }
     };
 
-    // 4. ENVIO DE MENSAGEM
     const handleSend = () => {
         if (!input.trim()) return;
 
-        // Adicionar mensagem do usuário
-        const newMsg: Message = {
-            id: Date.now(),
-            role: 'user',
-            text: input,
-            timestamp: new Date().toLocaleTimeString()
-        };
-        setMessages(prev => [...prev, newMsg]);
+        setMessages(prev => [...prev, { id: Date.now(), role: 'user', text: input, timestamp: 'Now' }]);
+        const userText = input;
         setInput('');
+        setIsThinking(true); // Ativa brilho da mente
 
-        // Simular Resposta da IA
-        setIsSpeaking(true);
+        // Simulação de Resposta
         setTimeout(() => {
-            const aiResponse = `Entendido. Utilizando o modelo ${selectedModel.name} para processar sua solicitação. A análise preliminar indica sucesso.`;
-            
-            const aiMsg: Message = {
-                id: Date.now() + 1,
-                role: 'ai',
-                text: aiResponse,
-                timestamp: new Date().toLocaleTimeString()
-            };
-            setMessages(prev => [...prev, aiMsg]);
-            speakText(aiResponse);
-        }, 1500);
+            setIsThinking(false);
+            const response = `Analisei sua solicitação: "${userText}". Utilizando a arquitetura ${selectedModel.name}, identifiquei 3 caminhos ótimos para execução. Iniciando protocolos.`;
+            setMessages(prev => [...prev, { id: Date.now()+1, role: 'ai', text: response, timestamp: 'Now' }]);
+            speakText(response);
+        }, 2000);
     };
 
     return (
-        <div className="h-[calc(100vh-6rem)] flex flex-col md:flex-row gap-6 overflow-hidden relative p-4">
+        <div className="h-[calc(100vh-6rem)] flex flex-col md:flex-row gap-6 overflow-hidden relative p-2">
             
-            {/* --- COLUNA DA ESQUERDA: O NÚCLEO DA IA (ROSTO) --- */}
-            <div className="w-full md:w-1/3 flex flex-col gap-4 relative z-10 h-full">
-                
-                {/* 3D CORE VISUALIZER */}
-                <div className="flex-1 bg-black/40 backdrop-blur-xl border border-white/10 rounded-3xl relative overflow-hidden group shadow-2xl min-h-[300px]">
-                    <div className="absolute top-4 left-4 z-20 flex items-center gap-2 bg-black/60 px-3 py-1 rounded-full border border-white/10">
-                        <div className={`w-2 h-2 rounded-full ${isSpeaking ? 'bg-green-500 animate-pulse' : 'bg-gray-500'}`} />
-                        <span className="text-xs font-mono text-white uppercase tracking-wider">
-                            {isSpeaking ? 'FALANDO' : isRecording ? 'OUVINDO' : 'AGUARDANDO'}
+            {/* ESQUERDA: HOLOGRAMA DA IA */}
+            <div className="w-full md:w-[400px] flex flex-col gap-4 relative z-10 h-full">
+                <div className="flex-1 bg-black/60 backdrop-blur-xl border border-white/10 rounded-3xl relative overflow-hidden shadow-[0_0_50px_rgba(0,0,0,0.5)] group">
+                    
+                    {/* Status Badge */}
+                    <div className="absolute top-6 left-6 z-20 flex items-center gap-3">
+                        <div className={`w-3 h-3 rounded-full ${isSpeaking ? 'bg-green-400 animate-pulse' : isThinking ? 'bg-yellow-400 animate-bounce' : 'bg-gray-500'}`} />
+                        <span className="text-xs font-mono text-white/70 tracking-[0.2em]">
+                            {isSpeaking ? 'VOCALIZING' : isThinking ? 'PROCESSING' : 'ONLINE'}
                         </span>
                     </div>
 
-                    <canvas 
-                        ref={canvasRef} 
-                        className="w-full h-full absolute inset-0 block"
-                    />
+                    {/* CANVAS DO ROSTO */}
+                    <canvas ref={canvasRef} className="w-full h-full absolute inset-0" />
                     
-                    {/* Efeito Vignette */}
-                    <div className="absolute inset-0 bg-radial-gradient from-transparent to-black/80 pointer-events-none" />
+                    {/* Efeitos de Overlay (Scanlines) */}
+                    <div className="absolute inset-0 bg-[url('/scanlines.png')] opacity-10 pointer-events-none bg-cover" />
+                    <div className="absolute inset-0 bg-radial-gradient from-transparent via-transparent to-black/90 pointer-events-none" />
                 </div>
 
-                {/* SELETOR DE MODELO (LLM) */}
+                {/* MODEL SELECTOR */}
                 <div className="relative">
                     <button 
                         onClick={() => setIsModelMenuOpen(!isModelMenuOpen)}
-                        className="w-full p-4 bg-[var(--color-surface)]/80 backdrop-blur-md border border-[var(--color-border)]/30 rounded-xl flex items-center justify-between text-white hover:border-[var(--color-primary)] transition-all shadow-lg group"
+                        className="w-full p-4 bg-[#0a0a0a] border border-white/10 rounded-xl flex items-center justify-between text-white hover:border-[var(--color-primary)] transition-all group"
                     >
                         <div className="flex items-center gap-3">
-                            <div className="p-2 rounded-lg bg-white/5 group-hover:bg-[var(--color-primary)]/20 transition-colors">
-                                <Cpu className="w-5 h-5 text-[var(--color-primary)]" />
-                            </div>
+                            <BrainCircuit className="w-5 h-5 text-[var(--color-primary)]" />
                             <div className="text-left">
-                                <div className="text-[10px] text-gray-400 font-mono uppercase">Modelo Ativo</div>
+                                <div className="text-[10px] text-gray-500 font-mono uppercase tracking-wider">Neural Engine</div>
                                 <div className="font-bold text-sm">{selectedModel.name}</div>
                             </div>
                         </div>
-                        <ChevronDown className={`w-5 h-5 text-gray-400 transition-transform ${isModelMenuOpen ? 'rotate-180' : ''}`} />
+                        <ChevronDown className={`w-4 h-4 text-gray-500 transition-transform ${isModelMenuOpen ? 'rotate-180' : ''}`} />
                     </button>
 
-                    {/* Dropdown Menu */}
                     {isModelMenuOpen && (
-                        <div className="absolute bottom-full left-0 right-0 mb-2 bg-[#050505]/95 backdrop-blur-xl border border-white/10 rounded-xl overflow-hidden shadow-2xl z-50 animate-slideUp">
+                        <div className="absolute bottom-full left-0 right-0 mb-2 bg-[#0a0a0a] border border-white/10 rounded-xl overflow-hidden shadow-2xl z-50 animate-slideUp">
                             {AI_MODELS.map(model => (
                                 <button
                                     key={model.id}
-                                    onClick={() => {
-                                        setSelectedModel(model);
-                                        setIsModelMenuOpen(false);
-                                    }}
-                                    className={`w-full p-3 flex items-center gap-3 hover:bg-white/5 transition-colors ${selectedModel.id === model.id ? 'bg-white/10' : ''}`}
+                                    onClick={() => { setSelectedModel(model); setIsModelMenuOpen(false); }}
+                                    className={`w-full p-3 flex items-center gap-3 hover:bg-white/5 transition-colors ${selectedModel.id === model.id ? 'bg-white/5' : ''}`}
                                 >
-                                    <span className="text-lg">{model.icon}</span>
-                                    <div className="text-left">
-                                        <div className={`text-sm font-medium ${selectedModel.id === model.id ? 'text-[var(--color-primary)]' : 'text-white'}`}>
-                                            {model.name}
-                                        </div>
-                                        <div className="text-[10px] text-gray-500">{model.provider}</div>
-                                    </div>
-                                    {selectedModel.id === model.id && <Sparkles className="w-4 h-4 text-[var(--color-primary)] ml-auto" />}
+                                    <span className="text-lg filter grayscale group-hover:grayscale-0">{model.icon}</span>
+                                    <span className={`text-sm ${selectedModel.id === model.id ? 'text-[var(--color-primary)]' : 'text-white'}`}>{model.name}</span>
                                 </button>
                             ))}
                         </div>
@@ -315,94 +362,50 @@ export default function OrionPage() {
                 </div>
             </div>
 
-            {/* --- COLUNA DA DIREITA: INTERFACE DE CHAT --- */}
-            <div className="flex-1 flex flex-col bg-black/20 backdrop-blur-md border border-white/5 rounded-3xl overflow-hidden relative h-full">
-                
-                {/* CHAT HISTORY */}
+            {/* DIREITA: CHAT INTERFACE */}
+            <div className="flex-1 flex flex-col bg-[#050505]/80 backdrop-blur-md border border-white/5 rounded-3xl overflow-hidden relative">
                 <div className="flex-1 overflow-y-auto p-6 space-y-6 scrollbar-thin scrollbar-thumb-[var(--color-primary)]/20 scrollbar-track-transparent">
                     {messages.map((msg) => (
-                        <div 
-                            key={msg.id} 
-                            className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
-                        >
-                            <div className={`
-                                max-w-[80%] p-4 rounded-2xl relative group
-                                ${msg.role === 'user' 
-                                    ? 'bg-[var(--color-primary)]/10 border border-[var(--color-primary)]/20 text-white rounded-tr-none' 
-                                    : 'bg-white/5 border border-white/10 text-gray-200 rounded-tl-none'
-                                }
-                            `}>
-                                <div className="flex items-center gap-2 mb-2 opacity-50">
+                        <div key={msg.id} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+                            <div className={`max-w-[85%] p-5 rounded-2xl relative ${
+                                msg.role === 'user' 
+                                ? 'bg-[var(--color-primary)]/10 border border-[var(--color-primary)]/20 text-white rounded-tr-none' 
+                                : 'bg-white/5 border border-white/10 text-gray-200 rounded-tl-none'
+                            }`}>
+                                <div className="flex items-center gap-2 mb-2 opacity-40 text-[10px] font-mono uppercase tracking-wider">
                                     {msg.role === 'ai' ? <Bot className="w-3 h-3" /> : <User className="w-3 h-3" />}
-                                    <span className="text-[10px] font-mono uppercase">
-                                        {msg.role === 'ai' ? 'Orion Core' : 'Commander'} • {msg.timestamp}
-                                    </span>
+                                    {msg.role === 'ai' ? 'ORION SYSTEM' : 'OPERATOR'} • {msg.timestamp}
                                 </div>
-                                
-                                <p className="leading-relaxed whitespace-pre-wrap">{msg.text}</p>
-
-                                {msg.role === 'ai' && (
-                                    <button 
-                                        onClick={() => speakText(msg.text)}
-                                        className="absolute -right-10 top-2 p-2 rounded-full bg-white/5 hover:bg-[var(--color-primary)]/20 text-gray-400 hover:text-[var(--color-primary)] opacity-0 group-hover:opacity-100 transition-all"
-                                        title="Ouvir"
-                                    >
-                                        <Volume2 className="w-4 h-4" />
-                                    </button>
-                                )}
+                                <p className="leading-relaxed text-sm md:text-base">{msg.text}</p>
                             </div>
                         </div>
                     ))}
                     <div ref={messagesEndRef} />
                 </div>
 
-                {/* INPUT AREA */}
-                <div className="p-4 bg-black/40 border-t border-white/5 backdrop-blur-xl">
-                    <div className="relative flex items-center gap-2 bg-black/50 border border-white/10 rounded-2xl p-2 focus-within:border-[var(--color-primary)]/50 transition-all">
-                        
-                        {/* Voice Button */}
+                {/* INPUT BAR */}
+                <div className="p-4 bg-black/20 border-t border-white/5">
+                    <div className="relative flex items-center gap-2 bg-[#0a0a0a] border border-white/10 rounded-2xl p-2 focus-within:border-[var(--color-primary)]/50 transition-all shadow-lg">
                         <button
                             onClick={toggleRecording}
-                            className={`p-3 rounded-xl transition-all duration-300 ${
-                                isRecording 
-                                    ? 'bg-red-500/20 text-red-500 animate-pulse border border-red-500/50' 
-                                    : 'bg-white/5 text-gray-400 hover:bg-white/10 hover:text-white'
-                            }`}
-                            title={isRecording ? "Parar Gravação" : "Ativar Voz"}
+                            className={`p-3 rounded-xl transition-all ${isRecording ? 'bg-red-500/20 text-red-500 animate-pulse' : 'bg-white/5 text-gray-400 hover:text-white'}`}
                         >
                             {isRecording ? <MicOff className="w-5 h-5" /> : <Mic className="w-5 h-5" />}
                         </button>
-
-                        {/* Text Input */}
                         <input
                             type="text"
                             value={input}
                             onChange={(e) => setInput(e.target.value)}
                             onKeyDown={(e) => e.key === 'Enter' && handleSend()}
-                            placeholder={isRecording ? "Ouvindo..." : "Digite ou fale sua diretiva..."}
-                            className="flex-1 bg-transparent border-none outline-none text-white placeholder-gray-600 font-mono text-sm"
-                            autoFocus
+                            placeholder="Digite ou fale com a consciência..."
+                            className="flex-1 bg-transparent border-none outline-none text-white placeholder-gray-600 font-mono text-sm h-full"
                         />
-
-                        {/* Send Button */}
-                        <button
-                            onClick={handleSend}
-                            disabled={!input.trim()}
-                            className="p-3 bg-[var(--color-primary)] hover:bg-[var(--color-accent)] disabled:opacity-50 rounded-xl text-black transition-all"
-                        >
+                        <button onClick={handleSend} disabled={!input.trim()} className="p-3 bg-[var(--color-primary)] hover:bg-[var(--color-accent)] rounded-xl text-black transition-all disabled:opacity-50">
                             <Send className="w-5 h-5" />
                         </button>
                     </div>
                 </div>
             </div>
-
-            <style jsx>{`
-                @keyframes slideUp {
-                    from { opacity: 0; transform: translateY(10px); }
-                    to { opacity: 1; transform: translateY(0); }
-                }
-                .animate-slideUp { animation: slideUp 0.2s ease-out; }
-            `}</style>
         </div>
     );
 }
