@@ -62,32 +62,40 @@ export default function Home() {
           </span>
         </p>
 
-        {/* Botões de Ação */}
+        {/* Botões de Ação - COM NAVEGAÇÃO FORÇADA */}
         <div className="flex flex-col sm:flex-row gap-4">
-          <Link href="/dashboard">
-            <Button 
-              className="text-lg px-8 py-6 font-bold transition-all hover:scale-105"
-              style={{
-                backgroundColor: 'var(--color-primary)',
-                color: '#FFFFFF',
-                boxShadow: '0 0 30px var(--color-glow)',
-                border: 'none',
-              }}
-            >
-              ACESSAR COCKPIT
-            </Button>
-          </Link>
-          <Button 
-            variant="outline" 
-            className="text-lg px-8 py-6 backdrop-blur-sm transition-all hover:scale-105"
+          <button
+            onClick={() => {
+              console.log('🚀 Navegando para /dashboard');
+              window.location.href = '/dashboard';
+            }}
+            className="text-lg px-8 py-6 font-bold transition-all hover:scale-105 rounded-lg cursor-pointer"
             style={{
+              backgroundColor: 'var(--color-primary)',
+              color: '#FFFFFF',
+              boxShadow: '0 0 30px var(--color-glow)',
+              border: 'none',
+            }}
+          >
+            ACESSAR COCKPIT
+          </button>
+          
+          <button
+            onClick={() => {
+              console.log('📖 Abrindo documentação');
+              // Implementar depois
+            }}
+            className="text-lg px-8 py-6 backdrop-blur-sm transition-all hover:scale-105 rounded-lg cursor-pointer"
+            style={{
+              borderWidth: '1px',
+              borderStyle: 'solid',
               borderColor: 'var(--color-border)',
               color: 'var(--color-text)',
               backgroundColor: 'var(--color-surface)',
             }}
           >
             DOCUMENTAÇÃO
-          </Button>
+          </button>
         </div>
 
         {/* Cards de Estatísticas */}
