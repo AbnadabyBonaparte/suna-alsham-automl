@@ -1,9 +1,9 @@
 /**
  * ═══════════════════════════════════════════════════════════════
- * ALSHAM QUANTUM - LOGIN (QUANTUM GATEWAY)
+ * ALSHAM QUANTUM - LOGIN (QUANTUM GATEWAY V2)
  * ═══════════════════════════════════════════════════════════════
  * 📁 PATH: frontend/src/app/login/page.tsx
- * 📋 Tela de autenticação com scanner biométrico e efeitos visuais
+ * 📋 Autenticação Biométrica + Social Login (Google/GitHub)
  * ═══════════════════════════════════════════════════════════════
  */
 
@@ -11,7 +11,10 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import { Fingerprint, Scan, ShieldCheck, AlertOctagon, Lock, Key, Mail, Sparkles } from 'lucide-react';
+import { 
+    Fingerprint, Scan, ShieldCheck, AlertOctagon, Lock, Key, 
+    Mail, Sparkles, Github, Chrome 
+} from 'lucide-react';
 
 export default function LoginPage() {
     const router = useRouter();
@@ -34,6 +37,7 @@ export default function LoginPage() {
         let time = 0;
 
         const resize = () => {
+            // Ajuste para manter proporção no container
             canvas.width = 300;
             canvas.height = 300;
         };
@@ -102,25 +106,25 @@ export default function LoginPage() {
         return () => cancelAnimationFrame(animationId);
     }, [status]);
 
-    // Lógica de Login Simulado
-    const handleLogin = (e: React.FormEvent) => {
-        e.preventDefault();
-        if (!email || !password) return;
-
+    // Função Genérica de Login (Email ou Social)
+    const executeLoginProcess = (method: 'email' | 'google' | 'github') => {
         setStatus('scanning');
         
-        // Simular progresso de scan
         let p = 0;
         const interval = setInterval(() => {
-            p += 2;
+            p += 4; // Velocidade do scan
             setScanProgress(p);
+            
             if (p >= 100) {
                 clearInterval(interval);
                 
-                // Verificação Fake
-                if (password === '123' || password.length > 3) {
+                // Lógica de Validação (Simulada)
+                const isSuccess = method !== 'email' || (password === '123' || password.length > 3);
+
+                if (isSuccess) {
                     setStatus('success');
-                    setTimeout(() => router.push('/dashboard'), 1000);
+                    // REDIRECIONAMENTO CORRIGIDO: Vai para o Onboarding
+                    setTimeout(() => router.push('/onboarding'), 1000);
                 } else {
                     setStatus('denied');
                     setTimeout(() => {
@@ -130,6 +134,13 @@ export default function LoginPage() {
                 }
             }
         }, 30);
+    };
+
+    // Handlers
+    const handleEmailLogin = (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!email || !password) return;
+        executeLoginProcess('email');
     };
 
     return (
@@ -149,7 +160,7 @@ export default function LoginPage() {
             </div>
 
             {/* LOGIN CARD (GLASSLITH) */}
-            <div className="relative z-10 w-full max-w-md p-1">
+            <div className="relative z-10 w-full max-w-md p-4">
                 {/* Borda Brilhante Animada */}
                 <div className={`absolute inset-0 rounded-3xl blur-md transition-all duration-500 ${
                     status === 'scanning' ? 'bg-[var(--color-primary)] opacity-50' : 
@@ -161,42 +172,41 @@ export default function LoginPage() {
                 <div className="relative bg-black/80 backdrop-blur-2xl border border-white/10 rounded-3xl p-8 shadow-2xl overflow-hidden">
                     
                     {/* SCANNER CANVAS */}
-                    <div className="flex justify-center mb-6 relative">
-                        <div className="w-32 h-32 relative">
+                    <div className="flex justify-center mb-4 relative">
+                        <div className="w-24 h-24 relative">
                             <canvas ref={canvasRef} className="w-full h-full" />
                             {/* Icon Overlay */}
                             <div className="absolute inset-0 flex items-center justify-center text-white/50">
-                                {status === 'success' ? <ShieldCheck className="w-10 h-10 text-black z-10" /> : 
-                                 status === 'denied' ? <AlertOctagon className="w-10 h-10 text-black z-10" /> :
-                                 <Scan className="w-10 h-10 opacity-50" />}
+                                {status === 'success' ? <ShieldCheck className="w-8 h-8 text-black z-10" /> : 
+                                 status === 'denied' ? <AlertOctagon className="w-8 h-8 text-black z-10" /> :
+                                 <Scan className="w-8 h-8 opacity-50" />}
                             </div>
                         </div>
                     </div>
 
                     {/* HEADER TEXT */}
-                    <div className="text-center mb-8">
-                        <h1 className="text-3xl font-black text-white tracking-tight font-display flex items-center justify-center gap-2">
+                    <div className="text-center mb-6">
+                        <h1 className="text-2xl font-black text-white tracking-tight font-display flex items-center justify-center gap-2">
                             ALSHAM <Sparkles className="w-4 h-4 text-[var(--color-primary)]" />
                         </h1>
-                        <p className={`text-xs font-mono mt-2 tracking-[0.3em] uppercase transition-colors ${
+                        <p className={`text-[10px] font-mono mt-1 tracking-[0.2em] uppercase transition-colors ${
                             status === 'success' ? 'text-green-400' : 
                             status === 'denied' ? 'text-red-400' : 
                             'text-gray-500'
                         }`}>
                             {status === 'idle' && 'Identity Verification Required'}
-                            {status === 'scanning' && 'Biometric Scan in Progress...'}
+                            {status === 'scanning' && 'Processing Biometrics...'}
                             {status === 'success' && 'Access Granted. Welcome Architect.'}
                             {status === 'denied' && 'Access Denied. Security Alert.'}
                         </p>
                     </div>
 
-                    {/* FORM */}
-                    <form onSubmit={handleLogin} className="space-y-6 relative">
+                    {/* EMAIL FORM */}
+                    <form onSubmit={handleEmailLogin} className="space-y-4 relative">
                         
-                        {/* Email Input */}
                         <div className="group relative">
                             <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 group-focus-within:text-[var(--color-primary)] transition-colors">
-                                <Mail className="w-5 h-5" />
+                                <Mail className="w-4 h-4" />
                             </div>
                             <input 
                                 type="email" 
@@ -204,14 +214,13 @@ export default function LoginPage() {
                                 onChange={(e) => setEmail(e.target.value)}
                                 placeholder="Commander ID"
                                 disabled={status !== 'idle'}
-                                className="w-full bg-white/5 border border-white/10 rounded-xl py-4 pl-12 pr-4 text-white placeholder-gray-600 focus:border-[var(--color-primary)] focus:bg-black transition-all outline-none font-mono text-sm"
+                                className="w-full bg-white/5 border border-white/10 rounded-xl py-3 pl-10 pr-4 text-white placeholder-gray-600 focus:border-[var(--color-primary)] focus:bg-black transition-all outline-none font-mono text-sm"
                             />
                         </div>
 
-                        {/* Password Input */}
                         <div className="group relative">
                             <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 group-focus-within:text-[var(--color-primary)] transition-colors">
-                                <Key className="w-5 h-5" />
+                                <Key className="w-4 h-4" />
                             </div>
                             <input 
                                 type="password" 
@@ -219,26 +228,25 @@ export default function LoginPage() {
                                 onChange={(e) => setPassword(e.target.value)}
                                 placeholder="Access Code"
                                 disabled={status !== 'idle'}
-                                className="w-full bg-white/5 border border-white/10 rounded-xl py-4 pl-12 pr-4 text-white placeholder-gray-600 focus:border-[var(--color-primary)] focus:bg-black transition-all outline-none font-mono text-sm tracking-widest"
+                                className="w-full bg-white/5 border border-white/10 rounded-xl py-3 pl-10 pr-4 text-white placeholder-gray-600 focus:border-[var(--color-primary)] focus:bg-black transition-all outline-none font-mono text-sm tracking-widest"
                             />
                         </div>
 
-                        {/* SUBMIT BUTTON (FINGERPRINT) */}
                         <button 
                             type="submit"
                             disabled={status !== 'idle'}
                             className={`
-                                w-full py-4 rounded-xl font-bold text-sm tracking-widest uppercase transition-all relative overflow-hidden group
+                                w-full py-3 rounded-xl font-bold text-xs tracking-widest uppercase transition-all relative overflow-hidden group
                                 ${status === 'success' ? 'bg-green-500 text-black' : 
                                   status === 'denied' ? 'bg-red-500 text-white' : 
                                   'bg-[var(--color-primary)] text-black hover:bg-[var(--color-accent)]'}
                             `}
                         >
                             <div className="relative z-10 flex items-center justify-center gap-2">
-                                {status === 'idle' && <><Fingerprint className="w-5 h-5" /> AUTHENTICATE</>}
+                                {status === 'idle' && <><Fingerprint className="w-4 h-4" /> AUTHENTICATE</>}
                                 {status === 'scanning' && 'SCANNING...'}
-                                {status === 'success' && <><ShieldCheck className="w-5 h-5" /> GRANTED</>}
-                                {status === 'denied' && <><Lock className="w-5 h-5" /> LOCKED</>}
+                                {status === 'success' && <><ShieldCheck className="w-4 h-4" /> GRANTED</>}
+                                {status === 'denied' && <><Lock className="w-4 h-4" /> LOCKED</>}
                             </div>
 
                             {/* Progress Bar Overlay */}
@@ -249,13 +257,40 @@ export default function LoginPage() {
                                 />
                             )}
                         </button>
-
                     </form>
 
+                    {/* DIVIDER */}
+                    <div className="my-6 flex items-center gap-4">
+                        <div className="h-[1px] flex-1 bg-white/10" />
+                        <span className="text-[10px] font-mono text-gray-600 uppercase">OR CONNECT WITH</span>
+                        <div className="h-[1px] flex-1 bg-white/10" />
+                    </div>
+
+                    {/* SOCIAL BUTTONS */}
+                    <div className="grid grid-cols-2 gap-4">
+                        <button 
+                            onClick={() => executeLoginProcess('google')}
+                            disabled={status !== 'idle'}
+                            className="flex items-center justify-center gap-2 py-3 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/30 transition-all group"
+                        >
+                            <Chrome className="w-4 h-4 text-white group-hover:text-blue-400 transition-colors" />
+                            <span className="text-xs font-bold text-gray-400 group-hover:text-white">GOOGLE</span>
+                        </button>
+
+                        <button 
+                            onClick={() => executeLoginProcess('github')}
+                            disabled={status !== 'idle'}
+                            className="flex items-center justify-center gap-2 py-3 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/30 transition-all group"
+                        >
+                            <Github className="w-4 h-4 text-white group-hover:text-purple-400 transition-colors" />
+                            <span className="text-xs font-bold text-gray-400 group-hover:text-white">GITHUB</span>
+                        </button>
+                    </div>
+
                     {/* Footer Links */}
-                    <div className="mt-8 flex justify-between text-[10px] text-gray-600 font-mono uppercase">
-                        <button className="hover:text-white transition-colors">Recover Key</button>
-                        <button className="hover:text-white transition-colors">Emergency Protocol</button>
+                    <div className="mt-6 flex justify-between text-[9px] text-gray-700 font-mono uppercase">
+                        <button className="hover:text-white transition-colors">Reset Protocol</button>
+                        <button className="hover:text-white transition-colors">Emergency Override</button>
                     </div>
                 </div>
             </div>
