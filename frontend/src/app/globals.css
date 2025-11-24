@@ -1,9 +1,9 @@
 /**
  * ═══════════════════════════════════════════════════════════════
- * ALSHAM QUANTUM - GLOBAL STYLES & CSS VARIABLES (7 TEMAS)
+ * ALSHAM QUANTUM - GLOBAL STYLES & CSS VARIABLES (9 UNIVERSOS)
  * ═══════════════════════════════════════════════════════════════
  * 📁 PATH: frontend/src/app/globals.css
- * 📋 Define CSS variables para os 7 temas
+ * 📋 Define CSS variables para os 9 temas da Global Elite
  * ═══════════════════════════════════════════════════════════════
  */
 
@@ -12,8 +12,7 @@
 @tailwind utilities;
 
 /* ═══════════════════════════════════════════════════════════════
-   ROOT VARIABLES (Padrão = Quantum Lab)
-   (O restante das variáveis é injetado via ThemeContext.tsx)
+   ROOT VARIABLES (Fallback/Padrão = Quantum Lab)
    ═══════════════════════════════════════════════════════════════ */
 :root {
   --color-primary: #00FFD0;
@@ -22,7 +21,7 @@
   --color-background: #000000;
   --color-surface: #0a0a0a;
   --color-text: #FFFFFF;
-  --color-textSecondary: #94A3B8;
+  --color-text-secondary: #94A3B8;
   --color-border: #00FFD0;
   --color-success: #00FFD0;
   --color-warning: #F59E0B;
@@ -31,7 +30,97 @@
 }
 
 /* ═══════════════════════════════════════════════════════════════
-   TEMA: VINTAGE TERMINAL (Verde Fósforo)
+   1. QUANTUM LAB (Ciano/Preto)
+   ═══════════════════════════════════════════════════════════════ */
+[data-theme="quantum"] {
+  --color-primary: #00FFD0;
+  --color-secondary: #0EA5E9;
+  --color-accent: #06B6D4;
+  --color-background: #000000;
+  --color-surface: #0a0a0a;
+  --color-text: #FFFFFF;
+  --color-text-secondary: #94A3B8;
+  --color-border: #00FFD0;
+  --color-success: #00FFD0;
+  --color-warning: #F59E0B;
+  --color-error: #EF4444;
+  --color-glow: #00FFD0;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   2. LUMINOUS ASCENSION (Dourado/Branco)
+   ═══════════════════════════════════════════════════════════════ */
+[data-theme="ascension"] {
+  --color-primary: #FFD700;
+  --color-secondary: #FFA500;
+  --color-accent: #FF8C00;
+  --color-background: #F8FAFC;
+  --color-surface: #FFFFFF;
+  --color-text: #1E293B;
+  --color-text-secondary: #64748B;
+  --color-border: #E2E8F0;
+  --color-success: #FFD700;
+  --color-warning: #F59E0B;
+  --color-error: #EF4444;
+  --color-glow: #FFD700;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   3. MILITARY OPS (Verde Night Vision/Preto)
+   ═══════════════════════════════════════════════════════════════ */
+[data-theme="military"] {
+  --color-primary: #10B981;
+  --color-secondary: #064E3B;
+  --color-accent: #34D399;
+  --color-background: #020604;
+  --color-surface: #090F0B;
+  --color-text: #ECFDF5;
+  --color-text-secondary: #6EE7B7;
+  --color-border: #10B981;
+  --color-success: #10B981;
+  --color-warning: #F59E0B;
+  --color-error: #EF4444;
+  --color-glow: #10B981;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   4. NEURAL SINGULARITY (Roxo/Preto)
+   ═══════════════════════════════════════════════════════════════ */
+[data-theme="neural"] {
+  --color-primary: #8B5CF6;
+  --color-secondary: #A78BFA;
+  --color-accent: #EC4899;
+  --color-background: #050008;
+  --color-surface: #0F0A14;
+  --color-text: #FFFFFF;
+  --color-text-secondary: #A78BFA;
+  --color-border: #8B5CF6;
+  --color-success: #8B5CF6;
+  --color-warning: #F59E0B;
+  --color-error: #EC4899;
+  --color-glow: #8B5CF6;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   5. TITANIUM EXECUTIVE (Platina/Azul Marinho/Ouro)
+   ═══════════════════════════════════════════════════════════════ */
+[data-theme="titanium"] {
+  --color-primary: #F8FAFC;
+  --color-secondary: #1E293B;
+  --color-accent: #D4AF37;
+  --color-background: #020617;
+  --color-surface: #0F172A;
+  --color-text: #F8FAFC;
+  --color-text-secondary: #94A3B8;
+  --color-border: #334155;
+  --color-success: #D4AF37;
+  --color-warning: #B45309;
+  --color-error: #991B1B;
+  --color-glow: #D4AF37;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   6. VINTAGE TERMINAL (Verde Fósforo/Preto)
    ═══════════════════════════════════════════════════════════════ */
 [data-theme="vintage"] {
   --color-primary: #00FF00;
@@ -40,19 +129,17 @@
   --color-background: #001A00;
   --color-surface: #000A00;
   --color-text: #00FF00;
-  --color-textSecondary: #00A000;
+  --color-text-secondary: #00A000;
   --color-border: #00FF00;
   --color-success: #00FF00;
   --color-warning: #FFFF00;
   --color-error: #FF0000;
   --color-glow: #00FF00;
-  
-  /* Efeitos de texto para simular CRT */
   text-shadow: 0 0 5px var(--color-primary);
 }
 
 /* ═══════════════════════════════════════════════════════════════
-   TEMA: ZEN GARDEN (Verde Musgo/Branco Suave)
+   7. ZEN GARDEN (Verde Musgo/Papel)
    ═══════════════════════════════════════════════════════════════ */
 [data-theme="zen"] {
   --color-primary: #4CAF50;
@@ -61,7 +148,7 @@
   --color-background: #F9F7F3;
   --color-surface: #FFFFFF;
   --color-text: #333333;
-  --color-textSecondary: #708090;
+  --color-text-secondary: #708090;
   --color-border: #D3D3D3;
   --color-success: #4CAF50;
   --color-warning: #FF9800;
@@ -70,18 +157,54 @@
 }
 
 /* ═══════════════════════════════════════════════════════════════
-   ANIMAÇÃO DE TRANSIÇÃO DE TEMA (Mantida)
+   8. COBALT PRIME (Azul Enterprise/Navy)
    ═══════════════════════════════════════════════════════════════ */
-.theme-transition,
-.theme-transition * {
-  transition: 
-    background-color 0.8s cubic-bezier(0.4, 0, 0.2, 1),
-    border-color 0.8s cubic-bezier(0.4, 0, 0.2, 1),
-    color 0.8s cubic-bezier(0.4, 0, 0.2, 1) !important;
+[data-theme="cobalt"] {
+  --color-primary: #3B82F6;
+  --color-secondary: #1E40AF;
+  --color-accent: #60A5FA;
+  --color-background: #0B1120;
+  --color-surface: #111827;
+  --color-text: #F9FAFB;
+  --color-text-secondary: #94A3B8;
+  --color-border: #1E3A8A;
+  --color-success: #059669;
+  --color-warning: #F59E0B;
+  --color-error: #DC2626;
+  --color-glow: #3B82F6;
 }
 
 /* ═══════════════════════════════════════════════════════════════
-   GLOBAL STYLES (Mantidos)
+   9. CRIMSON VELOCITY (Vermelho Performance/Carbono)
+   ═══════════════════════════════════════════════════════════════ */
+[data-theme="crimson"] {
+  --color-primary: #EF4444;
+  --color-secondary: #991B1B;
+  --color-accent: #F87171;
+  --color-background: #0F0505;
+  --color-surface: #1C0505;
+  --color-text: #FFFFFF;
+  --color-text-secondary: #FECACA;
+  --color-border: #7F1D1D;
+  --color-success: #10B981;
+  --color-warning: #F59E0B;
+  --color-error: #FF0000;
+  --color-glow: #EF4444;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   ANIMAÇÃO DE TRANSIÇÃO DE TEMA
+   ═══════════════════════════════════════════════════════════════ */
+body, div, span, button, input, textarea, select {
+  transition: 
+    background-color 0.5s cubic-bezier(0.4, 0, 0.2, 1),
+    border-color 0.5s cubic-bezier(0.4, 0, 0.2, 1),
+    color 0.5s cubic-bezier(0.4, 0, 0.2, 1),
+    box-shadow 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   UTILITY CLASSES & RESET
    ═══════════════════════════════════════════════════════════════ */
 * {
   box-sizing: border-box;
@@ -92,7 +215,7 @@
 html,
 body {
   height: 100%;
-  font-family: var(--font-geist-sans), -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-family: var(--font-inter), -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   background-color: var(--color-background);
   color: var(--color-text);
   overflow-x: hidden;
@@ -103,7 +226,7 @@ body {
 }
 
 /* ═══════════════════════════════════════════════════════════════
-   SCROLLBAR CUSTOMIZADA (Mantida)
+   SCROLLBAR CUSTOMIZADA
    ═══════════════════════════════════════════════════════════════ */
 ::-webkit-scrollbar {
   width: 8px;
@@ -124,8 +247,10 @@ body {
 }
 
 /* ═══════════════════════════════════════════════════════════════
-   ANIMAÇÕES ESPECIAIS (Mantidas)
+   EFEITOS VISUAIS ESPECIAIS
    ═══════════════════════════════════════════════════════════════ */
+
+/* Scanline (Usado no Military) */
 @keyframes scanline {
   0% { transform: translateY(-100%); }
   100% { transform: translateY(100vh); }
@@ -138,8 +263,10 @@ body {
   background: linear-gradient(to bottom, transparent, var(--color-primary), transparent);
   animation: scanline 4.7s linear infinite;
   pointer-events: none;
+  z-index: 10;
 }
 
+/* Pulse Glow (Usado no Neural/Quantum) */
 @keyframes pulse-glow {
   0%, 100% { 
     box-shadow: 0 0 5px var(--color-glow), 0 0 10px var(--color-glow);
@@ -153,47 +280,22 @@ body {
   animation: pulse-glow 2s ease-in-out infinite;
 }
 
-/* ═══════════════════════════════════════════════════════════════
-   NOISE TEXTURE (Mantida)
-   ═══════════════════════════════════════════════════════════════ */
+/* Noise (Usado no Titanium/Vintage) */
 .bg-noise {
   background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='4' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
 }
 
-/* ═══════════════════════════════════════════════════════════════
-   EFEITOS ESPECÍFICOS DE BACKGROUND
-   ═══════════════════════════════════════════════════════════════ */
-
-/* VINTAGE: Scanlines e Noise para simular CRT */
-.vintage-scanlines {
+/* Efeito CRT (Apenas Vintage) */
+.vintage-crt::before {
+  content: " ";
+  display: block;
   position: absolute;
-  inset: 0;
-  background: repeating-linear-gradient(
-    to bottom,
-    transparent 0%,
-    rgba(0, 0, 0, 0.2) 1px,
-    transparent 2px
-  );
+  top: 0;
+  left: 0;
+  bottom: 0;
+  right: 0;
+  background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+  z-index: 2;
+  background-size: 100% 2px, 3px 100%;
   pointer-events: none;
-  z-index: 1;
-}
-
-.vintage-noise {
-  position: absolute;
-  inset: 0;
-  opacity: 0.1;
-  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
-  pointer-events: none;
-  z-index: 0;
-}
-
-/* ZEN: Textura de papel suave */
-.zen-paper-texture {
-  position: absolute;
-  inset: 0;
-  opacity: 0.3;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%23F9F7F3'/%3E%3Cg opacity='0.3'%3E%3Ccircle cx='50' cy='50' r='50' fill='%23FFFFFF'/%3E%3C/g%3E%3C/svg%3E");
-  background-size: 100px 100px;
-  pointer-events: none;
-  z-index: 0;
 }
