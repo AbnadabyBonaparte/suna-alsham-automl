@@ -20,7 +20,6 @@ import {
   CheckCircle,
   Clock,
   DollarSign,
-  Target,
   Sparkles,
   Network,
   Terminal,
@@ -38,6 +37,7 @@ export default function DashboardPage() {
 
   useEffect(() => {
     setMounted(true);
+    console.log('✅ Dashboard carregado com sucesso!');
   }, []);
 
   // Stats principais
