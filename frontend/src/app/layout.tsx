@@ -1,65 +1,76 @@
-import type { Metadata } from "next";
-import { Orbitron, Inter, Rajdhani } from "next/font/google";
-import "./globals.css";
-import Sidebar from "@/components/layout/Sidebar";
-import { AuthProvider } from "@/contexts/AuthContext";
-import { ThemeProvider } from "@/contexts/ThemeContext";
-import { RealityBackground } from "@/components/backgrounds/RealityBackground";
+/**
+ * ═══════════════════════════════════════════════════════════════
+ * ALSHAM QUANTUM - ROOT LAYOUT (COM TEMA INTEGRADO)
+ * ═══════════════════════════════════════════════════════════════
+ * 📁 PATH: frontend/src/app/layout.tsx
+ * ═══════════════════════════════════════════════════════════════
+ */
 
-const orbitron = Orbitron({ 
-  subsets: ["latin"], 
-  variable: "--font-orbitron", 
-  display: "swap" 
-});
+import type { Metadata } from 'next';
+import { Inter, Orbitron, Rajdhani } from 'next/font/google';
+import './globals.css';
+import { ThemeProvider } from '@/contexts/ThemeContext';
+import { GlobalKeyListener } from '@/components/layout/GlobalKeyListener';
+import RealityBackground from '@/components/backgrounds/RealityBackground';
+import { ThemeSwitcher } from '@/components/ui/ThemeSwitcher';
 
 const inter = Inter({ 
-  subsets: ["latin"], 
-  variable: "--font-inter", 
-  display: "swap" 
+  subsets: ['latin'],
+  variable: '--font-inter',
+});
+
+const orbitron = Orbitron({ 
+  subsets: ['latin'],
+  variable: '--font-orbitron',
 });
 
 const rajdhani = Rajdhani({ 
-  subsets: ["latin"], 
-  weight: ["300", "400", "500", "600", "700"],
-  variable: "--font-rajdhani", 
-  display: "swap" 
+  subsets: ['latin'],
+  weight: ['300', '400', '500', '600', '700'],
+  variable: '--font-rajdhani',
 });
 
 export const metadata: Metadata = {
-  title: "ALSHAM QUANTUM v13.3 | Reality Codex",
-  description: "Cockpit de Inteligência Suprema - Sistema de Realidades Visuais",
+  title: 'ALSHAM QUANTUM - Reality Codex v13.3',
+  description: 'A Singularidade Chegou. Sistema de Gestão de Agentes Autônomos com IA.',
+  keywords: ['AI', 'Quantum', 'Agents', 'CRM', 'Automation', 'Neural Networks'],
+  authors: [{ name: 'ALSHAM GLOBAL' }],
+  openGraph: {
+    title: 'ALSHAM QUANTUM',
+    description: 'A Singularidade Chegou',
+    type: 'website',
+  },
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   return (
     <html 
-      lang="pt-br" 
-      className={`${orbitron.variable} ${inter.variable} ${rajdhani.variable}`}
-      data-theme="quantum"
+      lang="pt-BR" 
+      className={`${inter.variable} ${orbitron.variable} ${rajdhani.variable}`}
       suppressHydrationWarning
     >
-      <body 
-        className="antialiased h-screen w-screen overflow-hidden flex"
-        style={{
-          background: 'var(--bg-core)',
-          color: 'var(--text-primary)',
-        }}
-      >
+      <head>
+        <link rel="icon" href="/favicon.ico" />
+      </head>
+      <body className="antialiased">
         <ThemeProvider>
-          <AuthProvider>
-            {/* Background dinâmico baseado no tema */}
-            <RealityBackground />
-            
-            <aside className="flex-shrink-0 z-50 hidden md:block relative">
-              <Sidebar />
-            </aside>
-            
-            <main 
-              className="flex-1 relative h-full overflow-y-auto overflow-x-hidden z-10"
-            >
-              {children}
-            </main>
-          </AuthProvider>
+          {/* Background Animado (muda com o tema) */}
+          <RealityBackground />
+          
+          {/* Keyboard Shortcuts (Alt+Shift+T para trocar tema) */}
+          <GlobalKeyListener />
+          
+          {/* Conteúdo Principal */}
+          <main className="relative z-10">
+            {children}
+          </main>
+          
+          {/* Theme Switcher (Botão Floating) */}
+          <ThemeSwitcher />
         </ThemeProvider>
       </body>
     </html>
