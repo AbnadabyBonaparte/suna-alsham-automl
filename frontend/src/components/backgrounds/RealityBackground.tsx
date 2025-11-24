@@ -1,9 +1,9 @@
 /**
  * ═══════════════════════════════════════════════════════════════
- * ALSHAM QUANTUM - REALITY BACKGROUND WRAPPER
+ * ALSHAM QUANTUM - REALITY BACKGROUND ORCHESTRATOR (9 UNIVERSOS)
  * ═══════════════════════════════════════════════════════════════
  * 📁 PATH: frontend/src/components/backgrounds/RealityBackground.tsx
- * 📋 Escolhe qual background renderizar baseado no tema atual
+ * 📋 Escolhe qual background renderizar baseado no tema atual da Global Elite.
  * ═══════════════════════════════════════════════════════════════
  */
 
@@ -11,15 +11,24 @@
 
 import { useTheme } from '@/contexts/ThemeContext';
 import dynamic from 'next/dynamic';
-import { useReducedMotion } from '@/hooks/useReducedMotion';
 
-// Lazy load backgrounds para performance
+// Lazy load backgrounds para performance máxima
 const QuantumBackground = dynamic(() => import('./QuantumBackground'), {
   ssr: false,
   loading: () => null,
 });
 
 const AscensionBackground = dynamic(() => import('./AscensionBackground'), {
+  ssr: false,
+  loading: () => null,
+});
+
+const MilitaryBackground = dynamic(() => import('./MilitaryBackground'), {
+  ssr: false,
+  loading: () => null,
+});
+
+const TitaniumBackground = dynamic(() => import('./TitaniumBackground'), {
   ssr: false,
   loading: () => null,
 });
@@ -36,48 +45,49 @@ const ZenBackground = dynamic(() => import('./ZenBackground'), {
 
 export default function RealityBackground() {
   const { currentTheme, themeConfig } = useTheme();
-  const prefersReducedMotion = useReducedMotion(); // Assumindo que você tem este hook para acessibilidade
 
-  // Renderizar background apropriado para cada tema
-  switch (themeConfig.backgroundType) {
+  // O switch case decide qual componente renderizar
+  // Para temas baseados em partículas (Neural, Cobalt, Crimson), reutilizamos o QuantumBackground
+  
+  switch (currentTheme) {
+    // 1. QUANTUM (Ciano Padrão)
     case 'quantum':
-      return <QuantumBackground />;
+      return <QuantumBackground color="#00FFD0" />;
     
+    // 2. ASCENSION (Divino)
     case 'ascension':
       return <AscensionBackground />;
     
+    // 3. MILITARY (Night Vision Radar)
     case 'military':
-      // Military usa background CSS puro (grid hexagonal + scanlines)
-      return (
-        <div className="fixed inset-0 pointer-events-none z-0">
-          <div className="absolute inset-0 bg-[url('/grid-military.svg')] opacity-10" />
-          <div className="absolute inset-0 animate-scanline" />
-        </div>
-      );
+      return <MilitaryBackground />;
     
+    // 4. NEURAL (Roxo Vivo)
     case 'neural':
-      // Neural usa efeito de neurônios pulsando (similar ao Quantum mas roxo)
-      // RECOMENDAÇÃO: Criar um NeuralBackground.tsx dedicado para o 10/10
-      return <QuantumBackground color={themeConfig.colors.primary} />;
+      return <QuantumBackground color="#8B5CF6" />;
     
+    // 5. TITANIUM (Dubai Night)
     case 'titanium':
-      // Titanium usa textura de couro + ruído
-      return (
-        <div className="fixed inset-0 pointer-events-none z-0">
-          <div className="absolute inset-0 bg-[url('/leather-texture.svg')] opacity-5" />
-          <div className="absolute inset-0 bg-noise opacity-10" />
-        </div>
-      );
+      return <TitaniumBackground />;
       
+    // 6. VINTAGE (CRT Hacker)
     case 'vintage':
-      // Vintage usa o componente dedicado para CRT
       return <VintageBackground />;
       
+    // 7. ZEN (Minimalista)
     case 'zen':
-      // Zen usa o componente dedicado para papel/minimalismo
       return <ZenBackground />;
+
+    // 8. COBALT (Azul Enterprise) - Reutiliza Quantum
+    case 'cobalt':
+      return <QuantumBackground color="#3B82F6" />;
+
+    // 9. CRIMSON (Vermelho Performance) - Reutiliza Quantum
+    case 'crimson':
+      return <QuantumBackground color="#EF4444" />;
     
+    // Fallback de segurança
     default:
-      return <QuantumBackground />;
+      return <QuantumBackground color="#00FFD0" />;
   }
 }
