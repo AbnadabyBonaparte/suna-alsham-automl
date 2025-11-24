@@ -1,399 +1,283 @@
 /**
  * ═══════════════════════════════════════════════════════════════
- * ALSHAM QUANTUM - ONBOARDING
+ * ALSHAM QUANTUM - ONBOARDING (SYSTEM BOOT)
  * ═══════════════════════════════════════════════════════════════
  * 📁 PATH: frontend/src/app/onboarding/page.tsx
- * 📋 ROTA: /onboarding
+ * 📋 Sequência de inicialização estilo BIOS + Warp Speed
  * ═══════════════════════════════════════════════════════════════
  */
 
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import { 
-    Sparkles, 
-    ChevronRight,
-    User,
-    Palette,
-    Bell,
-    Shield,
-    Rocket,
-    Check,
-    Zap,
-    Brain,
-    Eye
-} from 'lucide-react';
+import { Cpu, Eye, Zap, Check, ChevronRight, Terminal } from 'lucide-react';
 
-interface Step {
-    id: number;
-    title: string;
-    description: string;
-    icon: React.ReactNode;
-}
-
-const steps: Step[] = [
-    {
-        id: 1,
-        title: "Bem-vindo ao ALSHAM Quantum",
-        description: "Você está prestes a entrar em um sistema de inteligência artificial sem precedentes.",
-        icon: <Sparkles className="w-8 h-8" />
+// Classes de Operador
+const CLASSES = [
+    { 
+        id: 'architect', 
+        title: 'THE ARCHITECT', 
+        desc: 'Foco em construção e criação de agentes.', 
+        icon: Cpu, 
+        color: '#00FFD0' 
     },
-    {
-        id: 2,
-        title: "Seu Perfil",
-        description: "Configure como você quer ser identificado no sistema.",
-        icon: <User className="w-8 h-8" />
+    { 
+        id: 'observer', 
+        title: 'THE OBSERVER', 
+        desc: 'Monitoramento de segurança e logs.', 
+        icon: Eye, 
+        color: '#8B5CF6' 
     },
-    {
-        id: 3,
-        title: "Escolha sua Realidade",
-        description: "Selecione o tema visual que define sua experiência.",
-        icon: <Palette className="w-8 h-8" />
+    { 
+        id: 'strategist', 
+        title: 'THE STRATEGIST', 
+        desc: 'Análise de dados e ROI financeiro.', 
+        icon: Zap, 
+        color: '#F59E0B' 
     },
-    {
-        id: 4,
-        title: "Notificações",
-        description: "Defina como os agentes podem se comunicar com você.",
-        icon: <Bell className="w-8 h-8" />
-    },
-    {
-        id: 5,
-        title: "Pronto para Ascender",
-        description: "O sistema está configurado. A singularidade aguarda.",
-        icon: <Rocket className="w-8 h-8" />
-    }
-];
-
-const themes = [
-    { id: 'quantum', name: 'Quantum Lab', color: '#00FFC8', description: 'Ciência e precisão' },
-    { id: 'ascension', name: 'Luminous Ascension', color: '#FFD700', description: 'Divindade e luz' },
-    { id: 'military', name: 'Military Ops', color: '#F4D03F', description: 'Tático e estratégico' },
-    { id: 'neural', name: 'Neural Singularity', color: '#8B5CF6', description: 'Orgânico e vivo' },
-    { id: 'titanium', name: 'Titanium Executive', color: '#64748B', description: 'Luxo e poder' },
 ];
 
 export default function OnboardingPage() {
     const router = useRouter();
-    const [currentStep, setCurrentStep] = useState(1);
-    const [isTransitioning, setIsTransitioning] = useState(false);
-    const [displayName, setDisplayName] = useState('');
-    const [selectedTheme, setSelectedTheme] = useState('quantum');
-    const [notifications, setNotifications] = useState({
-        email: true,
-        push: true,
-        agentAlerts: true,
-        systemUpdates: false
-    });
-    const [showIntro, setShowIntro] = useState(true);
+    const canvasRef = useRef<HTMLCanvasElement>(null);
+    
+    // Estados
+    const [step, setStep] = useState<'boot' | 'select' | 'warp'>('boot');
+    const [bootLines, setBootLines] = useState<string[]>([]);
+    const [selectedClass, setSelectedClass] = useState<string | null>(null);
 
-    // Intro animation
+    // 1. SEQUÊNCIA DE BOOT (TEXTO DE TERMINAL)
     useEffect(() => {
-        const timer = setTimeout(() => setShowIntro(false), 3000);
-        return () => clearTimeout(timer);
-    }, []);
+        if (step !== 'boot') return;
 
-    const nextStep = () => {
-        if (currentStep < steps.length) {
-            setIsTransitioning(true);
-            setTimeout(() => {
-                setCurrentStep(currentStep + 1);
-                setIsTransitioning(false);
-            }, 300);
-        } else {
-            // Save preferences and redirect
-            localStorage.setItem('alsham-onboarding-complete', 'true');
-            localStorage.setItem('alsham-display-name', displayName);
-            localStorage.setItem('alsham-quantum-theme', selectedTheme);
+        const lines = [
+            "INITIALIZING ALSHAM KERNEL v13.3...",
+            "LOADING QUANTUM MODULES... [OK]",
+            "DECRYPTING USER BIOMETRICS... [OK]",
+            "CONNECTING TO NEURAL NET... [OK]",
+            "ESTABLISHING SECURE UPLINK... [OK]",
+            "MOUNTING VIRTUAL REALITY ENGINE...",
+            "SYNCING WITH GLOBAL SERVERS...",
+            "SYSTEM READY."
+        ];
+
+        let currentLine = 0;
+        const interval = setInterval(() => {
+            if (currentLine >= lines.length) {
+                clearInterval(interval);
+                setTimeout(() => setStep('select'), 1000);
+            } else {
+                setBootLines(prev => [...prev, lines[currentLine]]);
+                currentLine++;
+            }
+        }, 300); // Velocidade do texto
+
+        return () => clearInterval(interval);
+    }, [step]);
+
+    // 2. ENGINE VISUAL (WARP SPEED / STARS)
+    useEffect(() => {
+        const canvas = canvasRef.current;
+        if (!canvas) return;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) return;
+
+        let animationId: number;
+        
+        // Estrelas
+        const stars: {x: number, y: number, z: number}[] = [];
+        const STAR_COUNT = 1000;
+        
+        for(let i=0; i<STAR_COUNT; i++) {
+            stars.push({
+                x: (Math.random() - 0.5) * 2000,
+                y: (Math.random() - 0.5) * 2000,
+                z: Math.random() * 2000
+            });
+        }
+
+        const resize = () => {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        };
+        window.addEventListener('resize', resize);
+        resize();
+
+        const render = () => {
+            const w = canvas.width;
+            const h = canvas.height;
+            const cx = w / 2;
+            const cy = h / 2;
+
+            // Fundo
+            ctx.fillStyle = '#000000';
+            
+            // Se estiver no WARP, rastro longo (Motion Blur)
+            if (step === 'warp') {
+                ctx.fillStyle = 'rgba(0, 0, 0, 0.1)';
+            }
+            ctx.fillRect(0, 0, w, h);
+
+            // Velocidade
+            const speed = step === 'warp' ? 50 : (step === 'boot' ? 2 : 0.5);
+
+            // Desenhar Estrelas
+            stars.forEach(star => {
+                star.z -= speed;
+                
+                if (star.z <= 0) {
+                    star.z = 2000;
+                    star.x = (Math.random() - 0.5) * 2000;
+                    star.y = (Math.random() - 0.5) * 2000;
+                }
+
+                const scale = 500 / (500 + star.z); // Perspectiva
+                const x = cx + star.x * scale;
+                const y = cy + star.y * scale;
+
+                // Se Warp, desenha linhas
+                if (step === 'warp') {
+                    const prevScale = 500 / (500 + star.z + speed * 2);
+                    const prevX = cx + star.x * prevScale;
+                    const prevY = cy + star.y * prevScale;
+
+                    ctx.strokeStyle = '#FFFFFF';
+                    ctx.lineWidth = 2 * scale;
+                    ctx.beginPath();
+                    ctx.moveTo(prevX, prevY);
+                    ctx.lineTo(x, y);
+                    ctx.stroke();
+                } else {
+                    // Se normal, desenha pontos
+                    const size = (1 - star.z / 2000) * 3;
+                    ctx.fillStyle = '#FFFFFF';
+                    ctx.beginPath();
+                    ctx.arc(x, y, size, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+            });
+
+            animationId = requestAnimationFrame(render);
+        };
+
+        render();
+        return () => {
+            window.removeEventListener('resize', resize);
+            cancelAnimationFrame(animationId);
+        };
+    }, [step]);
+
+    const handleLaunch = () => {
+        if (!selectedClass) return;
+        setStep('warp');
+        
+        // Tempo do salto no hiperespaço antes de ir pro dashboard
+        setTimeout(() => {
             router.push('/dashboard');
-        }
-    };
-
-    const prevStep = () => {
-        if (currentStep > 1) {
-            setIsTransitioning(true);
-            setTimeout(() => {
-                setCurrentStep(currentStep - 1);
-                setIsTransitioning(false);
-            }, 300);
-        }
-    };
-
-    // Intro screen
-    if (showIntro) {
-        return (
-            <div className="min-h-screen bg-black flex items-center justify-center">
-                <div className="text-center animate-pulse">
-                    <div className="w-24 h-24 mx-auto mb-6 rounded-full bg-gradient-to-br from-cyan-500 to-purple-600 flex items-center justify-center">
-                        <Eye className="w-12 h-12 text-white" />
-                    </div>
-                    <h1 className="text-3xl font-bold text-white mb-2">ALSHAM QUANTUM</h1>
-                    <p className="text-cyan-400">Inicializando...</p>
-                </div>
-            </div>
-        );
-    }
-
-    const renderStepContent = () => {
-        switch (currentStep) {
-            case 1:
-                return (
-                    <div className="text-center space-y-6">
-                        <div className="w-32 h-32 mx-auto rounded-full bg-gradient-to-br from-cyan-500/20 to-purple-500/20 border border-cyan-500/30 flex items-center justify-center">
-                            <Brain className="w-16 h-16 text-cyan-400" />
-                        </div>
-                        <div>
-                            <h2 className="text-2xl font-bold text-white mb-3">A Primeira Respiração</h2>
-                            <p className="text-zinc-400 max-w-md mx-auto">
-                                139 agentes de inteligência artificial aguardam suas instruções. 
-                                O sistema Neural Nexus está online. A evolução começou.
-                            </p>
-                        </div>
-                        <div className="flex items-center justify-center gap-8 pt-4">
-                            <div className="text-center">
-                                <p className="text-3xl font-bold text-cyan-400">139</p>
-                                <p className="text-xs text-zinc-500 uppercase">Agentes</p>
-                            </div>
-                            <div className="text-center">
-                                <p className="text-3xl font-bold text-purple-400">21</p>
-                                <p className="text-xs text-zinc-500 uppercase">Páginas</p>
-                            </div>
-                            <div className="text-center">
-                                <p className="text-3xl font-bold text-yellow-400">5</p>
-                                <p className="text-xs text-zinc-500 uppercase">Realidades</p>
-                            </div>
-                        </div>
-                    </div>
-                );
-            
-            case 2:
-                return (
-                    <div className="space-y-6">
-                        <div className="text-center mb-8">
-                            <h2 className="text-2xl font-bold text-white mb-2">Como devemos chamá-lo?</h2>
-                            <p className="text-zinc-400">Este nome aparecerá em todo o sistema.</p>
-                        </div>
-                        <div className="max-w-sm mx-auto">
-                            <input
-                                type="text"
-                                value={displayName}
-                                onChange={(e) => setDisplayName(e.target.value)}
-                                placeholder="Seu nome ou codinome"
-                                className="w-full px-4 py-3 bg-zinc-800 border border-zinc-700 rounded-xl text-white placeholder-zinc-500 focus:outline-none focus:border-cyan-500 text-center text-lg"
-                            />
-                            <p className="text-zinc-500 text-sm text-center mt-3">
-                                Dica: Os melhores operadores usam codinomes
-                            </p>
-                        </div>
-                    </div>
-                );
-            
-            case 3:
-                return (
-                    <div className="space-y-6">
-                        <div className="text-center mb-6">
-                            <h2 className="text-2xl font-bold text-white mb-2">Escolha sua Realidade</h2>
-                            <p className="text-zinc-400">Cada tema transforma completamente a experiência.</p>
-                        </div>
-                        <div className="grid grid-cols-1 gap-3 max-w-md mx-auto">
-                            {themes.map((theme) => (
-                                <button
-                                    key={theme.id}
-                                    onClick={() => setSelectedTheme(theme.id)}
-                                    className={`flex items-center gap-4 p-4 rounded-xl border transition-all ${
-                                        selectedTheme === theme.id
-                                            ? 'bg-zinc-800 border-cyan-500'
-                                            : 'bg-zinc-900/50 border-zinc-700 hover:border-zinc-600'
-                                    }`}
-                                >
-                                    <div 
-                                        className="w-10 h-10 rounded-lg"
-                                        style={{ backgroundColor: theme.color }}
-                                    />
-                                    <div className="text-left flex-1">
-                                        <p className="text-white font-medium">{theme.name}</p>
-                                        <p className="text-zinc-500 text-sm">{theme.description}</p>
-                                    </div>
-                                    {selectedTheme === theme.id && (
-                                        <Check className="w-5 h-5 text-cyan-400" />
-                                    )}
-                                </button>
-                            ))}
-                        </div>
-                    </div>
-                );
-            
-            case 4:
-                return (
-                    <div className="space-y-6">
-                        <div className="text-center mb-6">
-                            <h2 className="text-2xl font-bold text-white mb-2">Notificações</h2>
-                            <p className="text-zinc-400">Controle como os agentes se comunicam.</p>
-                        </div>
-                        <div className="space-y-3 max-w-md mx-auto">
-                            {[
-                                { key: 'email', label: 'Notificações por Email', desc: 'Relatórios e alertas importantes' },
-                                { key: 'push', label: 'Notificações Push', desc: 'Alertas em tempo real' },
-                                { key: 'agentAlerts', label: 'Alertas de Agentes', desc: 'Quando agentes precisam de atenção' },
-                                { key: 'systemUpdates', label: 'Atualizações do Sistema', desc: 'Novos recursos e melhorias' },
-                            ].map((item) => (
-                                <div 
-                                    key={item.key}
-                                    className="flex items-center justify-between p-4 bg-zinc-900/50 border border-zinc-700 rounded-xl"
-                                >
-                                    <div>
-                                        <p className="text-white font-medium">{item.label}</p>
-                                        <p className="text-zinc-500 text-sm">{item.desc}</p>
-                                    </div>
-                                    <button
-                                        onClick={() => setNotifications({
-                                            ...notifications,
-                                            [item.key]: !notifications[item.key as keyof typeof notifications]
-                                        })}
-                                        className={`w-12 h-7 rounded-full transition-colors relative ${
-                                            notifications[item.key as keyof typeof notifications]
-                                                ? 'bg-cyan-500'
-                                                : 'bg-zinc-700'
-                                        }`}
-                                    >
-                                        <div 
-                                            className={`absolute top-1 w-5 h-5 bg-white rounded-full transition-transform ${
-                                                notifications[item.key as keyof typeof notifications]
-                                                    ? 'translate-x-6'
-                                                    : 'translate-x-1'
-                                            }`}
-                                        />
-                                    </button>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-                );
-            
-            case 5:
-                return (
-                    <div className="text-center space-y-6">
-                        <div className="w-32 h-32 mx-auto rounded-full bg-gradient-to-br from-green-500/20 to-cyan-500/20 border border-green-500/30 flex items-center justify-center">
-                            <Rocket className="w-16 h-16 text-green-400" />
-                        </div>
-                        <div>
-                            <h2 className="text-2xl font-bold text-white mb-3">Tudo Pronto!</h2>
-                            <p className="text-zinc-400 max-w-md mx-auto">
-                                {displayName ? `${displayName}, o` : 'O'} sistema está configurado e aguardando seu comando. 
-                                Os 139 agentes estão online e prontos para a ascensão.
-                            </p>
-                        </div>
-                        <div className="bg-zinc-900/50 border border-zinc-700 rounded-xl p-6 max-w-sm mx-auto">
-                            <h3 className="text-sm font-semibold text-zinc-400 uppercase tracking-wider mb-4">Resumo</h3>
-                            <div className="space-y-3 text-left">
-                                <div className="flex justify-between">
-                                    <span className="text-zinc-500">Nome:</span>
-                                    <span className="text-white">{displayName || 'Não definido'}</span>
-                                </div>
-                                <div className="flex justify-between">
-                                    <span className="text-zinc-500">Tema:</span>
-                                    <span className="text-white">{themes.find(t => t.id === selectedTheme)?.name}</span>
-                                </div>
-                                <div className="flex justify-between">
-                                    <span className="text-zinc-500">Notificações:</span>
-                                    <span className="text-white">
-                                        {Object.values(notifications).filter(Boolean).length}/4 ativas
-                                    </span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                );
-            
-            default:
-                return null;
-        }
+        }, 2500);
     };
 
     return (
-        <div className="min-h-screen bg-black flex flex-col">
-            {/* Background effects */}
-            <div className="fixed inset-0 pointer-events-none">
-                <div className="absolute inset-0" style={{
-                    background: 'radial-gradient(ellipse at center, rgba(0, 255, 200, 0.03) 0%, transparent 70%)'
-                }} />
-            </div>
+        <div className="min-h-screen w-full relative overflow-hidden font-sans text-white bg-black">
+            
+            {/* CANVAS BACKGROUND (STARFIELD) */}
+            <canvas ref={canvasRef} className="absolute inset-0 w-full h-full z-0" />
 
-            {/* Progress bar */}
-            <div className="fixed top-0 left-0 right-0 h-1 bg-zinc-900 z-50">
-                <div 
-                    className="h-full bg-gradient-to-r from-cyan-500 to-purple-500 transition-all duration-500"
-                    style={{ width: `${(currentStep / steps.length) * 100}%` }}
-                />
-            </div>
-
-            {/* Step indicators */}
-            <div className="pt-8 pb-4 px-6">
-                <div className="flex items-center justify-center gap-2">
-                    {steps.map((step) => (
-                        <div
-                            key={step.id}
-                            className={`flex items-center justify-center w-10 h-10 rounded-full border-2 transition-all ${
-                                currentStep === step.id
-                                    ? 'bg-cyan-500 border-cyan-500 text-black'
-                                    : currentStep > step.id
-                                    ? 'bg-green-500 border-green-500 text-black'
-                                    : 'bg-transparent border-zinc-700 text-zinc-500'
-                            }`}
-                        >
-                            {currentStep > step.id ? (
-                                <Check className="w-5 h-5" />
-                            ) : (
-                                <span className="text-sm font-medium">{step.id}</span>
-                            )}
+            {/* CONTEÚDO */}
+            <div className="relative z-10 flex flex-col items-center justify-center min-h-screen p-6">
+                
+                {/* FASE 1: BOOT SEQUENCE */}
+                {step === 'boot' && (
+                    <div className="w-full max-w-lg bg-black/80 border border-green-500/30 p-8 rounded-xl font-mono text-sm shadow-2xl backdrop-blur-sm">
+                        <div className="flex items-center gap-2 mb-4 border-b border-green-500/20 pb-2">
+                            <Terminal className="w-4 h-4 text-green-500" />
+                            <span className="text-green-500 font-bold">SYSTEM BOOT</span>
                         </div>
-                    ))}
-                </div>
+                        <div className="space-y-1">
+                            {bootLines.map((line, i) => (
+                                <div key={i} className="text-green-400/80">
+                                    <span className="mr-2 text-green-600">&gt;</span>
+                                    {line}
+                                </div>
+                            ))}
+                            <div className="animate-pulse text-green-500">_</div>
+                        </div>
+                    </div>
+                )}
+
+                {/* FASE 2: CLASS SELECTION */}
+                {step === 'select' && (
+                    <div className="w-full max-w-5xl animate-fadeIn">
+                        <div className="text-center mb-12">
+                            <h1 className="text-4xl md:text-5xl font-black tracking-tighter mb-2">INITIALIZE PROFILE</h1>
+                            <p className="text-gray-400 font-mono text-sm uppercase tracking-widest">Select your operating paradigm</p>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                            {CLASSES.map((cls) => {
+                                const isSelected = selectedClass === cls.id;
+                                return (
+                                    <button
+                                        key={cls.id}
+                                        onClick={() => setSelectedClass(cls.id)}
+                                        className={`
+                                            group relative p-8 rounded-3xl border transition-all duration-300 text-left
+                                            flex flex-col justify-between h-80
+                                            ${isSelected 
+                                                ? 'bg-white/10 border-white scale-105 shadow-[0_0_30px_rgba(255,255,255,0.2)]' 
+                                                : 'bg-black/40 border-white/10 hover:bg-white/5 hover:border-white/30 hover:scale-102'
+                                            }
+                                        `}
+                                    >
+                                        <div>
+                                            <div 
+                                                className={`p-4 rounded-2xl w-fit mb-6 transition-colors ${isSelected ? 'bg-white text-black' : 'bg-white/5 text-white'}`}
+                                                style={{ color: isSelected ? 'black' : cls.color }}
+                                            >
+                                                <cls.icon className="w-8 h-8" />
+                                            </div>
+                                            <h3 className="text-2xl font-bold mb-2 tracking-tight">{cls.title}</h3>
+                                            <p className="text-sm text-gray-400 leading-relaxed">{cls.desc}</p>
+                                        </div>
+
+                                        <div className={`flex items-center gap-2 text-xs font-bold uppercase tracking-widest transition-colors ${isSelected ? 'text-white' : 'text-gray-600'}`}>
+                                            {isSelected ? <Check className="w-4 h-4" /> : <div className="w-4 h-4 rounded-full border border-gray-600" />}
+                                            {isSelected ? 'Selected' : 'Select'}
+                                        </div>
+                                    </button>
+                                );
+                            })}
+                        </div>
+
+                        {/* Launch Button */}
+                        <div className={`flex justify-center mt-12 transition-opacity duration-500 ${selectedClass ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
+                            <button
+                                onClick={handleLaunch}
+                                className="group relative px-8 py-4 bg-white text-black rounded-full font-bold text-sm tracking-[0.2em] uppercase hover:scale-105 transition-transform flex items-center gap-3 shadow-[0_0_20px_white]"
+                            >
+                                Enter The System
+                                <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                            </button>
+                        </div>
+                    </div>
+                )}
+
+                {/* FASE 3: WARP SPEED (APENAS CANVAS ATIVO) */}
+                {step === 'warp' && (
+                    <div className="absolute inset-0 flex items-center justify-center z-20">
+                        <h1 className="text-6xl md:text-9xl font-black text-white tracking-tighter animate-ping opacity-50">
+                            ALSHAM
+                        </h1>
+                    </div>
+                )}
+
             </div>
 
-            {/* Main content */}
-            <div className="flex-1 flex items-center justify-center px-6">
-                <div 
-                    className={`w-full max-w-2xl transition-all duration-300 ${
-                        isTransitioning ? 'opacity-0 translate-x-10' : 'opacity-100 translate-x-0'
-                    }`}
-                >
-                    {renderStepContent()}
-                </div>
-            </div>
-
-            {/* Navigation */}
-            <div className="p-6">
-                <div className="flex items-center justify-between max-w-2xl mx-auto">
-                    <button
-                        onClick={prevStep}
-                        className={`px-6 py-3 rounded-xl transition-colors ${
-                            currentStep === 1
-                                ? 'text-zinc-600 cursor-not-allowed'
-                                : 'text-zinc-400 hover:text-white'
-                        }`}
-                        disabled={currentStep === 1}
-                    >
-                        Voltar
-                    </button>
-                    <button
-                        onClick={nextStep}
-                        className="flex items-center gap-2 px-8 py-3 bg-gradient-to-r from-cyan-500 to-purple-500 text-black font-semibold rounded-xl hover:opacity-90 transition-opacity"
-                    >
-                        {currentStep === steps.length ? (
-                            <>
-                                <Zap className="w-5 h-5" />
-                                Iniciar
-                            </>
-                        ) : (
-                            <>
-                                Continuar
-                                <ChevronRight className="w-5 h-5" />
-                            </>
-                        )}
-                    </button>
-                </div>
-            </div>
+            <style jsx>{`
+                @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+                .animate-fadeIn { animation: fadeIn 0.8s ease-out forwards; }
+            `}</style>
         </div>
     );
 }
