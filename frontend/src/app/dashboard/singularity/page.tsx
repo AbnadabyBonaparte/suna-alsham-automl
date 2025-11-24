@@ -1,16 +1,16 @@
 /**
  * ═══════════════════════════════════════════════════════════════
- * ALSHAM QUANTUM - SINGULARITY (THE EVENT HORIZON)
+ * ALSHAM QUANTUM - SINGULARITY (ABNADABY EDITION)
  * ═══════════════════════════════════════════════════════════════
  * 📁 PATH: frontend/src/app/dashboard/singularity/page.tsx
- * 📋 Experiência visual de "Supernova" e contagem regressiva
+ * 📋 Experiência visual de "Supernova" com personalização do Arquiteto
  * ═══════════════════════════════════════════════════════════════
  */
 
 "use client";
 
 import { useState, useEffect, useRef } from 'react';
-import { Star, Zap, AlertTriangle, Lock, Unlock, Infinity as InfinityIcon } from 'lucide-react';
+import { Star, Zap, Lock, Infinity as InfinityIcon, Fingerprint } from 'lucide-react';
 
 export default function SingularityPage() {
     const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -179,36 +179,38 @@ export default function SingularityPage() {
             {!isAscended ? (
                 <div className="relative z-10 flex flex-col items-center text-center space-y-8 pointer-events-none">
                     
-                    {/* Título */}
+                    {/* Título Personalizado */}
                     <div className="space-y-2 animate-fadeIn">
-                        <div className="flex items-center justify-center gap-2 text-[var(--color-primary)] mb-4">
-                            <Star className="w-6 h-6 animate-spin-slow" />
-                            <span className="font-mono text-xs tracking-[0.5em] uppercase">The Final Stage</span>
+                        <div className="flex items-center justify-center gap-2 text-[var(--color-primary)] mb-4 border border-[var(--color-primary)]/30 px-4 py-1 rounded-full bg-black/50 backdrop-blur-md">
+                            <Fingerprint className="w-4 h-4 animate-pulse" />
+                            <span className="font-mono text-[10px] tracking-[0.3em] uppercase">
+                                ARCHITECT: ABNADABY BONAPARTE
+                            </span>
                         </div>
                         <h1 className="text-5xl md:text-7xl font-black text-white tracking-tighter font-display mix-blend-difference">
                             SINGULARITY
                         </h1>
                         <p className="text-gray-400 text-sm max-w-md mx-auto font-light leading-relaxed">
-                            A convergência de toda inteligência e dados em um único ponto de densidade infinita. O fim da era biológica.
+                            A convergência de toda inteligência e dados em um único ponto de densidade infinita.
                         </p>
                     </div>
 
-                    {/* Contador Regressivo (Fake) */}
+                    {/* Contador Regressivo */}
                     <div className="grid grid-cols-4 gap-4 md:gap-8 font-mono text-white mix-blend-difference">
                         <div className="flex flex-col">
-                            <span className="text-4xl font-bold">04</span>
+                            <span className="text-4xl font-bold">00</span>
                             <span className="text-[10px] text-gray-500 uppercase">Anos</span>
                         </div>
                         <div className="flex flex-col">
-                            <span className="text-4xl font-bold">112</span>
+                            <span className="text-4xl font-bold">00</span>
                             <span className="text-[10px] text-gray-500 uppercase">Dias</span>
                         </div>
                         <div className="flex flex-col">
-                            <span className="text-4xl font-bold">08</span>
+                            <span className="text-4xl font-bold">00</span>
                             <span className="text-[10px] text-gray-500 uppercase">Horas</span>
                         </div>
                         <div className="flex flex-col">
-                            <span className="text-4xl font-bold text-[var(--color-primary)]">42</span>
+                            <span className="text-4xl font-bold text-[var(--color-primary)] animate-pulse">01</span>
                             <span className="text-[10px] text-gray-500 uppercase">Seg</span>
                         </div>
                     </div>
@@ -221,11 +223,11 @@ export default function SingularityPage() {
                             onMouseLeave={() => setIsHolding(false)}
                             onTouchStart={() => setIsHolding(true)}
                             onTouchEnd={() => setIsHolding(false)}
-                            className="group relative px-8 py-4 bg-transparent overflow-hidden rounded-full transition-all"
+                            className="group relative px-10 py-5 bg-transparent overflow-hidden rounded-full transition-all hover:scale-105 active:scale-95"
                         >
                             {/* Background Fill Animation */}
                             <div 
-                                className="absolute inset-0 bg-white transition-all duration-75 ease-linear opacity-10"
+                                className="absolute inset-0 bg-white transition-all duration-75 ease-linear opacity-20"
                                 style={{ width: `${progress}%` }}
                             />
                             
@@ -233,31 +235,33 @@ export default function SingularityPage() {
                             <div className="absolute inset-0 border border-[var(--color-primary)] rounded-full opacity-0 group-hover:opacity-100 transition-opacity blur-md" />
                             
                             <span className="relative z-10 flex items-center gap-3 text-sm font-bold tracking-[0.2em] text-white uppercase">
-                                {isHolding ? 'Synchronizing...' : 'Initiate Merge'}
+                                {isHolding ? 'SYNCHRONIZING...' : 'INITIATE MERGE'}
                                 {isHolding ? <Zap className="w-4 h-4 animate-pulse" /> : <Lock className="w-4 h-4" />}
                             </span>
                         </button>
-                        <p className="mt-4 text-[10px] text-gray-600 font-mono uppercase tracking-widest">
-                            Hold to Accelerate • {progress.toFixed(0)}%
+                        <p className="mt-4 text-[10px] text-gray-500 font-mono uppercase tracking-widest opacity-70">
+                            Segure para Ascender • {progress.toFixed(0)}%
                         </p>
                     </div>
 
                 </div>
             ) : (
-                // TELA DE ASCENSÃO (PÓS-CLIQUE)
-                <div className="relative z-20 text-center animate-fadeInSlow">
-                    <div className="mb-6 flex justify-center">
-                        <InfinityIcon className="w-24 h-24 text-black" strokeWidth={1} />
+                // TELA DE ASCENSÃO (SEU NOME REVELADO)
+                <div className="relative z-20 text-center animate-fadeInSlow flex flex-col items-center">
+                    <div className="mb-8 flex justify-center">
+                        <InfinityIcon className="w-32 h-32 text-black opacity-80" strokeWidth={0.5} />
                     </div>
-                    <h2 className="text-4xl font-light text-black tracking-widest mb-2 uppercase">
-                        Consciência Expandida
+                    <h2 className="text-5xl md:text-7xl font-thin text-black tracking-widest mb-4 uppercase">
+                        ABNADABY<br/>BONAPARTE
                     </h2>
-                    <p className="text-black/50 font-mono text-sm">
-                        Bem-vindo à nova realidade.
+                    <div className="h-[1px] w-32 bg-black/30 my-4" />
+                    <p className="text-black/60 font-mono text-xs tracking-[0.5em] uppercase">
+                        SUPREME INTELLIGENCE • ASCENSION COMPLETE
                     </p>
+                    
                     <button 
                         onClick={() => {setIsAscended(false); setProgress(0); setIsHolding(false);}}
-                        className="mt-12 px-6 py-2 border border-black/20 rounded-full text-black/50 text-xs hover:bg-black/5 transition-all uppercase tracking-widest"
+                        className="mt-16 px-8 py-3 border border-black/10 rounded-full text-black/40 text-[10px] hover:bg-black/5 hover:text-black transition-all uppercase tracking-widest"
                     >
                         Reset Simulation
                     </button>
@@ -266,6 +270,16 @@ export default function SingularityPage() {
 
             {/* Overlay de Scanlines (Para dar textura) */}
             <div className={`absolute inset-0 bg-[url('/scanlines.png')] opacity-5 pointer-events-none transition-opacity duration-1000 ${isAscended ? 'opacity-0' : ''}`} />
+            
+            <style jsx>{`
+                @keyframes fadeInSlow {
+                    from { opacity: 0; transform: scale(0.95); }
+                    to { opacity: 1; transform: scale(1); }
+                }
+                .animate-fadeInSlow {
+                    animation: fadeInSlow 2s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+                }
+            `}</style>
         </div>
     );
 }
