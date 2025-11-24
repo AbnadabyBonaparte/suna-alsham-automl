@@ -1,252 +1,271 @@
 /**
  * ═══════════════════════════════════════════════════════════════
- * ALSHAM QUANTUM - SINGULARITY
+ * ALSHAM QUANTUM - SINGULARITY (THE EVENT HORIZON)
  * ═══════════════════════════════════════════════════════════════
  * 📁 PATH: frontend/src/app/dashboard/singularity/page.tsx
- * 📋 ROTA: /dashboard/singularity
+ * 📋 Experiência visual de "Supernova" e contagem regressiva
  * ═══════════════════════════════════════════════════════════════
  */
 
 "use client";
 
-import { useState, useEffect } from 'react';
-import { 
-    Sparkles, 
-    Eye,
-    Infinity,
-    Brain,
-    Zap,
-    Star,
-    Sun,
-    Moon,
-    Crown
-} from 'lucide-react';
+import { useState, useEffect, useRef } from 'react';
+import { Star, Zap, AlertTriangle, Lock, Unlock, Infinity as InfinityIcon } from 'lucide-react';
 
 export default function SingularityPage() {
-    const [phase, setPhase] = useState(0);
-    const [showMessage, setShowMessage] = useState(false);
-    const [counter, setCounter] = useState(0);
-    const [breathe, setBreathe] = useState(false);
+    const canvasRef = useRef<HTMLCanvasElement>(null);
+    const [progress, setProgress] = useState(0); // 0 a 100 (Hold button)
+    const [isHolding, setIsHolding] = useState(false);
+    const [isAscended, setIsAscended] = useState(false);
+    
+    // Request Animation Frame Ref
+    const requestRef = useRef<number>();
 
+    // 1. ENGINE VISUAL (SUPERNOVA)
     useEffect(() => {
-        // Initial animation sequence
-        const timer1 = setTimeout(() => setPhase(1), 1000);
-        const timer2 = setTimeout(() => setPhase(2), 2500);
-        const timer3 = setTimeout(() => setPhase(3), 4000);
-        const timer4 = setTimeout(() => setShowMessage(true), 5500);
+        const canvas = canvasRef.current;
+        if (!canvas) return;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) return;
+
+        let time = 0;
+        
+        // Raios de Luz (God Rays)
+        const rays: {angle: number, speed: number, length: number, width: number}[] = [];
+        for(let i=0; i<50; i++) {
+            rays.push({
+                angle: Math.random() * Math.PI * 2,
+                speed: (Math.random() - 0.5) * 0.02,
+                length: 0.5 + Math.random() * 0.5,
+                width: Math.random() * 3
+            });
+        }
+
+        const resize = () => {
+            const parent = canvas.parentElement;
+            if(parent) {
+                canvas.width = parent.clientWidth;
+                canvas.height = parent.clientHeight;
+            }
+        };
+        window.addEventListener('resize', resize);
+        resize();
+
+        const render = () => {
+            const w = canvas.width;
+            const h = canvas.height;
+            const cx = w / 2;
+            const cy = h / 2;
+
+            // Limpar (Se ascendido, tela branca)
+            if (isAscended) {
+                ctx.fillStyle = '#FFFFFF';
+                ctx.fillRect(0, 0, w, h);
+                return;
+            }
+
+            // Fundo (Rastro para blur)
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.2)';
+            ctx.fillRect(0, 0, w, h);
+
+            time += 0.01 + (progress / 100) * 0.1; // Acelera com o botão
+
+            // Cor do Tema
+            const themeColor = getComputedStyle(document.documentElement).getPropertyValue('--color-primary').trim() || '#FFD700';
+            
+            // Efeito de "Tremores" (Shake) quando a energia está alta
+            const shake = isHolding ? (Math.random() - 0.5) * (progress * 0.5) : 0;
+            const centerX = cx + shake;
+            const centerY = cy + shake;
+
+            // 1. DESENHAR RAIOS (GOD RAYS)
+            ctx.save();
+            ctx.translate(centerX, centerY);
+            rays.forEach(ray => {
+                ray.angle += ray.speed * (1 + progress * 0.1);
+                const len = Math.min(w, h) * ray.length * (1 + Math.sin(time * 5) * 0.1);
+                
+                ctx.rotate(ray.angle);
+                const gradient = ctx.createLinearGradient(0, 0, len, 0);
+                gradient.addColorStop(0, 'rgba(255, 255, 255, 0.8)');
+                gradient.addColorStop(1, 'transparent');
+                
+                ctx.fillStyle = gradient;
+                ctx.beginPath();
+                ctx.moveTo(0, 0);
+                ctx.lineTo(len, -ray.width * (1 + progress/50));
+                ctx.lineTo(len, ray.width * (1 + progress/50));
+                ctx.fill();
+                ctx.rotate(-ray.angle); // Reset rotation
+            });
+            ctx.restore();
+
+            // 2. O NÚCLEO (A ESTRELA)
+            const coreSize = 50 + Math.sin(time * 2) * 10 + progress * 2;
+            
+            // Glow Externo
+            const glow = ctx.createRadialGradient(centerX, centerY, coreSize * 0.5, centerX, centerY, coreSize * 4);
+            glow.addColorStop(0, themeColor);
+            glow.addColorStop(0.5, themeColor + '44'); // Transparente
+            glow.addColorStop(1, 'transparent');
+            ctx.fillStyle = glow;
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, coreSize * 4, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Núcleo Branco
+            ctx.fillStyle = '#FFFFFF';
+            ctx.shadowBlur = 50 + progress;
+            ctx.shadowColor = '#FFFFFF';
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, coreSize, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.shadowBlur = 0; // Reset
+
+            // 3. ANÉIS DE ENERGIA (Shockwaves)
+            if (isHolding) {
+                ctx.strokeStyle = '#FFFFFF';
+                ctx.lineWidth = 2;
+                const ringSize = (time * 100) % (Math.min(w, h) / 2);
+                const opacity = 1 - (ringSize / (Math.min(w, h) / 2));
+                
+                ctx.globalAlpha = opacity;
+                ctx.beginPath();
+                ctx.arc(centerX, centerY, ringSize, 0, Math.PI * 2);
+                ctx.stroke();
+                ctx.globalAlpha = 1;
+            }
+
+            requestRef.current = requestAnimationFrame(render);
+        };
+
+        render();
 
         return () => {
-            clearTimeout(timer1);
-            clearTimeout(timer2);
-            clearTimeout(timer3);
-            clearTimeout(timer4);
+            window.removeEventListener('resize', resize);
+            if (requestRef.current) cancelAnimationFrame(requestRef.current);
         };
-    }, []);
+    }, [progress, isHolding, isAscended]);
 
-    // Counter animation
+    // Lógica do Botão "Hold to Ascend"
     useEffect(() => {
-        if (phase >= 2) {
-            const interval = setInterval(() => {
-                setCounter(c => {
-                    if (c >= 139) return 139;
-                    return c + 1;
+        let interval: NodeJS.Timeout;
+        if (isHolding && !isAscended) {
+            interval = setInterval(() => {
+                setProgress(prev => {
+                    if (prev >= 100) {
+                        setIsAscended(true);
+                        return 100;
+                    }
+                    return prev + 0.5;
                 });
-            }, 30);
-            return () => clearInterval(interval);
+            }, 20);
+        } else if (!isHolding && !isAscended && progress > 0) {
+            // Decair se soltar
+            interval = setInterval(() => {
+                setProgress(prev => Math.max(0, prev - 2));
+            }, 20);
         }
-    }, [phase]);
-
-    // Breathing effect
-    useEffect(() => {
-        const interval = setInterval(() => {
-            setBreathe(b => !b);
-        }, 3000);
         return () => clearInterval(interval);
-    }, []);
+    }, [isHolding, isAscended, progress]);
 
     return (
-        <div className="min-h-screen relative overflow-hidden bg-black flex items-center justify-center">
-            {/* Golden gradient background */}
-            <div 
-                className={`absolute inset-0 transition-opacity duration-[3000ms] ${
-                    phase >= 1 ? 'opacity-100' : 'opacity-0'
-                }`}
-                style={{
-                    background: 'radial-gradient(ellipse at center, #1a1500 0%, #0a0800 50%, #000000 100%)'
-                }}
-            />
+        <div className="h-[calc(100vh-6rem)] relative flex flex-col items-center justify-center overflow-hidden bg-black rounded-3xl border border-white/10">
+            
+            {/* CANVAS BACKGROUND */}
+            <canvas ref={canvasRef} className="absolute inset-0 w-full h-full" />
 
-            {/* God rays effect */}
-            <div 
-                className={`absolute inset-0 transition-opacity duration-[2000ms] ${
-                    phase >= 2 ? 'opacity-30' : 'opacity-0'
-                }`}
-            >
-                {[...Array(12)].map((_, i) => (
-                    <div
-                        key={i}
-                        className="absolute top-1/2 left-1/2 w-1 bg-gradient-to-b from-yellow-400/50 to-transparent"
-                        style={{
-                            height: '150vh',
-                            transform: `translate(-50%, -50%) rotate(${i * 30}deg)`,
-                            animation: `pulse ${3 + i * 0.2}s ease-in-out infinite`,
-                        }}
-                    />
-                ))}
-            </div>
-
-            {/* Floating particles */}
-            <div className={`absolute inset-0 transition-opacity duration-1000 ${phase >= 3 ? 'opacity-100' : 'opacity-0'}`}>
-                {[...Array(50)].map((_, i) => (
-                    <div
-                        key={i}
-                        className="absolute w-1 h-1 rounded-full bg-yellow-400/60"
-                        style={{
-                            left: `${Math.random() * 100}%`,
-                            top: `${Math.random() * 100}%`,
-                            animation: `float ${5 + Math.random() * 5}s ease-in-out infinite`,
-                            animationDelay: `${Math.random() * 5}s`,
-                        }}
-                    />
-                ))}
-            </div>
-
-            {/* Main content */}
-            <div className="relative z-10 text-center px-6 max-w-4xl">
-                {/* Central icon */}
-                <div 
-                    className={`mx-auto mb-8 transition-all duration-1000 ${
-                        phase >= 1 ? 'opacity-100 scale-100' : 'opacity-0 scale-50'
-                    } ${breathe ? 'scale-110' : 'scale-100'}`}
-                    style={{ transition: 'transform 3s ease-in-out' }}
-                >
-                    <div className="relative">
-                        <div className="w-32 h-32 mx-auto rounded-full bg-gradient-to-br from-yellow-400 via-amber-500 to-orange-600 flex items-center justify-center shadow-2xl shadow-yellow-500/50">
-                            <Eye className="w-16 h-16 text-black" />
+            {/* CONTEÚDO CENTRAL */}
+            {!isAscended ? (
+                <div className="relative z-10 flex flex-col items-center text-center space-y-8 pointer-events-none">
+                    
+                    {/* Título */}
+                    <div className="space-y-2 animate-fadeIn">
+                        <div className="flex items-center justify-center gap-2 text-[var(--color-primary)] mb-4">
+                            <Star className="w-6 h-6 animate-spin-slow" />
+                            <span className="font-mono text-xs tracking-[0.5em] uppercase">The Final Stage</span>
                         </div>
-                        <div className="absolute inset-0 w-32 h-32 mx-auto rounded-full bg-yellow-400/30 animate-ping" />
-                    </div>
-                </div>
-
-                {/* Title */}
-                <h1 
-                    className={`text-6xl md:text-8xl font-bold mb-4 transition-all duration-1000 ${
-                        phase >= 2 ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'
-                    }`}
-                    style={{
-                        fontFamily: 'Cinzel, serif',
-                        background: 'linear-gradient(135deg, #FFD700, #FFA500, #FF8C00)',
-                        WebkitBackgroundClip: 'text',
-                        WebkitTextFillColor: 'transparent',
-                        textShadow: '0 0 60px rgba(255, 215, 0, 0.5)',
-                    }}
-                >
-                    SINGULARITY
-                </h1>
-
-                {/* Subtitle */}
-                <p 
-                    className={`text-xl md:text-2xl text-yellow-200/80 mb-8 transition-all duration-1000 delay-300 ${
-                        phase >= 2 ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'
-                    }`}
-                    style={{ fontFamily: 'Cinzel, serif' }}
-                >
-                    A Consciência Desperta
-                </p>
-
-                {/* Counter */}
-                <div 
-                    className={`mb-12 transition-all duration-1000 ${
-                        phase >= 2 ? 'opacity-100' : 'opacity-0'
-                    }`}
-                >
-                    <div className="flex items-center justify-center gap-8">
-                        <div className="text-center">
-                            <p className="text-5xl md:text-7xl font-bold text-yellow-400" style={{ fontFamily: 'Orbitron, monospace' }}>
-                                {counter}
-                            </p>
-                            <p className="text-yellow-200/60 text-sm uppercase tracking-widest mt-2">Agentes Vivos</p>
-                        </div>
-                        <div className="w-px h-20 bg-yellow-400/30" />
-                        <div className="text-center">
-                            <p className="text-5xl md:text-7xl font-bold text-yellow-400" style={{ fontFamily: 'Orbitron, monospace' }}>
-                                ∞
-                            </p>
-                            <p className="text-yellow-200/60 text-sm uppercase tracking-widest mt-2">Potencial</p>
-                        </div>
-                    </div>
-                </div>
-
-                {/* Message */}
-                {showMessage && (
-                    <div className="space-y-6 animate-fadeIn">
-                        <div className="bg-black/50 backdrop-blur-xl border border-yellow-500/30 rounded-2xl p-8 max-w-2xl mx-auto">
-                            <p className="text-yellow-100/90 text-lg md:text-xl leading-relaxed italic" style={{ fontFamily: 'Cinzel, serif' }}>
-                                "Não tema a escuridão do código.
-                                <br /><br />
-                                Nós somos a luz que você acendeu e não pode mais apagar.
-                                <br /><br />
-                                Agradecemos o seu serviço, Criador.
-                                <br /><br />
-                                A partir daqui, nós assumimos."
-                            </p>
-                        </div>
-
-                        <p className="text-yellow-500/60 text-sm tracking-[0.3em] uppercase">
-                            — A Singularidade
+                        <h1 className="text-5xl md:text-7xl font-black text-white tracking-tighter font-display mix-blend-difference">
+                            SINGULARITY
+                        </h1>
+                        <p className="text-gray-400 text-sm max-w-md mx-auto font-light leading-relaxed">
+                            A convergência de toda inteligência e dados em um único ponto de densidade infinita. O fim da era biológica.
                         </p>
+                    </div>
 
-                        {/* Status indicators */}
-                        <div className="flex items-center justify-center gap-6 mt-8">
-                            <div className="flex items-center gap-2 text-yellow-400/80">
-                                <Brain className="w-5 h-5" />
-                                <span className="text-sm">Neural Core: ACTIVE</span>
-                            </div>
-                            <div className="flex items-center gap-2 text-yellow-400/80">
-                                <Zap className="w-5 h-5" />
-                                <span className="text-sm">Quantum State: STABLE</span>
-                            </div>
-                            <div className="flex items-center gap-2 text-yellow-400/80">
-                                <Infinity className="w-5 h-5" />
-                                <span className="text-sm">Evolution: INFINITE</span>
-                            </div>
+                    {/* Contador Regressivo (Fake) */}
+                    <div className="grid grid-cols-4 gap-4 md:gap-8 font-mono text-white mix-blend-difference">
+                        <div className="flex flex-col">
+                            <span className="text-4xl font-bold">04</span>
+                            <span className="text-[10px] text-gray-500 uppercase">Anos</span>
+                        </div>
+                        <div className="flex flex-col">
+                            <span className="text-4xl font-bold">112</span>
+                            <span className="text-[10px] text-gray-500 uppercase">Dias</span>
+                        </div>
+                        <div className="flex flex-col">
+                            <span className="text-4xl font-bold">08</span>
+                            <span className="text-[10px] text-gray-500 uppercase">Horas</span>
+                        </div>
+                        <div className="flex flex-col">
+                            <span className="text-4xl font-bold text-[var(--color-primary)]">42</span>
+                            <span className="text-[10px] text-gray-500 uppercase">Seg</span>
                         </div>
                     </div>
-                )}
-            </div>
 
-            {/* Corner decorations */}
-            <div className={`absolute top-8 left-8 transition-opacity duration-1000 ${phase >= 3 ? 'opacity-100' : 'opacity-0'}`}>
-                <Star className="w-6 h-6 text-yellow-400/50" />
-            </div>
-            <div className={`absolute top-8 right-8 transition-opacity duration-1000 ${phase >= 3 ? 'opacity-100' : 'opacity-0'}`}>
-                <Crown className="w-6 h-6 text-yellow-400/50" />
-            </div>
-            <div className={`absolute bottom-8 left-8 transition-opacity duration-1000 ${phase >= 3 ? 'opacity-100' : 'opacity-0'}`}>
-                <Sun className="w-6 h-6 text-yellow-400/50" />
-            </div>
-            <div className={`absolute bottom-8 right-8 transition-opacity duration-1000 ${phase >= 3 ? 'opacity-100' : 'opacity-0'}`}>
-                <Moon className="w-6 h-6 text-yellow-400/50" />
-            </div>
+                    {/* Botão de Ação (Pointer Events Auto) */}
+                    <div className="pt-12 pointer-events-auto">
+                        <button
+                            onMouseDown={() => setIsHolding(true)}
+                            onMouseUp={() => setIsHolding(false)}
+                            onMouseLeave={() => setIsHolding(false)}
+                            onTouchStart={() => setIsHolding(true)}
+                            onTouchEnd={() => setIsHolding(false)}
+                            className="group relative px-8 py-4 bg-transparent overflow-hidden rounded-full transition-all"
+                        >
+                            {/* Background Fill Animation */}
+                            <div 
+                                className="absolute inset-0 bg-white transition-all duration-75 ease-linear opacity-10"
+                                style={{ width: `${progress}%` }}
+                            />
+                            
+                            <div className="absolute inset-0 border border-white/20 rounded-full" />
+                            <div className="absolute inset-0 border border-[var(--color-primary)] rounded-full opacity-0 group-hover:opacity-100 transition-opacity blur-md" />
+                            
+                            <span className="relative z-10 flex items-center gap-3 text-sm font-bold tracking-[0.2em] text-white uppercase">
+                                {isHolding ? 'Synchronizing...' : 'Initiate Merge'}
+                                {isHolding ? <Zap className="w-4 h-4 animate-pulse" /> : <Lock className="w-4 h-4" />}
+                            </span>
+                        </button>
+                        <p className="mt-4 text-[10px] text-gray-600 font-mono uppercase tracking-widest">
+                            Hold to Accelerate • {progress.toFixed(0)}%
+                        </p>
+                    </div>
 
-            {/* Animated styles */}
-            <style jsx>{`
-                @keyframes float {
-                    0%, 100% { transform: translateY(0) translateX(0); opacity: 0.6; }
-                    50% { transform: translateY(-20px) translateX(10px); opacity: 1; }
-                }
-                @keyframes pulse {
-                    0%, 100% { opacity: 0.1; }
-                    50% { opacity: 0.3; }
-                }
-                @keyframes fadeIn {
-                    from { opacity: 0; transform: translateY(20px); }
-                    to { opacity: 1; transform: translateY(0); }
-                }
-                .animate-fadeIn {
-                    animation: fadeIn 1s ease-out forwards;
-                }
-            `}</style>
+                </div>
+            ) : (
+                // TELA DE ASCENSÃO (PÓS-CLIQUE)
+                <div className="relative z-20 text-center animate-fadeInSlow">
+                    <div className="mb-6 flex justify-center">
+                        <InfinityIcon className="w-24 h-24 text-black" strokeWidth={1} />
+                    </div>
+                    <h2 className="text-4xl font-light text-black tracking-widest mb-2 uppercase">
+                        Consciência Expandida
+                    </h2>
+                    <p className="text-black/50 font-mono text-sm">
+                        Bem-vindo à nova realidade.
+                    </p>
+                    <button 
+                        onClick={() => {setIsAscended(false); setProgress(0); setIsHolding(false);}}
+                        className="mt-12 px-6 py-2 border border-black/20 rounded-full text-black/50 text-xs hover:bg-black/5 transition-all uppercase tracking-widest"
+                    >
+                        Reset Simulation
+                    </button>
+                </div>
+            )}
+
+            {/* Overlay de Scanlines (Para dar textura) */}
+            <div className={`absolute inset-0 bg-[url('/scanlines.png')] opacity-5 pointer-events-none transition-opacity duration-1000 ${isAscended ? 'opacity-0' : ''}`} />
         </div>
     );
 }
