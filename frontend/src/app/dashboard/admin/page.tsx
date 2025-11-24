@@ -1,309 +1,295 @@
 /**
  * ═══════════════════════════════════════════════════════════════
- * ALSHAM QUANTUM - ADMIN MODE
+ * ALSHAM QUANTUM - ADMIN GOD MODE (THE ARCHITECT)
  * ═══════════════════════════════════════════════════════════════
  * 📁 PATH: frontend/src/app/dashboard/admin/page.tsx
- * 📋 ROTA: /dashboard/admin
+ * 📋 Controle total do SaaS, Gestão de Usuários e Kill Switches
  * ═══════════════════════════════════════════════════════════════
  */
 
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { 
-    Shield, 
-    Users, 
-    Database, 
-    Settings, 
-    Activity,
-    AlertTriangle,
-    CheckCircle,
-    XCircle,
-    RefreshCw,
-    Lock,
-    Unlock,
-    Terminal,
-    Cpu,
-    HardDrive,
-    Wifi,
-    Eye,
-    EyeOff
+    ShieldAlert, Users, Database, Power, 
+    Lock, Unlock, AlertTriangle, Terminal, 
+    Activity, Eye, Search, Trash2 
 } from 'lucide-react';
-import { supabase } from '@/lib/supabase';
 
-interface SystemStatus {
-    id: string;
+interface UserSession {
+    id: number;
     name: string;
-    status: 'online' | 'offline' | 'warning';
-    uptime: string;
-    load: number;
-}
-
-interface UserData {
-    id: string;
-    email: string;
-    role: string;
-    last_login: string;
-    status: 'active' | 'inactive' | 'suspended';
+    role: 'admin' | 'user' | 'bot';
+    status: 'active' | 'idle';
+    x: number;
+    y: number;
+    vx: number;
+    vy: number;
 }
 
 export default function AdminPage() {
-    const [systemStatus, setSystemStatus] = useState<SystemStatus[]>([
-        { id: '1', name: 'Core Neural Engine', status: 'online', uptime: '99.97%', load: 42 },
-        { id: '2', name: 'Quantum Database', status: 'online', uptime: '99.99%', load: 28 },
-        { id: '3', name: 'Agent Orchestrator', status: 'online', uptime: '99.95%', load: 65 },
-        { id: '4', name: 'Reality Processor', status: 'warning', uptime: '98.50%', load: 87 },
-        { id: '5', name: 'Containment Grid', status: 'online', uptime: '100%', load: 15 },
-    ]);
+    const canvasRef = useRef<HTMLCanvasElement>(null);
+    
+    // Estados
+    const [isSafetyOff, setIsSafetyOff] = useState(false);
+    const [isNukeArmed, setIsNukeArmed] = useState(false);
+    const [dbStatus, setDbStatus] = useState('OPTIMAL');
+    const [activeUsers, setActiveUsers] = useState(142);
+    const [query, setQuery] = useState('');
+    
+    // 1. ENGINE VISUAL (SOUL MAP - USUÁRIOS EM TEMPO REAL)
+    useEffect(() => {
+        const canvas = canvasRef.current;
+        if (!canvas) return;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) return;
 
-    const [users, setUsers] = useState<UserData[]>([
-        { id: '1', email: 'casamondestore@gmail.com', role: 'ADMIN', last_login: '2025-11-24 01:55', status: 'active' },
-        { id: '2', email: 'operator@alsham.quantum', role: 'OPERATOR', last_login: '2025-11-23 18:30', status: 'active' },
-        { id: '3', email: 'agent.handler@system', role: 'HANDLER', last_login: '2025-11-22 09:15', status: 'inactive' },
-    ]);
+        const users: UserSession[] = [];
+        const USER_COUNT = 50;
 
-    const [logs, setLogs] = useState([
-        { time: '01:55:32', type: 'INFO', message: 'User authentication successful' },
-        { time: '01:54:18', type: 'WARN', message: 'Reality Processor load exceeding threshold' },
-        { time: '01:52:45', type: 'INFO', message: 'Agent UNIT_24 optimization complete' },
-        { time: '01:50:00', type: 'INFO', message: 'System backup initiated' },
-        { time: '01:48:33', type: 'ERROR', message: 'Connection timeout - auto-recovered' },
-    ]);
+        const resize = () => {
+            const parent = canvas.parentElement;
+            if(parent) {
+                canvas.width = parent.clientWidth;
+                canvas.height = parent.clientHeight;
+            }
+        };
+        window.addEventListener('resize', resize);
+        resize();
 
-    const [showSecrets, setShowSecrets] = useState(false);
-
-    const getStatusIcon = (status: string) => {
-        switch (status) {
-            case 'online': return <CheckCircle className="w-4 h-4 text-green-400" />;
-            case 'offline': return <XCircle className="w-4 h-4 text-red-400" />;
-            case 'warning': return <AlertTriangle className="w-4 h-4 text-yellow-400" />;
-            default: return null;
+        // Inicializar "Almas"
+        for(let i=0; i<USER_COUNT; i++) {
+            users.push({
+                id: i,
+                name: `User_${Math.floor(Math.random()*9999)}`,
+                role: Math.random() > 0.9 ? 'admin' : 'user',
+                status: 'active',
+                x: Math.random() * canvas.width,
+                y: Math.random() * canvas.height,
+                vx: (Math.random() - 0.5) * 0.5,
+                vy: (Math.random() - 0.5) * 0.5
+            });
         }
-    };
 
-    const getStatusColor = (status: string) => {
-        switch (status) {
-            case 'online': return 'text-green-400 bg-green-400/10 border-green-400/30';
-            case 'offline': return 'text-red-400 bg-red-400/10 border-red-400/30';
-            case 'warning': return 'text-yellow-400 bg-yellow-400/10 border-yellow-400/30';
-            case 'active': return 'text-green-400 bg-green-400/10';
-            case 'inactive': return 'text-zinc-400 bg-zinc-400/10';
-            case 'suspended': return 'text-red-400 bg-red-400/10';
-            default: return 'text-zinc-400';
-        }
-    };
+        const render = () => {
+            const w = canvas.width;
+            const h = canvas.height;
+            
+            // Limpar com rastro (Ghosting)
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.1)';
+            ctx.fillRect(0, 0, w, h);
 
-    const getLogColor = (type: string) => {
-        switch (type) {
-            case 'INFO': return 'text-cyan-400';
-            case 'WARN': return 'text-yellow-400';
-            case 'ERROR': return 'text-red-400';
-            default: return 'text-zinc-400';
-        }
-    };
+            // Cor do Tema
+            const themeColor = getComputedStyle(document.documentElement).getPropertyValue('--color-primary').trim() || '#00FFD0';
+
+            // Conexões (Rede de Usuários)
+            ctx.lineWidth = 0.5;
+            ctx.strokeStyle = `${themeColor}22`; // Muito transparente
+            
+            users.forEach((u, i) => {
+                // Movimento
+                u.x += u.vx;
+                u.y += u.vy;
+
+                // Bounce nas bordas
+                if(u.x < 0 || u.x > w) u.vx *= -1;
+                if(u.y < 0 || u.y > h) u.vy *= -1;
+
+                // Desenhar Conexões Próximas
+                for(let j=i+1; j<users.length; j++) {
+                    const u2 = users[j];
+                    const dist = Math.hypot(u.x - u2.x, u.y - u2.y);
+                    if(dist < 100) {
+                        ctx.beginPath();
+                        ctx.moveTo(u.x, u.y);
+                        ctx.lineTo(u2.x, u2.y);
+                        ctx.stroke();
+                    }
+                }
+
+                // Desenhar Usuário (Alma)
+                ctx.beginPath();
+                ctx.fillStyle = u.role === 'admin' ? '#FFD700' : themeColor;
+                ctx.shadowBlur = 10;
+                ctx.shadowColor = ctx.fillStyle;
+                ctx.arc(u.x, u.y, u.role === 'admin' ? 4 : 2, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.shadowBlur = 0;
+            });
+
+            // Olho Central (O Observador)
+            const cx = w/2;
+            const cy = h/2;
+            ctx.strokeStyle = '#FFFFFF';
+            ctx.lineWidth = 2;
+            ctx.globalAlpha = 0.1;
+            ctx.beginPath();
+            ctx.arc(cx, cy, 100, 0, Math.PI * 2);
+            ctx.stroke();
+            ctx.globalAlpha = 1;
+
+            // Radar Scan
+            const angle = (Date.now() / 2000) % (Math.PI * 2);
+            ctx.beginPath();
+            ctx.moveTo(cx, cy);
+            ctx.arc(cx, cy, 100, angle, angle + 0.2);
+            ctx.fillStyle = `rgba(255, 255, 255, 0.05)`;
+            ctx.fill();
+
+            requestAnimationFrame(render);
+        };
+
+        render();
+        return () => window.removeEventListener('resize', resize);
+    }, []);
 
     return (
-        <div className="min-h-screen p-6 space-y-6">
-            {/* Header */}
-            <div className="flex items-center justify-between">
-                <div className="flex items-center gap-4">
-                    <div className="p-3 bg-red-500/20 rounded-xl border border-red-500/30">
-                        <Shield className="w-8 h-8 text-red-400" />
-                    </div>
-                    <div>
-                        <h1 className="text-3xl font-bold text-white tracking-tight">
-                            Admin Mode
-                        </h1>
-                        <p className="text-zinc-400">System Control & User Management</p>
-                    </div>
-                </div>
-                <div className="flex items-center gap-3">
-                    <span className="px-3 py-1 bg-red-500/20 border border-red-500/30 rounded-full text-red-400 text-sm font-medium flex items-center gap-2">
-                        <Lock className="w-3 h-3" />
-                        RESTRICTED ACCESS
-                    </span>
-                </div>
-            </div>
-
-            {/* Stats Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                <div className="bg-zinc-900/50 border border-zinc-800 rounded-xl p-4">
-                    <div className="flex items-center justify-between">
-                        <Users className="w-5 h-5 text-cyan-400" />
-                        <span className="text-xs text-green-400">+2 today</span>
-                    </div>
-                    <p className="text-2xl font-bold text-white mt-2">139</p>
-                    <p className="text-sm text-zinc-400">Active Agents</p>
-                </div>
-                <div className="bg-zinc-900/50 border border-zinc-800 rounded-xl p-4">
-                    <div className="flex items-center justify-between">
-                        <Database className="w-5 h-5 text-purple-400" />
-                        <span className="text-xs text-zinc-400">21 tables</span>
-                    </div>
-                    <p className="text-2xl font-bold text-white mt-2">2.4 GB</p>
-                    <p className="text-sm text-zinc-400">Database Size</p>
-                </div>
-                <div className="bg-zinc-900/50 border border-zinc-800 rounded-xl p-4">
-                    <div className="flex items-center justify-between">
-                        <Cpu className="w-5 h-5 text-orange-400" />
-                        <span className="text-xs text-green-400">Healthy</span>
-                    </div>
-                    <p className="text-2xl font-bold text-white mt-2">47%</p>
-                    <p className="text-sm text-zinc-400">CPU Usage</p>
-                </div>
-                <div className="bg-zinc-900/50 border border-zinc-800 rounded-xl p-4">
-                    <div className="flex items-center justify-between">
-                        <Activity className="w-5 h-5 text-green-400" />
-                        <span className="text-xs text-green-400">99.97%</span>
-                    </div>
-                    <p className="text-2xl font-bold text-white mt-2">Online</p>
-                    <p className="text-sm text-zinc-400">System Status</p>
-                </div>
-            </div>
-
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                {/* System Services */}
-                <div className="bg-zinc-900/50 border border-zinc-800 rounded-xl p-6">
-                    <div className="flex items-center justify-between mb-4">
-                        <h2 className="text-lg font-semibold text-white flex items-center gap-2">
-                            <HardDrive className="w-5 h-5 text-cyan-400" />
-                            System Services
+        <div className="h-[calc(100vh-6rem)] flex flex-col gap-6 p-2 overflow-hidden relative">
+            
+            {/* CAMADA SUPERIOR: GOD STATS & NUKES */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 relative z-10">
+                
+                {/* Card 1: The Eye (User Monitor) */}
+                <div className="lg:col-span-2 bg-black/60 backdrop-blur-xl border border-white/10 rounded-3xl overflow-hidden relative h-64 group shadow-2xl">
+                    <div className="absolute top-6 left-6 z-10">
+                        <h2 className="text-lg font-bold text-white flex items-center gap-2 tracking-tight">
+                            <Eye className="w-5 h-5 text-[var(--color-primary)] animate-pulse" />
+                            PANOPTICON VIEW
                         </h2>
-                        <button className="p-2 hover:bg-zinc-800 rounded-lg transition-colors">
-                            <RefreshCw className="w-4 h-4 text-zinc-400" />
-                        </button>
+                        <p className="text-xs text-gray-400 font-mono uppercase">Monitoring {activeUsers} Active Souls</p>
                     </div>
-                    <div className="space-y-3">
-                        {systemStatus.map((service) => (
-                            <div 
-                                key={service.id}
-                                className="flex items-center justify-between p-3 bg-black/30 rounded-lg border border-zinc-800"
+                    
+                    {/* CANVAS */}
+                    <canvas ref={canvasRef} className="w-full h-full absolute inset-0" />
+                    
+                    {/* Grid Overlay */}
+                    <div className="absolute inset-0 bg-[url('/grid.svg')] opacity-10 pointer-events-none" />
+                </div>
+
+                {/* Card 2: System Controls (Dangerous) */}
+                <div className="bg-[#0a0a0a] border border-white/10 rounded-3xl p-6 flex flex-col justify-between relative overflow-hidden">
+                    {/* Warning Stripes Background */}
+                    <div className="absolute top-0 right-0 w-32 h-full bg-[url('/stripes.png')] opacity-5 pointer-events-none" />
+
+                    <div className="flex items-center gap-3 mb-4">
+                        <ShieldAlert className="w-6 h-6 text-red-500" />
+                        <h2 className="text-lg font-bold text-white tracking-tight">OVERRIDE PROTOCOLS</h2>
+                    </div>
+
+                    <div className="space-y-4">
+                        {/* Emergency Stop Switch */}
+                        <div className="flex items-center justify-between p-3 rounded-xl border border-white/5 bg-white/5">
+                            <span className="text-sm font-bold text-gray-300">Global Freeze</span>
+                            <button 
+                                onClick={() => setDbStatus(dbStatus === 'FROZEN' ? 'OPTIMAL' : 'FROZEN')}
+                                className={`relative w-12 h-6 rounded-full transition-colors duration-300 ${dbStatus === 'FROZEN' ? 'bg-red-500' : 'bg-gray-700'}`}
                             >
-                                <div className="flex items-center gap-3">
-                                    {getStatusIcon(service.status)}
-                                    <span className="text-white">{service.name}</span>
-                                </div>
-                                <div className="flex items-center gap-4">
-                                    <span className="text-sm text-zinc-400">{service.uptime}</span>
-                                    <div className="w-24 h-2 bg-zinc-800 rounded-full overflow-hidden">
-                                        <div 
-                                            className={`h-full rounded-full ${
-                                                service.load > 80 ? 'bg-red-500' : 
-                                                service.load > 60 ? 'bg-yellow-500' : 'bg-green-500'
-                                            }`}
-                                            style={{ width: `${service.load}%` }}
-                                        />
-                                    </div>
-                                    <span className="text-sm text-zinc-400 w-12">{service.load}%</span>
-                                </div>
+                                <div className={`absolute top-1 left-1 w-4 h-4 bg-white rounded-full transition-transform duration-300 ${dbStatus === 'FROZEN' ? 'translate-x-6' : ''}`} />
+                            </button>
+                        </div>
+
+                        {/* The Nuke Button */}
+                        <div className="relative group">
+                            {/* Glass Cover */}
+                            {!isSafetyOff && (
+                                <button 
+                                    onClick={() => setIsSafetyOff(true)}
+                                    className="absolute inset-0 bg-white/5 backdrop-blur-[2px] border border-white/10 rounded-xl flex items-center justify-center z-10 hover:bg-white/10 transition-all group-hover:scale-[1.02]"
+                                >
+                                    <Lock className="w-5 h-5 text-gray-400 mr-2" />
+                                    <span className="text-xs font-mono font-bold text-gray-400 tracking-widest">DISENGAGE SAFETY</span>
+                                </button>
+                            )}
+                            
+                            {/* The Actual Button */}
+                            <button 
+                                onClick={() => setIsNukeArmed(!isNukeArmed)}
+                                className={`w-full py-4 rounded-xl font-black tracking-widest flex items-center justify-center gap-2 transition-all ${
+                                    isNukeArmed 
+                                    ? 'bg-red-600 text-white animate-pulse shadow-[0_0_30px_red]' 
+                                    : 'bg-red-900/20 text-red-500 border border-red-900'
+                                }`}
+                            >
+                                <Power className="w-5 h-5" />
+                                {isNukeArmed ? 'CONFIRM WIPE?' : 'SYSTEM PURGE'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {/* CAMADA INFERIOR: DATABASE & USERS */}
+            <div className="flex-1 grid grid-cols-1 lg:grid-cols-2 gap-6 relative z-10">
+                
+                {/* DB CONSOLE (SQL INJECTION) */}
+                <div className="bg-[#02040a] border border-white/10 rounded-3xl p-6 flex flex-col shadow-xl">
+                    <div className="flex justify-between items-center mb-4">
+                        <div className="flex items-center gap-2">
+                            <Database className="w-5 h-5 text-blue-400" />
+                            <span className="font-bold text-white text-sm tracking-wider">REALITY EDITOR (SQL)</span>
+                        </div>
+                        <span className={`text-[10px] px-2 py-1 rounded font-mono ${dbStatus === 'OPTIMAL' ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'}`}>
+                            DB_STATUS: {dbStatus}
+                        </span>
+                    </div>
+
+                    <div className="flex-1 bg-black/50 border border-white/5 rounded-xl p-4 font-mono text-sm text-gray-300 overflow-hidden relative">
+                        <div className="absolute left-4 top-4 bottom-4 w-[1px] bg-white/10" />
+                        <div className="pl-6 space-y-1">
+                            <div className="opacity-50">1  UPDATE users</div>
+                            <div className="opacity-50">2  SET plan = 'god_mode'</div>
+                            <div className="flex items-center gap-2">
+                                <span className="opacity-50">3</span>
+                                <input 
+                                    type="text" 
+                                    value={query}
+                                    onChange={(e) => setQuery(e.target.value)}
+                                    placeholder="WHERE id = 'current_user';"
+                                    className="bg-transparent border-none outline-none text-blue-400 w-full placeholder-gray-700"
+                                />
                             </div>
-                        ))}
+                        </div>
+                        
+                        <button className="absolute bottom-4 right-4 p-2 bg-white/10 hover:bg-blue-500/20 rounded-lg text-blue-400 transition-all">
+                            <Terminal className="w-4 h-4" />
+                        </button>
                     </div>
                 </div>
 
-                {/* User Management */}
-                <div className="bg-zinc-900/50 border border-zinc-800 rounded-xl p-6">
-                    <div className="flex items-center justify-between mb-4">
-                        <h2 className="text-lg font-semibold text-white flex items-center gap-2">
-                            <Users className="w-5 h-5 text-purple-400" />
-                            User Management
-                        </h2>
-                        <button className="px-3 py-1.5 bg-purple-500/20 border border-purple-500/30 rounded-lg text-purple-400 text-sm hover:bg-purple-500/30 transition-colors">
-                            + Add User
-                        </button>
+                {/* USER LIST (MODERN TABLE) */}
+                <div className="bg-black/40 backdrop-blur-xl border border-white/10 rounded-3xl p-6 flex flex-col">
+                    <div className="flex justify-between items-center mb-4">
+                        <h3 className="font-bold text-white text-sm flex items-center gap-2">
+                            <Users className="w-4 h-4 text-[var(--color-primary)]" />
+                            Elite Users
+                        </h3>
+                        <div className="relative">
+                            <Search className="w-3 h-3 text-gray-500 absolute left-3 top-1/2 -translate-y-1/2" />
+                            <input type="text" placeholder="Find Soul..." className="bg-white/5 border border-white/10 rounded-full pl-8 pr-3 py-1 text-xs text-white focus:border-[var(--color-primary)] outline-none w-32 focus:w-48 transition-all" />
+                        </div>
                     </div>
-                    <div className="space-y-3">
-                        {users.map((user) => (
-                            <div 
-                                key={user.id}
-                                className="flex items-center justify-between p-3 bg-black/30 rounded-lg border border-zinc-800"
-                            >
+
+                    <div className="space-y-2 overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-white/10">
+                        {[1, 2, 3, 4, 5].map((u) => (
+                            <div key={u} className="group flex items-center justify-between p-3 rounded-xl bg-white/5 hover:bg-white/10 border border-transparent hover:border-white/10 transition-all cursor-pointer">
                                 <div className="flex items-center gap-3">
-                                    <div className="w-8 h-8 bg-gradient-to-br from-purple-500 to-cyan-500 rounded-full flex items-center justify-center text-white text-sm font-bold">
-                                        {user.email[0].toUpperCase()}
+                                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-gray-800 to-black border border-white/10 flex items-center justify-center text-xs font-bold text-white">
+                                        U{u}
                                     </div>
                                     <div>
-                                        <p className="text-white text-sm">{user.email}</p>
-                                        <p className="text-xs text-zinc-500">Last: {user.last_login}</p>
+                                        <div className="text-sm font-medium text-gray-200 group-hover:text-white">Commander_{u}99</div>
+                                        <div className="text-[10px] text-gray-500 font-mono">ID: 8f92-a{u}</div>
                                     </div>
                                 </div>
-                                <div className="flex items-center gap-3">
-                                    <span className={`px-2 py-0.5 rounded text-xs font-medium ${
-                                        user.role === 'ADMIN' ? 'bg-red-500/20 text-red-400' :
-                                        user.role === 'OPERATOR' ? 'bg-cyan-500/20 text-cyan-400' :
-                                        'bg-zinc-500/20 text-zinc-400'
-                                    }`}>
-                                        {user.role}
-                                    </span>
-                                    <span className={`px-2 py-0.5 rounded text-xs ${getStatusColor(user.status)}`}>
-                                        {user.status}
-                                    </span>
+                                <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                    <button className="p-2 hover:bg-red-500/20 rounded-lg text-red-500"><Trash2 className="w-3 h-3" /></button>
+                                    <button className="p-2 hover:bg-blue-500/20 rounded-lg text-blue-500"><Activity className="w-3 h-3" /></button>
                                 </div>
                             </div>
                         ))}
                     </div>
                 </div>
-            </div>
 
-            {/* System Logs */}
-            <div className="bg-zinc-900/50 border border-zinc-800 rounded-xl p-6">
-                <div className="flex items-center justify-between mb-4">
-                    <h2 className="text-lg font-semibold text-white flex items-center gap-2">
-                        <Terminal className="w-5 h-5 text-green-400" />
-                        System Logs
-                    </h2>
-                    <div className="flex items-center gap-2">
-                        <button 
-                            onClick={() => setShowSecrets(!showSecrets)}
-                            className="p-2 hover:bg-zinc-800 rounded-lg transition-colors"
-                        >
-                            {showSecrets ? (
-                                <EyeOff className="w-4 h-4 text-zinc-400" />
-                            ) : (
-                                <Eye className="w-4 h-4 text-zinc-400" />
-                            )}
-                        </button>
-                    </div>
-                </div>
-                <div className="bg-black/50 rounded-lg p-4 font-mono text-sm space-y-2 max-h-64 overflow-y-auto">
-                    {logs.map((log, index) => (
-                        <div key={index} className="flex items-start gap-4">
-                            <span className="text-zinc-500">[{log.time}]</span>
-                            <span className={`font-bold ${getLogColor(log.type)}`}>[{log.type}]</span>
-                            <span className="text-zinc-300">{log.message}</span>
-                        </div>
-                    ))}
-                </div>
-            </div>
-
-            {/* Environment Variables */}
-            <div className="bg-zinc-900/50 border border-zinc-800 rounded-xl p-6">
-                <div className="flex items-center justify-between mb-4">
-                    <h2 className="text-lg font-semibold text-white flex items-center gap-2">
-                        <Settings className="w-5 h-5 text-orange-400" />
-                        Environment Configuration
-                    </h2>
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="p-3 bg-black/30 rounded-lg border border-zinc-800">
-                        <p className="text-xs text-zinc-500 mb-1">SUPABASE_URL</p>
-                        <p className="text-sm text-cyan-400 font-mono">
-                            {showSecrets ? 'https://vktzdrsigrdnemdshcdp.supabase.co' : '••••••••••••••••'}
-                        </p>
-                    </div>
-                    <div className="p-3 bg-black/30 rounded-lg border border-zinc-800">
-                        <p className="text-xs text-zinc-500 mb-1">NEXT_PUBLIC_ENV</p>
-                        <p className="text-sm text-green-400 font-mono">production</p>
-                    </div>
-                    <div className="p-3 bg-black/30 rounded-lg border border-zinc-800">
-                        <p className="text-xs text-zinc-500 mb-1">DEPLOY_REGION</p>
-                        <p className="text-sm text-purple-400 font-mono">pdx1 (Portland, USA)</p>
-                    </div>
-                    <div className="p-3 bg-black/30 rounded-lg border border-zinc-800">
-                        <p className="text-xs text-zinc-500 mb-1">NODE_ENV</p>
-                        <p className="text-sm text-yellow-400 font-mono">production</p>
-                    </div>
-                </div>
             </div>
         </div>
     );
