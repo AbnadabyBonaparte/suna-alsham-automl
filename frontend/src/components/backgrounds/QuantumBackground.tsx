@@ -1,9 +1,10 @@
 /**
  * ═══════════════════════════════════════════════════════════════
- * ALSHAM QUANTUM - QUANTUM LAB BACKGROUND
+ * ALSHAM QUANTUM - QUANTUM LAB BACKGROUND (MULTI-COLOR CORE)
  * ═══════════════════════════════════════════════════════════════
  * 📁 PATH: frontend/src/components/backgrounds/QuantumBackground.tsx
- * 📋 Partículas quânticas flutuando em Canvas HTML5
+ * 📋 Partículas quânticas flutuando em Canvas HTML5.
+ * 📋 Suporta cores dinâmicas para reutilização em Neural/Cobalt/Crimson.
  * ═══════════════════════════════════════════════════════════════
  */
 
@@ -12,7 +13,7 @@
 import React, { useEffect, useRef } from 'react';
 
 interface QuantumBackgroundProps {
-  color?: string;
+  color?: string; // Cor primária das partículas (Hex)
 }
 
 interface Particle {
@@ -25,7 +26,7 @@ interface Particle {
   pulsePhase: number;
 }
 
-export function QuantumBackground({ color = '#00FFD0' }: QuantumBackgroundProps) {
+export default function QuantumBackground({ color = '#00FFD0' }: QuantumBackgroundProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const particlesRef = useRef<Particle[]>([]);
   const animationFrameRef = useRef<number>();
@@ -37,6 +38,26 @@ export function QuantumBackground({ color = '#00FFD0' }: QuantumBackgroundProps)
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
+    // Função para converter HEX para RGB
+    const hexToRgb = (hex: string) => {
+      // Remove o # se existir
+      hex = hex.replace(/^#/, '');
+      
+      // Expande short hex (ex: '03F' -> '0033FF')
+      if (hex.length === 3) {
+        hex = hex.split('').map(char => char + char).join('');
+      }
+
+      const bigint = parseInt(hex, 16);
+      const r = (bigint >> 16) & 255;
+      const g = (bigint >> 8) & 255;
+      const b = bigint & 255;
+
+      return { r, g, b };
+    };
+
+    const rgb = hexToRgb(color);
+
     // Configurar tamanho do canvas
     const resizeCanvas = () => {
       canvas.width = window.innerWidth;
@@ -45,8 +66,9 @@ export function QuantumBackground({ color = '#00FFD0' }: QuantumBackgroundProps)
     resizeCanvas();
     window.addEventListener('resize', resizeCanvas);
 
-    // Criar partículas
-    const particleCount = 80;
+    // Criar partículas (Quantidade baseada no tamanho da tela)
+    const particleCount = Math.min(Math.floor((window.innerWidth * window.innerHeight) / 15000), 100);
+    
     particlesRef.current = Array.from({ length: particleCount }, () => ({
       x: Math.random() * canvas.width,
       y: Math.random() * canvas.height,
@@ -57,35 +79,17 @@ export function QuantumBackground({ color = '#00FFD0' }: QuantumBackgroundProps)
       pulsePhase: Math.random() * Math.PI * 2,
     }));
 
-    // Converter cor hex para RGB
-    const hexToRgb = (hex: string) => {
-      const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-      return result
-        ? {
-            r: parseInt(result[1], 16),
-            g: parseInt(result[2], 16),
-            b: parseInt(result[3], 16),
-          }
-        : { r: 0, g: 255, b: 208 };
-    };
-
-    const rgb = hexToRgb(color);
-
-    // Animação
-    let time = 0;
+    // Animação Loop
     const animate = () => {
       if (!ctx || !canvas) return;
 
-      time += 0.01;
-
-      // Limpar canvas
-      ctx.fillStyle = 'rgba(0, 0, 0, 0.05)';
+      // Limpar canvas com rastro suave (trail effect)
+      ctx.fillStyle = `rgba(0, 0, 0, 0.1)`; // Aumentei um pouco a opacidade para limpar mais rápido
       ctx.fillRect(0, 0, canvas.width, canvas.height);
 
       const particles = particlesRef.current;
 
       // Desenhar conexões entre partículas próximas
-      ctx.strokeStyle = `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 0.15)`;
       ctx.lineWidth = 0.5;
 
       for (let i = 0; i < particles.length; i++) {
@@ -94,8 +98,9 @@ export function QuantumBackground({ color = '#00FFD0' }: QuantumBackgroundProps)
           const dy = particles[i].y - particles[j].y;
           const distance = Math.sqrt(dx * dx + dy * dy);
 
+          // Conexão apenas se estiver perto (150px)
           if (distance < 150) {
-            const opacity = (1 - distance / 150) * 0.3;
+            const opacity = (1 - distance / 150) * 0.2;
             ctx.beginPath();
             ctx.strokeStyle = `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${opacity})`;
             ctx.moveTo(particles[i].x, particles[i].y);
@@ -111,38 +116,38 @@ export function QuantumBackground({ color = '#00FFD0' }: QuantumBackgroundProps)
         particle.x += particle.vx;
         particle.y += particle.vy;
 
-        // Efeito de pulso
+        // Efeito de pulso (brilho oscilante)
         particle.pulsePhase += 0.05;
-        const pulseOpacity = Math.sin(particle.pulsePhase) * 0.3 + particle.opacity;
+        const pulseOpacity = Math.sin(particle.pulsePhase) * 0.2 + particle.opacity;
 
-        // Wrap around nas bordas
+        // Wrap around nas bordas (teletransporte estilo Pac-Man)
         if (particle.x < 0) particle.x = canvas.width;
         if (particle.x > canvas.width) particle.x = 0;
         if (particle.y < 0) particle.y = canvas.height;
         if (particle.y > canvas.height) particle.y = 0;
 
-        // Desenhar partícula com glow
+        // Desenhar Glow da Partícula
         const gradient = ctx.createRadialGradient(
           particle.x,
           particle.y,
           0,
           particle.x,
           particle.y,
-          particle.radius * 3
+          particle.radius * 4 // Glow maior
         );
         gradient.addColorStop(0, `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${pulseOpacity})`);
-        gradient.addColorStop(0.5, `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${pulseOpacity * 0.5})`);
+        gradient.addColorStop(0.4, `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${pulseOpacity * 0.3})`);
         gradient.addColorStop(1, `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 0)`);
 
         ctx.beginPath();
         ctx.fillStyle = gradient;
-        ctx.arc(particle.x, particle.y, particle.radius * 3, 0, Math.PI * 2);
+        ctx.arc(particle.x, particle.y, particle.radius * 4, 0, Math.PI * 2);
         ctx.fill();
 
-        // Desenhar núcleo brilhante
+        // Desenhar Núcleo Sólido (Branco brilhante)
         ctx.beginPath();
-        ctx.fillStyle = `rgba(255, 255, 255, ${pulseOpacity})`;
-        ctx.arc(particle.x, particle.y, particle.radius * 0.5, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(255, 255, 255, ${Math.min(pulseOpacity + 0.2, 1)})`;
+        ctx.arc(particle.x, particle.y, particle.radius * 0.6, 0, Math.PI * 2);
         ctx.fill();
       });
 
@@ -164,12 +169,11 @@ export function QuantumBackground({ color = '#00FFD0' }: QuantumBackgroundProps)
     <canvas
       ref={canvasRef}
       className="fixed inset-0 pointer-events-none z-0"
+      // Gradiente de fundo sutil para dar profundidade, mas permitindo que a cor de fundo do CSS brilhe
       style={{ 
-        background: 'radial-gradient(ellipse at center, #051015 0%, #000000 70%)',
+        background: 'transparent',
       }}
       aria-hidden="true"
     />
   );
 }
-
-export default QuantumBackground;
