@@ -108,31 +108,31 @@ export const ASCENSION_THEME: ThemeConfig = {
 };
 
 // ═══════════════════════════════════════════════════════════════
-// 3. MILITARY OPS (O General - PENTAGON WAR ROOM)
+// 3. MILITARY OPS (SPEC OPS EDITION - Night Vision)
 // ═══════════════════════════════════════════════════════════════
 export const MILITARY_THEME: ThemeConfig = {
   id: 'military',
   name: 'Military Ops',
-  description: 'War Room do Pentágono. Camuflagem digital e fibra de carbono.',
-  icon: '🎯', // Ícone de Sniper
+  description: 'Special Forces HUD. Visão noturna e precisão cirúrgica.',
+  icon: '🟢', // Green Circle / Radar
   colors: {
-    primary: '#FFD600',      // Amarelo Tático de Alto Contraste (HUD)
-    secondary: '#333333',    // Gunmetal Grey
-    accent: '#EF4444',       // Vermelho Alerta/Laser
-    background: '#050505',   // Preto Fosco Absoluto (Stealth)
-    surface: '#111111',      // Textura Fibra de Carbono (Simulada)
-    text: '#E5E5E5',         // Branco Gelo Sujo
-    textSecondary: '#6B7280', // Cinza Tático
-    border: '#404040',       // Aço Escovado Escuro
-    success: '#10B981',      // Verde Radar
-    warning: '#F59E0B',      // Laranja Perigo
-    error: '#DC2626',        // Vermelho Crítico
-    glow: '#FFD600',         // Glow Amarelo HUD
+    primary: '#10B981',      // Verde Esmeralda Tático (Moderno, não retrô)
+    secondary: '#064E3B',    // Verde Camuflagem Profundo
+    accent: '#34D399',       // Verde Laser Mira
+    background: '#020604',   // Preto Floresta (Quase invisível)
+    surface: '#090F0B',      // Blindagem Escura
+    text: '#ECFDF5',         // Branco Menta (Alta legibilidade no escuro)
+    textSecondary: '#6EE7B7', // Verde Radar Apagado
+    border: '#10B981',       // Linha de Grade HUD
+    success: '#10B981',
+    warning: '#F59E0B',      // Laranja Alvo
+    error: '#EF4444',        // Vermelho Abate
+    glow: '#10B981',         // Glow Visão Noturna
   },
-  gradient: 'linear-gradient(180deg, #050505 0%, #111111 100%)', // Fundo Stealth
+  gradient: 'linear-gradient(180deg, #020604 0%, #000000 100%)',
   backgroundType: 'military',
   animation: { speed: 'fast', intensity: 'high' },
-  sound: { ambient: '/sounds/radar-sweep.mp3', click: '/sounds/tactical-switch.mp3' },
+  sound: { ambient: '/sounds/night-vision.mp3', click: '/sounds/silencer-click.mp3' },
 };
 
 // ═══════════════════════════════════════════════════════════════
@@ -169,21 +169,21 @@ export const NEURAL_THEME: ThemeConfig = {
 export const TITANIUM_THEME: ThemeConfig = {
   id: 'titanium',
   name: 'Titanium Executive',
-  description: 'Dubai Penthouse. Couro Saffiano, Ouro Líquido e Platina.',
+  description: 'Dubai Penthouse. Ouro Líquido, Safira e Platina.',
   icon: '🤵',
   colors: {
-    primary: '#F1F5F9',      // Platina Pura
-    secondary: '#1E293B',    // Azul Meia-Noite
-    accent: '#D4AF37',       // Ouro Metálico Real (Champagne Gold)
-    background: '#020617',   // Azul Marinho Profundo (Deep Navy)
+    primary: '#F8FAFC',      // Platina (Texto Principal)
+    secondary: '#1E293B',    // Safira Escura
+    accent: '#D4AF37',       // Ouro Metálico (Champagne)
+    background: '#020617',   // Azul Marinho Profundo (Luxo)
     surface: '#0F172A',      // Couro Azulado
-    text: '#F8FAFC',         // Branco Titânio
-    textSecondary: '#94A3B8', // Prata Fosco
-    border: '#334155',       // Borda Metálica Fina
-    success: '#D4AF37',      // Sucesso é Ouro
-    warning: '#B45309',      // Bronze
-    error: '#991B1B',        // Rubi Escuro
-    glow: '#D4AF37',         // Brilho Dourado Sutil
+    text: '#F8FAFC',
+    textSecondary: '#94A3B8', // Prata
+    border: '#334155',       // Aço Escovado
+    success: '#D4AF37',      // Sucesso = Ouro
+    warning: '#B45309',
+    error: '#991B1B',
+    glow: '#D4AF37',         // Glow Dourado Sutil
   },
   gradient: 'linear-gradient(135deg, #020617 0%, #0F172A 100%)',
   backgroundType: 'titanium',
@@ -200,7 +200,7 @@ export const VINTAGE_THEME: ThemeConfig = {
   description: 'A estética do CRT. Código puro e nostalgia.',
   icon: '💾',
   colors: {
-    primary: '#00FF00',
+    primary: '#00FF00',      // Verde Fósforo (Retro)
     secondary: '#00D400',
     accent: '#00FFFF',
     background: '#001A00',
@@ -304,7 +304,7 @@ export const CRIMSON_THEME: ThemeConfig = {
 };
 
 // ═══════════════════════════════════════════════════════════════
-// 10. AGRUPAMENTO FINAL (ORDEM CORRIGIDA)
+// 10. AGRUPAMENTO FINAL (IMPORTANTE: MANTENHA NO FINAL)
 // ═══════════════════════════════════════════════════════════════
 export const THEMES: Record<ThemeId, ThemeConfig> = {
   quantum: QUANTUM_THEME,
@@ -323,8 +323,8 @@ export const DEFAULT_THEME: ThemeId = 'quantum';
 export const THEME_ORDER: ThemeId[] = [
   'quantum',
   'ascension',
-  'military', // O General (Novo)
-  'titanium', // O Bilionário (Novo)
+  'military', // Night Vision (Novo)
+  'titanium', // Dubai Luxury (Novo)
   'cobalt',
   'crimson',
   'neural',
