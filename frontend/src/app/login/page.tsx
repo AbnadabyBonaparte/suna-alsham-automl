@@ -3,21 +3,22 @@
  * ALSHAM QUANTUM - LOGIN (QUANTUM GATEWAY V2)
  * ═══════════════════════════════════════════════════════════════
  * 📁 PATH: frontend/src/app/login/page.tsx
- * 📋 Autenticação Biométrica + Social Login (Google/GitHub)
+ * 📋 Autenticação REAL com Supabase + Social Login (Google/GitHub)
  * ═══════════════════════════════════════════════════════════════
  */
 
 "use client";
 
 import { useState, useEffect, useRef } from 'react';
-import { useRouter } from 'next/navigation';
+import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/lib/supabase';
 import { 
     Fingerprint, Scan, ShieldCheck, AlertOctagon, Lock, Key, 
     Mail, Sparkles, Github, Chrome 
 } from 'lucide-react';
 
 export default function LoginPage() {
-    const router = useRouter();
+    const { signIn } = useAuth();
     const canvasRef = useRef<HTMLCanvasElement>(null);
     
     // Estados
@@ -25,6 +26,7 @@ export default function LoginPage() {
     const [password, setPassword] = useState('');
     const [status, setStatus] = useState<'idle' | 'scanning' | 'success' | 'denied'>('idle');
     const [scanProgress, setScanProgress] = useState(0);
+    const [errorMessage, setErrorMessage] = useState('');
     
     // 1. ENGINE VISUAL (IRIS SCANNER)
     useEffect(() => {
@@ -37,7 +39,6 @@ export default function LoginPage() {
         let time = 0;
 
         const resize = () => {
-            // Ajuste para manter proporção no container
             canvas.width = 300;
             canvas.height = 300;
         };
@@ -106,41 +107,95 @@ export default function LoginPage() {
         return () => cancelAnimationFrame(animationId);
     }, [status]);
 
-    // Função Genérica de Login (Email ou Social)
-    const executeLoginProcess = (method: 'email' | 'google' | 'github') => {
-        setStatus('scanning');
-        
-        let p = 0;
-        const interval = setInterval(() => {
-            p += 4; // Velocidade do scan
-            setScanProgress(p);
-            
-            if (p >= 100) {
-                clearInterval(interval);
-                
-                // Lógica de Validação (Simulada)
-                const isSuccess = method !== 'email' || (password === '123' || password.length > 3);
-
-                if (isSuccess) {
-                    setStatus('success');
-                    // REDIRECIONAMENTO CORRIGIDO: Vai para o Onboarding
-                    setTimeout(() => router.push('/onboarding'), 1000);
-                } else {
-                    setStatus('denied');
-                    setTimeout(() => {
-                        setStatus('idle');
-                        setScanProgress(0);
-                    }, 2000);
-                }
-            }
-        }, 30);
-    };
-
-    // Handlers
-    const handleEmailLogin = (e: React.FormEvent) => {
+    // AUTENTICAÇÃO EMAIL/PASSWORD (REAL)
+    const handleEmailLogin = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!email || !password) return;
-        executeLoginProcess('email');
+        
+        setStatus('scanning');
+        setErrorMessage('');
+        
+        // Animação de progresso
+        let p = 0;
+        const interval = setInterval(() => {
+            p += 4;
+            setScanProgress(p);
+            if (p >= 100) clearInterval(interval);
+        }, 30);
+
+        try {
+            // AUTENTICAÇÃO REAL COM SUPABASE
+            const { error } = await signIn(email, password);
+            
+            clearInterval(interval);
+            setScanProgress(100);
+
+            if (error) {
+                setStatus('denied');
+                setErrorMessage(error.message || 'Authentication failed');
+                setTimeout(() => {
+                    setStatus('idle');
+                    setScanProgress(0);
+                }, 2000);
+            } else {
+                setStatus('success');
+                // Router.push já é chamado dentro do signIn
+            }
+        } catch (err: any) {
+            clearInterval(interval);
+            setStatus('denied');
+            setErrorMessage('Connection error. Please try again.');
+            setTimeout(() => {
+                setStatus('idle');
+                setScanProgress(0);
+            }, 2000);
+        }
+    };
+
+    // GOOGLE LOGIN
+    const handleGoogleLogin = async () => {
+        try {
+            setStatus('scanning');
+            const { data, error } = await supabase.auth.signInWithOAuth({
+                provider: 'google',
+                options: {
+                    redirectTo: `${window.location.origin}/auth/callback`
+                }
+            });
+            
+            if (error) {
+                setStatus('denied');
+                setErrorMessage(error.message);
+                setTimeout(() => setStatus('idle'), 2000);
+            }
+        } catch (err: any) {
+            setStatus('denied');
+            setErrorMessage('Google login failed');
+            setTimeout(() => setStatus('idle'), 2000);
+        }
+    };
+
+    // GITHUB LOGIN
+    const handleGithubLogin = async () => {
+        try {
+            setStatus('scanning');
+            const { data, error } = await supabase.auth.signInWithOAuth({
+                provider: 'github',
+                options: {
+                    redirectTo: `${window.location.origin}/auth/callback`
+                }
+            });
+            
+            if (error) {
+                setStatus('denied');
+                setErrorMessage(error.message);
+                setTimeout(() => setStatus('idle'), 2000);
+            }
+        } catch (err: any) {
+            setStatus('denied');
+            setErrorMessage('GitHub login failed');
+            setTimeout(() => setStatus('idle'), 2000);
+        }
     };
 
     return (
@@ -197,7 +252,7 @@ export default function LoginPage() {
                             {status === 'idle' && 'Identity Verification Required'}
                             {status === 'scanning' && 'Processing Biometrics...'}
                             {status === 'success' && 'Access Granted. Welcome Architect.'}
-                            {status === 'denied' && 'Access Denied. Security Alert.'}
+                            {status === 'denied' && errorMessage}
                         </p>
                     </div>
 
@@ -269,7 +324,7 @@ export default function LoginPage() {
                     {/* SOCIAL BUTTONS */}
                     <div className="grid grid-cols-2 gap-4">
                         <button 
-                            onClick={() => executeLoginProcess('google')}
+                            onClick={handleGoogleLogin}
                             disabled={status !== 'idle'}
                             className="flex items-center justify-center gap-2 py-3 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/30 transition-all group"
                         >
@@ -278,7 +333,7 @@ export default function LoginPage() {
                         </button>
 
                         <button 
-                            onClick={() => executeLoginProcess('github')}
+                            onClick={handleGithubLogin}
                             disabled={status !== 'idle'}
                             className="flex items-center justify-center gap-2 py-3 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/30 transition-all group"
                         >
