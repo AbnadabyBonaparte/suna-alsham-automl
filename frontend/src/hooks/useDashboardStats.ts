@@ -38,7 +38,7 @@ export function useDashboardStats() {
         if (agentsError) throw agentsError;
 
         const totalAgents = agents?.length || 0;
-        const activeAgents = agents?.filter(a => a.status !== 'maintenance' && a.status !== 'offline' && a.status !== 'WARNING').length || 0;
+        const activeAgents = agents?.filter(a => a.current_task && a.current_task !== 'Standby mode' && a.current_task !== 'Aguardando comando').length || 0;
         const avgEfficiency = agents?.length
           ? agents.reduce((sum, a) => sum + (a.efficiency || 0), 0) / agents.length
           : 0;
@@ -83,4 +83,5 @@ export function useDashboardStats() {
 
   return stats;
 }
+
 
