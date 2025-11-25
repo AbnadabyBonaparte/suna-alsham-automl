@@ -5,7 +5,19 @@
 -- Author: ALSHAM GLOBAL
 -- ============================================
 
--- WARNING: This will DROP all tables and remove columns
+-- WARNING: This will DROP all tables
+
+-- ============================================
+-- AUTH TRIGGERS ROLLBACK (Phase 2.1)
+-- Remove auth trigger and function
+-- ============================================
+
+-- Drop trigger first
+DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
+
+-- Drop function
+DROP FUNCTION IF EXISTS public.handle_new_user();
+ and remove columns
 -- Only run if you need to completely undo ALL Phase 1.2 changes
 
 -- Phase 1.2.10: Drop AI Module tables
