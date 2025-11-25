@@ -11,6 +11,7 @@ interface DashboardStats {
   totalDeals: number;
   totalTickets: number;
   totalPosts: number;
+  latencyMs: number;
   loading: boolean;
   error: string | null;
 }
@@ -23,17 +24,20 @@ export function useDashboardStats() {
     totalDeals: 0,
     totalTickets: 0,
     totalPosts: 0,
+    latencyMs: 0,
     loading: true,
     error: null,
   });
 
   useEffect(() => {
     async function fetchStats() {
+      const startTime = performance.now();
+      
       try {
         // 1. Agents stats
         const { data: agents, error: agentsError } = await supabase
           .from('agents')
-          .select('efficiency, status');
+          .select('efficiency, status, current_task');
 
         if (agentsError) throw agentsError;
 
@@ -58,6 +62,9 @@ export function useDashboardStats() {
           .from('social_posts')
           .select('*', { count: 'exact', head: true });
 
+        const endTime = performance.now();
+        const latency = Math.round(endTime - startTime);
+
         setStats({
           totalAgents,
           avgEfficiency: Math.round(avgEfficiency * 10) / 10,
@@ -65,6 +72,7 @@ export function useDashboardStats() {
           totalDeals: dealsCount || 0,
           totalTickets: ticketsCount || 0,
           totalPosts: postsCount || 0,
+          latencyMs: latency,
           loading: false,
           error: null,
         });
@@ -83,5 +91,3 @@ export function useDashboardStats() {
 
   return stats;
 }
-
-

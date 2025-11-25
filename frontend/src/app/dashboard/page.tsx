@@ -16,16 +16,7 @@ import {
 import { useDashboardStats } from '@/hooks/useDashboardStats';
 
 export default function CockpitPage() {
-  const {
-    totalAgents,
-    avgEfficiency,
-    activeAgents,
-    totalDeals,
-    totalTickets,
-    totalPosts,
-    loading,
-    error
-  } = useDashboardStats();
+  const { totalAgents, avgEfficiency, activeAgents, totalDeals, totalTickets, totalPosts, latencyMs, loading, error } = useDashboardStats();
 
   const stats = [
     {
@@ -81,7 +72,7 @@ export default function CockpitPage() {
           <div className="flex gap-4">
             <div className="px-4 py-2 rounded-xl bg-black/20 border border-[var(--color-border)]/30 backdrop-blur-md text-center">
               <div className="text-[10px] text-[var(--color-text-secondary)] uppercase font-mono">Latência</div>
-              <div className="text-xl font-bold text-[var(--color-primary)] font-mono">12ms</div>
+              <div className="text-xl font-bold text-[var(--color-primary)] font-mono">{loading ? "..." : `${latencyMs}ms`}</div>
             </div>
             <div className="px-4 py-2 rounded-xl bg-black/20 border border-[var(--color-border)]/30 backdrop-blur-md text-center">
               <div className="text-[10px] text-[var(--color-text-secondary)] uppercase font-mono">Uptime</div>
@@ -220,3 +211,5 @@ export default function CockpitPage() {
     </div>
   );
 }
+
+
