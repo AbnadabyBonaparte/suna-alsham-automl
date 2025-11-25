@@ -74,7 +74,7 @@ export function useDashboardStats() {
           .select('*', { count: 'exact', head: true });
 
         // Calcular uptime (assumindo sistema stable desde Jan 2025)
-        const systemStartDate = new Date("2025-01-01");
+        const systemStartDate = new Date("2024-11-20T14:30:00-03:00");
         const now = new Date();
         const totalHours = (now.getTime() - systemStartDate.getTime()) / (1000 * 60 * 60);
         const downtimeHours = 0.5; // Downtime estimado (pode ser buscado de uma tabela depois)
@@ -111,4 +111,5 @@ export function useDashboardStats() {
 
   return stats;
 }
+
 
