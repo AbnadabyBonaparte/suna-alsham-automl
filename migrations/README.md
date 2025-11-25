@@ -9,10 +9,10 @@ This directory contains SQL migrations for the ALSHAM QUANTUM database schema.
 
 ## Applied Migrations
 
-### 20251125_phase_1_2_core_crm_support.sql
+### 20251125_phase_1_2_complete.sql
 **Date Applied:** 2025-11-25  
 **Status:** ✅ Applied successfully  
-**Phases:** 1.2.1 (Core) + 1.2.2 (Dashboard) + 1.2.3 (CRM) + 1.2.4 (Support)
+**Phases:** 1.2.1 (Core) + 1.2.2 (Dashboard) + 1.2.3 (CRM) + 1.2.4 (Support) + 1.2.5 (Social)
 
 **Tables Created/Modified:**
 
@@ -81,18 +81,34 @@ This directory contains SQL migrations for the ALSHAM QUANTUM database schema.
     - 2 RLS policies (inherit ticket access)
     - Supports internal/external messages
 
+#### Phase 1.2.5: Social Module
+12. **social_posts** (13 columns) - NEW
+    - Social media posts monitoring
+    - 6 indexes for social queries
+    - 1 CHECK constraint (platform)
+    - 2 RLS policies (public read, auth insert)
+    - Tracks: likes, shares, comments, sentiment
+
+13. **social_trends** (6 columns) - NEW
+    - Trending hashtags and topics
+    - 4 indexes for trend queries
+    - 1 CHECK constraint (sentiment)
+    - 2 RLS policies (public read, auth insert)
+
 **Statistics:**
-- Total Tables: 11 (10 new + 1 expanded)
-- Total Indexes: 46+
-- Total Constraints: 22+
-- RLS Policies: 25+
+- Total Tables: 13 (12 new + 1 expanded)
+- Total Indexes: 56+
+- Total Constraints: 25+
+- RLS Policies: 29+
+- Total Columns: 119 across all tables
 - Agents Preserved: 139/139 ✅
 - Phase 1.2.1: COMPLETE ✅
 - Phase 1.2.2: COMPLETE ✅
 - Phase 1.2.3: COMPLETE ✅
 - Phase 1.2.4: COMPLETE ✅
+- Phase 1.2.5: COMPLETE ✅
 
-**Rollback:** Use `20251125_phase_1_2_core_crm_support_down.sql`
+**Rollback:** Use `20251125_phase_1_2_complete_down.sql`
 
 **Verification:** All tables tested with sample inserts and queries. All constraints validated. Zero data loss.
 
@@ -107,19 +123,18 @@ supabase db push
 
 ### Manual Application
 ```bash
-psql -h your-db-host -d your-database -f migrations/20251125_phase_1_2_core_crm_support.sql
+psql -h your-db-host -d your-database -f migrations/20251125_phase_1_2_complete.sql
 ```
 
 ### Rollback
 ```bash
-psql -h your-db-host -d your-database -f migrations/20251125_phase_1_2_core_crm_support_down.sql
+psql -h your-db-host -d your-database -f migrations/20251125_phase_1_2_complete_down.sql
 ```
 
 ---
 
 ## Next Phases
 
-- **Phase 1.2.5:** Social Media Module (social_posts, social_trends)
 - **Phase 1.2.6:** Gamification Module (user_stats, achievements, leaderboard)
 - **Phase 1.2.7:** API Module (api_keys, api_logs, rate_limits)
 - **Phase 1.2.8:** Security Module (security_logs, audit_trail)
@@ -132,7 +147,7 @@ See `ALSHAM QUANTUM - ROADMAP TO PERFECT.md` for complete roadmap.
 
 ## Database Structure Overview
 ```
-ALSHAM QUANTUM Database (11 Tables)
+ALSHAM QUANTUM Database (13 Tables)
 ├── Core System (5 tables)
 │   ├── profiles
 │   ├── user_sessions
@@ -145,10 +160,14 @@ ALSHAM QUANTUM Database (11 Tables)
 ├── CRM Module (2 tables)
 │   ├── deals
 │   └── deal_activities
-└── Support Module (2 tables)
-    ├── support_tickets
-    └── ticket_messages
+├── Support Module (2 tables)
+│   ├── support_tickets
+│   └── ticket_messages
+└── Social Media Module (2 tables)
+    ├── social_posts
+    └── social_trends
 ```
 
-**Total:** 94 columns across 11 tables
-**Ready for:** Production deployment
+**Total:** 119 columns across 13 tables  
+**Progress:** 37% of Phase 1.2 Database Schema  
+**Status:** Ready for production deployment

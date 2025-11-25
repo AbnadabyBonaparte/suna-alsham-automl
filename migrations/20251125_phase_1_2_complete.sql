@@ -1,6 +1,6 @@
 -- ============================================
--- ALSHAM QUANTUM - Phase 1.2.1 & 1.2.2
--- Core Tables + Dashboard Metrics
+-- ALSHAM QUANTUM - Phase 1.2 Complete
+-- All Database Tables
 -- Created: 2025-11-25
 -- Author: ALSHAM GLOBAL
 -- ============================================
@@ -9,7 +9,6 @@
 -- =========================
 
 -- Table 1: profiles
--- User profiles extending auth.users
 CREATE TABLE IF NOT EXISTS public.profiles (
   id uuid NOT NULL PRIMARY KEY DEFAULT gen_random_uuid(),
   auth_user_id uuid REFERENCES auth.users(id) ON DELETE CASCADE,
@@ -44,7 +43,6 @@ CREATE POLICY "Allow authenticated users to update own profile"
   USING (auth.uid() = auth_user_id);
 
 -- Table 2: user_sessions
--- Session tracking for authenticated users
 CREATE TABLE IF NOT EXISTS public.user_sessions (
   id uuid NOT NULL PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id uuid REFERENCES public.profiles(id) ON DELETE CASCADE,
@@ -80,7 +78,6 @@ CREATE POLICY "Users can delete own sessions"
   USING (auth.uid() = (SELECT auth_user_id FROM profiles WHERE id = user_id));
 
 -- Table 3: agents (EXPANSION)
--- Expanding existing agents table with 5 new columns
 ALTER TABLE public.agents 
 ADD COLUMN IF NOT EXISTS user_id uuid REFERENCES public.profiles(id) ON DELETE SET NULL,
 ADD COLUMN IF NOT EXISTS metadata jsonb DEFAULT '{}'::jsonb,
@@ -88,11 +85,9 @@ ADD COLUMN IF NOT EXISTS neural_load numeric DEFAULT 0.00,
 ADD COLUMN IF NOT EXISTS uptime_seconds bigint DEFAULT 0,
 ADD COLUMN IF NOT EXISTS version text DEFAULT '1.0.0';
 
--- Enable RLS on agents (if not already enabled)
 ALTER TABLE public.agents ENABLE ROW LEVEL SECURITY;
 
 -- Table 4: agent_logs
--- Logging system for agent activities
 CREATE TABLE IF NOT EXISTS public.agent_logs (
   id uuid NOT NULL PRIMARY KEY DEFAULT gen_random_uuid(),
   agent_id text NOT NULL REFERENCES public.agents(id) ON DELETE CASCADE,
@@ -106,14 +101,9 @@ ALTER TABLE public.agent_logs
 ADD CONSTRAINT agent_logs_log_level_check
 CHECK (log_level IN ('info', 'warning', 'error', 'critical', 'debug'));
 
-CREATE INDEX IF NOT EXISTS idx_agent_logs_agent_id 
-ON public.agent_logs(agent_id);
-
-CREATE INDEX IF NOT EXISTS idx_agent_logs_level 
-ON public.agent_logs(log_level);
-
-CREATE INDEX IF NOT EXISTS idx_agent_logs_created_at 
-ON public.agent_logs(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_agent_logs_agent_id ON public.agent_logs(agent_id);
+CREATE INDEX IF NOT EXISTS idx_agent_logs_level ON public.agent_logs(log_level);
+CREATE INDEX IF NOT EXISTS idx_agent_logs_created_at ON public.agent_logs(created_at DESC);
 
 ALTER TABLE public.agent_logs ENABLE ROW LEVEL SECURITY;
 
@@ -124,7 +114,6 @@ CREATE POLICY "Allow authenticated insert on agent_logs"
   ON public.agent_logs FOR INSERT TO public WITH CHECK (true);
 
 -- Table 5: agent_connections
--- Neural network connections between agents
 CREATE TABLE IF NOT EXISTS public.agent_connections (
   id uuid NOT NULL PRIMARY KEY DEFAULT gen_random_uuid(),
   agent_a_id text NOT NULL REFERENCES public.agents(id) ON DELETE CASCADE,
@@ -143,18 +132,10 @@ CREATE TABLE IF NOT EXISTS public.agent_connections (
   CONSTRAINT valid_status CHECK (status IN ('active', 'inactive', 'degraded', 'failed'))
 );
 
-CREATE INDEX IF NOT EXISTS idx_agent_connections_agent_a 
-ON public.agent_connections(agent_a_id);
-
-CREATE INDEX IF NOT EXISTS idx_agent_connections_agent_b 
-ON public.agent_connections(agent_b_id);
-
-CREATE INDEX IF NOT EXISTS idx_agent_connections_type 
-ON public.agent_connections(connection_type);
-
-CREATE INDEX IF NOT EXISTS idx_agent_connections_status 
-ON public.agent_connections(status) 
-WHERE status = 'active';
+CREATE INDEX IF NOT EXISTS idx_agent_connections_agent_a ON public.agent_connections(agent_a_id);
+CREATE INDEX IF NOT EXISTS idx_agent_connections_agent_b ON public.agent_connections(agent_b_id);
+CREATE INDEX IF NOT EXISTS idx_agent_connections_type ON public.agent_connections(connection_type);
+CREATE INDEX IF NOT EXISTS idx_agent_connections_status ON public.agent_connections(status) WHERE status = 'active';
 
 CREATE TRIGGER update_agent_connections_updated_at
   BEFORE UPDATE ON public.agent_connections
@@ -173,7 +154,6 @@ CREATE POLICY "Allow authenticated insert on agent_connections"
 -- =================================
 
 -- Table 6: system_metrics
--- System-wide metrics for dashboard and analytics
 CREATE TABLE IF NOT EXISTS public.system_metrics (
   id uuid NOT NULL PRIMARY KEY DEFAULT gen_random_uuid(),
   metric_type text NOT NULL,
@@ -190,17 +170,10 @@ ALTER TABLE public.system_metrics
 ADD CONSTRAINT system_metrics_category_check
 CHECK (category IN ('general', 'performance', 'security', 'business', 'agent', 'network'));
 
-CREATE INDEX IF NOT EXISTS idx_system_metrics_type 
-ON public.system_metrics(metric_type);
-
-CREATE INDEX IF NOT EXISTS idx_system_metrics_recorded_at 
-ON public.system_metrics(recorded_at DESC);
-
-CREATE INDEX IF NOT EXISTS idx_system_metrics_category 
-ON public.system_metrics(category);
-
-CREATE INDEX IF NOT EXISTS idx_system_metrics_type_recorded 
-ON public.system_metrics(metric_type, recorded_at DESC);
+CREATE INDEX IF NOT EXISTS idx_system_metrics_type ON public.system_metrics(metric_type);
+CREATE INDEX IF NOT EXISTS idx_system_metrics_recorded_at ON public.system_metrics(recorded_at DESC);
+CREATE INDEX IF NOT EXISTS idx_system_metrics_category ON public.system_metrics(category);
+CREATE INDEX IF NOT EXISTS idx_system_metrics_type_recorded ON public.system_metrics(metric_type, recorded_at DESC);
 
 ALTER TABLE public.system_metrics ENABLE ROW LEVEL SECURITY;
 
@@ -210,11 +183,7 @@ CREATE POLICY "Allow public read access on system_metrics"
 CREATE POLICY "Allow authenticated insert on system_metrics"
   ON public.system_metrics FOR INSERT TO public WITH CHECK (true);
 
--- Phase 1.2.2: Dashboard & Metrics (continued)
--- ==============================================
-
 -- Table 7: network_nodes
--- 3D Network visualization nodes
 CREATE TABLE IF NOT EXISTS public.network_nodes (
   id uuid NOT NULL PRIMARY KEY DEFAULT gen_random_uuid(),
   node_type text NOT NULL,
@@ -239,17 +208,10 @@ ALTER TABLE public.network_nodes
 ADD CONSTRAINT network_nodes_status_check
 CHECK (status IN ('active', 'inactive', 'degraded', 'maintenance'));
 
-CREATE INDEX IF NOT EXISTS idx_network_nodes_type 
-ON public.network_nodes(node_type);
-
-CREATE INDEX IF NOT EXISTS idx_network_nodes_status 
-ON public.network_nodes(status) WHERE status = 'active';
-
-CREATE INDEX IF NOT EXISTS idx_network_nodes_position 
-ON public.network_nodes(position_x, position_y, position_z);
-
-CREATE INDEX IF NOT EXISTS idx_network_nodes_name 
-ON public.network_nodes(node_name);
+CREATE INDEX IF NOT EXISTS idx_network_nodes_type ON public.network_nodes(node_type);
+CREATE INDEX IF NOT EXISTS idx_network_nodes_status ON public.network_nodes(status) WHERE status = 'active';
+CREATE INDEX IF NOT EXISTS idx_network_nodes_position ON public.network_nodes(position_x, position_y, position_z);
+CREATE INDEX IF NOT EXISTS idx_network_nodes_name ON public.network_nodes(node_name);
 
 CREATE TRIGGER update_network_nodes_updated_at
   BEFORE UPDATE ON public.network_nodes
@@ -268,10 +230,9 @@ CREATE POLICY "Allow authenticated update on network_nodes"
   ON public.network_nodes FOR UPDATE TO public USING (true);
 
 -- Phase 1.2.3: CRM Module
--- =========================
+-- ========================
 
 -- Table 8: deals
--- Sales pipeline and deal tracking
 CREATE TABLE IF NOT EXISTS public.deals (
   id uuid NOT NULL PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id uuid REFERENCES public.profiles(id) ON DELETE CASCADE,
@@ -321,7 +282,6 @@ CREATE POLICY "Users can update own deals"
   USING (auth.uid() = (SELECT auth_user_id FROM profiles WHERE id = user_id));
 
 -- Table 9: deal_activities
--- Timeline of activities for each deal
 CREATE TABLE IF NOT EXISTS public.deal_activities (
   id uuid NOT NULL PRIMARY KEY DEFAULT gen_random_uuid(),
   deal_id uuid NOT NULL REFERENCES public.deals(id) ON DELETE CASCADE,
@@ -359,13 +319,181 @@ CREATE POLICY "Users can insert activities on own deals"
     AND deals.user_id IN (SELECT id FROM profiles WHERE auth_user_id = auth.uid())
   ));
 
+-- Phase 1.2.4: Support Module
+-- ============================
+
+-- Table 10: support_tickets
+CREATE TABLE IF NOT EXISTS public.support_tickets (
+  id uuid NOT NULL PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id uuid REFERENCES public.profiles(id) ON DELETE CASCADE,
+  subject text NOT NULL,
+  description text,
+  status text DEFAULT 'open',
+  priority text DEFAULT 'normal',
+  sentiment_score numeric(5,2),
+  assigned_to uuid REFERENCES public.profiles(id),
+  resolved_at timestamptz,
+  created_at timestamptz DEFAULT now(),
+  updated_at timestamptz DEFAULT now()
+);
+
+ALTER TABLE public.support_tickets
+ADD CONSTRAINT support_tickets_status_check
+CHECK (status IN ('open', 'in_progress', 'resolved', 'closed'));
+
+ALTER TABLE public.support_tickets
+ADD CONSTRAINT support_tickets_priority_check
+CHECK (priority IN ('low', 'normal', 'high', 'critical'));
+
+CREATE INDEX IF NOT EXISTS idx_support_tickets_user_id ON public.support_tickets(user_id);
+CREATE INDEX IF NOT EXISTS idx_support_tickets_status ON public.support_tickets(status);
+CREATE INDEX IF NOT EXISTS idx_support_tickets_priority ON public.support_tickets(priority);
+CREATE INDEX IF NOT EXISTS idx_support_tickets_assigned ON public.support_tickets(assigned_to);
+CREATE INDEX IF NOT EXISTS idx_support_tickets_created ON public.support_tickets(created_at DESC);
+
+CREATE TRIGGER update_support_tickets_updated_at
+  BEFORE UPDATE ON public.support_tickets
+  FOR EACH ROW
+  EXECUTE FUNCTION update_updated_at_column();
+
+ALTER TABLE public.support_tickets ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Users can view own tickets"
+  ON public.support_tickets FOR SELECT TO public
+  USING (
+    auth.uid() = (SELECT auth_user_id FROM profiles WHERE id = user_id)
+    OR auth.uid() = (SELECT auth_user_id FROM profiles WHERE id = assigned_to)
+  );
+
+CREATE POLICY "Users can create tickets"
+  ON public.support_tickets FOR INSERT TO public
+  WITH CHECK (auth.uid() = (SELECT auth_user_id FROM profiles WHERE id = user_id));
+
+CREATE POLICY "Assigned users can update tickets"
+  ON public.support_tickets FOR UPDATE TO public
+  USING (auth.uid() = (SELECT auth_user_id FROM profiles WHERE id = assigned_to));
+
+-- Table 11: ticket_messages
+CREATE TABLE IF NOT EXISTS public.ticket_messages (
+  id uuid NOT NULL PRIMARY KEY DEFAULT gen_random_uuid(),
+  ticket_id uuid NOT NULL REFERENCES public.support_tickets(id) ON DELETE CASCADE,
+  user_id uuid REFERENCES public.profiles(id),
+  message text NOT NULL,
+  is_internal boolean DEFAULT false,
+  attachments jsonb,
+  created_at timestamptz DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS idx_ticket_messages_ticket_id ON public.ticket_messages(ticket_id);
+CREATE INDEX IF NOT EXISTS idx_ticket_messages_user_id ON public.ticket_messages(user_id);
+CREATE INDEX IF NOT EXISTS idx_ticket_messages_created ON public.ticket_messages(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_ticket_messages_internal ON public.ticket_messages(is_internal) WHERE is_internal = true;
+
+ALTER TABLE public.ticket_messages ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Users can view messages of accessible tickets"
+  ON public.ticket_messages FOR SELECT TO public
+  USING (
+    EXISTS (
+      SELECT 1 FROM support_tickets st
+      WHERE st.id = ticket_messages.ticket_id 
+      AND (
+        auth.uid() = (SELECT auth_user_id FROM profiles WHERE id = st.user_id)
+        OR auth.uid() = (SELECT auth_user_id FROM profiles WHERE id = st.assigned_to)
+      )
+    )
+  );
+
+CREATE POLICY "Users can insert messages on accessible tickets"
+  ON public.ticket_messages FOR INSERT TO public
+  WITH CHECK (
+    EXISTS (
+      SELECT 1 FROM support_tickets st
+      WHERE st.id = ticket_messages.ticket_id 
+      AND (
+        auth.uid() = (SELECT auth_user_id FROM profiles WHERE id = st.user_id)
+        OR auth.uid() = (SELECT auth_user_id FROM profiles WHERE id = st.assigned_to)
+      )
+    )
+  );
+
+-- Phase 1.2.5: Social Module
+-- ===========================
+
+-- Table 12: social_posts
+CREATE TABLE IF NOT EXISTS public.social_posts (
+  id uuid NOT NULL PRIMARY KEY DEFAULT gen_random_uuid(),
+  platform text NOT NULL,
+  external_id text,
+  author text,
+  content text,
+  likes_count int DEFAULT 0,
+  shares_count int DEFAULT 0,
+  comments_count int DEFAULT 0,
+  sentiment_score numeric(5,2),
+  trending_score numeric(10,2),
+  metadata jsonb DEFAULT '{}'::jsonb,
+  posted_at timestamptz,
+  fetched_at timestamptz DEFAULT now()
+);
+
+ALTER TABLE public.social_posts
+ADD CONSTRAINT social_posts_platform_check
+CHECK (platform IN ('twitter', 'reddit', 'instagram', 'linkedin', 'tiktok', 'youtube'));
+
+CREATE INDEX IF NOT EXISTS idx_social_posts_platform ON public.social_posts(platform);
+CREATE INDEX IF NOT EXISTS idx_social_posts_posted_at ON public.social_posts(posted_at DESC);
+CREATE INDEX IF NOT EXISTS idx_social_posts_trending ON public.social_posts(trending_score DESC NULLS LAST);
+CREATE INDEX IF NOT EXISTS idx_social_posts_sentiment ON public.social_posts(sentiment_score DESC NULLS LAST);
+CREATE INDEX IF NOT EXISTS idx_social_posts_author ON public.social_posts(author);
+CREATE INDEX IF NOT EXISTS idx_social_posts_external ON public.social_posts(platform, external_id);
+
+ALTER TABLE public.social_posts ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Allow public read access on social_posts"
+  ON public.social_posts FOR SELECT TO public USING (true);
+
+CREATE POLICY "Allow authenticated insert on social_posts"
+  ON public.social_posts FOR INSERT TO public WITH CHECK (true);
+
+-- Table 13: social_trends
+CREATE TABLE IF NOT EXISTS public.social_trends (
+  id uuid NOT NULL PRIMARY KEY DEFAULT gen_random_uuid(),
+  tag text NOT NULL,
+  volume int DEFAULT 0,
+  sentiment text,
+  metadata jsonb DEFAULT '{}'::jsonb,
+  recorded_at timestamptz DEFAULT now()
+);
+
+ALTER TABLE public.social_trends
+ADD CONSTRAINT social_trends_sentiment_check
+CHECK (sentiment IN ('positive', 'negative', 'neutral', 'mixed'));
+
+CREATE INDEX IF NOT EXISTS idx_social_trends_tag ON public.social_trends(tag);
+CREATE INDEX IF NOT EXISTS idx_social_trends_volume ON public.social_trends(volume DESC);
+CREATE INDEX IF NOT EXISTS idx_social_trends_recorded ON public.social_trends(recorded_at DESC);
+CREATE INDEX IF NOT EXISTS idx_social_trends_sentiment ON public.social_trends(sentiment);
+
+ALTER TABLE public.social_trends ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Allow public read access on social_trends"
+  ON public.social_trends FOR SELECT TO public USING (true);
+
+CREATE POLICY "Allow authenticated insert on social_trends"
+  ON public.social_trends FOR INSERT TO public WITH CHECK (true);
+
 -- ============================================
 -- END OF MIGRATION
 -- Applied: 2025-11-25
--- Tables: 9 (8 new + 1 expanded)
+-- Tables: 13 total (12 new + 1 expanded)
 -- RLS: Enabled on all tables
--- Indexes: 35 total
--- Constraints: Multiple CHECK, UNIQUE, FK
+-- Indexes: 56+ total
+-- Constraints: 25+ total
 -- Agents Preserved: 139/139 ✅
--- Phase 1.2.3 CRM: COMPLETE ✅
+-- Phase 1.2.1: Core Tables COMPLETE ✅
+-- Phase 1.2.2: Dashboard & Metrics COMPLETE ✅
+-- Phase 1.2.3: CRM Module COMPLETE ✅
+-- Phase 1.2.4: Support Module COMPLETE ✅
+-- Phase 1.2.5: Social Module COMPLETE ✅
 -- ============================================
