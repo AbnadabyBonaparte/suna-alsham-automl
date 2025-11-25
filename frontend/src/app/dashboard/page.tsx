@@ -132,7 +132,7 @@ export default function CockpitPage() {
           <div className="flex-1 rounded-2xl border border-dashed border-[var(--color-border)]/20 bg-black/10 flex items-center justify-center relative overflow-hidden group">
             <div className="absolute inset-0 opacity-10 bg-[url('/grid.svg')] animate-pulse" />
             <div className="flex items-end justify-center gap-1 h-32 w-full px-10 opacity-70">
-              {(agentEfficiencies.length > 0 ? agentEfficiencies : Array.from({ length: 40 }, () => 0)).map((efficiency, i) => (
+              {(activeAgents > 0 && agentEfficiencies.length > 0 ? agentEfficiencies : Array.from({ length: 40 }, () => 5)).map((efficiency, i) => (
                 <div
                   key={i}
                   className="w-full bg-[var(--color-primary)] rounded-t-sm transition-all duration-300 ease-in-out"
@@ -211,6 +211,7 @@ export default function CockpitPage() {
     </div>
   );
 }
+
 
 
 
