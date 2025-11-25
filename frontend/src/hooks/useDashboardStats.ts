@@ -47,7 +47,9 @@ export function useDashboardStats() {
         if (agentsError) throw agentsError;
 
         const totalAgents = agents?.length || 0;
-        const activeAgents = agents?.filter(a => a.current_task && a.current_task !== 'Standby mode' && a.current_task !== 'Aguardando comando').length || 0;
+        // TODO: Contar agents REALMENTE ativos quando workers estiverem rodando
+        // Por enquanto, sistema está em configuração (sem agents executando)
+        const activeAgents = 0;
         const avgEfficiency = agents?.length
           ? agents.reduce((sum, a) => sum + (a.efficiency || 0), 0) / agents.length
           : 0;
@@ -111,5 +113,6 @@ export function useDashboardStats() {
 
   return stats;
 }
+
 
 
