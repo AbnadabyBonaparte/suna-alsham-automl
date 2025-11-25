@@ -12,6 +12,7 @@ interface DashboardStats {
   totalTickets: number;
   totalPosts: number;
   latencyMs: number;
+  agentEfficiencies: number[];
   loading: boolean;
   error: string | null;
 }
@@ -25,6 +26,7 @@ export function useDashboardStats() {
     totalTickets: 0,
     totalPosts: 0,
     latencyMs: 0,
+    agentEfficiencies: [],
     loading: true,
     error: null,
   });
@@ -34,10 +36,11 @@ export function useDashboardStats() {
       const startTime = performance.now();
       
       try {
-        // 1. Agents stats
+        // 1. Agents stats (pegando 40 para o gráfico)
         const { data: agents, error: agentsError } = await supabase
           .from('agents')
-          .select('efficiency, status, current_task');
+          .select('efficiency, status, current_task')
+          .limit(40);
 
         if (agentsError) throw agentsError;
 
@@ -46,6 +49,12 @@ export function useDashboardStats() {
         const avgEfficiency = agents?.length
           ? agents.reduce((sum, a) => sum + (a.efficiency || 0), 0) / agents.length
           : 0;
+        const agentEfficiencies = agents?.map(a => a.efficiency || 0) || [];
+
+        // Contar total de agents
+        const { count: totalAgentsCount } = await supabase
+          .from('agents')
+          .select('*', { count: 'exact', head: true });
 
         // 2. Deals count
         const { count: dealsCount } = await supabase
@@ -66,13 +75,14 @@ export function useDashboardStats() {
         const latency = Math.round(endTime - startTime);
 
         setStats({
-          totalAgents,
+          totalAgents: totalAgentsCount || 0,
           avgEfficiency: Math.round(avgEfficiency * 10) / 10,
           activeAgents,
           totalDeals: dealsCount || 0,
           totalTickets: ticketsCount || 0,
           totalPosts: postsCount || 0,
           latencyMs: latency,
+          agentEfficiencies,
           loading: false,
           error: null,
         });

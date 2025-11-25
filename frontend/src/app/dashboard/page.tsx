@@ -16,7 +16,7 @@ import {
 import { useDashboardStats } from '@/hooks/useDashboardStats';
 
 export default function CockpitPage() {
-  const { totalAgents, avgEfficiency, activeAgents, totalDeals, totalTickets, totalPosts, latencyMs, loading, error } = useDashboardStats();
+  const { totalAgents, avgEfficiency, activeAgents, totalDeals, totalTickets, totalPosts, latencyMs, agentEfficiencies, loading, error } = useDashboardStats();
 
   const stats = [
     {
@@ -132,12 +132,12 @@ export default function CockpitPage() {
           <div className="flex-1 rounded-2xl border border-dashed border-[var(--color-border)]/20 bg-black/10 flex items-center justify-center relative overflow-hidden group">
             <div className="absolute inset-0 opacity-10 bg-[url('/grid.svg')] animate-pulse" />
             <div className="flex items-end justify-center gap-1 h-32 w-full px-10 opacity-70">
-              {Array.from({ length: 40 }).map((_, i) => (
+              {(agentEfficiencies.length > 0 ? agentEfficiencies : Array.from({ length: 40 }, () => 0)).map((efficiency, i) => (
                 <div
                   key={i}
                   className="w-full bg-[var(--color-primary)] rounded-t-sm transition-all duration-300 ease-in-out"
                   style={{
-                    height: `${Math.random() * 100}%`,
+                    height: `${efficiency}%`,
                     opacity: Math.random() * 0.5 + 0.5,
                     animation: `pulse-height ${0.5 + Math.random()}s infinite alternate`
                   }}
@@ -211,5 +211,6 @@ export default function CockpitPage() {
     </div>
   );
 }
+
 
 
