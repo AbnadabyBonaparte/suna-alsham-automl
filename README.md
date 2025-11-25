@@ -199,6 +199,21 @@ As of deployment:
 
 ---
 
+## 🏗️ Architecture
+
+This project follows **Enterprise-Grade Architecture Standards**.
+
+See [ARCHITECTURE.md](ARCHITECTURE.md) for:
+- Mandatory patterns
+- Code organization
+- TypeScript standards  
+- State management rules
+- FAANG-level practices
+
+**TL;DR:** Every line of code follows Vercel/Stripe/Linear quality standards.
+
+---
+
 ## 📄 License
 
 Proprietary © 2025 ALSHAM GLOBAL
@@ -207,3 +222,4 @@ Proprietary © 2025 ALSHAM GLOBAL
 
 **Built with 💎 by ALSHAM GLOBAL**  
 **Honesty • Quality • Innovation**
+
