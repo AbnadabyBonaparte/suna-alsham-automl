@@ -13,7 +13,7 @@ import { useState, useEffect } from "react";
 import { createClient } from "@supabase/supabase-js";
 
 // ÍCONES SVG NATIVOS (Zero dependências externas)
-const IconSearch = () => (
+const IconsearchQuery = () => (
   <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     <circle cx="11" cy="11" r="8" />
     <path d="m21 21-4.3-4.3" />
@@ -56,11 +56,7 @@ const IconServer = () => (
   </svg>
 );
 
-// Initialize Supabase client
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL || "",
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ""
-);
+
 
 // Agent type definition matching Supabase schema
 interface Agent {
@@ -87,48 +83,55 @@ const AGENTS_DATA = [
 ];
 
 export default function AgentsPage() {
-  const [filter, setFilter] = useState("ALL");
-  const [search, setSearch] = useState("");
-  const [agents, setAgents] = useState<Agent[]>(AGENTS_DATA);
-  const [loading, setLoading] = useState(true);
+  const store = useAgentsStore();
+  const { 
+    agents, 
+    loading, 
+    error, 
+    filteredSquadedSquad, 
+    searchQueryQuery,
+    setAgents,
+    setLoading,
+    setError,
+    setfilteredSquadedSquad,
+    setsearchQueryQuery,
+    getfilteredSquadedAgents
+  } = store;
 
   // Fetch agents from Supabase on mount
   useEffect(() => {
     async function fetchAgents() {
       try {
-        const { data, error } = await supabase
+        setLoading(true);
+        const { data, error: supabaseError } = await supabase
           .from("agents")
           .select("*")
           .order("created_at", { ascending: true });
 
-        if (error) {
-          console.error("Error fetching agents from Supabase:", error);
-          // Keep fallback data
+        if (supabaseError) {
+          console.error("Error fetching agents:", supabaseError);
+          setError(supabaseError.message);
         } else if (data && data.length > 0) {
-          // Normalize data: map current_task to currentTask for consistency
           const normalizedData = data.map((agent: any) => ({
             ...agent,
-            currentTask: agent.current_task || agent.currentTask || "Aguardando comando",
+            currentTask: agent.current_task || "Aguardando comando",
           }));
           setAgents(normalizedData);
         }
-      } catch (err) {
-        console.error("Failed to connect to Supabase:", err);
-        // Keep fallback data
+      } catch (err: any) {
+        console.error("Failed to fetch agents:", err);
+        setError(err.message);
       } finally {
         setLoading(false);
       }
     }
 
-    fetchAgents();
+    if (agents.length === 0) {
+      fetchAgents();
+    }
   }, []);
 
-  const filteredAgents = agents.filter((agent) => {
-    const matchesSearch = agent.name.toLowerCase().includes(search.toLowerCase()) ||
-      agent.currentTask.toLowerCase().includes(search.toLowerCase());
-    const matchesFilter = filter === "ALL" || agent.role === filter;
-    return matchesSearch && matchesFilter;
-  });
+  const filteredSquadedAgents = getfilteredSquadedAgents();
 
   const renderIcon = (role: string) => {
     switch (role) {
@@ -156,14 +159,14 @@ export default function AgentsPage() {
 
           <div className="relative w-full md:w-96">
             <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500">
-              <IconSearch />
+              <IconsearchQuery />
             </div>
             <input
               type="text"
               placeholder="Buscar unidade..."
               className="w-full pl-14 pr-6 py-4 text-xl bg-black/40 border border-[var(--color-border)]/30 text-white placeholder:text-gray-600 focus:border-[var(--color-primary)] focus:outline-none focus:shadow-[0_0_20px_var(--color-primary)] transition-all rounded-lg"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
+              value={searchQuery}
+              onChange={(e) => setsearchQueryQuery(e.target.value)}
             />
           </div>
         </div>
@@ -173,8 +176,8 @@ export default function AgentsPage() {
           {["ALL", "CORE", "GUARD", "ANALYST", "SPECIALIST"].map((f) => (
             <button
               key={f}
-              onClick={() => setFilter(f)}
-              className={`text-lg font-bold px-8 py-4 rounded border-2 transition-all uppercase tracking-wider ${filter === f
+              onClick={() => setfilteredSquadedSquad(f)}
+              className={`text-lg font-bold px-8 py-4 rounded border-2 transition-all uppercase tracking-wider ${filteredSquad === f
                 ? "bg-[var(--color-primary)]/10 text-[var(--color-primary)] border-[var(--color-primary)] shadow-[0_0_30px_var(--color-primary)]"
                 : "bg-transparent border-[var(--color-border)]/30 text-gray-400 hover:text-[var(--color-primary)] hover:border-[var(--color-primary)]/70"
                 }`}
@@ -186,7 +189,7 @@ export default function AgentsPage() {
 
         {/* GRID */}
         <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-8">
-          {filteredAgents.map((agent) => {
+          {filteredSquadedAgents.map((agent) => {
             return (
               <div
                 key={agent.id}
@@ -252,3 +255,4 @@ export default function AgentsPage() {
     </div>
   );
 }
+

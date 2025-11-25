@@ -1,43 +1,21 @@
 /**
  * Hook para buscar estatísticas reais do dashboard
+ * Refatorado para usar Zustand store (Enterprise Pattern)
  */
-import { useState, useEffect } from 'react';
+import { useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
-
-interface DashboardStats {
-  totalAgents: number;
-  avgEfficiency: number;
-  activeAgents: number;
-  totalDeals: number;
-  totalTickets: number;
-  totalPosts: number;
-  latencyMs: number;
-  uptimePercent: number;
-  agentEfficiencies: number[];
-  loading: boolean;
-  error: string | null;
-}
+import { useDashboardStore } from '@/stores';
 
 export function useDashboardStats() {
-  const [stats, setStats] = useState<DashboardStats>({
-    totalAgents: 0,
-    avgEfficiency: 0,
-    activeAgents: 0,
-    totalDeals: 0,
-    totalTickets: 0,
-    totalPosts: 0,
-    latencyMs: 0,
-    uptimePercent: 0,
-    agentEfficiencies: [],
-    loading: true,
-    error: null,
-  });
+  const store = useDashboardStore();
 
   useEffect(() => {
     async function fetchStats() {
       const startTime = performance.now();
-      
+
       try {
+        store.setStats({ loading: true, error: null });
+
         // 1. Agents stats (pegando 40 para o gráfico)
         const { data: agents, error: agentsError } = await supabase
           .from('agents')
@@ -46,10 +24,6 @@ export function useDashboardStats() {
 
         if (agentsError) throw agentsError;
 
-        const totalAgents = agents?.length || 0;
-        // TODO: Contar agents REALMENTE ativos quando workers estiverem rodando
-        // Por enquanto, sistema está em configuração (sem agents executando)
-        const activeAgents = 0;
         const avgEfficiency = agents?.length
           ? agents.reduce((sum, a) => sum + (a.efficiency || 0), 0) / agents.length
           : 0;
@@ -75,20 +49,21 @@ export function useDashboardStats() {
           .from('social_posts')
           .select('*', { count: 'exact', head: true });
 
-        // Calcular uptime (assumindo sistema stable desde Jan 2025)
+        // Calcular uptime
         const systemStartDate = new Date("2024-11-20T14:30:00-03:00");
         const now = new Date();
         const totalHours = (now.getTime() - systemStartDate.getTime()) / (1000 * 60 * 60);
-        const downtimeHours = 0.5; // Downtime estimado (pode ser buscado de uma tabela depois)
+        const downtimeHours = 0.5;
         const uptimePercent = ((totalHours - downtimeHours) / totalHours) * 100;
 
         const endTime = performance.now();
         const latency = Math.round(endTime - startTime);
 
-        setStats({
+        // Atualizar store com todos os dados
+        store.setStats({
           totalAgents: totalAgentsCount || 0,
           avgEfficiency: Math.round(avgEfficiency * 10) / 10,
-          activeAgents,
+          activeAgents: 0, // Honesto: 0 até workers rodarem
           totalDeals: dealsCount || 0,
           totalTickets: ticketsCount || 0,
           totalPosts: postsCount || 0,
@@ -100,19 +75,16 @@ export function useDashboardStats() {
         });
       } catch (err: any) {
         console.error('Error fetching dashboard stats:', err);
-        setStats(prev => ({
-          ...prev,
+        store.setStats({
           loading: false,
           error: err.message,
-        }));
+        });
       }
     }
 
     fetchStats();
   }, []);
 
-  return stats;
+  // Retornar o store completo
+  return store;
 }
-
-
-
