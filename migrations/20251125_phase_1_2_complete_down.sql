@@ -1,12 +1,35 @@
 -- ============================================
 -- ALSHAM QUANTUM - Phase 1.2 ROLLBACK
--- Rollback for ALL Phase 1.2 tables
+-- Rollback for ALL 10 phases (26 tables)
 -- Created: 2025-11-25
 -- Author: ALSHAM GLOBAL
 -- ============================================
 
--- WARNING: This will DROP tables and remove columns
--- Only run if you need to completely undo Phase 1.2.1-1.2.5
+-- WARNING: This will DROP all tables and remove columns
+-- Only run if you need to completely undo ALL Phase 1.2 changes
+
+-- Phase 1.2.10: Drop AI Module tables
+DROP TABLE IF EXISTS public.predictions CASCADE;
+DROP TABLE IF EXISTS public.training_data CASCADE;
+DROP TABLE IF EXISTS public.ai_models CASCADE;
+
+-- Phase 1.2.9: Drop Finance Module tables
+DROP TABLE IF EXISTS public.invoices CASCADE;
+DROP TABLE IF EXISTS public.transactions CASCADE;
+
+-- Phase 1.2.8: Drop Security Module tables
+DROP TABLE IF EXISTS public.audit_log CASCADE;
+DROP TABLE IF EXISTS public.security_events CASCADE;
+
+-- Phase 1.2.7: Drop API Module tables
+DROP TABLE IF EXISTS public.rate_limits CASCADE;
+DROP TABLE IF EXISTS public.api_logs CASCADE;
+DROP TABLE IF EXISTS public.api_keys CASCADE;
+
+-- Phase 1.2.6: Drop Gamification Module tables
+DROP TABLE IF EXISTS public.leaderboard CASCADE;
+DROP TABLE IF EXISTS public.achievements CASCADE;
+DROP TABLE IF EXISTS public.user_stats CASCADE;
 
 -- Phase 1.2.5: Drop Social Module tables
 DROP TABLE IF EXISTS public.social_trends CASCADE;
@@ -45,7 +68,8 @@ DROP TABLE IF EXISTS public.profiles CASCADE;
 
 -- ============================================
 -- END OF ROLLBACK
--- All Phase 1.2.1-1.2.5 changes reverted
--- Tables dropped: 13
--- Columns removed from agents: 5
+-- All Phase 1.2.1-1.2.10 changes reverted
+-- Tables dropped: 26 (25 tables + 5 columns from agents)
+-- Database returned to pre-migration state
+-- Note: Agent data (139 agents) will remain in reverted agents table
 -- ============================================
