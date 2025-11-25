@@ -210,12 +210,70 @@ CREATE POLICY "Allow public read access on system_metrics"
 CREATE POLICY "Allow authenticated insert on system_metrics"
   ON public.system_metrics FOR INSERT TO public WITH CHECK (true);
 
+-- Phase 1.2.2: Dashboard & Metrics (continued)
+-- ==============================================
+
+-- Table 7: network_nodes
+-- 3D Network visualization nodes
+CREATE TABLE IF NOT EXISTS public.network_nodes (
+  id uuid NOT NULL PRIMARY KEY DEFAULT gen_random_uuid(),
+  node_type text NOT NULL,
+  node_name text NOT NULL,
+  position_x numeric DEFAULT 0,
+  position_y numeric DEFAULT 0,
+  position_z numeric DEFAULT 0,
+  size numeric DEFAULT 1.0,
+  color text DEFAULT '#00FFD0',
+  status text DEFAULT 'active',
+  connections_count int DEFAULT 0,
+  metadata jsonb DEFAULT '{}'::jsonb,
+  created_at timestamptz DEFAULT now(),
+  updated_at timestamptz DEFAULT now()
+);
+
+ALTER TABLE public.network_nodes
+ADD CONSTRAINT network_nodes_node_type_check
+CHECK (node_type IN ('agent', 'system', 'hub', 'relay', 'sensor'));
+
+ALTER TABLE public.network_nodes
+ADD CONSTRAINT network_nodes_status_check
+CHECK (status IN ('active', 'inactive', 'degraded', 'maintenance'));
+
+CREATE INDEX IF NOT EXISTS idx_network_nodes_type 
+ON public.network_nodes(node_type);
+
+CREATE INDEX IF NOT EXISTS idx_network_nodes_status 
+ON public.network_nodes(status) WHERE status = 'active';
+
+CREATE INDEX IF NOT EXISTS idx_network_nodes_position 
+ON public.network_nodes(position_x, position_y, position_z);
+
+CREATE INDEX IF NOT EXISTS idx_network_nodes_name 
+ON public.network_nodes(node_name);
+
+CREATE TRIGGER update_network_nodes_updated_at
+  BEFORE UPDATE ON public.network_nodes
+  FOR EACH ROW
+  EXECUTE FUNCTION update_updated_at_column();
+
+ALTER TABLE public.network_nodes ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Allow public read access on network_nodes"
+  ON public.network_nodes FOR SELECT TO public USING (true);
+
+CREATE POLICY "Allow authenticated insert on network_nodes"
+  ON public.network_nodes FOR INSERT TO public WITH CHECK (true);
+
+CREATE POLICY "Allow authenticated update on network_nodes"
+  ON public.network_nodes FOR UPDATE TO public USING (true);
+
 -- ============================================
 -- END OF MIGRATION
 -- Applied: 2025-11-25
--- Tables: 6 (5 new + 1 expanded)
+-- Tables: 7 (6 new + 1 expanded)
 -- RLS: Enabled on all tables
--- Indexes: 19 total
+-- Indexes: 24 total
 -- Constraints: Multiple CHECK, UNIQUE, FK
 -- Agents Preserved: 139/139 ✅
+-- Phase 1.2.2: COMPLETE ✅
 -- ============================================

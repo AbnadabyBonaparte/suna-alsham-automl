@@ -9,6 +9,7 @@
 -- Only run if you need to completely undo Phase 1.2.1 & 1.2.2
 
 -- Phase 1.2.2: Drop Dashboard & Metrics tables
+DROP TABLE IF EXISTS public.network_nodes CASCADE;
 DROP TABLE IF EXISTS public.system_metrics CASCADE;
 
 -- Phase 1.2.1: Drop Core Tables (in reverse dependency order)

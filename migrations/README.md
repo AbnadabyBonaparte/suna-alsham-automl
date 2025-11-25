@@ -45,12 +45,20 @@ This directory contains SQL migrations for the ALSHAM QUANTUM database schema.
    - 4 indexes for time-series queries
    - Category CHECK constraint
 
+7. **network_nodes** (13 columns) - NEW
+   - 3D network visualization nodes
+   - 3D coordinates (position_x, y, z)
+   - 4 indexes including 3D position composite
+   - 2 CHECK constraints (node_type, status)
+   - 3 RLS policies
+
 **Statistics:**
-- Total Tables: 6 (5 new + 1 expanded)
-- Total Indexes: 19
-- Total Constraints: 13+
-- RLS Policies: 12
+- Total Tables: 7 (6 new + 1 expanded)
+- Total Indexes: 24
+- Total Constraints: 15+
+- RLS Policies: 15
 - Agents Preserved: 139/139 ✅
+- Phase 1.2.2: COMPLETE ✅
 
 **Rollback:** Use `20251125_phase_1_2_core_and_metrics_down.sql`
 
