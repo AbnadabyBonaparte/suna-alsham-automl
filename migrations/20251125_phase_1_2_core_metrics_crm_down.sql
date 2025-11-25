@@ -6,7 +6,11 @@
 -- ============================================
 
 -- WARNING: This will DROP tables and remove columns
--- Only run if you need to completely undo Phase 1.2.1 & 1.2.2
+-- Only run if you need to completely undo Phase 1.2.1, 1.2.2 & 1.2.3
+
+-- Phase 1.2.3: Drop CRM Module tables
+DROP TABLE IF EXISTS public.deal_activities CASCADE;
+DROP TABLE IF EXISTS public.deals CASCADE;
 
 -- Phase 1.2.2: Drop Dashboard & Metrics tables
 DROP TABLE IF EXISTS public.network_nodes CASCADE;

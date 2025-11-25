@@ -52,13 +52,25 @@ This directory contains SQL migrations for the ALSHAM QUANTUM database schema.
    - 2 CHECK constraints (node_type, status)
    - 3 RLS policies
 
+8. **deals** (12 columns) - NEW
+   - Sales pipeline and deal tracking
+   - 5 indexes for CRM queries
+   - 2 CHECK constraints (status, probability)
+   - 3 RLS policies (user-scoped access)
+
+9. **deal_activities** (7 columns) - NEW
+   - Timeline of activities for each deal
+   - 4 indexes for timeline queries
+   - 1 CHECK constraint (activity_type)
+   - 2 RLS policies (inherit deal ownership)
+
 **Statistics:**
-- Total Tables: 7 (6 new + 1 expanded)
-- Total Indexes: 24
-- Total Constraints: 15+
-- RLS Policies: 15
+- Total Tables: 9 (8 new + 1 expanded)
+- Total Indexes: 35
+- Total Constraints: 18+
+- RLS Policies: 20
 - Agents Preserved: 139/139 ✅
-- Phase 1.2.2: COMPLETE ✅
+- Phase 1.2.3 CRM: COMPLETE ✅
 
 **Rollback:** Use `20251125_phase_1_2_core_and_metrics_down.sql`
 

@@ -267,13 +267,105 @@ CREATE POLICY "Allow authenticated insert on network_nodes"
 CREATE POLICY "Allow authenticated update on network_nodes"
   ON public.network_nodes FOR UPDATE TO public USING (true);
 
+-- Phase 1.2.3: CRM Module
+-- =========================
+
+-- Table 8: deals
+-- Sales pipeline and deal tracking
+CREATE TABLE IF NOT EXISTS public.deals (
+  id uuid NOT NULL PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id uuid REFERENCES public.profiles(id) ON DELETE CASCADE,
+  client_name text NOT NULL,
+  value numeric(15,2) NOT NULL,
+  status text DEFAULT 'lead',
+  probability int DEFAULT 50,
+  stage text,
+  close_date date,
+  notes text,
+  metadata jsonb DEFAULT '{}'::jsonb,
+  created_at timestamptz DEFAULT now(),
+  updated_at timestamptz DEFAULT now()
+);
+
+ALTER TABLE public.deals
+ADD CONSTRAINT deals_status_check
+CHECK (status IN ('lead', 'negotiation', 'closed', 'lost'));
+
+ALTER TABLE public.deals
+ADD CONSTRAINT deals_probability_check
+CHECK (probability >= 0 AND probability <= 100);
+
+CREATE INDEX IF NOT EXISTS idx_deals_user_id ON public.deals(user_id);
+CREATE INDEX IF NOT EXISTS idx_deals_status ON public.deals(status);
+CREATE INDEX IF NOT EXISTS idx_deals_close_date ON public.deals(close_date DESC);
+CREATE INDEX IF NOT EXISTS idx_deals_value ON public.deals(value DESC);
+CREATE INDEX IF NOT EXISTS idx_deals_created ON public.deals(created_at DESC);
+
+CREATE TRIGGER update_deals_updated_at
+  BEFORE UPDATE ON public.deals
+  FOR EACH ROW
+  EXECUTE FUNCTION update_updated_at_column();
+
+ALTER TABLE public.deals ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Users can view own deals"
+  ON public.deals FOR SELECT TO public
+  USING (auth.uid() = (SELECT auth_user_id FROM profiles WHERE id = user_id));
+
+CREATE POLICY "Users can insert own deals"
+  ON public.deals FOR INSERT TO public
+  WITH CHECK (auth.uid() = (SELECT auth_user_id FROM profiles WHERE id = user_id));
+
+CREATE POLICY "Users can update own deals"
+  ON public.deals FOR UPDATE TO public
+  USING (auth.uid() = (SELECT auth_user_id FROM profiles WHERE id = user_id));
+
+-- Table 9: deal_activities
+-- Timeline of activities for each deal
+CREATE TABLE IF NOT EXISTS public.deal_activities (
+  id uuid NOT NULL PRIMARY KEY DEFAULT gen_random_uuid(),
+  deal_id uuid NOT NULL REFERENCES public.deals(id) ON DELETE CASCADE,
+  user_id uuid REFERENCES public.profiles(id),
+  activity_type text NOT NULL,
+  description text,
+  metadata jsonb DEFAULT '{}'::jsonb,
+  created_at timestamptz DEFAULT now()
+);
+
+ALTER TABLE public.deal_activities
+ADD CONSTRAINT deal_activities_activity_type_check
+CHECK (activity_type IN ('note', 'email', 'call', 'meeting', 'status_change', 'value_update'));
+
+CREATE INDEX IF NOT EXISTS idx_deal_activities_deal_id ON public.deal_activities(deal_id);
+CREATE INDEX IF NOT EXISTS idx_deal_activities_user_id ON public.deal_activities(user_id);
+CREATE INDEX IF NOT EXISTS idx_deal_activities_type ON public.deal_activities(activity_type);
+CREATE INDEX IF NOT EXISTS idx_deal_activities_created ON public.deal_activities(created_at DESC);
+
+ALTER TABLE public.deal_activities ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Users can view activities of own deals"
+  ON public.deal_activities FOR SELECT TO public
+  USING (EXISTS (
+    SELECT 1 FROM deals 
+    WHERE deals.id = deal_activities.deal_id 
+    AND deals.user_id IN (SELECT id FROM profiles WHERE auth_user_id = auth.uid())
+  ));
+
+CREATE POLICY "Users can insert activities on own deals"
+  ON public.deal_activities FOR INSERT TO public
+  WITH CHECK (EXISTS (
+    SELECT 1 FROM deals 
+    WHERE deals.id = deal_activities.deal_id 
+    AND deals.user_id IN (SELECT id FROM profiles WHERE auth_user_id = auth.uid())
+  ));
+
 -- ============================================
 -- END OF MIGRATION
 -- Applied: 2025-11-25
--- Tables: 7 (6 new + 1 expanded)
+-- Tables: 9 (8 new + 1 expanded)
 -- RLS: Enabled on all tables
--- Indexes: 24 total
+-- Indexes: 35 total
 -- Constraints: Multiple CHECK, UNIQUE, FK
 -- Agents Preserved: 139/139 ✅
--- Phase 1.2.2: COMPLETE ✅
+-- Phase 1.2.3 CRM: COMPLETE ✅
 -- ============================================
