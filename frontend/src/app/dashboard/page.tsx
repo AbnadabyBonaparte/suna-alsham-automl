@@ -16,7 +16,7 @@ import {
 import { useDashboardStats } from '@/hooks/useDashboardStats';
 
 export default function CockpitPage() {
-  const { totalAgents, avgEfficiency, activeAgents, totalDeals, totalTickets, totalPosts, latencyMs, agentEfficiencies, loading, error } = useDashboardStats();
+  const { totalAgents, avgEfficiency, activeAgents, totalDeals, totalTickets, totalPosts, latencyMs, agentEfficiencies, uptimePercent, loading, error } = useDashboardStats();
 
   const stats = [
     {
@@ -76,7 +76,7 @@ export default function CockpitPage() {
             </div>
             <div className="px-4 py-2 rounded-xl bg-black/20 border border-[var(--color-border)]/30 backdrop-blur-md text-center">
               <div className="text-[10px] text-[var(--color-text-secondary)] uppercase font-mono">Uptime</div>
-              <div className="text-xl font-bold text-[var(--color-success)] font-mono">99.9%</div>
+              <div className="text-xl font-bold text-[var(--color-success)] font-mono">{loading ? "..." : `${uptimePercent.toFixed(1)}%`}</div>
             </div>
           </div>
         </div>
@@ -211,6 +211,7 @@ export default function CockpitPage() {
     </div>
   );
 }
+
 
 
 
