@@ -9,8 +9,9 @@
 
 "use client";
 
-import { useState, useEffect } from "react";
-import { createClient } from "@supabase/supabase-js";
+import { useEffect } from "react";
+import { useAgentsStore } from "@/stores";
+import { supabase } from "@/lib/supabase";
 
 // ÍCONES SVG NATIVOS (Zero dependências externas)
 const IconsearchQuery = () => (
@@ -255,4 +256,5 @@ export default function AgentsPage() {
     </div>
   );
 }
+
 
