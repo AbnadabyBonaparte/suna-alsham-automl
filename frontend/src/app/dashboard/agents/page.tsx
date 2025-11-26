@@ -9,8 +9,10 @@
 
 "use client";
 
-import { useState, useEffect } from "react";
-import { createClient } from "@supabase/supabase-js";
+import { useAgents } from "@/hooks/useAgents";
+
+
+
 
 // ÍCONES SVG NATIVOS (Zero dependências externas)
 const IconSearch = () => (
@@ -56,12 +58,6 @@ const IconServer = () => (
   </svg>
 );
 
-// Initialize Supabase client
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL || "",
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ""
-);
-
 // Agent type definition matching Supabase schema
 interface Agent {
   id: string | number;
@@ -73,62 +69,18 @@ interface Agent {
   currentTask?: string;
 }
 
-// Fallback data if Supabase connection fails
-const AGENTS_DATA = [
-  { id: 1, name: "ORCHESTRATOR ALPHA", role: "CORE", status: "ACTIVE", efficiency: 99.9, currentTask: "Sincronizando 57 nós neurais" },
-  { id: 2, name: "REVENUE HUNTER", role: "SPECIALIST", status: "PROCESSING", efficiency: 94.2, currentTask: "Analisando padrões de compra globais" },
-  { id: 3, name: "SECURITY GUARDIAN", role: "GUARD", status: "ACTIVE", efficiency: 100.0, currentTask: "Varredura de ameaças quânticas" },
-  { id: 4, name: "CONTENT CREATOR", role: "ANALYST", status: "IDLE", efficiency: 87.5, currentTask: "Aguardando input criativo" },
-  { id: 5, name: "MARKET PREDICTOR", role: "ANALYST", status: "WARNING", efficiency: 76.1, currentTask: "Recalculando volatilidade do mercado" },
-  { id: 6, name: "SUPPORT SENTINEL", role: "SPECIALIST", status: "ACTIVE", efficiency: 98.3, currentTask: "Monitoramento de tickets em tempo real" },
-  { id: 7, name: "DEVOPS MASTER", role: "CORE", status: "ACTIVE", efficiency: 99.1, currentTask: "Otimizando pipeline CI/CD" },
-  { id: 8, name: "DATA MINER", role: "ANALYST", status: "PROCESSING", efficiency: 91.4, currentTask: "Extração de dados profundos" },
-  { id: 9, name: "NETWORK WATCHER", role: "GUARD", status: "ACTIVE", efficiency: 100.0, currentTask: "Ping: 2ms - Latência Zero" },
-];
-
 export default function AgentsPage() {
-  const [filter, setFilter] = useState("ALL");
-  const [search, setSearch] = useState("");
-  const [agents, setAgents] = useState<Agent[]>(AGENTS_DATA);
-  const [loading, setLoading] = useState(true);
+  const { 
+    agents, 
+    loading, 
+    searchQuery,
+    filteredSquad,
+    setSearchQuery,
+    setFilteredSquad,
+    getFilteredAgents
+  } = useAgents();
 
-  // Fetch agents from Supabase on mount
-  useEffect(() => {
-    async function fetchAgents() {
-      try {
-        const { data, error } = await supabase
-          .from("agents")
-          .select("*")
-          .order("created_at", { ascending: true });
-
-        if (error) {
-          console.error("Error fetching agents from Supabase:", error);
-          // Keep fallback data
-        } else if (data && data.length > 0) {
-          // Normalize data: map current_task to currentTask for consistency
-          const normalizedData = data.map((agent: any) => ({
-            ...agent,
-            currentTask: agent.current_task || agent.currentTask || "Aguardando comando",
-          }));
-          setAgents(normalizedData);
-        }
-      } catch (err) {
-        console.error("Failed to connect to Supabase:", err);
-        // Keep fallback data
-      } finally {
-        setLoading(false);
-      }
-    }
-
-    fetchAgents();
-  }, []);
-
-  const filteredAgents = agents.filter((agent) => {
-    const matchesSearch = agent.name.toLowerCase().includes(search.toLowerCase()) ||
-      agent.currentTask.toLowerCase().includes(search.toLowerCase());
-    const matchesFilter = filter === "ALL" || agent.role === filter;
-    return matchesSearch && matchesFilter;
-  });
+  const filteredAgents = getFilteredAgents();
 
   const renderIcon = (role: string) => {
     switch (role) {
@@ -162,8 +114,8 @@ export default function AgentsPage() {
               type="text"
               placeholder="Buscar unidade..."
               className="w-full pl-14 pr-6 py-4 text-xl bg-black/40 border border-[var(--color-border)]/30 text-white placeholder:text-gray-600 focus:border-[var(--color-primary)] focus:outline-none focus:shadow-[0_0_20px_var(--color-primary)] transition-all rounded-lg"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
             />
           </div>
         </div>
@@ -173,8 +125,8 @@ export default function AgentsPage() {
           {["ALL", "CORE", "GUARD", "ANALYST", "SPECIALIST"].map((f) => (
             <button
               key={f}
-              onClick={() => setFilter(f)}
-              className={`text-lg font-bold px-8 py-4 rounded border-2 transition-all uppercase tracking-wider ${filter === f
+              onClick={() => setFilteredSquad(f)}
+              className={`text-lg font-bold px-8 py-4 rounded border-2 transition-all uppercase tracking-wider ${filteredSquad === f
                 ? "bg-[var(--color-primary)]/10 text-[var(--color-primary)] border-[var(--color-primary)] shadow-[0_0_30px_var(--color-primary)]"
                 : "bg-transparent border-[var(--color-border)]/30 text-gray-400 hover:text-[var(--color-primary)] hover:border-[var(--color-primary)]/70"
                 }`}
@@ -252,3 +204,6 @@ export default function AgentsPage() {
     </div>
   );
 }
+
+
+
