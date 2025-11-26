@@ -10,6 +10,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from 'react';
+import { useRequests } from '@/hooks/useRequests';
 import { 
     Send, FileText, UploadCloud, Zap, 
     Box, Cpu, CheckCircle2, Clock, AlertCircle 
@@ -27,14 +28,10 @@ export default function RequestsPage() {
     const canvasRef = useRef<HTMLCanvasElement>(null);
     
     // Estados do Formulário
+    const { requests, loading, createRequest } = useRequests();
     const [title, setTitle] = useState('');
     const [desc, setDesc] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
-    const [activeJobs, setActiveJobs] = useState<RequestJob[]>([
-        { id: 1, title: 'Analyze Market Trends', status: 'processing', priority: 'high', timestamp: '10:42 AM' },
-        { id: 2, title: 'Optimize Database', status: 'queued', priority: 'normal', timestamp: '09:15 AM' },
-        { id: 3, title: 'Generate Daily Report', status: 'completed', priority: 'low', timestamp: '08:00 AM' },
-    ]);
 
     // 1. ENGINE VISUAL (HOLOGRAMA DE CONSTRUÇÃO)
     useEffect(() => {
@@ -142,23 +139,19 @@ export default function RequestsPage() {
         return () => window.removeEventListener('resize', resize);
     }, [title, desc, isSubmitting]);
 
-    const handleSubmit = () => {
+    const handleSubmit = async () => {
         if(!title) return;
         setIsSubmitting(true);
         
-        setTimeout(() => {
-            const newJob: RequestJob = {
-                id: Date.now(),
-                title: title,
-                status: 'queued',
-                priority: 'normal',
-                timestamp: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})
-            };
-            setActiveJobs(prev => [newJob, ...prev]);
+        try {
+            await createRequest(title, desc, 'normal');
             setTitle('');
             setDesc('');
+        } catch (err) {
+            console.error('Failed to create request:', err);
+        } finally {
             setIsSubmitting(false);
-        }, 1500);
+        }
     };
 
     return (
@@ -167,7 +160,7 @@ export default function RequestsPage() {
             {/* ESQUERDA: CONSOLE DE COMANDO (FORM) */}
             <div className="lg:w-1/2 w-full flex flex-col gap-6 relative z-10">
                 
-                <div className="flex-1 bg-black/60 backdrop-blur-xl border border-white/10 rounded-3xl p-8 shadow-2xl flex flex-col relative overflow-hidden group">
+                <div className="flex-1 bg-black/60 backdrop-blur-xl border border-white/10 rounded-3xl p-8 overflow-y-auto shadow-2xl flex flex-col relative overflow-hidden group">
                     
                     {/* Header */}
                     <div className="flex items-center gap-3 mb-8">
@@ -251,7 +244,7 @@ export default function RequestsPage() {
                     </div>
 
                     <div className="flex-1 overflow-y-auto p-4 space-y-3 scrollbar-thin scrollbar-thumb-white/10">
-                        {activeJobs.map((job) => (
+                        {requests.map((job) => (
                             <div 
                                 key={job.id}
                                 className="group bg-black/40 border border-white/5 hover:border-[var(--color-primary)]/30 rounded-xl p-4 transition-all hover:translate-x-[-5px] animate-slideInRight"
@@ -292,3 +285,6 @@ export default function RequestsPage() {
         </div>
     );
 }
+
+
+

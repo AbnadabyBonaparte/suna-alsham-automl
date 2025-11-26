@@ -6,4 +6,7 @@ export { useAuthStore } from './useAuthStore';
 export { useAppStore } from './useAppStore';
 
 // Re-export types if needed
+export { useRequestsStore } from './useRequestsStore';
+export type { Request } from './useRequestsStore';
 export type { Agent } from './useAgentsStore';
+
