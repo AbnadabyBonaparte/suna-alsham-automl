@@ -40,7 +40,7 @@ export const useAgentsStore = create<AgentsStore>((set, get) => ({
     const { agents, filteredSquad, searchQuery } = get();
     let filtered = agents;
     
-    if (filteredSquad) {
+    if (filteredSquad && filteredSquad !== "ALL") {
       filtered = filtered.filter(a => a.role === filteredSquad);
     }
     
@@ -54,3 +54,4 @@ export const useAgentsStore = create<AgentsStore>((set, get) => ({
     return filtered;
   },
 }));
+
