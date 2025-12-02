@@ -12,6 +12,7 @@ import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import Sidebar from '@/components/layout/Sidebar';
+import { ToastContainer } from '@/components/ui/ToastContainer';
 import { Menu, Sparkles, Loader2 } from 'lucide-react';
 
 export default function DashboardLayout({
@@ -84,6 +85,9 @@ export default function DashboardLayout({
           </div>
         </main>
       </div>
+
+      {/* Global Toast Notifications */}
+      <ToastContainer />
     </div>
   );
 }
