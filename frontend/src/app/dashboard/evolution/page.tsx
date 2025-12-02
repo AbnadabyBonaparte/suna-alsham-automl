@@ -10,20 +10,40 @@
 "use client";
 
 import { useState, useEffect, useRef } from 'react';
-import { 
-    Dna, GitBranch, Zap, RefreshCw, 
-    TrendingUp, AlertTriangle, CheckCircle, Microscope 
+import { useAgents } from '@/hooks/useAgents';
+import {
+    Dna, GitBranch, Zap, RefreshCw,
+    TrendingUp, AlertTriangle, CheckCircle, Microscope
 } from 'lucide-react';
 
 export default function EvolutionPage() {
     const canvasRef = useRef<HTMLCanvasElement>(null);
-    
+    const { agents, loading } = useAgents();
+
+    // Calcular stats REAIS dos agents
+    const avgEfficiency = agents.length > 0
+        ? agents.reduce((sum, a) => sum + a.efficiency, 0) / agents.length
+        : 87.4;
+
+    const mutationsByRole = agents.reduce((acc, agent) => {
+        acc[agent.role] = (acc[agent.role] || 0) + 1;
+        return acc;
+    }, {} as Record<string, number>);
+
     // Estado da Simulação
-    const [generation, setGeneration] = useState(1402);
-    const [fitness, setFitness] = useState(87.4);
+    const [generation, setGeneration] = useState(agents.length || 12);
+    const [fitness, setFitness] = useState(avgEfficiency);
     const [mutationRate, setMutationRate] = useState(0.05);
     const [isEvolving, setIsEvolving] = useState(false);
     const [logs, setLogs] = useState<string[]>([]);
+
+    // Atualizar fitness quando agents mudarem
+    useEffect(() => {
+        if (agents.length > 0) {
+            setFitness(avgEfficiency);
+            setGeneration(agents.length);
+        }
+    }, [agents, avgEfficiency]);
 
     // 1. ENGINE VISUAL (DNA HELIX)
     useEffect(() => {
@@ -226,12 +246,51 @@ export default function EvolutionPage() {
 
             {/* DIREITA: PAINEL DE DADOS (GENÉTICA) */}
             <div className="lg:w-1/3 w-full h-full flex flex-col gap-4">
-                
+
+                {/* Loading State */}
+                {loading && (
+                    <div className="bg-black/40 backdrop-blur-xl border border-white/10 rounded-2xl p-6 flex items-center justify-center gap-3">
+                        <RefreshCw className="w-5 h-5 text-[var(--color-primary)] animate-spin" />
+                        <span className="text-gray-400 font-mono text-sm">Loading Genetic Data...</span>
+                    </div>
+                )}
+
+                {/* Card: Mutations by Role */}
+                <div className="bg-black/40 backdrop-blur-xl border border-white/10 rounded-2xl p-6 flex-shrink-0">
+                    <div className="flex items-center gap-2 mb-6 text-white/80">
+                        <Microscope className="w-5 h-5 text-[var(--color-secondary)]" />
+                        <span className="font-bold text-sm tracking-wider">MUTATIONS BY ROLE</span>
+                    </div>
+
+                    <div className="space-y-4">
+                        {Object.entries(mutationsByRole).length > 0 ? (
+                            Object.entries(mutationsByRole).map(([role, count]) => (
+                                <div key={role}>
+                                    <div className="flex justify-between text-xs mb-2">
+                                        <span className="text-gray-400 uppercase font-mono">{role}</span>
+                                        <span className="text-white font-mono">{count} units</span>
+                                    </div>
+                                    <div className="h-2 bg-white/5 rounded-full overflow-hidden">
+                                        <div
+                                            className="h-full bg-gradient-to-r from-[var(--color-primary)] to-[var(--color-accent)]"
+                                            style={{ width: `${(count / agents.length) * 100}%` }}
+                                        />
+                                    </div>
+                                </div>
+                            ))
+                        ) : (
+                            <div className="text-center text-gray-600 text-sm italic">
+                                No agents detected
+                            </div>
+                        )}
+                    </div>
+                </div>
+
                 {/* Card: Status Atual */}
                 <div className="bg-black/40 backdrop-blur-xl border border-white/10 rounded-2xl p-6 flex-1 flex flex-col">
                     <div className="flex items-center gap-2 mb-6 text-white/80">
-                        <Microscope className="w-5 h-5 text-[var(--color-secondary)]" />
-                        <span className="font-bold text-sm tracking-wider">GENETIC MARKERS</span>
+                        <TrendingUp className="w-5 h-5 text-emerald-400" />
+                        <span className="font-bold text-sm tracking-wider">SYSTEM PARAMETERS</span>
                     </div>
 
                     <div className="space-y-6 flex-1">
@@ -253,22 +312,22 @@ export default function EvolutionPage() {
                         {/* Stat 2 */}
                         <div>
                             <div className="flex justify-between text-xs mb-2">
-                                <span className="text-gray-400">Stability Index</span>
-                                <span className="text-emerald-400 font-mono">99.2%</span>
+                                <span className="text-gray-400">Avg Efficiency (Real)</span>
+                                <span className="text-emerald-400 font-mono">{avgEfficiency.toFixed(1)}%</span>
                             </div>
                             <div className="h-2 bg-white/5 rounded-full overflow-hidden">
-                                <div className="h-full bg-emerald-500 w-[99.2%]" />
+                                <div className="h-full bg-emerald-500" style={{ width: `${avgEfficiency}%` }} />
                             </div>
                         </div>
 
                         {/* Stat 3 */}
                         <div>
                             <div className="flex justify-between text-xs mb-2">
-                                <span className="text-gray-400">Code Complexity</span>
-                                <span className="text-orange-400 font-mono">High</span>
+                                <span className="text-gray-400">Total Agents</span>
+                                <span className="text-[var(--color-primary)] font-mono">{agents.length}</span>
                             </div>
                             <div className="h-2 bg-white/5 rounded-full overflow-hidden">
-                                <div className="h-full bg-orange-500 w-[75%]" />
+                                <div className="h-full bg-[var(--color-primary)]" style={{ width: `${Math.min(100, (agents.length / 20) * 100)}%` }} />
                             </div>
                         </div>
                     </div>

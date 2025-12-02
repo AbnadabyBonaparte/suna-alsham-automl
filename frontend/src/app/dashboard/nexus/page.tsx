@@ -342,7 +342,22 @@ export default function NexusPage() {
 
     return (
         <div className="relative h-[calc(100vh-6rem)] w-full overflow-hidden rounded-3xl border border-white/10 bg-[#020617] group">
-            
+
+            {/* COMING SOON BADGE */}
+            <div className="absolute top-4 right-4 z-50 animate-pulse">
+                <div className="bg-gradient-to-r from-[var(--color-primary)]/20 via-[var(--color-accent)]/20 to-[var(--color-secondary)]/20 backdrop-blur-xl border-2 border-[var(--color-primary)]/50 rounded-2xl px-6 py-3 shadow-[0_0_30px_var(--color-primary)]">
+                    <div className="flex items-center gap-3">
+                        <div className="w-2 h-2 rounded-full bg-[var(--color-primary)] animate-ping" />
+                        <span className="text-sm font-black text-white uppercase tracking-widest orbitron">
+                            Coming Soon
+                        </span>
+                    </div>
+                    <div className="text-[10px] text-gray-400 text-center mt-1 font-mono">
+                        Feature in development
+                    </div>
+                </div>
+            </div>
+
             {/* CANVAS CÓSMICO */}
             <canvas
                 ref={canvasRef}

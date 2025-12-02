@@ -264,7 +264,22 @@ export default function OrionPage() {
 
     return (
         <div className="h-[calc(100vh-6rem)] flex flex-col md:flex-row gap-6 overflow-hidden relative p-2" onMouseMove={handleMouseMove}>
-            
+
+            {/* COMING SOON BADGE */}
+            <div className="absolute top-4 right-4 z-50 animate-pulse">
+                <div className="bg-gradient-to-r from-[var(--color-primary)]/20 via-[var(--color-accent)]/20 to-[var(--color-secondary)]/20 backdrop-blur-xl border-2 border-[var(--color-primary)]/50 rounded-2xl px-6 py-3 shadow-[0_0_30px_var(--color-primary)]">
+                    <div className="flex items-center gap-3">
+                        <div className="w-2 h-2 rounded-full bg-[var(--color-primary)] animate-ping" />
+                        <span className="text-sm font-black text-white uppercase tracking-widest orbitron">
+                            Coming Soon
+                        </span>
+                    </div>
+                    <div className="text-[10px] text-gray-400 text-center mt-1 font-mono">
+                        Feature in development
+                    </div>
+                </div>
+            </div>
+
             {/* ESQUERDA: HOLOGRAMA DA IA */}
             <div className="w-full md:w-[400px] flex flex-col gap-4 relative z-10 h-full">
                 <div className="flex-1 bg-black/60 backdrop-blur-xl border border-white/10 rounded-3xl relative overflow-hidden shadow-[0_0_50px_rgba(0,0,0,0.5)] group">

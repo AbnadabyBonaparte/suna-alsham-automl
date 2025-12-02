@@ -10,7 +10,8 @@
 "use client";
 
 import { useState, useEffect, useRef } from 'react';
-import { Globe, Server, Wifi, Radio, MapPin, Activity, Zap } from 'lucide-react';
+import { supabase } from '@/lib/supabase';
+import { Globe, Server, Wifi, Radio, MapPin, Activity, Zap, X, TrendingUp, Clock } from 'lucide-react';
 
 // Dados dos Servidores (Nodes)
 const SERVERS = [
@@ -25,8 +26,29 @@ const SERVERS = [
 export default function NetworkPage() {
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const [hoveredServer, setHoveredServer] = useState<any>(null);
+    const [selectedServer, setSelectedServer] = useState<typeof SERVERS[0] | null>(null);
     const [rotation, setRotation] = useState(0);
     const [stats, setStats] = useState({ packets: 0, latency: 24 });
+    const [supabaseLatency, setSupabaseLatency] = useState<number>(0);
+
+    // Medir latência REAL do Supabase
+    useEffect(() => {
+        async function measureLatency() {
+            const start = performance.now();
+            try {
+                await supabase.from('agents').select('count').limit(1);
+                const end = performance.now();
+                const latency = Math.round(end - start);
+                setSupabaseLatency(latency);
+                setStats(prev => ({ ...prev, latency }));
+            } catch (err) {
+                console.error('Failed to measure latency:', err);
+            }
+        }
+        measureLatency();
+        const interval = setInterval(measureLatency, 10000); // A cada 10s
+        return () => clearInterval(interval);
+    }, []);
 
     // 1. ENGINE VISUAL (HOLO-GLOBE)
     useEffect(() => {
@@ -238,9 +260,10 @@ export default function NetworkPage() {
 
                     <div className="space-y-3 max-h-[400px] overflow-y-auto scrollbar-thin scrollbar-thumb-white/10">
                         {SERVERS.map((server) => (
-                            <div 
+                            <div
                                 key={server.id}
-                                className="group p-3 rounded-lg border border-white/5 bg-white/5 hover:bg-white/10 hover:border-[var(--color-primary)]/50 transition-all cursor-pointer"
+                                onClick={() => setSelectedServer(server)}
+                                className="group p-3 rounded-lg border border-white/5 bg-white/5 hover:bg-white/10 hover:border-[var(--color-primary)]/50 transition-all cursor-pointer hover:scale-105"
                             >
                                 <div className="flex justify-between items-start mb-2">
                                     <div className="flex items-center gap-2">
@@ -298,11 +321,138 @@ export default function NetworkPage() {
                 <span>SCANNING SECTOR {Math.floor(rotation * 100 % 360)}°</span>
             </div>
 
+            {/* MODAL DE DETALHES DO SERVER */}
+            {selectedServer && (
+                <div
+                    className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4"
+                    onClick={() => setSelectedServer(null)}
+                >
+                    <div
+                        className="relative bg-[var(--color-surface)]/95 border-2 border-[var(--color-primary)]/50 backdrop-blur-xl rounded-2xl p-8 max-w-2xl w-full shadow-[0_0_80px_var(--color-primary)] animate-scaleIn"
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        {/* Close Button */}
+                        <button
+                            onClick={() => setSelectedServer(null)}
+                            className="absolute top-4 right-4 p-2 rounded-lg bg-black/40 hover:bg-black/60 text-gray-400 hover:text-white transition-all"
+                        >
+                            <X className="w-6 h-6" />
+                        </button>
+
+                        {/* Header */}
+                        <div className="flex items-center gap-6 mb-8">
+                            <div className="p-6 rounded-2xl bg-black/80 border border-[var(--color-border)]/30 text-[var(--color-primary)] shadow-[0_0_20px_var(--color-primary)]">
+                                <Server className="w-8 h-8" />
+                            </div>
+                            <div>
+                                <h2 className="text-4xl font-black text-white orbitron tracking-wide mb-2">
+                                    {selectedServer.id}
+                                </h2>
+                                <p className="text-gray-400 font-mono">{selectedServer.name}</p>
+                            </div>
+                        </div>
+
+                        {/* Stats Grid */}
+                        <div className="grid grid-cols-2 gap-6 mb-6">
+                            <div className="bg-black/40 border border-white/10 rounded-xl p-6">
+                                <div className="flex items-center gap-3 mb-3">
+                                    <Activity className="w-5 h-5 text-[var(--color-primary)]" />
+                                    <span className="text-sm text-gray-400 uppercase font-mono">Server Load</span>
+                                </div>
+                                <div className={`text-3xl font-bold ${selectedServer.load > 80 ? 'text-red-400' : 'text-emerald-400'}`}>
+                                    {selectedServer.load}%
+                                </div>
+                            </div>
+
+                            <div className="bg-black/40 border border-white/10 rounded-xl p-6">
+                                <div className="flex items-center gap-3 mb-3">
+                                    <Clock className="w-5 h-5 text-[var(--color-accent)]" />
+                                    <span className="text-sm text-gray-400 uppercase font-mono">Latency</span>
+                                </div>
+                                <div className="text-3xl font-bold text-white">
+                                    {supabaseLatency} <span className="text-lg text-gray-500">ms</span>
+                                </div>
+                            </div>
+
+                            <div className="bg-black/40 border border-white/10 rounded-xl p-6">
+                                <div className="flex items-center gap-3 mb-3">
+                                    <MapPin className="w-5 h-5 text-yellow-400" />
+                                    <span className="text-sm text-gray-400 uppercase font-mono">Location</span>
+                                </div>
+                                <div className="text-xl font-mono text-white">
+                                    {selectedServer.lat}°, {selectedServer.lon}°
+                                </div>
+                            </div>
+
+                            <div className="bg-black/40 border border-white/10 rounded-xl p-6">
+                                <div className="flex items-center gap-3 mb-3">
+                                    <TrendingUp className="w-5 h-5 text-emerald-400" />
+                                    <span className="text-sm text-gray-400 uppercase font-mono">Status</span>
+                                </div>
+                                <div className="text-xl font-bold text-emerald-400">
+                                    OPERATIONAL
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Load Bar */}
+                        <div className="bg-black/40 border border-white/10 rounded-xl p-6">
+                            <h3 className="text-xs text-gray-500 uppercase tracking-widest mb-3 font-mono">
+                                Resource Usage
+                            </h3>
+                            <div className="space-y-3">
+                                <div>
+                                    <div className="flex justify-between text-sm mb-2 font-mono">
+                                        <span className="text-gray-400">CPU</span>
+                                        <span className={`font-bold ${selectedServer.load > 80 ? 'text-red-400' : 'text-[var(--color-primary)]'}`}>
+                                            {selectedServer.load}%
+                                        </span>
+                                    </div>
+                                    <div className="w-full bg-white/5 h-3 rounded-full overflow-hidden">
+                                        <div
+                                            className={`h-full transition-all duration-1000 ${selectedServer.load > 80 ? 'bg-red-500' : 'bg-gradient-to-r from-[var(--color-secondary)] via-[var(--color-primary)] to-[var(--color-accent)]'}`}
+                                            style={{ width: `${selectedServer.load}%` }}
+                                        />
+                                    </div>
+                                </div>
+                                <div>
+                                    <div className="flex justify-between text-sm mb-2 font-mono">
+                                        <span className="text-gray-400">Memory</span>
+                                        <span className="text-[var(--color-primary)] font-bold">
+                                            {Math.max(20, selectedServer.load - 15)}%
+                                        </span>
+                                    </div>
+                                    <div className="w-full bg-white/5 h-3 rounded-full overflow-hidden">
+                                        <div
+                                            className="h-full bg-gradient-to-r from-purple-500 to-pink-500 transition-all duration-1000"
+                                            style={{ width: `${Math.max(20, selectedServer.load - 15)}%` }}
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
             <style jsx>{`
                 .animate-spin-slow { animation: spin 10s linear infinite; }
                 @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
                 @keyframes fadeInRight { from { opacity: 0; transform: translateX(20px); } to { opacity: 1; transform: translateX(0); } }
                 .animate-fadeInRight { animation: fadeInRight 0.3s ease-out forwards; }
+                @keyframes scaleIn {
+                    from {
+                        opacity: 0;
+                        transform: scale(0.9);
+                    }
+                    to {
+                        opacity: 1;
+                        transform: scale(1);
+                    }
+                }
+                .animate-scaleIn {
+                    animation: scaleIn 0.3s ease-out;
+                }
             `}</style>
         </div>
     );
