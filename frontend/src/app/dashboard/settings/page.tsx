@@ -10,11 +10,12 @@
 "use client";
 
 import { useState, useEffect, useRef } from 'react';
-import { 
-    User, Volume2, Monitor, Cpu, Shield, 
-    Bell, Eye, Zap, Save, RefreshCw, 
-    Power, Fingerprint, CreditCard 
+import {
+    User, Volume2, Monitor, Cpu, Shield,
+    Bell, Eye, Zap, Save, RefreshCw,
+    Power, Fingerprint, CreditCard, BrainCircuit
 } from 'lucide-react';
+import { useProfile } from '@/hooks/useProfile';
 
 const TABS = [
     { id: 'profile', label: 'Identity', icon: User },
@@ -26,7 +27,16 @@ const TABS = [
 export default function SettingsPage() {
     const [activeTab, setActiveTab] = useState('profile');
     const [isSaving, setIsSaving] = useState(false);
-    
+    const [saveSuccess, setSaveSuccess] = useState(false);
+    const [saveError, setSaveError] = useState<string | null>(null);
+
+    // Profile Hook
+    const { profile, loading, error, updateProfile } = useProfile();
+
+    // Estados de edição do profile
+    const [username, setUsername] = useState('');
+    const [fullName, setFullName] = useState('');
+
     // Estados de Configuração
     const [volume, setVolume] = useState(75);
     const [performance, setPerformance] = useState(90);
@@ -35,6 +45,14 @@ export default function SettingsPage() {
 
     // Refs para Canvas (Audio Viz)
     const audioCanvasRef = useRef<HTMLCanvasElement>(null);
+
+    // Sincronizar profile com estados locais
+    useEffect(() => {
+        if (profile) {
+            setUsername(profile.username || '');
+            setFullName(profile.full_name || '');
+        }
+    }, [profile]);
 
     // 1. ENGINE VISUAL (AUDIO SPECTRUM)
     useEffect(() => {
@@ -80,9 +98,37 @@ export default function SettingsPage() {
         return () => cancelAnimationFrame(animationId);
     }, [volume]);
 
-    const handleSave = () => {
-        setIsSaving(true);
-        setTimeout(() => setIsSaving(false), 1500);
+    const handleSave = async () => {
+        if (activeTab !== 'profile') {
+            // Mock save para outras tabs
+            setIsSaving(true);
+            setTimeout(() => {
+                setIsSaving(false);
+                setSaveSuccess(true);
+                setTimeout(() => setSaveSuccess(false), 3000);
+            }, 1500);
+            return;
+        }
+
+        // Save real para profile
+        try {
+            setIsSaving(true);
+            setSaveError(null);
+            setSaveSuccess(false);
+
+            await updateProfile({
+                username: username || null,
+                full_name: fullName || null,
+            });
+
+            setSaveSuccess(true);
+            setTimeout(() => setSaveSuccess(false), 3000);
+        } catch (err: any) {
+            setSaveError(err.message || 'Failed to save profile');
+            setTimeout(() => setSaveError(null), 5000);
+        } finally {
+            setIsSaving(false);
+        }
     };
 
     return (
@@ -127,14 +173,29 @@ export default function SettingsPage() {
                         {activeTab === 'notifications' && <Bell className="w-6 h-6 text-[var(--color-primary)]" />}
                         {activeTab} SETTINGS
                     </h2>
-                    <button 
-                        onClick={handleSave}
-                        disabled={isSaving}
-                        className="flex items-center gap-2 px-6 py-2 bg-[var(--color-primary)] hover:bg-[var(--color-accent)] text-black font-bold rounded-full transition-all disabled:opacity-50"
-                    >
-                        {isSaving ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-                        {isSaving ? 'OVERWRITING...' : 'SAVE CHANGES'}
-                    </button>
+                    <div className="flex items-center gap-4">
+                        {/* Feedback Messages */}
+                        {saveSuccess && (
+                            <div className="flex items-center gap-2 px-4 py-2 bg-emerald-500/20 border border-emerald-500/50 rounded-full animate-fade-in">
+                                <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                                <span className="text-xs font-bold text-emerald-400">SAVED SUCCESSFULLY</span>
+                            </div>
+                        )}
+                        {saveError && (
+                            <div className="flex items-center gap-2 px-4 py-2 bg-red-500/20 border border-red-500/50 rounded-full animate-fade-in">
+                                <div className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
+                                <span className="text-xs font-bold text-red-400">ERROR: {saveError}</span>
+                            </div>
+                        )}
+                        <button
+                            onClick={handleSave}
+                            disabled={isSaving || loading}
+                            className="flex items-center gap-2 px-6 py-2 bg-[var(--color-primary)] hover:bg-[var(--color-accent)] text-black font-bold rounded-full transition-all disabled:opacity-50"
+                        >
+                            {isSaving ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+                            {isSaving ? 'OVERWRITING...' : 'SAVE CHANGES'}
+                        </button>
+                    </div>
                 </div>
 
                 <div className="flex-1 overflow-y-auto pr-4 space-y-8 scrollbar-thin scrollbar-thumb-white/10">
@@ -147,23 +208,38 @@ export default function SettingsPage() {
                                 {/* Efeito Holográfico (CSS Gradient) */}
                                 <div className="absolute inset-0 bg-[url('/noise.png')] opacity-10 mix-blend-overlay" />
                                 <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/5 to-transparent opacity-0 group-hover:opacity-30 transition-opacity duration-700" />
-                                
-                                <div className="absolute top-6 left-6">
-                                    <div className="w-16 h-16 rounded-xl bg-[var(--color-primary)]/20 border border-[var(--color-primary)] flex items-center justify-center mb-4">
-                                        <Fingerprint className="w-8 h-8 text-[var(--color-primary)]" />
-                                    </div>
-                                    <h3 className="text-lg font-bold text-white">Abnadaby Bonaparte</h3>
-                                    <p className="text-xs text-gray-500 font-mono uppercase tracking-widest">Supreme Architect</p>
-                                </div>
 
-                                <div className="absolute bottom-6 right-6 text-right">
-                                    <div className="text-[10px] text-gray-600 font-mono">ID: ORION-001</div>
-                                    <div className="flex items-center justify-end gap-1 mt-1">
-                                        <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                                        <span className="text-xs text-emerald-500 font-bold">AUTHORIZED</span>
+                                {loading ? (
+                                    // Loading State
+                                    <div className="absolute inset-0 flex items-center justify-center">
+                                        <RefreshCw className="w-8 h-8 text-[var(--color-primary)] animate-spin" />
                                     </div>
-                                </div>
-                                
+                                ) : (
+                                    <>
+                                        <div className="absolute top-6 left-6">
+                                            <div className="w-16 h-16 rounded-xl bg-[var(--color-primary)]/20 border border-[var(--color-primary)] flex items-center justify-center mb-4">
+                                                <Fingerprint className="w-8 h-8 text-[var(--color-primary)]" />
+                                            </div>
+                                            <h3 className="text-lg font-bold text-white">
+                                                {profile?.full_name || profile?.username || 'Agent'}
+                                            </h3>
+                                            <p className="text-xs text-gray-500 font-mono uppercase tracking-widest">
+                                                {profile?.username ? `@${profile.username}` : 'Quantum Operative'}
+                                            </p>
+                                        </div>
+
+                                        <div className="absolute bottom-6 right-6 text-right">
+                                            <div className="text-[10px] text-gray-600 font-mono">
+                                                ID: {profile?.id.slice(0, 8).toUpperCase() || 'UNKNOWN'}
+                                            </div>
+                                            <div className="flex items-center justify-end gap-1 mt-1">
+                                                <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                                                <span className="text-xs text-emerald-500 font-bold">AUTHORIZED</span>
+                                            </div>
+                                        </div>
+                                    </>
+                                )}
+
                                 {/* Scanline */}
                                 <div className="absolute inset-0 bg-gradient-to-b from-transparent via-[var(--color-primary)]/10 to-transparent h-[200%] w-full animate-scanline pointer-events-none" />
                             </div>
@@ -171,13 +247,32 @@ export default function SettingsPage() {
                             {/* Campos de Edição */}
                             <div className="flex-1 space-y-4">
                                 <div className="space-y-2">
-                                    <label className="text-xs font-bold text-gray-500 uppercase tracking-widest">Codenames</label>
-                                    <input type="text" defaultValue="The Architect" className="w-full bg-white/5 border border-white/10 rounded-xl p-3 text-white focus:border-[var(--color-primary)] outline-none transition-all font-mono" />
+                                    <label className="text-xs font-bold text-gray-500 uppercase tracking-widest">Username</label>
+                                    <input
+                                        type="text"
+                                        value={username}
+                                        onChange={(e) => setUsername(e.target.value)}
+                                        placeholder="Enter username"
+                                        disabled={loading}
+                                        className="w-full bg-white/5 border border-white/10 rounded-xl p-3 text-white focus:border-[var(--color-primary)] outline-none transition-all font-mono disabled:opacity-50"
+                                    />
                                 </div>
                                 <div className="space-y-2">
-                                    <label className="text-xs font-bold text-gray-500 uppercase tracking-widest">Secure Email</label>
-                                    <input type="email" defaultValue="admin@alsham.quantum" className="w-full bg-white/5 border border-white/10 rounded-xl p-3 text-white focus:border-[var(--color-primary)] outline-none transition-all font-mono" />
+                                    <label className="text-xs font-bold text-gray-500 uppercase tracking-widest">Full Name</label>
+                                    <input
+                                        type="text"
+                                        value={fullName}
+                                        onChange={(e) => setFullName(e.target.value)}
+                                        placeholder="Enter full name"
+                                        disabled={loading}
+                                        className="w-full bg-white/5 border border-white/10 rounded-xl p-3 text-white focus:border-[var(--color-primary)] outline-none transition-all font-mono disabled:opacity-50"
+                                    />
                                 </div>
+                                {error && (
+                                    <div className="p-3 bg-red-500/10 border border-red-500/30 rounded-xl">
+                                        <p className="text-xs text-red-400 font-mono">{error}</p>
+                                    </div>
+                                )}
                             </div>
                         </div>
                     )}
@@ -271,6 +366,12 @@ export default function SettingsPage() {
                     100% { transform: translateY(100%); }
                 }
                 .animate-scanline { animation: scanline 3s linear infinite; }
+
+                @keyframes fade-in {
+                    from { opacity: 0; transform: translateY(-10px); }
+                    to { opacity: 1; transform: translateY(0); }
+                }
+                .animate-fade-in { animation: fade-in 0.3s ease-out; }
             `}</style>
         </div>
     );
