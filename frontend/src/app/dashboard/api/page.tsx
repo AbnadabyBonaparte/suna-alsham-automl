@@ -10,9 +10,10 @@
 "use client";
 
 import { useState, useEffect, useRef } from 'react';
-import { 
-    Play, Code, Copy, Check, Server, 
-    Globe, Shield, Zap, Database, RefreshCw 
+import { useNotificationStore } from '@/stores/useNotificationStore';
+import {
+    Play, Code, Copy, Check, Server,
+    Globe, Shield, Zap, Database, RefreshCw
 } from 'lucide-react';
 
 const METHODS = ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'];
@@ -27,6 +28,7 @@ const ENDPOINTS = [
 
 export default function ApiPage() {
     // States
+    const { addNotification } = useNotificationStore();
     const [method, setMethod] = useState('GET');
     const [url, setUrl] = useState('https://api.alsham.quantum/v1/agents');
     const [isLoading, setIsLoading] = useState(false);
@@ -81,11 +83,41 @@ export default function ApiPage() {
     };
 
     const handleCopy = () => {
-        if(response) {
+        if (response) {
             navigator.clipboard.writeText(response);
             setCopied(true);
+            addNotification({
+                type: 'success',
+                title: 'Response Copied',
+                message: 'Response data copied to clipboard.',
+            });
             setTimeout(() => setCopied(false), 2000);
         }
+    };
+
+    // Syntax highlighting function
+    const syntaxHighlight = (json: string) => {
+        json = json.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        return json.replace(
+            /("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g,
+            (match) => {
+                let cls = 'text-gray-400';
+                if (/^"/.test(match)) {
+                    if (/:$/.test(match)) {
+                        cls = 'text-purple-400 font-semibold'; // keys
+                    } else {
+                        cls = 'text-emerald-400'; // string values
+                    }
+                } else if (/true|false/.test(match)) {
+                    cls = 'text-yellow-400'; // booleans
+                } else if (/null/.test(match)) {
+                    cls = 'text-red-400'; // null
+                } else {
+                    cls = 'text-blue-400'; // numbers
+                }
+                return `<span class="${cls}">${match}</span>`;
+            }
+        );
     };
 
     return (
@@ -227,7 +259,9 @@ export default function ApiPage() {
                             </span>
                         )}
                         {latency && (
-                            <span className="text-xs font-mono text-gray-500">{latency}ms</span>
+                            <span className="text-xs font-mono text-[var(--color-accent)] animate-pulse">
+                                ⚡ {latency}ms
+                            </span>
                         )}
                     </div>
                 </div>
@@ -245,9 +279,11 @@ export default function ApiPage() {
                     {/* Code Display */}
                     <div className="absolute inset-0 overflow-auto p-6 scrollbar-thin scrollbar-thumb-white/10">
                         {response ? (
-                            <pre ref={responseRef} className="font-mono text-sm text-blue-300 leading-relaxed">
-                                {response}
-                            </pre>
+                            <pre
+                                ref={responseRef}
+                                className="font-mono text-sm leading-relaxed animate-fadeIn"
+                                dangerouslySetInnerHTML={{ __html: syntaxHighlight(response) }}
+                            />
                         ) : (
                             <div className="h-full flex flex-col items-center justify-center text-gray-700 select-none">
                                 <Server className="w-16 h-16 mb-4 opacity-20" />
@@ -280,6 +316,12 @@ export default function ApiPage() {
                     100% { transform: translateX(300%); }
                 }
                 .animate-loading-bar { animation: loading-bar 1s linear infinite; }
+
+                @keyframes fadeIn {
+                    from { opacity: 0; transform: translateY(10px); }
+                    to { opacity: 1; transform: translateY(0); }
+                }
+                .animate-fadeIn { animation: fadeIn 0.3s ease-out; }
             `}</style>
         </div>
     );

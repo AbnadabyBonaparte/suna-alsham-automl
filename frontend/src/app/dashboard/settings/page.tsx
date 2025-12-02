@@ -10,6 +10,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from 'react';
+import { useNotificationStore } from '@/stores/useNotificationStore';
 import {
     User, Volume2, Monitor, Cpu, Shield,
     Bell, Eye, Zap, Save, RefreshCw,
@@ -30,8 +31,9 @@ export default function SettingsPage() {
     const [saveSuccess, setSaveSuccess] = useState(false);
     const [saveError, setSaveError] = useState<string | null>(null);
 
-    // Profile Hook
+    // Profile Hook & Notifications
     const { profile, loading, error, updateProfile } = useProfile();
+    const { addNotification } = useNotificationStore();
 
     // Estados de edição do profile
     const [username, setUsername] = useState('');
@@ -42,6 +44,12 @@ export default function SettingsPage() {
     const [performance, setPerformance] = useState(90);
     const [notifications, setNotifications] = useState(true);
     const [stealthMode, setStealthMode] = useState(false);
+
+    // Estados de Notifications Tab
+    const [emailNotifs, setEmailNotifs] = useState(true);
+    const [pushNotifs, setPushNotifs] = useState(true);
+    const [agentAlerts, setAgentAlerts] = useState(true);
+    const [securityAlerts, setSecurityAlerts] = useState(true);
 
     // Refs para Canvas (Audio Viz)
     const audioCanvasRef = useRef<HTMLCanvasElement>(null);
@@ -105,6 +113,11 @@ export default function SettingsPage() {
             setTimeout(() => {
                 setIsSaving(false);
                 setSaveSuccess(true);
+                addNotification({
+                    type: 'success',
+                    title: 'Settings Saved',
+                    message: `${activeTab} preferences have been updated.`,
+                });
                 setTimeout(() => setSaveSuccess(false), 3000);
             }, 1500);
             return;
@@ -122,9 +135,19 @@ export default function SettingsPage() {
             });
 
             setSaveSuccess(true);
+            addNotification({
+                type: 'success',
+                title: 'Profile Updated',
+                message: 'Your identity has been successfully updated.',
+            });
             setTimeout(() => setSaveSuccess(false), 3000);
         } catch (err: any) {
             setSaveError(err.message || 'Failed to save profile');
+            addNotification({
+                type: 'error',
+                title: 'Save Failed',
+                message: err.message || 'Failed to update profile.',
+            });
             setTimeout(() => setSaveError(null), 5000);
         } finally {
             setIsSaving(false);
@@ -333,13 +356,13 @@ export default function SettingsPage() {
                                 { label: 'Quantum Sync', state: true, set: () => {}, icon: RefreshCw, color: 'text-cyan-400' },
                                 { label: 'Firewall Guard', state: true, set: () => {}, icon: Shield, color: 'text-emerald-400' },
                             ].map((opt, i) => (
-                                <div 
+                                <div
                                     key={i}
                                     onClick={() => opt.set(!opt.state)}
                                     className={`
                                         cursor-pointer p-5 rounded-2xl border transition-all duration-300 flex items-center justify-between group
-                                        ${opt.state 
-                                            ? 'bg-white/5 border-[var(--color-primary)]/30' 
+                                        ${opt.state
+                                            ? 'bg-white/5 border-[var(--color-primary)]/30'
                                             : 'bg-black/40 border-white/5 opacity-60'}
                                     `}
                                 >
@@ -347,13 +370,63 @@ export default function SettingsPage() {
                                         <opt.icon className={`w-5 h-5 ${opt.color}`} />
                                         <span className={`font-bold text-sm ${opt.state ? 'text-white' : 'text-gray-500'}`}>{opt.label}</span>
                                     </div>
-                                    
+
                                     {/* Toggle Switch Visual */}
                                     <div className={`w-12 h-6 rounded-full p-1 transition-colors ${opt.state ? 'bg-[var(--color-primary)]' : 'bg-gray-700'}`}>
                                         <div className={`w-4 h-4 bg-white rounded-full shadow-md transition-transform ${opt.state ? 'translate-x-6' : 'translate-x-0'}`} />
                                     </div>
                                 </div>
                             ))}
+                        </div>
+                    )}
+
+                    {/* --- CONTEÚDO: NOTIFICATIONS --- */}
+                    {activeTab === 'notifications' && (
+                        <div className="space-y-6">
+                            <p className="text-sm text-gray-400 font-mono">
+                                Configure how you receive alerts and updates from the Alsham Quantum system.
+                            </p>
+
+                            <div className="grid grid-cols-1 gap-4">
+                                {[
+                                    { label: 'Email Notifications', desc: 'Receive updates via email', state: emailNotifs, set: setEmailNotifs, icon: Bell },
+                                    { label: 'Push Notifications', desc: 'Browser push notifications', state: pushNotifs, set: setPushNotifs, icon: Zap },
+                                    { label: 'Agent Alerts', desc: 'Notifications when agents complete tasks', state: agentAlerts, set: setAgentAlerts, icon: User },
+                                    { label: 'Security Alerts', desc: 'Critical security warnings', state: securityAlerts, set: setSecurityAlerts, icon: Shield },
+                                ].map((opt, i) => (
+                                    <div
+                                        key={i}
+                                        onClick={() => opt.set(!opt.state)}
+                                        className={`
+                                            cursor-pointer p-6 rounded-2xl border transition-all duration-300 group
+                                            ${opt.state
+                                                ? 'bg-white/5 border-[var(--color-primary)]/30 shadow-[0_0_20px_rgba(var(--color-primary-rgb),0.1)]'
+                                                : 'bg-black/40 border-white/5 hover:border-white/10'}
+                                        `}
+                                    >
+                                        <div className="flex items-center justify-between">
+                                            <div className="flex items-center gap-4">
+                                                <div className={`p-3 rounded-xl transition-colors ${opt.state ? 'bg-[var(--color-primary)]/20 text-[var(--color-primary)]' : 'bg-white/5 text-gray-500'}`}>
+                                                    <opt.icon className="w-5 h-5" />
+                                                </div>
+                                                <div>
+                                                    <h4 className={`font-bold text-sm ${opt.state ? 'text-white' : 'text-gray-500'}`}>
+                                                        {opt.label}
+                                                    </h4>
+                                                    <p className="text-xs text-gray-600 mt-0.5">
+                                                        {opt.desc}
+                                                    </p>
+                                                </div>
+                                            </div>
+
+                                            {/* Toggle Switch Visual */}
+                                            <div className={`w-14 h-7 rounded-full p-1 transition-all ${opt.state ? 'bg-[var(--color-primary)] shadow-[0_0_15px_var(--color-primary)]' : 'bg-gray-700'}`}>
+                                                <div className={`w-5 h-5 bg-white rounded-full shadow-md transition-transform ${opt.state ? 'translate-x-7' : 'translate-x-0'}`} />
+                                            </div>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
                         </div>
                     )}
 
