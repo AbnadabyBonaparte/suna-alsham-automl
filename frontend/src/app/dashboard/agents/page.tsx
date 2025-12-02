@@ -9,7 +9,9 @@
 
 "use client";
 
+import { useState } from "react";
 import { useAgents } from "@/hooks/useAgents";
+import { X, Activity, Clock, Zap as ZapIcon, TrendingUp } from "lucide-react";
 
 
 
@@ -70,9 +72,9 @@ interface Agent {
 }
 
 export default function AgentsPage() {
-  const { 
-    agents, 
-    loading, 
+  const {
+    agents,
+    loading,
     searchQuery,
     filteredSquad,
     setSearchQuery,
@@ -81,6 +83,7 @@ export default function AgentsPage() {
   } = useAgents();
 
   const filteredAgents = getFilteredAgents();
+  const [selectedAgent, setSelectedAgent] = useState<Agent | null>(null);
 
   const renderIcon = (role: string) => {
     switch (role) {
@@ -138,11 +141,15 @@ export default function AgentsPage() {
 
         {/* GRID */}
         <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-8">
-          {filteredAgents.map((agent) => {
+          {filteredAgents.map((agent, index) => {
             return (
               <div
                 key={agent.id}
-                className="group relative bg-[var(--color-surface)]/60 border-2 border-[var(--color-border)]/20 backdrop-blur-xl hover:border-[var(--color-primary)]/80 hover:shadow-[0_0_50px_var(--color-primary)] transition-all duration-500 rounded-xl overflow-hidden cursor-pointer transform hover:-translate-y-2"
+                onClick={() => setSelectedAgent(agent)}
+                style={{
+                  animation: `fadeInUp 0.6s ease-out ${index * 0.05}s both`
+                }}
+                className="group relative bg-[var(--color-surface)]/60 border-2 border-[var(--color-border)]/20 backdrop-blur-xl hover:border-[var(--color-primary)]/80 hover:shadow-[0_0_50px_var(--color-primary)] hover:scale-105 transition-all duration-500 rounded-xl overflow-hidden cursor-pointer transform hover:-translate-y-2"
               >
                 <div className="p-8">
                   <div className="flex items-start justify-between mb-6">
@@ -200,7 +207,144 @@ export default function AgentsPage() {
             );
           })}
         </div>
+
+        {/* MODAL DE DETALHES DO AGENT */}
+        {selectedAgent && (
+          <div
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4"
+            onClick={() => setSelectedAgent(null)}
+          >
+            <div
+              className="relative bg-[var(--color-surface)]/95 border-2 border-[var(--color-primary)]/50 backdrop-blur-xl rounded-2xl p-8 max-w-2xl w-full shadow-[0_0_80px_var(--color-primary)] animate-scaleIn"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Close Button */}
+              <button
+                onClick={() => setSelectedAgent(null)}
+                className="absolute top-4 right-4 p-2 rounded-lg bg-black/40 hover:bg-black/60 text-gray-400 hover:text-white transition-all"
+              >
+                <X className="w-6 h-6" />
+              </button>
+
+              {/* Header */}
+              <div className="flex items-center gap-6 mb-8">
+                <div className="p-6 rounded-2xl bg-black/80 border border-[var(--color-border)]/30 text-[var(--color-primary)] shadow-[0_0_20px_var(--color-primary)]">
+                  {renderIcon(selectedAgent.role)}
+                </div>
+                <div>
+                  <h2 className="text-4xl font-black text-white orbitron tracking-wide mb-2">
+                    {selectedAgent.name}
+                  </h2>
+                  <span className="inline-block text-sm px-4 py-1 bg-black/80 border border-[var(--color-primary)]/40 text-[var(--color-primary)] rounded uppercase font-bold tracking-widest">
+                    {selectedAgent.role} UNIT
+                  </span>
+                </div>
+              </div>
+
+              {/* Stats Grid */}
+              <div className="grid grid-cols-2 gap-6 mb-8">
+                <div className="bg-black/40 border border-white/10 rounded-xl p-6">
+                  <div className="flex items-center gap-3 mb-3">
+                    <Activity className="w-5 h-5 text-[var(--color-primary)]" />
+                    <span className="text-sm text-gray-400 uppercase font-mono">Status</span>
+                  </div>
+                  <div
+                    className={`text-2xl font-bold ${
+                      selectedAgent.status === "ACTIVE"
+                        ? "text-[var(--color-success)]"
+                        : "text-[var(--color-warning)]"
+                    }`}
+                  >
+                    {selectedAgent.status}
+                  </div>
+                </div>
+
+                <div className="bg-black/40 border border-white/10 rounded-xl p-6">
+                  <div className="flex items-center gap-3 mb-3">
+                    <TrendingUp className="w-5 h-5 text-[var(--color-secondary)]" />
+                    <span className="text-sm text-gray-400 uppercase font-mono">Efficiency</span>
+                  </div>
+                  <div className="text-2xl font-bold text-white">
+                    {selectedAgent.efficiency.toFixed(1)}%
+                  </div>
+                </div>
+
+                <div className="bg-black/40 border border-white/10 rounded-xl p-6">
+                  <div className="flex items-center gap-3 mb-3">
+                    <Clock className="w-5 h-5 text-[var(--color-accent)]" />
+                    <span className="text-sm text-gray-400 uppercase font-mono">Agent ID</span>
+                  </div>
+                  <div className="text-xl font-mono text-white">
+                    #{selectedAgent.id}
+                  </div>
+                </div>
+
+                <div className="bg-black/40 border border-white/10 rounded-xl p-6">
+                  <div className="flex items-center gap-3 mb-3">
+                    <ZapIcon className="w-5 h-5 text-yellow-400" />
+                    <span className="text-sm text-gray-400 uppercase font-mono">Role</span>
+                  </div>
+                  <div className="text-xl font-bold text-white">
+                    {selectedAgent.role}
+                  </div>
+                </div>
+              </div>
+
+              {/* Current Task */}
+              <div className="bg-black/40 border border-white/10 rounded-xl p-6">
+                <h3 className="text-xs text-gray-500 uppercase tracking-widest mb-3 font-mono">
+                  Current Task
+                </h3>
+                <p className="text-lg text-gray-300 font-mono leading-relaxed border-l-4 border-[var(--color-primary)] pl-4">
+                  &quot;{selectedAgent.currentTask}&quot;
+                </p>
+              </div>
+
+              {/* Efficiency Bar */}
+              <div className="mt-8">
+                <div className="flex justify-between text-sm mb-2 font-mono">
+                  <span className="text-gray-400">NEURAL INTEGRITY</span>
+                  <span className="text-[var(--color-primary)] font-bold">
+                    {selectedAgent.efficiency.toFixed(1)}%
+                  </span>
+                </div>
+                <div className="w-full bg-white/5 h-4 rounded-full overflow-hidden">
+                  <div
+                    className="h-full bg-gradient-to-r from-[var(--color-secondary)] via-[var(--color-primary)] to-[var(--color-accent)] transition-all duration-1000"
+                    style={{ width: `${selectedAgent.efficiency}%` }}
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
+
+      <style jsx>{`
+        @keyframes fadeInUp {
+          from {
+            opacity: 0;
+            transform: translateY(30px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+        @keyframes scaleIn {
+          from {
+            opacity: 0;
+            transform: scale(0.9);
+          }
+          to {
+            opacity: 1;
+            transform: scale(1);
+          }
+        }
+        .animate-scaleIn {
+          animation: scaleIn 0.3s ease-out;
+        }
+      `}</style>
     </div>
   );
 }

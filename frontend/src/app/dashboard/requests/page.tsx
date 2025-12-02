@@ -11,9 +11,10 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { useRequests } from '@/hooks/useRequests';
-import { 
-    Send, FileText, UploadCloud, Zap, 
-    Box, Cpu, CheckCircle2, Clock, AlertCircle 
+import { useNotificationStore } from '@/stores/useNotificationStore';
+import {
+    Send, FileText, UploadCloud, Zap,
+    Box, Cpu, CheckCircle2, Clock, AlertCircle
 } from 'lucide-react';
 
 interface RequestJob {
@@ -26,9 +27,10 @@ interface RequestJob {
 
 export default function RequestsPage() {
     const canvasRef = useRef<HTMLCanvasElement>(null);
-    
+
     // Estados do Formulário
     const { requests, loading, createRequest } = useRequests();
+    const { addNotification } = useNotificationStore();
     const [title, setTitle] = useState('');
     const [desc, setDesc] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -140,15 +142,32 @@ export default function RequestsPage() {
     }, [title, desc, isSubmitting]);
 
     const handleSubmit = async () => {
-        if(!title) return;
+        if (!title) {
+            addNotification({
+                type: 'warning',
+                title: 'Missing Title',
+                message: 'Please provide a directive title before initializing.',
+            });
+            return;
+        }
         setIsSubmitting(true);
-        
+
         try {
             await createRequest(title, desc, 'normal');
+            addNotification({
+                type: 'success',
+                title: 'Request Created',
+                message: `"${title}" has been successfully materialized.`,
+            });
             setTitle('');
             setDesc('');
         } catch (err) {
             console.error('Failed to create request:', err);
+            addNotification({
+                type: 'error',
+                title: 'Creation Failed',
+                message: 'Failed to materialize request. Please try again.',
+            });
         } finally {
             setIsSubmitting(false);
         }
@@ -244,11 +263,16 @@ export default function RequestsPage() {
                     </div>
 
                     <div className="flex-1 overflow-y-auto p-4 space-y-3 scrollbar-thin scrollbar-thumb-white/10">
-                        {requests.map((job) => (
-                            <div 
+                        {requests.map((job, index) => (
+                            <div
                                 key={job.id}
-                                className="group bg-black/40 border border-white/5 hover:border-[var(--color-primary)]/30 rounded-xl p-4 transition-all hover:translate-x-[-5px] animate-slideInRight"
+                                style={{
+                                    animation: `slideInRight 0.4s ease-out ${index * 0.05}s both`
+                                }}
+                                className="group relative bg-black/40 border border-white/5 hover:border-[var(--color-primary)]/30 rounded-xl p-4 transition-all hover:translate-x-[-5px] hover:scale-105 cursor-pointer overflow-hidden"
                             >
+                                {/* Hover Preview Overlay */}
+                                <div className="absolute inset-0 bg-gradient-to-r from-[var(--color-primary)]/0 via-[var(--color-primary)]/5 to-[var(--color-primary)]/0 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
                                 <div className="flex justify-between items-start mb-2">
                                     <div className="p-2 rounded-lg bg-white/5 text-gray-300 group-hover:text-[var(--color-primary)] transition-colors">
                                         <Box className="w-4 h-4" />
