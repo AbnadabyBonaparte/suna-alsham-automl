@@ -1,36 +1,136 @@
 /**
  * ═══════════════════════════════════════════════════════════════
- * ALSHAM QUANTUM - SUPPORT OPS (CRISIS CENTER)
+ * ALSHAM QUANTUM - SUPPORT OPS (CRISIS CENTER) - ENTERPRISE v10
  * ═══════════════════════════════════════════════════════════════
  * 📁 PATH: frontend/src/app/dashboard/support/page.tsx
- * 📋 Colmeia de Tickets Hexagonais e Triagem por IA
+ * 📋 Colmeia de Tickets Hexagonais e Triagem por IA - DADOS REAIS
  * ═══════════════════════════════════════════════════════════════
  */
 
 "use client";
 
 import { useState, useEffect, useRef } from 'react';
-import { 
-    LifeBuoy, CheckCircle, Clock, AlertOctagon, 
-    Bot, User, MessageSquare, Zap, Activity 
+import {
+    LifeBuoy, CheckCircle, Clock, AlertOctagon,
+    Bot, User, MessageSquare, Zap, Activity, X, ExternalLink
 } from 'lucide-react';
+import { useSupport } from '@/hooks/useSupport';
+import { Skeleton } from '@/components/ui/SkeletonLoader';
+import type { SupportTicket } from '@/stores';
 
-interface Ticket {
-    id: number;
-    user: string;
-    issue: string;
-    status: 'critical' | 'pending' | 'solved';
-    sentiment: number; // 0-100
+interface HexTicket extends SupportTicket {
     x: number;
     y: number;
 }
 
+interface TicketModalProps {
+    ticket: SupportTicket | null;
+    onClose: () => void;
+}
+
+function TicketModal({ ticket, onClose }: TicketModalProps) {
+    if (!ticket) return null;
+
+    const statusColors = {
+        open: { bg: 'bg-red-500/10', border: 'border-red-500/30', text: 'text-red-400' },
+        in_progress: { bg: 'bg-yellow-500/10', border: 'border-yellow-500/30', text: 'text-yellow-400' },
+        resolved: { bg: 'bg-emerald-500/10', border: 'border-emerald-500/30', text: 'text-emerald-400' },
+        closed: { bg: 'bg-gray-500/10', border: 'border-gray-500/30', text: 'text-gray-400' },
+    };
+
+    const priorityColors = {
+        low: 'text-blue-400',
+        normal: 'text-gray-400',
+        high: 'text-orange-400',
+        critical: 'text-red-400',
+    };
+
+    const colors = statusColors[ticket.status];
+
+    return (
+        <div className="fixed inset-0 z-[9998] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fadeIn">
+            <div className={`relative w-full max-w-2xl ${colors.bg} backdrop-blur-xl border ${colors.border} rounded-3xl p-8 shadow-2xl`}>
+                {/* Close Button */}
+                <button
+                    onClick={onClose}
+                    className="absolute top-6 right-6 text-gray-400 hover:text-white transition-colors"
+                >
+                    <X className="w-6 h-6" />
+                </button>
+
+                {/* Header */}
+                <div className="flex items-start gap-4 mb-6">
+                    <div className={`p-3 rounded-xl ${colors.bg} border ${colors.border}`}>
+                        <LifeBuoy className={`w-8 h-8 ${colors.text}`} />
+                    </div>
+                    <div className="flex-1">
+                        <h2 className="text-2xl font-bold text-white mb-1">{ticket.title}</h2>
+                        <div className="flex gap-2 text-xs">
+                            <span className={`px-2 py-1 rounded ${colors.bg} ${colors.text} border ${colors.border} uppercase font-bold`}>
+                                {ticket.status.replace('_', ' ')}
+                            </span>
+                            <span className={`px-2 py-1 rounded bg-white/5 ${priorityColors[ticket.priority]} border border-white/10 uppercase font-bold`}>
+                                {ticket.priority}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Description */}
+                <div className="mb-6">
+                    <h3 className="text-sm font-bold text-gray-400 uppercase mb-2">Description</h3>
+                    <p className="text-white leading-relaxed">{ticket.description || 'No description provided'}</p>
+                </div>
+
+                {/* Stats Grid */}
+                <div className="grid grid-cols-2 gap-4 mb-6">
+                    <div className="bg-white/5 rounded-xl p-4">
+                        <div className="text-xs text-gray-400 uppercase mb-1">Sentiment Score</div>
+                        <div className="flex items-baseline gap-2">
+                            <span className="text-2xl font-bold text-white">{ticket.sentiment}/100</span>
+                            <Activity className={`w-4 h-4 ${ticket.sentiment > 70 ? 'text-emerald-400' : ticket.sentiment > 40 ? 'text-yellow-400' : 'text-red-400'}`} />
+                        </div>
+                        {/* Sentiment Bar */}
+                        <div className="mt-2 h-2 w-full bg-black/50 rounded-full overflow-hidden">
+                            <div
+                                className={`h-full transition-all ${ticket.sentiment > 70 ? 'bg-emerald-500' : ticket.sentiment > 40 ? 'bg-yellow-500' : 'bg-red-500'}`}
+                                style={{ width: `${ticket.sentiment}%` }}
+                            />
+                        </div>
+                    </div>
+
+                    <div className="bg-white/5 rounded-xl p-4">
+                        <div className="text-xs text-gray-400 uppercase mb-1">Created</div>
+                        <div className="text-lg font-mono text-white">
+                            {new Date(ticket.created_at).toLocaleDateString()}
+                        </div>
+                        <div className="text-xs text-gray-500 font-mono">
+                            {new Date(ticket.created_at).toLocaleTimeString()}
+                        </div>
+                    </div>
+                </div>
+
+                {/* Actions */}
+                <div className="flex gap-3">
+                    <button className="flex-1 bg-[var(--color-primary)] hover:bg-[var(--color-primary)]/80 text-black font-bold py-3 px-6 rounded-xl transition-all">
+                        Assign to AI Agent
+                    </button>
+                    <button className="px-6 py-3 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-white transition-all">
+                        View Details
+                        <ExternalLink className="w-4 h-4 inline ml-2" />
+                    </button>
+                </div>
+            </div>
+        </div>
+    );
+}
+
 export default function SupportPage() {
     const canvasRef = useRef<HTMLCanvasElement>(null);
-    const [tickets, setTickets] = useState<Ticket[]>([]);
-    const [solvedCount, setSolvedCount] = useState(1240);
-    const [patienceLevel, setPatienceLevel] = useState(85);
-    const [activeTicket, setActiveTicket] = useState<Ticket | null>(null);
+    const [hexTickets, setHexTickets] = useState<HexTicket[]>([]);
+    const [activeTicket, setActiveTicket] = useState<SupportTicket | null>(null);
+
+    const { tickets, stats, loading } = useSupport();
 
     // 1. ENGINE VISUAL (THE HIVE)
     useEffect(() => {
@@ -44,9 +144,13 @@ export default function SupportPage() {
         const GAP = 4;
         const COLS = 12;
         const ROWS = 8;
-        
-        // Inicializar Grid de Tickets
-        const initialTickets: Ticket[] = [];
+
+        // Inicializar Grid de Tickets com dados REAIS
+        const initialHexTickets: HexTicket[] = [];
+        const maxVisibleTickets = COLS * ROWS;
+        const visibleTickets = tickets.slice(0, maxVisibleTickets);
+
+        let hexIndex = 0;
         for(let r=0; r<ROWS; r++) {
             for(let c=0; c<COLS; c++) {
                 // Posição Hexagonal
@@ -54,19 +158,18 @@ export default function SupportPage() {
                 const x = c * (HEX_SIZE * Math.sqrt(3) + GAP) + xOffset + 50;
                 const y = r * (HEX_SIZE * 1.5 + GAP) + 50;
 
-                if(Math.random() > 0.6) { // 40% de chance de ter ticket
-                    initialTickets.push({
-                        id: r * COLS + c,
-                        user: `User_${Math.floor(Math.random()*999)}`,
-                        issue: ['Login Error', 'Payment Failed', 'API Limit', 'Bug Report'][Math.floor(Math.random()*4)],
-                        status: Math.random() > 0.8 ? 'critical' : Math.random() > 0.5 ? 'pending' : 'solved',
-                        sentiment: Math.random() * 100,
-                        x, y
+                if (hexIndex < visibleTickets.length) {
+                    const ticket = visibleTickets[hexIndex];
+                    initialHexTickets.push({
+                        ...ticket,
+                        x,
+                        y
                     });
+                    hexIndex++;
                 }
             }
         }
-        setTickets(initialTickets);
+        setHexTickets(initialHexTickets);
 
         let time = 0;
         let aiLaser = { active: false, targetX: 0, targetY: 0, progress: 0 };
@@ -89,17 +192,18 @@ export default function SupportPage() {
             time += 0.02;
 
             // Desenhar Tickets (Hexágonos)
-            tickets.forEach(t => {
-                // Cor baseada no status
+            initialHexTickets.forEach(t => {
+                // Cor baseada no status REAL
                 let color = '#374151'; // Default Gray
                 let glow = false;
 
-                if(t.status === 'solved') color = '#10B981'; // Verde
-                else if(t.status === 'pending') color = '#F59E0B'; // Amarelo
-                else if(t.status === 'critical') {
+                if(t.status === 'resolved' || t.status === 'closed') color = '#10B981'; // Verde
+                else if(t.status === 'in_progress') color = '#F59E0B'; // Amarelo
+                else if(t.status === 'open' && t.priority === 'critical') {
                     color = '#EF4444'; // Vermelho
                     glow = true;
                 }
+                else if(t.status === 'open') color = '#F59E0B'; // Orange
 
                 // Animação de pulso para críticos
                 const pulse = glow ? Math.sin(time * 5) * 0.2 + 1 : 1;
@@ -118,9 +222,9 @@ export default function SupportPage() {
                 ctx.fillStyle = color;
                 ctx.shadowBlur = glow ? 15 : 0;
                 ctx.shadowColor = color;
-                ctx.globalAlpha = t.status === 'solved' ? 0.3 : 0.8; // Solved fica transparente
+                ctx.globalAlpha = (t.status === 'resolved' || t.status === 'closed') ? 0.3 : 0.8;
                 ctx.fill();
-                
+
                 // Reset
                 ctx.shadowBlur = 0;
                 ctx.globalAlpha = 1;
@@ -128,8 +232,8 @@ export default function SupportPage() {
 
             // --- IA INTERVENTION (O LASER) ---
             if(Math.random() > 0.98 && !aiLaser.active) {
-                // Escolher um alvo pendente/crítico
-                const target = tickets.find(t => t.status !== 'solved');
+                // Escolher um alvo open/in_progress
+                const target = initialHexTickets.find(t => t.status === 'open' || t.status === 'in_progress');
                 if(target) {
                     aiLaser = { active: true, targetX: target.x, targetY: target.y, progress: 0 };
                 }
@@ -137,7 +241,7 @@ export default function SupportPage() {
 
             if(aiLaser.active) {
                 aiLaser.progress += 0.1;
-                
+
                 // Origem do Laser (Centro superior)
                 const startX = w / 2;
                 const startY = -50;
@@ -146,10 +250,10 @@ export default function SupportPage() {
                 ctx.beginPath();
                 ctx.moveTo(startX, startY);
                 ctx.lineTo(aiLaser.targetX, aiLaser.targetY);
-                
+
                 const themeColor = getComputedStyle(document.documentElement).getPropertyValue('--color-primary').trim() || '#00FFD0';
                 ctx.strokeStyle = themeColor;
-                ctx.lineWidth = 2 * (1 - aiLaser.progress); // Fica mais fino ao acabar
+                ctx.lineWidth = 2 * (1 - aiLaser.progress);
                 ctx.shadowBlur = 20;
                 ctx.shadowColor = themeColor;
                 ctx.stroke();
@@ -162,17 +266,9 @@ export default function SupportPage() {
                 ctx.fill();
                 ctx.globalAlpha = 1;
 
-                // Terminar Laser e Resolver Ticket
+                // Terminar Laser
                 if(aiLaser.progress >= 1) {
                     aiLaser.active = false;
-                    // Atualizar status do ticket (apenas visual no canvas loop)
-                    // Em app real, usaria state, mas aqui é para performance visual
-                    const tIndex = tickets.findIndex(t => t.x === aiLaser.targetX && t.y === aiLaser.targetY);
-                    if(tIndex !== -1) {
-                        // Hack visual: desenha por cima para não re-renderizar react
-                        tickets[tIndex].status = 'solved';
-                        setSolvedCount(prev => prev + 1);
-                    }
                 }
             }
 
@@ -181,14 +277,49 @@ export default function SupportPage() {
 
         render();
         return () => window.removeEventListener('resize', resize);
-    }, []);
+    }, [tickets]);
+
+    // Handle click on canvas (detect hex click)
+    const handleCanvasClick = (e: React.MouseEvent<HTMLCanvasElement>) => {
+        const canvas = canvasRef.current;
+        if (!canvas) return;
+
+        const rect = canvas.getBoundingClientRect();
+        const clickX = e.clientX - rect.left;
+        const clickY = e.clientY - rect.top;
+
+        // Check if click is within any hex
+        for (const hex of hexTickets) {
+            const distance = Math.sqrt(Math.pow(clickX - hex.x, 2) + Math.pow(clickY - hex.y, 2));
+            if (distance < 30) {
+                setActiveTicket(hex);
+                break;
+            }
+        }
+    };
+
+    if (loading && tickets.length === 0) {
+        return (
+            <div className="h-[calc(100vh-6rem)] flex items-center justify-center">
+                <div className="text-center">
+                    <Skeleton className="w-20 h-20 rounded-full mx-auto mb-4" />
+                    <Skeleton className="w-48 h-6 mx-auto mb-2" />
+                    <Skeleton className="w-32 h-4 mx-auto" />
+                </div>
+            </div>
+        );
+    }
+
+    const autoResolutionRate = stats.resolved > 0
+        ? ((stats.resolved / stats.total) * 100).toFixed(1)
+        : '0.0';
 
     return (
         <div className="h-[calc(100vh-6rem)] flex flex-col lg:flex-row gap-6 p-2 overflow-hidden relative">
-            
+
             {/* ESQUERDA: THE HIVE (VISUALIZER) */}
             <div className="lg:w-2/3 w-full h-full relative rounded-3xl overflow-hidden border border-white/10 bg-[#02040a] group shadow-2xl">
-                
+
                 {/* Header Flutuante */}
                 <div className="absolute top-6 left-6 z-20">
                     <div className="flex items-center gap-3 mb-2">
@@ -197,7 +328,9 @@ export default function SupportPage() {
                         </div>
                         <div>
                             <h1 className="text-xl font-bold text-white tracking-tight font-display">SUPPORT HIVE</h1>
-                            <p className="text-xs text-gray-400 font-mono uppercase">AI Triage System Active</p>
+                            <p className="text-xs text-gray-400 font-mono uppercase">
+                                {tickets.length > 0 ? `${tickets.length} Tickets Loaded • Click to View` : 'No tickets • System Ready'}
+                            </p>
                         </div>
                     </div>
                 </div>
@@ -205,104 +338,103 @@ export default function SupportPage() {
                 {/* Legenda */}
                 <div className="absolute bottom-6 left-6 z-20 flex gap-4 text-xs font-mono font-bold">
                     <div className="flex items-center gap-2 text-red-400">
-                        <div className="w-3 h-3 bg-red-500 rounded-sm shadow-[0_0_10px_red]" /> CRITICAL
+                        <div className="w-3 h-3 bg-red-500 rounded-sm shadow-[0_0_10px_red]" /> CRITICAL ({stats.critical_count})
                     </div>
                     <div className="flex items-center gap-2 text-yellow-400">
-                        <div className="w-3 h-3 bg-yellow-500 rounded-sm" /> PENDING
+                        <div className="w-3 h-3 bg-yellow-500 rounded-sm" /> PENDING ({stats.in_progress})
                     </div>
                     <div className="flex items-center gap-2 text-emerald-400">
-                        <div className="w-3 h-3 bg-emerald-500 rounded-sm opacity-30" /> SOLVED
+                        <div className="w-3 h-3 bg-emerald-500 rounded-sm opacity-30" /> SOLVED ({stats.resolved})
                     </div>
                 </div>
 
                 {/* CANVAS */}
-                <canvas ref={canvasRef} className="w-full h-full" />
-                
+                <canvas
+                    ref={canvasRef}
+                    className="w-full h-full cursor-pointer"
+                    onClick={handleCanvasClick}
+                />
+
                 {/* Overlay Tech */}
                 <div className="absolute inset-0 bg-[url('/grid.svg')] opacity-5 pointer-events-none" />
+
+                {/* Empty State */}
+                {tickets.length === 0 && !loading && (
+                    <div className="absolute inset-0 flex items-center justify-center">
+                        <div className="text-center">
+                            <LifeBuoy className="w-16 h-16 text-gray-600 mx-auto mb-4" />
+                            <h3 className="text-xl font-bold text-gray-400 mb-2">No Support Tickets</h3>
+                            <p className="text-sm text-gray-500">System is running smoothly</p>
+                        </div>
+                    </div>
+                )}
             </div>
 
             {/* DIREITA: DADOS E LIVE FEED */}
             <div className="lg:w-1/3 w-full flex flex-col gap-4">
-                
+
                 {/* Card: AI Performance */}
                 <div className="bg-black/40 backdrop-blur-xl border border-white/10 rounded-2xl p-6 flex items-center justify-between relative overflow-hidden">
                     {/* Background Glow */}
                     <div className="absolute -right-10 -top-10 w-32 h-32 bg-[var(--color-primary)]/20 blur-3xl rounded-full" />
-                    
+
                     <div>
                         <div className="text-[10px] text-gray-400 font-mono uppercase mb-1">Auto-Resolution Rate</div>
                         <div className="text-4xl font-mono text-white font-bold flex items-baseline gap-2">
-                            94.2%
-                            <span className="text-sm text-emerald-400 flex items-center"><Zap className="w-3 h-3" /> +2%</span>
+                            {autoResolutionRate}%
+                            <span className="text-sm text-emerald-400 flex items-center"><Zap className="w-3 h-3" /></span>
                         </div>
-                        <p className="text-xs text-gray-500 mt-2">AI is handling {solvedCount} tickets</p>
+                        <p className="text-xs text-gray-500 mt-2">AI handling {stats.resolved} tickets</p>
                     </div>
                     <div className="h-16 w-16 rounded-full border-4 border-[var(--color-primary)]/30 border-t-[var(--color-primary)] animate-spin" />
                 </div>
 
-                {/* Card: User Patience (Biometric) */}
+                {/* Card: User Patience (Average Sentiment) */}
                 <div className="bg-black/40 backdrop-blur-xl border border-white/10 rounded-2xl p-6">
                     <div className="flex justify-between items-center mb-4">
                         <h3 className="text-sm font-bold text-white flex items-center gap-2">
                             <Activity className="w-4 h-4 text-red-400" />
-                            USER PATIENCE
+                            AVG SENTIMENT
                         </h3>
-                        <span className={`text-xs font-mono font-bold ${patienceLevel > 80 ? 'text-emerald-400' : 'text-yellow-400'}`}>
-                            {patienceLevel}/100
+                        <span className={`text-xs font-mono font-bold ${stats.avg_sentiment > 70 ? 'text-emerald-400' : stats.avg_sentiment > 40 ? 'text-yellow-400' : 'text-red-400'}`}>
+                            {stats.avg_sentiment.toFixed(1)}/100
                         </span>
                     </div>
-                    {/* Waveform Fake */}
-                    <div className="flex items-end gap-1 h-10 w-full overflow-hidden">
-                        {Array.from({length: 30}).map((_, i) => (
-                            <div 
-                                key={i} 
-                                className={`w-full rounded-sm transition-all duration-300 ${i > 25 ? 'bg-red-500 animate-pulse' : 'bg-emerald-500/50'}`}
-                                style={{ height: `${20 + Math.random() * 80}%` }}
-                            />
-                        ))}
+                    {/* Bar */}
+                    <div className="h-3 w-full bg-black/50 rounded-full overflow-hidden">
+                        <div
+                            className={`h-full transition-all ${stats.avg_sentiment > 70 ? 'bg-emerald-500' : stats.avg_sentiment > 40 ? 'bg-yellow-500' : 'bg-red-500'}`}
+                            style={{ width: `${stats.avg_sentiment}%` }}
+                        />
                     </div>
                 </div>
 
-                {/* Card: Live Transcript (Matrix Style) */}
-                <div className="flex-1 bg-[#050505] border border-white/10 rounded-2xl overflow-hidden flex flex-col">
-                    <div className="p-3 bg-white/5 border-b border-white/5 flex justify-between items-center">
-                        <span className="text-xs font-mono text-gray-400 flex items-center gap-2">
-                            <MessageSquare className="w-3 h-3" /> LIVE TRANSCRIPT
-                        </span>
-                        <div className="flex gap-1">
-                            <div className="w-2 h-2 rounded-full bg-red-500 animate-ping" />
+                {/* Card: Stats Grid */}
+                <div className="bg-black/40 backdrop-blur-xl border border-white/10 rounded-2xl p-6">
+                    <h3 className="text-sm font-bold text-white mb-4 uppercase tracking-widest">Ticket Status</h3>
+                    <div className="grid grid-cols-2 gap-3">
+                        <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-3">
+                            <div className="text-2xl font-mono font-bold text-red-400">{stats.open}</div>
+                            <div className="text-[10px] text-gray-400 uppercase">Open</div>
                         </div>
-                    </div>
-                    
-                    <div className="flex-1 p-4 space-y-3 overflow-hidden relative font-mono text-xs">
-                        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-[#050505] z-10 pointer-events-none" />
-                        
-                        {/* Fake Chat Items */}
-                        <div className="animate-slideUp opacity-50">
-                            <span className="text-blue-400">User_992:</span> My dashboard is not loading...
+                        <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-xl p-3">
+                            <div className="text-2xl font-mono font-bold text-yellow-400">{stats.in_progress}</div>
+                            <div className="text-[10px] text-gray-400 uppercase">In Progress</div>
                         </div>
-                        <div className="animate-slideUp opacity-70">
-                            <span className="text-[var(--color-primary)]">AI_Agent:</span> Rerouting connection to US-EAST. Fixed?
+                        <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-xl p-3">
+                            <div className="text-2xl font-mono font-bold text-emerald-400">{stats.resolved}</div>
+                            <div className="text-[10px] text-gray-400 uppercase">Resolved</div>
                         </div>
-                        <div className="animate-slideUp">
-                            <span className="text-blue-400">User_992:</span> Yes! Thanks.
-                        </div>
-                        <div className="animate-slideUp mt-4 border-t border-white/5 pt-2">
-                            <span className="text-red-400">User_X:</span> CRITICAL ERROR ON PAYMENT...
-                        </div>
-                        <div className="animate-slideUp">
-                            <span className="text-[var(--color-primary)]">AI_Agent:</span> Initiating refund protocol...
+                        <div className="bg-gray-500/10 border border-gray-500/20 rounded-xl p-3">
+                            <div className="text-2xl font-mono font-bold text-gray-400">{stats.total}</div>
+                            <div className="text-[10px] text-gray-400 uppercase">Total</div>
                         </div>
                     </div>
                 </div>
-
             </div>
 
-            <style jsx>{`
-                @keyframes slideUp { from { transform: translateY(10px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
-                .animate-slideUp { animation: slideUp 0.3s ease-out forwards; }
-            `}</style>
+            {/* Modal */}
+            <TicketModal ticket={activeTicket} onClose={() => setActiveTicket(null)} />
         </div>
     );
 }
