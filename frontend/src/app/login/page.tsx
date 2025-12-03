@@ -12,9 +12,10 @@
 import { useState, useEffect, useRef } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/supabase';
-import { 
-    Fingerprint, Scan, ShieldCheck, AlertOctagon, Lock, Key, 
-    Mail, Sparkles, Github, Chrome 
+import Link from 'next/link';
+import {
+    Fingerprint, Scan, ShieldCheck, AlertOctagon, Lock, Key,
+    Mail, Sparkles, Github, Chrome
 } from 'lucide-react';
 
 export default function LoginPage() {
@@ -342,34 +343,12 @@ export default function LoginPage() {
                         </button>
                     </div>
 
-                    {/* TRY DEMO BUTTON */}
-                    <button
-                        onClick={async () => {
-                            setStatus('scanning');
-                            setErrorMessage('');
-
-                            try {
-                                const { error } = await signIn('demo@alshamglobal.com', 'AlshamDemo2025!');
-
-                                if (error) {
-                                    setStatus('denied');
-                                    setErrorMessage('Demo account not available. Please contact support.');
-                                    setTimeout(() => setStatus('idle'), 2000);
-                                } else {
-                                    setStatus('success');
-                                }
-                            } catch (err) {
-                                setStatus('denied');
-                                setErrorMessage('Failed to access demo account');
-                                setTimeout(() => setStatus('idle'), 2000);
-                            }
-                        }}
-                        disabled={status !== 'idle'}
-                        className="w-full bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-600 hover:to-cyan-600 text-black font-bold py-4 px-6 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 flex items-center justify-center gap-3 mt-6 disabled:opacity-50 disabled:cursor-not-allowed group"
-                    >
-                        <span className="text-2xl">🎮</span>
-                        <span className="text-sm tracking-wide">Experimente o Demo Completo</span>
-                    </button>
+                    {/* Signup Link */}
+                    <div className="mt-6 text-center">
+                        <Link href="/signup" className="text-xs text-gray-500 hover:text-[var(--color-primary)] transition-colors font-mono">
+                            Não tem conta? <span className="font-bold">Criar conta</span>
+                        </Link>
+                    </div>
 
                     {/* Footer Links */}
                     <div className="mt-6 flex justify-between text-[9px] text-gray-700 font-mono uppercase">
