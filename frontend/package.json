@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "seed-demo": "npx tsx scripts/seed-demo-mega.ts"
   },
   "dependencies": {
     "@radix-ui/react-scroll-area": "^1.2.10",

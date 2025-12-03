@@ -323,7 +323,7 @@ export default function LoginPage() {
 
                     {/* SOCIAL BUTTONS */}
                     <div className="grid grid-cols-2 gap-4">
-                        <button 
+                        <button
                             onClick={handleGoogleLogin}
                             disabled={status !== 'idle'}
                             className="flex items-center justify-center gap-2 py-3 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/30 transition-all group"
@@ -332,7 +332,7 @@ export default function LoginPage() {
                             <span className="text-xs font-bold text-gray-400 group-hover:text-white">GOOGLE</span>
                         </button>
 
-                        <button 
+                        <button
                             onClick={handleGithubLogin}
                             disabled={status !== 'idle'}
                             className="flex items-center justify-center gap-2 py-3 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/30 transition-all group"
@@ -341,6 +341,35 @@ export default function LoginPage() {
                             <span className="text-xs font-bold text-gray-400 group-hover:text-white">GITHUB</span>
                         </button>
                     </div>
+
+                    {/* TRY DEMO BUTTON */}
+                    <button
+                        onClick={async () => {
+                            setStatus('scanning');
+                            setErrorMessage('');
+
+                            try {
+                                const { error } = await signIn('demo@alshamglobal.com', 'AlshamDemo2025!');
+
+                                if (error) {
+                                    setStatus('denied');
+                                    setErrorMessage('Demo account not available. Please contact support.');
+                                    setTimeout(() => setStatus('idle'), 2000);
+                                } else {
+                                    setStatus('success');
+                                }
+                            } catch (err) {
+                                setStatus('denied');
+                                setErrorMessage('Failed to access demo account');
+                                setTimeout(() => setStatus('idle'), 2000);
+                            }
+                        }}
+                        disabled={status !== 'idle'}
+                        className="w-full bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-600 hover:to-cyan-600 text-black font-bold py-4 px-6 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 flex items-center justify-center gap-3 mt-6 disabled:opacity-50 disabled:cursor-not-allowed group"
+                    >
+                        <span className="text-2xl">🎮</span>
+                        <span className="text-sm tracking-wide">Experimente o Demo Completo</span>
+                    </button>
 
                     {/* Footer Links */}
                     <div className="mt-6 flex justify-between text-[9px] text-gray-700 font-mono uppercase">
