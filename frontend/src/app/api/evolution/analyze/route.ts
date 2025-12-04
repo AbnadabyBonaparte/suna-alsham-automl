@@ -37,27 +37,10 @@ export async function GET(request: NextRequest) {
     console.log('[EVOLUTION:ANALYZE] ═══════════════════════════════════════════');
     console.log('[EVOLUTION:ANALYZE] Iniciando análise de performance dos agents');
 
-    // 1. Buscar métricas dos últimos 7 dias
-    const sevenDaysAgo = new Date();
-    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-
-    const { data: metricsData, error: metricsError } = await supabaseAdmin
-      .from('agent_metrics')
-      .select('*')
-      .gte('metric_date', sevenDaysAgo.toISOString().split('T')[0]);
-
-    if (metricsError) {
-      console.error('[EVOLUTION:ANALYZE] Erro ao buscar métricas:', metricsError);
-      return NextResponse.json(
-        { error: 'Erro ao buscar métricas dos agents', details: metricsError.message },
-        { status: 500 }
-      );
-    }
-
-    // 2. Buscar todos os agents
+    // 1. Buscar todos os agents primeiro
     const { data: agents, error: agentsError } = await supabaseAdmin
       .from('agents')
-      .select('id, name, role, efficiency, evolution_count, last_evolved_at');
+      .select('id, name, role, efficiency, evolution_count, last_evolved_at, status');
 
     if (agentsError) {
       console.error('[EVOLUTION:ANALYZE] Erro ao buscar agents:', agentsError);
@@ -68,9 +51,28 @@ export async function GET(request: NextRequest) {
     }
 
     console.log(`[EVOLUTION:ANALYZE] ${agents?.length || 0} agents encontrados`);
+
+    // 2. Tentar buscar métricas (pode não existir a tabela)
+    let metricsData: any[] = [];
+    try {
+      const sevenDaysAgo = new Date();
+      sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+
+      const { data, error } = await supabaseAdmin
+        .from('agent_metrics')
+        .select('*')
+        .gte('created_at', sevenDaysAgo.toISOString());
+
+      if (!error && data) {
+        metricsData = data;
+      }
+    } catch (e) {
+      console.log('[EVOLUTION:ANALYZE] Tabela agent_metrics não existe ou está vazia');
+    }
+
     console.log(`[EVOLUTION:ANALYZE] ${metricsData?.length || 0} registros de métricas encontrados`);
 
-    // 3. Agregar métricas por agent
+    // 3. Agregar métricas por agent (se existirem)
     const agentMetricsMap = new Map<string, {
       total_requests: number;
       successful_requests: number;
@@ -93,7 +95,7 @@ export async function GET(request: NextRequest) {
         avg_processing_time_ms: Math.round(
           (existing.avg_processing_time_ms * existing.total_requests +
             (metric.avg_processing_time_ms || 0) * (metric.requests_processed || 0)) /
-          (existing.total_requests + (metric.requests_processed || 0))
+          Math.max(1, existing.total_requests + (metric.requests_processed || 0))
         ),
       });
     });
@@ -111,48 +113,40 @@ export async function GET(request: NextRequest) {
         ? (metrics.successful_requests / metrics.total_requests) * 100
         : 100; // Sem dados = assume 100% (novo agent)
 
-      // Identificar issues
+      // Identificar issues baseado na efficiency do agent
       const issues: string[] = [];
       let recommendation: 'urgent' | 'recommended' | 'stable' = 'stable';
 
-      if (metrics.total_requests === 0) {
-        issues.push('Nenhuma request processada nos últimos 7 dias');
-        recommendation = 'recommended';
-      }
+      const efficiency = agent.efficiency || 85;
 
-      if (success_rate < 50) {
-        issues.push(`Taxa de sucesso muito baixa: ${success_rate.toFixed(1)}%`);
+      if (efficiency < 50) {
+        issues.push(`Eficiência muito baixa: ${efficiency}%`);
         recommendation = 'urgent';
-      } else if (success_rate < 75) {
-        issues.push(`Taxa de sucesso abaixo do ideal: ${success_rate.toFixed(1)}%`);
+      } else if (efficiency < 75) {
+        issues.push(`Eficiência abaixo do ideal: ${efficiency}%`);
         recommendation = 'recommended';
       }
 
-      if (metrics.avg_processing_time_ms > 30000) {
-        issues.push(`Tempo de processamento alto: ${(metrics.avg_processing_time_ms / 1000).toFixed(1)}s`);
+      if (agent.status === 'WARNING' || agent.status === 'ERROR') {
+        issues.push(`Status: ${agent.status}`);
         if (recommendation !== 'urgent') recommendation = 'recommended';
       }
 
-      if (agent.efficiency < 80) {
-        issues.push(`Eficiência do agent baixa: ${agent.efficiency}%`);
-        if (recommendation !== 'urgent') recommendation = 'recommended';
-      }
-
-      if (agent.evolution_count === 0 && metrics.total_requests > 10) {
-        issues.push('Agent nunca foi evoluído apesar de ter experiência');
+      if ((agent.evolution_count || 0) === 0) {
+        issues.push('Agent nunca foi evoluído');
         if (recommendation === 'stable') recommendation = 'recommended';
       }
 
       return {
         agent_id: agent.id,
         agent_name: agent.name,
-        agent_role: agent.role,
+        agent_role: agent.role || 'general',
         total_requests: metrics.total_requests,
         successful_requests: metrics.successful_requests,
         failed_requests: metrics.failed_requests,
         success_rate: parseFloat(success_rate.toFixed(2)),
         avg_processing_time_ms: metrics.avg_processing_time_ms,
-        current_efficiency: agent.efficiency,
+        current_efficiency: efficiency,
         evolution_count: agent.evolution_count || 0,
         last_evolved_at: agent.last_evolved_at,
         recommendation,
@@ -162,24 +156,20 @@ export async function GET(request: NextRequest) {
 
     // 5. Ordenar por urgência e pior performance
     const sortedPerformances = performances.sort((a, b) => {
-      // Priorizar por urgência
       const urgencyWeight = { urgent: 3, recommended: 2, stable: 1 };
       if (urgencyWeight[a.recommendation] !== urgencyWeight[b.recommendation]) {
         return urgencyWeight[b.recommendation] - urgencyWeight[a.recommendation];
       }
-
-      // Depois por success_rate (menor primeiro)
-      return a.success_rate - b.success_rate;
+      return a.current_efficiency - b.current_efficiency;
     });
 
-    // 6. Pegar os 5 piores (candidatos para evolução)
+    // 6. Pegar os 10 candidatos para evolução
     const candidates = sortedPerformances
       .filter(p => p.recommendation !== 'stable')
-      .slice(0, 5);
+      .slice(0, 10);
 
     console.log('[EVOLUTION:ANALYZE] ═══════════════════════════════════════════');
     console.log(`[EVOLUTION:ANALYZE] ${candidates.length} candidatos para evolução identificados`);
-    console.log('[EVOLUTION:ANALYZE] Candidatos:', candidates.map(c => `${c.agent_name} (${c.recommendation})`).join(', '));
     console.log('[EVOLUTION:ANALYZE] ═══════════════════════════════════════════');
 
     return NextResponse.json({
@@ -187,7 +177,7 @@ export async function GET(request: NextRequest) {
       total_agents: performances.length,
       candidates_count: candidates.length,
       candidates,
-      all_performances: sortedPerformances,
+      all_performances: sortedPerformances.slice(0, 50), // Limitar para performance
       analysis_period_days: 7,
       timestamp: new Date().toISOString(),
     });
