@@ -8,7 +8,12 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { supabaseAdmin } from '@/lib/supabase-admin';
+import { getSupabaseAdmin } from '@/lib/supabase-admin';
+
+// FORÇA O NEXT.JS A NÃO PRÉ-RENDERIZAR ESTA ROTA
+export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
+export const maxDuration = 60;
 
 interface ApplyRequest {
   proposal_id: string;
@@ -19,6 +24,7 @@ export async function POST(request: NextRequest) {
   const startTime = Date.now();
 
   try {
+    const supabaseAdmin = getSupabaseAdmin();
     console.log('[EVOLUTION:APPLY] ═══════════════════════════════════════════');
     console.log('[EVOLUTION:APPLY] Processando ação de evolução');
 
@@ -99,12 +105,29 @@ export async function POST(request: NextRequest) {
     // 4. APROVAR e APLICAR proposta
     console.log('[EVOLUTION:APPLY] Aplicando evolução ao agent...');
 
+    // Buscar o agent primeiro para obter o evolution_count atual
+    const { data: currentAgent, error: fetchAgentError } = await supabaseAdmin
+      .from('agents')
+      .select('evolution_count')
+      .eq('id', proposal.agent_id)
+      .single();
+
+    if (fetchAgentError || !currentAgent) {
+      console.error('[EVOLUTION:APPLY] Erro ao buscar agent:', fetchAgentError);
+      return NextResponse.json(
+        { error: 'Erro ao buscar agent', details: fetchAgentError?.message },
+        { status: 500 }
+      );
+    }
+
+    const newEvolutionCount = (currentAgent.evolution_count || 0) + 1;
+
     // Atualizar o agent com o novo prompt
     const { data: updatedAgent, error: agentError } = await supabaseAdmin
       .from('agents')
       .update({
         system_prompt: proposal.proposed_prompt,
-        evolution_count: supabaseAdmin.raw('evolution_count + 1'),
+        evolution_count: newEvolutionCount,
         last_evolved_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
       })
@@ -184,6 +207,7 @@ export async function POST(request: NextRequest) {
 // Endpoint GET para buscar histórico de evoluções
 export async function GET(request: NextRequest) {
   try {
+    const supabaseAdmin = getSupabaseAdmin();
     const { searchParams } = new URL(request.url);
     const agent_id = searchParams.get('agent_id');
     const status = searchParams.get('status');
@@ -231,8 +255,3 @@ export async function GET(request: NextRequest) {
     );
   }
 }
-
-export const config = {
-  runtime: 'nodejs',
-  maxDuration: 60,
-};

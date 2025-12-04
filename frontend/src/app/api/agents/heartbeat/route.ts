@@ -8,10 +8,15 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { supabaseAdmin } from '@/lib/supabase-admin';
+import { getSupabaseAdmin } from '@/lib/supabase-admin';
+
+// FORÇA O NEXT.JS A NÃO PRÉ-RENDERIZAR ESTA ROTA
+export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
 
 export async function POST(request: NextRequest) {
   try {
+    const supabaseAdmin = getSupabaseAdmin();
     console.log('[HEARTBEAT] Atualizando last_active dos agents...');
 
     // Atualizar last_active de todos os agents com status 'idle'
@@ -52,6 +57,7 @@ export async function POST(request: NextRequest) {
 
 export async function GET(request: NextRequest) {
   try {
+    const supabaseAdmin = getSupabaseAdmin();
     console.log('[HEARTBEAT] Consultando status dos agents...');
 
     // Buscar status geral dos agents

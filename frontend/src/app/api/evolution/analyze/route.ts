@@ -8,7 +8,12 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { supabaseAdmin } from '@/lib/supabase-admin';
+import { getSupabaseAdmin } from '@/lib/supabase-admin';
+
+// FORÇA O NEXT.JS A NÃO PRÉ-RENDERIZAR ESTA ROTA
+export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
+export const maxDuration = 60;
 
 interface AgentPerformance {
   agent_id: string;
@@ -28,6 +33,7 @@ interface AgentPerformance {
 
 export async function GET(request: NextRequest) {
   try {
+    const supabaseAdmin = getSupabaseAdmin();
     console.log('[EVOLUTION:ANALYZE] ═══════════════════════════════════════════');
     console.log('[EVOLUTION:ANALYZE] Iniciando análise de performance dos agents');
 
@@ -194,8 +200,3 @@ export async function GET(request: NextRequest) {
     );
   }
 }
-
-export const config = {
-  runtime: 'nodejs',
-  maxDuration: 60,
-};

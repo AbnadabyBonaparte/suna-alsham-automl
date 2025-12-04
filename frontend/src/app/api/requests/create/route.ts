@@ -10,10 +10,16 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
-import { supabaseAdmin } from '@/lib/supabase-admin';
+import { getSupabaseAdmin } from '@/lib/supabase-admin';
+
+// FORÇA O NEXT.JS A NÃO PRÉ-RENDERIZAR ESTA ROTA
+export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
 
 export async function POST(request: NextRequest) {
   try {
+    const supabaseAdmin = getSupabaseAdmin();
+    
     // 1. Validar autenticação do usuário
     const cookieStore = cookies();
     const supabase = createServerClient(
@@ -126,6 +132,8 @@ export async function POST(request: NextRequest) {
 // Endpoint GET para buscar requests do usuário autenticado
 export async function GET(request: NextRequest) {
   try {
+    const supabaseAdmin = getSupabaseAdmin();
+    
     // 1. Validar autenticação
     const cookieStore = cookies();
     const supabase = createServerClient(

@@ -8,8 +8,13 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { supabaseAdmin } from '@/lib/supabase-admin';
+import { getSupabaseAdmin } from '@/lib/supabase-admin';
 import Anthropic from '@anthropic-ai/sdk';
+
+// FORÇA O NEXT.JS A NÃO PRÉ-RENDERIZAR ESTA ROTA
+export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
+export const maxDuration = 60;
 
 const anthropic = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY || '',
@@ -23,6 +28,7 @@ export async function POST(request: NextRequest) {
   const startTime = Date.now();
 
   try {
+    const supabaseAdmin = getSupabaseAdmin();
     console.log('[EVOLUTION:PROPOSE] ═══════════════════════════════════════════');
     console.log('[EVOLUTION:PROPOSE] Iniciando proposta de evolução com Claude');
 
@@ -267,8 +273,3 @@ Analyze the current system prompt and the agent's performance metrics. Propose a
     );
   }
 }
-
-export const config = {
-  runtime: 'nodejs',
-  maxDuration: 60,
-};

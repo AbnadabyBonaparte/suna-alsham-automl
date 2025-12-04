@@ -8,8 +8,13 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { supabaseAdmin } from '@/lib/supabase-admin';
+import { getSupabaseAdmin } from '@/lib/supabase-admin';
 import OpenAI from 'openai';
+
+// FORÇA O NEXT.JS A NÃO PRÉ-RENDERIZAR ESTA ROTA
+export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
+export const maxDuration = 60;
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
@@ -17,6 +22,7 @@ const openai = new OpenAI({
 
 export async function POST(request: NextRequest) {
   try {
+    const supabaseAdmin = getSupabaseAdmin();
     const body = await request.json();
     const { request_id } = body;
 
@@ -177,9 +183,3 @@ export async function POST(request: NextRequest) {
     );
   }
 }
-
-// Configuração de timeout para Edge Functions
-export const config = {
-  runtime: 'nodejs',
-  maxDuration: 60, // 60 segundos de timeout
-};

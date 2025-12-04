@@ -7,7 +7,7 @@
  * ═══════════════════════════════════════════════════════════════
  */
 
-import { supabaseAdmin } from '@/lib/supabase-admin';
+import { getSupabaseAdmin } from '@/lib/supabase-admin';
 import OpenAI from 'openai';
 
 const openai = new OpenAI({
@@ -38,6 +38,8 @@ export async function processRequest(
 ): Promise<ProcessRequestResult> {
   try {
     console.log(`[PROCESS-SERVICE] Iniciando processamento da request ${request_id}`);
+    
+    const supabaseAdmin = getSupabaseAdmin();
 
     // 1. Buscar a request no banco
     const { data: requestData, error: requestError } = await supabaseAdmin
