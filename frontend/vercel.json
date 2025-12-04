@@ -16,5 +16,15 @@
         }
       ]
     }
+  ],
+  "crons": [
+    {
+      "path": "/api/queue/process",
+      "schedule": "*/2 * * * *"
+    },
+    {
+      "path": "/api/agents/heartbeat",
+      "schedule": "*/5 * * * *"
+    }
   ]
 }

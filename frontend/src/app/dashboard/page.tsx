@@ -14,10 +14,13 @@ import {
   Terminal,
   AlertCircle,
   X,
-  CheckCircle
+  CheckCircle,
+  Send,
+  Sparkles
 } from 'lucide-react';
 import { useDashboardStats } from '@/hooks/useDashboardStats';
 import { useNotificationStore } from '@/stores';
+import RequestsQueue from '@/components/RequestsQueue';
 
 interface ConfirmModalProps {
   isOpen: boolean;
@@ -78,6 +81,13 @@ export default function CockpitPage() {
 
   const [scanModalOpen, setScanModalOpen] = useState(false);
   const [purgeModalOpen, setPurgeModalOpen] = useState(false);
+
+  // Request Form State
+  const [requestTitle, setRequestTitle] = useState('');
+  const [requestDescription, setRequestDescription] = useState('');
+  const [requestPriority, setRequestPriority] = useState<'low' | 'normal' | 'high' | 'urgent'>('normal');
+  const [isSubmittingRequest, setIsSubmittingRequest] = useState(false);
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
 
   const stats = [
     {
@@ -142,6 +152,65 @@ export default function CockpitPage() {
         message: 'System logs cleaned. Storage optimized.',
       });
     }, 1500);
+  };
+
+  const handleCreateRequest = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!requestTitle.trim()) {
+      addNotification({
+        type: 'error',
+        title: 'Erro ao criar request',
+        message: 'O título é obrigatório',
+      });
+      return;
+    }
+
+    setIsSubmittingRequest(true);
+
+    try {
+      const response = await fetch('/api/requests/create', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          title: requestTitle,
+          description: requestDescription,
+          priority: requestPriority,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Erro ao criar request');
+      }
+
+      addNotification({
+        type: 'success',
+        title: 'Request Criada!',
+        message: 'Sua request será processada em breve...',
+      });
+
+      // Limpar formulário
+      setRequestTitle('');
+      setRequestDescription('');
+      setRequestPriority('normal');
+
+      // Trigger refresh da queue
+      setRefreshTrigger(prev => prev + 1);
+
+    } catch (error: any) {
+      console.error('Erro ao criar request:', error);
+      addNotification({
+        type: 'error',
+        title: 'Erro ao criar request',
+        message: error.message || 'Tente novamente',
+      });
+    } finally {
+      setIsSubmittingRequest(false);
+    }
   };
 
   return (
@@ -301,6 +370,86 @@ export default function CockpitPage() {
               </button>
             </div>
           </div>
+        </div>
+      </div>
+
+      {/* Request Creation & Queue Section */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        {/* Create Request Form */}
+        <div className="lg:col-span-1 rounded-3xl border border-[var(--color-border)]/20 bg-[var(--color-surface)]/20 backdrop-blur-md p-6">
+          <h3 className="flex items-center gap-2 text-lg font-bold text-[var(--color-text)] mb-4">
+            <Sparkles className="w-5 h-5 text-[var(--color-primary)]" />
+            Nova Request
+          </h3>
+          <form onSubmit={handleCreateRequest} className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-[var(--color-text)] mb-2">
+                Título *
+              </label>
+              <input
+                type="text"
+                value={requestTitle}
+                onChange={(e) => setRequestTitle(e.target.value)}
+                placeholder="Ex: Analisar dados de vendas"
+                className="w-full px-4 py-3 rounded-xl bg-black/20 border border-[var(--color-border)]/30 text-[var(--color-text)] placeholder-gray-500 focus:outline-none focus:border-[var(--color-primary)] transition-colors"
+                disabled={isSubmittingRequest}
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-[var(--color-text)] mb-2">
+                Descrição
+              </label>
+              <textarea
+                value={requestDescription}
+                onChange={(e) => setRequestDescription(e.target.value)}
+                placeholder="Descreva o que você precisa..."
+                rows={4}
+                className="w-full px-4 py-3 rounded-xl bg-black/20 border border-[var(--color-border)]/30 text-[var(--color-text)] placeholder-gray-500 focus:outline-none focus:border-[var(--color-primary)] transition-colors resize-none"
+                disabled={isSubmittingRequest}
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-[var(--color-text)] mb-2">
+                Prioridade
+              </label>
+              <select
+                value={requestPriority}
+                onChange={(e) => setRequestPriority(e.target.value as any)}
+                className="w-full px-4 py-3 rounded-xl bg-black/20 border border-[var(--color-border)]/30 text-[var(--color-text)] focus:outline-none focus:border-[var(--color-primary)] transition-colors cursor-pointer"
+                disabled={isSubmittingRequest}
+              >
+                <option value="low">Baixa</option>
+                <option value="normal">Normal</option>
+                <option value="high">Alta</option>
+                <option value="urgent">Urgente</option>
+              </select>
+            </div>
+
+            <button
+              type="submit"
+              disabled={isSubmittingRequest || !requestTitle.trim()}
+              className="w-full bg-[var(--color-primary)] hover:bg-[var(--color-primary)]/80 disabled:bg-gray-600 disabled:cursor-not-allowed text-black font-bold py-3 px-6 rounded-xl transition-all flex items-center justify-center gap-2"
+            >
+              {isSubmittingRequest ? (
+                <>
+                  <Sparkles className="w-5 h-5 animate-spin" />
+                  Criando...
+                </>
+              ) : (
+                <>
+                  <Send className="w-5 h-5" />
+                  Criar Request
+                </>
+              )}
+            </button>
+          </form>
+        </div>
+
+        {/* Requests Queue */}
+        <div className="lg:col-span-2">
+          <RequestsQueue refreshTrigger={refreshTrigger} />
         </div>
       </div>
 
