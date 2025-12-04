@@ -16,13 +16,21 @@ export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
 export const maxDuration = 60;
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
+// Lazy initialization do cliente OpenAI
+let _openai: OpenAI | null = null;
+function getOpenAI(): OpenAI {
+  if (!_openai) {
+    _openai = new OpenAI({
+      apiKey: process.env.OPENAI_API_KEY,
+    });
+  }
+  return _openai;
+}
 
 export async function POST(request: NextRequest) {
   try {
     const supabaseAdmin = getSupabaseAdmin();
+    const openai = getOpenAI();
     const body = await request.json();
     const { request_id } = body;
 

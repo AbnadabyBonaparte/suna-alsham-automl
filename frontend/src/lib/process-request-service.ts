@@ -10,9 +10,16 @@
 import { getSupabaseAdmin } from '@/lib/supabase-admin';
 import OpenAI from 'openai';
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
+// Lazy initialization do cliente OpenAI
+let _openai: OpenAI | null = null;
+function getOpenAI(): OpenAI {
+  if (!_openai) {
+    _openai = new OpenAI({
+      apiKey: process.env.OPENAI_API_KEY,
+    });
+  }
+  return _openai;
+}
 
 export interface ProcessRequestResult {
   success: boolean;
@@ -40,6 +47,7 @@ export async function processRequest(
     console.log(`[PROCESS-SERVICE] Iniciando processamento da request ${request_id}`);
     
     const supabaseAdmin = getSupabaseAdmin();
+    const openai = getOpenAI();
 
     // 1. Buscar a request no banco
     const { data: requestData, error: requestError } = await supabaseAdmin
