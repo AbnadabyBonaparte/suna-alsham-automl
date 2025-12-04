@@ -11,7 +11,8 @@
 
 import { useState } from "react";
 import { useAgents } from "@/hooks/useAgents";
-import { X, Activity, Clock, Zap as ZapIcon, TrendingUp } from "lucide-react";
+import { X, Activity, Clock, Zap as ZapIcon, TrendingUp, Play, CheckCircle, AlertCircle } from "lucide-react";
+import { supabase } from "@/lib/supabase";
 
 
 
@@ -84,6 +85,66 @@ export default function AgentsPage() {
 
   const filteredAgents = getFilteredAgents();
   const [selectedAgent, setSelectedAgent] = useState<Agent | null>(null);
+  const [processing, setProcessing] = useState(false);
+  const [result, setResult] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  // Função para processar uma request de teste
+  const handleProcessRequest = async (agentId: string | number) => {
+    setProcessing(true);
+    setError(null);
+    setResult(null);
+
+    try {
+      // 1. Criar uma request de teste no banco
+      const { data: newRequest, error: createError } = await supabase
+        .from('requests')
+        .insert({
+          user_id: '00000000-0000-0000-0000-000000000000', // User demo
+          title: `Teste de processamento - Agent ${agentId}`,
+          description: 'Request de teste para verificar se os agents estão funcionando corretamente',
+          status: 'queued',
+          priority: 'normal'
+        })
+        .select()
+        .single();
+
+      if (createError) throw createError;
+
+      console.log('Request criada:', newRequest);
+
+      // 2. Processar a request via API
+      const response = await fetch('/api/process-request', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          request_id: newRequest.id
+        })
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Erro ao processar request');
+      }
+
+      console.log('Request processada:', data);
+      setResult(data.result);
+
+      // Atualizar a lista de agents (para ver last_active atualizado)
+      setTimeout(() => {
+        window.location.reload();
+      }, 2000);
+
+    } catch (err: any) {
+      console.error('Erro ao processar:', err);
+      setError(err.message);
+    } finally {
+      setProcessing(false);
+    }
+  };
 
   const renderIcon = (role: string) => {
     switch (role) {
@@ -315,6 +376,58 @@ export default function AgentsPage() {
                   />
                 </div>
               </div>
+
+              {/* Botão de Processar Request */}
+              <div className="mt-8">
+                <button
+                  onClick={() => handleProcessRequest(selectedAgent.id)}
+                  disabled={processing}
+                  className={`w-full py-4 px-6 rounded-xl font-bold text-lg uppercase tracking-wider transition-all ${
+                    processing
+                      ? 'bg-gray-700 text-gray-400 cursor-not-allowed'
+                      : 'bg-gradient-to-r from-[var(--color-secondary)] via-[var(--color-primary)] to-[var(--color-accent)] text-white hover:scale-105 hover:shadow-[0_0_30px_var(--color-primary)]'
+                  }`}
+                >
+                  <div className="flex items-center justify-center gap-3">
+                    {processing ? (
+                      <>
+                        <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-white"></div>
+                        Processando...
+                      </>
+                    ) : (
+                      <>
+                        <Play className="w-6 h-6" />
+                        Processar Request de Teste
+                      </>
+                    )}
+                  </div>
+                </button>
+              </div>
+
+              {/* Resultado/Erro */}
+              {result && (
+                <div className="mt-6 bg-green-500/10 border border-green-500/50 rounded-xl p-6">
+                  <div className="flex items-center gap-3 mb-3">
+                    <CheckCircle className="w-6 h-6 text-green-500" />
+                    <h4 className="text-lg font-bold text-green-500">SUCESSO!</h4>
+                  </div>
+                  <p className="text-sm text-gray-300 font-mono leading-relaxed">
+                    {result}
+                  </p>
+                </div>
+              )}
+
+              {error && (
+                <div className="mt-6 bg-red-500/10 border border-red-500/50 rounded-xl p-6">
+                  <div className="flex items-center gap-3 mb-3">
+                    <AlertCircle className="w-6 h-6 text-red-500" />
+                    <h4 className="text-lg font-bold text-red-500">ERRO!</h4>
+                  </div>
+                  <p className="text-sm text-gray-300 font-mono leading-relaxed">
+                    {error}
+                  </p>
+                </div>
+              )}
             </div>
           </div>
         )}
