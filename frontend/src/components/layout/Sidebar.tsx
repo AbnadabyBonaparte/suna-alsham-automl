@@ -15,7 +15,7 @@ import {
   LayoutDashboard, Users, Network, Activity, Sparkles, Wallet, 
   Trophy, MessageSquare, Terminal, Shield, Settings, Database, 
   Inbox, Code, Star, Eye, Globe, Cpu, BarChart3, Radio, Headphones, X,
-  ChevronRight, Zap
+  ChevronRight, Zap, Brain
 } from 'lucide-react';
 
 // Props para controle Mobile
@@ -37,6 +37,7 @@ const MENU_GROUPS = [
   {
     title: "INTELLIGENCE LAYER",
     items: [
+      { name: 'Quantum Brain', href: '/dashboard/quantum-brain', icon: Brain, badge: '139', special: true },
       { name: 'Neural Nexus', href: '/dashboard/nexus', icon: Network },
       { name: 'Orion AI', href: '/dashboard/orion', icon: MessageSquare },
       { name: 'The Void', href: '/dashboard/void', icon: Eye },
