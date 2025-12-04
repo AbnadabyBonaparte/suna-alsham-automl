@@ -1,58 +1,133 @@
 /**
  * ═══════════════════════════════════════════════════════════════
- * ALSHAM QUANTUM - THE VOID (EVENT HORIZON EDITION)
+ * ALSHAM QUANTUM - THE VOID (OBSERVAÇÃO SILENCIOSA)
  * ═══════════════════════════════════════════════════════════════
  * 📁 PATH: frontend/src/app/dashboard/void/page.tsx
- * 📋 Visualização de Buraco Negro (Logs do Sistema)
+ * 👁️ Logs reais do sistema + métricas VOID squad
  * ═══════════════════════════════════════════════════════════════
  */
 
 "use client";
 
 import { useState, useEffect, useRef } from 'react';
-import { Eye, AlertTriangle, ShieldAlert, Database, XCircle, Trash2 } from 'lucide-react';
+import { supabase } from '@/lib/supabase';
+import { Eye, AlertTriangle, ShieldAlert, Database, XCircle, Trash2, Activity, RefreshCw, Filter, Clock, Zap } from 'lucide-react';
 
-// Tipos
 interface VoidLog {
-    id: number;
+    id: string;
     source: string;
     message: string;
-    integrity: number; // 0-100
+    integrity: number;
     timestamp: string;
+    type: 'info' | 'warning' | 'error' | 'success';
+    agent_id?: string;
+}
+
+interface VoidMetrics {
+    totalLogs: number;
+    warningsToday: number;
+    errorsToday: number;
+    avgIntegrity: number;
+    activeObservers: number;
 }
 
 export default function VoidPage() {
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const [logs, setLogs] = useState<VoidLog[]>([]);
-    const [hoveredLog, setHoveredLog] = useState<number | null>(null);
+    const [metrics, setMetrics] = useState<VoidMetrics>({
+        totalLogs: 0,
+        warningsToday: 0,
+        errorsToday: 0,
+        avgIntegrity: 100,
+        activeObservers: 7,
+    });
+    const [hoveredLog, setHoveredLog] = useState<string | null>(null);
+    const [filter, setFilter] = useState<'all' | 'warning' | 'error' | 'info'>('all');
+    const [isLoading, setIsLoading] = useState(true);
 
-    // 1. GERADOR DE LOGS (WHISPERS FROM THE VOID)
+    // Carregar logs reais do Supabase
     useEffect(() => {
-        const sources = ['KERNEL_PANIC', 'DELETED_MEM', 'GHOST_PROCESS', 'NULL_POINTER', 'VOID_SIGNAL'];
-        const messages = [
-            'Tentativa de acesso não autorizado no Setor 7',
-            'Fragmento de memória perdido na singularidade',
-            'Eco detectado na rede neural profunda',
-            'Conexão encerrada abruptamente pelo host',
-            'Sobrecarga de entropia detectada',
-            'O sistema está observando você...',
-        ];
+        async function loadLogs() {
+            setIsLoading(true);
+            try {
+                // Buscar requests com status de erro ou warning
+                const { data: requestsData, error } = await supabase
+                    .from('requests')
+                    .select('*')
+                    .order('created_at', { ascending: false })
+                    .limit(50);
 
-        const interval = setInterval(() => {
-            const newLog: VoidLog = {
-                id: Date.now(),
-                source: sources[Math.floor(Math.random() * sources.length)],
-                message: messages[Math.floor(Math.random() * messages.length)],
-                integrity: Math.floor(Math.random() * 100),
-                timestamp: new Date().toLocaleTimeString()
-            };
-            setLogs(prev => [newLog, ...prev].slice(0, 8)); // Manter apenas os 8 últimos visíveis
-        }, 3000);
+                if (error) throw error;
 
+                // Transformar em logs do VOID
+                const voidLogs: VoidLog[] = (requestsData || []).map(req => {
+                    let type: VoidLog['type'] = 'info';
+                    let integrity = 100;
+                    
+                    if (req.status === 'failed' || req.status === 'error') {
+                        type = 'error';
+                        integrity = Math.floor(Math.random() * 30 + 10);
+                    } else if (req.status === 'processing') {
+                        type = 'warning';
+                        integrity = Math.floor(Math.random() * 40 + 40);
+                    } else if (req.status === 'completed') {
+                        type = 'success';
+                        integrity = Math.floor(Math.random() * 20 + 80);
+                    }
+
+                    return {
+                        id: req.id,
+                        source: req.assigned_agent_id ? `AGENT_${req.assigned_agent_id.slice(0, 6).toUpperCase()}` : 'SYSTEM',
+                        message: req.title || req.description || 'Processo monitorado pelo VOID',
+                        integrity,
+                        timestamp: new Date(req.created_at).toLocaleTimeString('pt-BR'),
+                        type,
+                        agent_id: req.assigned_agent_id,
+                    };
+                });
+
+                setLogs(voidLogs);
+
+                // Calcular métricas
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
+                
+                const todayLogs = voidLogs.filter(l => new Date(l.timestamp) >= today);
+                const warnings = voidLogs.filter(l => l.type === 'warning').length;
+                const errors = voidLogs.filter(l => l.type === 'error').length;
+                const avgIntegrity = voidLogs.length > 0 
+                    ? Math.round(voidLogs.reduce((sum, l) => sum + l.integrity, 0) / voidLogs.length)
+                    : 100;
+
+                // Contar agents do squad VOID
+                const { count: voidAgents } = await supabase
+                    .from('agents')
+                    .select('*', { count: 'exact', head: true })
+                    .ilike('squad', '%void%');
+
+                setMetrics({
+                    totalLogs: voidLogs.length,
+                    warningsToday: warnings,
+                    errorsToday: errors,
+                    avgIntegrity,
+                    activeObservers: voidAgents || 7,
+                });
+
+            } catch (err) {
+                console.error('Failed to load VOID logs:', err);
+            } finally {
+                setIsLoading(false);
+            }
+        }
+
+        loadLogs();
+
+        // Refresh a cada 30s
+        const interval = setInterval(loadLogs, 30000);
         return () => clearInterval(interval);
     }, []);
 
-    // 2. ENGINE DO BURACO NEGRO (PHYSICS)
+    // ENGINE DO BURACO NEGRO
     useEffect(() => {
         const canvas = canvasRef.current;
         if (!canvas) return;
@@ -62,7 +137,6 @@ export default function VoidPage() {
         let animationId: number;
         let time = 0;
 
-        // Configuração das Partículas (Disco de Acreção)
         const particles: { angle: number, radius: number, speed: number, size: number, colorOffset: number }[] = [];
         const PARTICLE_COUNT = 800;
 
@@ -73,11 +147,10 @@ export default function VoidPage() {
         window.addEventListener('resize', resize);
         resize();
 
-        // Inicializar
         for(let i=0; i<PARTICLE_COUNT; i++) {
             particles.push({
                 angle: Math.random() * Math.PI * 2,
-                radius: 100 + Math.random() * 400, // Distância do centro
+                radius: 100 + Math.random() * 400,
                 speed: 0.002 + Math.random() * 0.005,
                 size: Math.random() * 2,
                 colorOffset: Math.random()
@@ -90,43 +163,32 @@ export default function VoidPage() {
             const cx = w / 2;
             const cy = h / 2;
 
-            // Limpar com rastro longo (Motion Blur pesado)
             ctx.fillStyle = 'rgba(0, 0, 0, 0.1)';
             ctx.fillRect(0, 0, w, h);
 
             time += 0.01;
 
-            // Pegar cor do tema
-            const themeColor = getComputedStyle(document.documentElement).getPropertyValue('--color-primary').trim() || '#8B5CF6'; // Roxo padrão pro Void
+            const themeColor = '#8B5CF6'; // Roxo VOID
 
-            // Desenhar Partículas
             particles.forEach(p => {
-                // Física Orbital: Quanto mais perto do centro, mais rápido
                 p.angle += p.speed * (500 / p.radius); 
-                
-                // Espiral da Morte: Partículas caem lentamente para o centro
                 p.radius -= 0.2; 
                 
-                // Reset se cair no buraco negro (< 50px)
                 if(p.radius < 50) {
                     p.radius = 400 + Math.random() * 100;
                     p.size = Math.random() * 2;
                 }
 
-                // Perspectiva 3D simulada (Inclinação do disco)
                 const x = cx + Math.cos(p.angle) * p.radius;
-                const y = cy + Math.sin(p.angle) * (p.radius * 0.4); // Achatamento vertical
+                const y = cy + Math.sin(p.angle) * (p.radius * 0.4);
 
-                // Efeito Doppler de Cor e Tamanho
-                // Partículas "atrás" são mais escuras/menores
                 const isFront = Math.sin(p.angle) > 0;
                 const depthScale = isFront ? 1.2 : 0.8;
                 
                 ctx.beginPath();
                 ctx.arc(x, y, p.size * depthScale, 0, Math.PI * 2);
                 
-                // Cor dinâmica
-                const opacity = (p.radius - 50) / 400; // Some nas bordas
+                const opacity = (p.radius - 50) / 400;
                 ctx.fillStyle = themeColor;
                 ctx.globalAlpha = opacity * (isFront ? 1 : 0.3);
                 
@@ -134,29 +196,41 @@ export default function VoidPage() {
             });
             ctx.globalAlpha = 1;
 
-            // O BURACO NEGRO (Event Horizon)
-            // Glow externo
+            // Event Horizon
             const glow = ctx.createRadialGradient(cx, cy, 40, cx, cy, 120);
             glow.addColorStop(0, '#000000');
-            glow.addColorStop(0.5, themeColor + '66'); // 40% opacity
+            glow.addColorStop(0.5, themeColor + '66');
             glow.addColorStop(1, 'transparent');
             ctx.fillStyle = glow;
             ctx.beginPath();
             ctx.arc(cx, cy, 120, 0, Math.PI * 2);
             ctx.fill();
 
-            // Núcleo Preto Absoluto
+            // Núcleo
             ctx.fillStyle = '#000000';
             ctx.beginPath();
-            ctx.arc(cx, cy, 48, 0, Math.PI * 2); // Um pouco menor que o glow
+            ctx.arc(cx, cy, 48, 0, Math.PI * 2);
             ctx.fill();
             
-            // Anel de Fótons (Borda branca brilhante)
-            ctx.strokeStyle = 'rgba(255,255,255,0.1)';
-            ctx.lineWidth = 1;
+            // Anel de Fótons
+            ctx.strokeStyle = 'rgba(139, 92, 246, 0.3)';
+            ctx.lineWidth = 2;
             ctx.beginPath();
             ctx.arc(cx, cy, 50, 0, Math.PI * 2);
             ctx.stroke();
+
+            // Olho do VOID
+            ctx.fillStyle = '#8B5CF6';
+            ctx.globalAlpha = 0.8 + Math.sin(time * 2) * 0.2;
+            ctx.beginPath();
+            ctx.ellipse(cx, cy, 15, 8, 0, 0, Math.PI * 2);
+            ctx.fill();
+            
+            ctx.fillStyle = '#FFFFFF';
+            ctx.globalAlpha = 1;
+            ctx.beginPath();
+            ctx.arc(cx, cy, 3, 0, Math.PI * 2);
+            ctx.fill();
 
             animationId = requestAnimationFrame(render);
         };
@@ -169,89 +243,148 @@ export default function VoidPage() {
         };
     }, []);
 
+    const filteredLogs = logs.filter(log => {
+        if (filter === 'all') return true;
+        return log.type === filter;
+    });
+
     return (
-        <div className="relative h-[calc(100vh-6rem)] w-full overflow-hidden rounded-3xl border border-white/5 bg-black group">
+        <div className="relative h-[calc(100vh-6rem)] w-full overflow-hidden rounded-3xl border border-purple-500/20 bg-black group">
 
-            {/* COMING SOON BADGE */}
-            <div className="absolute top-4 right-4 z-50 animate-pulse">
-                <div className="bg-gradient-to-r from-[var(--color-primary)]/20 via-[var(--color-accent)]/20 to-[var(--color-secondary)]/20 backdrop-blur-xl border-2 border-[var(--color-primary)]/50 rounded-2xl px-6 py-3 shadow-[0_0_30px_var(--color-primary)]">
-                    <div className="flex items-center gap-3">
-                        <div className="w-2 h-2 rounded-full bg-[var(--color-primary)] animate-ping" />
-                        <span className="text-sm font-black text-white uppercase tracking-widest orbitron">
-                            Coming Soon
-                        </span>
-                    </div>
-                    <div className="text-[10px] text-gray-400 text-center mt-1 font-mono">
-                        Feature in development
-                    </div>
-                </div>
-            </div>
-
-            {/* CANVAS (BACKGROUND) */}
             <canvas ref={canvasRef} className="w-full h-full absolute inset-0" />
 
-            {/* UI: HEADER CENTRAL */}
+            {/* HEADER */}
             <div className="absolute top-10 left-1/2 -translate-x-1/2 text-center pointer-events-none z-10">
                 <h1 className="text-4xl font-black text-white tracking-[0.5em] mb-2 font-display opacity-80">THE VOID</h1>
-                <p className="text-xs font-mono text-[var(--color-primary)] uppercase tracking-widest">
-                    System Entropy Monitor • Event Horizon Active
+                <p className="text-xs font-mono text-purple-400 uppercase tracking-widest">
+                    Observação Silenciosa • {metrics.activeObservers} Observadores Ativos
                 </p>
             </div>
 
-            {/* UI: LOGS FLUTUANTES (DIREITA) */}
-            <div className="absolute right-0 top-0 bottom-0 w-full md:w-96 p-6 flex flex-col justify-center pointer-events-none">
-                <div className="space-y-4 pointer-events-auto">
-                    {logs.map((log, index) => (
+            {/* MÉTRICAS */}
+            <div className="absolute top-6 left-6 z-20 space-y-3">
+                <div className="bg-black/60 backdrop-blur-xl border border-purple-500/20 rounded-xl p-4 w-64">
+                    <div className="flex items-center justify-between mb-3">
+                        <span className="text-xs text-gray-500 uppercase">System Integrity</span>
+                        <span className={`text-xl font-black ${metrics.avgIntegrity > 70 ? 'text-green-400' : metrics.avgIntegrity > 40 ? 'text-yellow-400' : 'text-red-400'}`}>
+                            {metrics.avgIntegrity}%
+                        </span>
+                    </div>
+                    <div className="h-2 w-full bg-black/50 rounded-full overflow-hidden">
                         <div 
-                            key={log.id}
-                            onMouseEnter={() => setHoveredLog(log.id)}
-                            onMouseLeave={() => setHoveredLog(null)}
-                            className={`
-                                relative p-4 rounded-xl border backdrop-blur-md transition-all duration-500 ease-out
-                                ${hoveredLog === log.id 
-                                    ? 'bg-[var(--color-primary)]/10 border-[var(--color-primary)] translate-x-[-10px]' 
-                                    : 'bg-black/40 border-white/5 translate-x-0 hover:bg-white/5'
-                                }
-                            `}
-                            style={{
-                                opacity: 1 - (index * 0.15), // Fade out os mais antigos
-                                transform: `scale(${1 - index * 0.05}) translateX(${index * 10}px)`
-                            }}
-                        >
-                            <div className="flex justify-between items-start mb-1">
-                                <div className="flex items-center gap-2">
-                                    {log.integrity < 50 ? <AlertTriangle className="w-4 h-4 text-red-500" /> : <Database className="w-4 h-4 text-[var(--color-primary)]" />}
-                                    <span className="text-[10px] font-mono text-gray-400 uppercase tracking-wider">{log.source}</span>
-                                </div>
-                                <span className="text-[10px] text-gray-600 font-mono">{log.timestamp}</span>
-                            </div>
-                            <p className="text-sm text-gray-200 font-light leading-snug">{log.message}</p>
-                            
-                            {/* Barra de Integridade */}
-                            <div className="mt-3 h-1 w-full bg-black/50 rounded-full overflow-hidden">
-                                <div 
-                                    className={`h-full ${log.integrity < 30 ? 'bg-red-500' : 'bg-[var(--color-primary)]'}`} 
-                                    style={{ width: `${log.integrity}%` }} 
-                                />
-                            </div>
-                        </div>
-                    ))}
+                            className={`h-full transition-all duration-1000 ${metrics.avgIntegrity > 70 ? 'bg-green-500' : metrics.avgIntegrity > 40 ? 'bg-yellow-500' : 'bg-red-500'}`}
+                            style={{ width: `${metrics.avgIntegrity}%` }}
+                        />
+                    </div>
+                </div>
+                
+                <div className="grid grid-cols-2 gap-2">
+                    <div className="bg-black/60 backdrop-blur-xl border border-white/10 rounded-lg p-3 text-center">
+                        <div className="text-xl font-black text-purple-400">{metrics.totalLogs}</div>
+                        <div className="text-[9px] text-gray-500 uppercase">Total Logs</div>
+                    </div>
+                    <div className="bg-black/60 backdrop-blur-xl border border-white/10 rounded-lg p-3 text-center">
+                        <div className="text-xl font-black text-red-400">{metrics.errorsToday}</div>
+                        <div className="text-[9px] text-gray-500 uppercase">Errors</div>
+                    </div>
                 </div>
             </div>
 
-            {/* UI: CONTROLES INFERIORES */}
+            {/* FILTROS */}
+            <div className="absolute top-6 right-6 z-20 flex gap-2">
+                {(['all', 'warning', 'error', 'info'] as const).map(f => (
+                    <button
+                        key={f}
+                        onClick={() => setFilter(f)}
+                        className={`px-4 py-2 rounded-lg text-xs font-bold uppercase transition-all ${
+                            filter === f 
+                                ? 'bg-purple-500 text-white' 
+                                : 'bg-black/40 text-gray-400 hover:bg-white/10'
+                        }`}
+                    >
+                        {f === 'all' ? 'Todos' : f}
+                    </button>
+                ))}
+            </div>
+
+            {/* LOGS FLUTUANTES */}
+            <div className="absolute right-0 top-20 bottom-20 w-full md:w-96 p-6 flex flex-col justify-center pointer-events-none overflow-hidden">
+                <div className="space-y-4 pointer-events-auto max-h-full overflow-y-auto scrollbar-thin scrollbar-thumb-purple-500/20">
+                    {isLoading ? (
+                        <div className="flex items-center justify-center py-8">
+                            <RefreshCw className="w-8 h-8 text-purple-500 animate-spin" />
+                        </div>
+                    ) : filteredLogs.length === 0 ? (
+                        <div className="text-center py-8 text-gray-500">
+                            <Eye className="w-12 h-12 mx-auto mb-3 opacity-20" />
+                            <p>O VOID está observando...</p>
+                            <p className="text-xs">Nenhum log encontrado</p>
+                        </div>
+                    ) : (
+                        filteredLogs.slice(0, 8).map((log, index) => (
+                            <div 
+                                key={log.id}
+                                onMouseEnter={() => setHoveredLog(log.id)}
+                                onMouseLeave={() => setHoveredLog(null)}
+                                className={`
+                                    relative p-4 rounded-xl border backdrop-blur-md transition-all duration-500 ease-out
+                                    ${hoveredLog === log.id 
+                                        ? 'bg-purple-500/10 border-purple-500 translate-x-[-10px]' 
+                                        : 'bg-black/40 border-white/5 translate-x-0 hover:bg-white/5'
+                                    }
+                                `}
+                                style={{
+                                    opacity: 1 - (index * 0.1),
+                                    transform: `scale(${1 - index * 0.02})`
+                                }}
+                            >
+                                <div className="flex justify-between items-start mb-1">
+                                    <div className="flex items-center gap-2">
+                                        {log.type === 'error' ? (
+                                            <XCircle className="w-4 h-4 text-red-500" />
+                                        ) : log.type === 'warning' ? (
+                                            <AlertTriangle className="w-4 h-4 text-yellow-500" />
+                                        ) : log.type === 'success' ? (
+                                            <Zap className="w-4 h-4 text-green-500" />
+                                        ) : (
+                                            <Database className="w-4 h-4 text-purple-500" />
+                                        )}
+                                        <span className="text-[10px] font-mono text-gray-400 uppercase tracking-wider">{log.source}</span>
+                                    </div>
+                                    <span className="text-[10px] text-gray-600 font-mono">{log.timestamp}</span>
+                                </div>
+                                <p className="text-sm text-gray-200 font-light leading-snug truncate">{log.message}</p>
+                                
+                                <div className="mt-3 h-1 w-full bg-black/50 rounded-full overflow-hidden">
+                                    <div 
+                                        className={`h-full transition-all duration-500 ${
+                                            log.integrity < 30 ? 'bg-red-500' : 
+                                            log.integrity < 70 ? 'bg-yellow-500' : 'bg-purple-500'
+                                        }`} 
+                                        style={{ width: `${log.integrity}%` }} 
+                                    />
+                                </div>
+                            </div>
+                        ))
+                    )}
+                </div>
+            </div>
+
+            {/* CONTROLES INFERIORES */}
             <div className="absolute bottom-10 left-1/2 -translate-x-1/2 flex gap-4 z-10">
                 <button className="flex items-center gap-2 px-6 py-3 bg-red-900/20 border border-red-500/30 text-red-400 rounded-full hover:bg-red-500 hover:text-white transition-all uppercase text-xs font-bold tracking-widest backdrop-blur-md group">
                     <Trash2 className="w-4 h-4" />
                     <span>Purge Memory</span>
                 </button>
-                <button className="flex items-center gap-2 px-6 py-3 bg-white/5 border border-white/10 text-white rounded-full hover:bg-white/10 transition-all uppercase text-xs font-bold tracking-widest backdrop-blur-md">
+                <button 
+                    onClick={() => window.location.reload()}
+                    className="flex items-center gap-2 px-6 py-3 bg-white/5 border border-white/10 text-white rounded-full hover:bg-white/10 transition-all uppercase text-xs font-bold tracking-widest backdrop-blur-md"
+                >
                     <Eye className="w-4 h-4" />
                     <span>Deep Scan</span>
                 </button>
             </div>
 
-            {/* Efeito Vignette Estático */}
             <div className="absolute inset-0 bg-radial-gradient from-transparent via-transparent to-black pointer-events-none" />
         </div>
     );

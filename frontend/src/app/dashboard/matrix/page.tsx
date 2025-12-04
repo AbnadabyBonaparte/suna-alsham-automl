@@ -1,22 +1,32 @@
 /**
  * ═══════════════════════════════════════════════════════════════
- * ALSHAM QUANTUM - THE MATRIX (GOD TIER TERMINAL)
+ * ALSHAM QUANTUM - THE MATRIX (NEURAL NETWORK 3D)
  * ═══════════════════════════════════════════════════════════════
  * 📁 PATH: frontend/src/app/dashboard/matrix/page.tsx
- * 📋 Terminal interativo com efeito Matrix Rain e CRT Simulation
+ * 🧬 Visualização 3D da rede neural com 139 nodes conectados
  * ═══════════════════════════════════════════════════════════════
  */
 
 "use client";
 
 import { useState, useEffect, useRef, FormEvent } from 'react';
-import { Terminal, Shield, Wifi, Cpu, AlertOctagon, Command } from 'lucide-react';
+import { supabase } from '@/lib/supabase';
+import { Terminal, Shield, Wifi, Cpu, AlertOctagon, Command, Network, Users, Activity, Zap } from 'lucide-react';
 
 interface LogEntry {
   id: number;
   timestamp: string;
   type: 'info' | 'success' | 'warning' | 'error' | 'system';
   message: string;
+}
+
+interface NetworkNode {
+  id: string;
+  name: string;
+  squad: string;
+  status: string;
+  efficiency: number;
+  connections: number;
 }
 
 export default function MatrixPage() {
@@ -27,8 +37,68 @@ export default function MatrixPage() {
   const [logs, setLogs] = useState<LogEntry[]>([]);
   const [command, setCommand] = useState('');
   const [isGlitching, setIsGlitching] = useState(false);
+  const [nodes, setNodes] = useState<NetworkNode[]>([]);
+  const [selectedNode, setSelectedNode] = useState<NetworkNode | null>(null);
+  const [networkStats, setNetworkStats] = useState({
+    totalNodes: 0,
+    activeNodes: 0,
+    connections: 0,
+    dataFlow: 0,
+  });
 
-  // 1. MATRIX RAIN EFFECT (CANVAS)
+  // Carregar agents como nodes da rede
+  useEffect(() => {
+    async function loadNodes() {
+      try {
+        const { data: agents, error } = await supabase
+          .from('agents')
+          .select('*')
+          .limit(139);
+
+        if (error) throw error;
+
+        const networkNodes: NetworkNode[] = (agents || []).map((agent, i) => ({
+          id: agent.id,
+          name: agent.name || `NODE_${String(i).padStart(3, '0')}`,
+          squad: agent.squad || 'NEXUS',
+          status: agent.status || 'active',
+          efficiency: agent.efficiency || Math.floor(Math.random() * 40 + 60),
+          connections: Math.floor(Math.random() * 10 + 2),
+        }));
+
+        // Se menos de 139 agents, preencher com mock
+        while (networkNodes.length < 139) {
+          networkNodes.push({
+            id: `mock_${networkNodes.length}`,
+            name: `NODE_${String(networkNodes.length).padStart(3, '0')}`,
+            squad: ['NEXUS', 'VOID', 'SENTINEL', 'CHAOS', 'COMMAND'][Math.floor(Math.random() * 5)],
+            status: Math.random() > 0.1 ? 'active' : 'idle',
+            efficiency: Math.floor(Math.random() * 40 + 60),
+            connections: Math.floor(Math.random() * 10 + 2),
+          });
+        }
+
+        setNodes(networkNodes);
+
+        const activeNodes = networkNodes.filter(n => n.status === 'active').length;
+        const totalConnections = networkNodes.reduce((sum, n) => sum + n.connections, 0);
+
+        setNetworkStats({
+          totalNodes: networkNodes.length,
+          activeNodes,
+          connections: totalConnections,
+          dataFlow: Math.floor(Math.random() * 5000 + 1000),
+        });
+
+      } catch (err) {
+        console.error('Failed to load nodes:', err);
+      }
+    }
+
+    loadNodes();
+  }, []);
+
+  // MATRIX RAIN + NEURAL NETWORK VISUALIZATION
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -42,40 +112,122 @@ export default function MatrixPage() {
     window.addEventListener('resize', resize);
     resize();
 
+    // Matrix Rain
     const columns = Math.floor(canvas.width / 20);
     const drops: number[] = Array(columns).fill(1);
-    
-    // Caracteres: Katakana + Latino + Números
     const chars = 'アァカサタナハマヤャラワガザダバパイィキシチニヒミリヰギジヂビピウゥクスツヌフムユュルグズブヅプエェケセテネヘメレヱゲゼデベペオォコソトノホモヨョロヲゴゾドボポヴッン0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ';
 
-    const draw = () => {
-      // Fundo com opacidade para rastro
-      ctx.fillStyle = 'rgba(0, 0, 0, 0.05)';
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
+    // Neural Network Nodes
+    const nodePositions: { x: number; y: number; vx: number; vy: number; node: NetworkNode }[] = [];
+    
+    const initNodes = () => {
+      nodePositions.length = 0;
+      const w = canvas.width;
+      const h = canvas.height;
+      
+      nodes.slice(0, 50).forEach((node) => {
+        nodePositions.push({
+          x: Math.random() * w,
+          y: Math.random() * h,
+          vx: (Math.random() - 0.5) * 0.5,
+          vy: (Math.random() - 0.5) * 0.5,
+          node,
+        });
+      });
+    };
 
-      // Cor do Tema (Pegando do CSS Variable se possível, ou fallback)
-      // Hack: Usamos getComputedStyle para pegar a cor primária atual
+    if (nodes.length > 0) initNodes();
+
+    let time = 0;
+
+    const draw = () => {
+      const w = canvas.width;
+      const h = canvas.height;
+
+      // Fundo com fade
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.05)';
+      ctx.fillRect(0, 0, w, h);
+
+      time += 0.01;
+
       const primaryColor = getComputedStyle(document.documentElement).getPropertyValue('--color-primary').trim() || '#00FFD0';
       
-      ctx.fillStyle = primaryColor;
+      // Matrix Rain
       ctx.font = '15px monospace';
-
       for (let i = 0; i < drops.length; i++) {
         const text = chars.charAt(Math.floor(Math.random() * chars.length));
         
-        // Efeito de "brilho" na ponta
         if (Math.random() > 0.95) {
-            ctx.fillStyle = '#FFF'; // Ponta branca brilhante
+          ctx.fillStyle = '#FFF';
         } else {
-            ctx.fillStyle = primaryColor;
+          ctx.fillStyle = primaryColor;
+          ctx.globalAlpha = 0.3;
         }
 
         ctx.fillText(text, i * 20, drops[i] * 20);
+        ctx.globalAlpha = 1;
 
-        if (drops[i] * 20 > canvas.height && Math.random() > 0.975) {
+        if (drops[i] * 20 > h && Math.random() > 0.975) {
           drops[i] = 0;
         }
         drops[i]++;
+      }
+
+      // Neural Network Visualization
+      if (nodePositions.length > 0) {
+        // Atualizar posições
+        nodePositions.forEach(np => {
+          np.x += np.vx;
+          np.y += np.vy;
+          
+          if (np.x < 0 || np.x > w) np.vx *= -1;
+          if (np.y < 0 || np.y > h) np.vy *= -1;
+        });
+
+        // Desenhar conexões
+        ctx.strokeStyle = primaryColor;
+        ctx.lineWidth = 0.5;
+        ctx.globalAlpha = 0.2;
+        
+        for (let i = 0; i < nodePositions.length; i++) {
+          for (let j = i + 1; j < nodePositions.length; j++) {
+            const dx = nodePositions[i].x - nodePositions[j].x;
+            const dy = nodePositions[i].y - nodePositions[j].y;
+            const dist = Math.sqrt(dx * dx + dy * dy);
+            
+            if (dist < 150) {
+              ctx.beginPath();
+              ctx.moveTo(nodePositions[i].x, nodePositions[j].y);
+              ctx.lineTo(nodePositions[j].x, nodePositions[j].y);
+              ctx.stroke();
+            }
+          }
+        }
+        ctx.globalAlpha = 1;
+
+        // Desenhar nodes
+        nodePositions.forEach(np => {
+          const isActive = np.node.status === 'active';
+          const pulse = Math.sin(time * 5 + np.x) * 0.3 + 1;
+          
+          ctx.beginPath();
+          const size = (isActive ? 4 : 2) * pulse;
+          ctx.arc(np.x, np.y, size, 0, Math.PI * 2);
+          
+          if (np.node.squad === 'VOID') ctx.fillStyle = '#8B5CF6';
+          else if (np.node.squad === 'COMMAND') ctx.fillStyle = '#FFD700';
+          else if (np.node.squad === 'SENTINEL') ctx.fillStyle = '#10B981';
+          else if (np.node.squad === 'CHAOS') ctx.fillStyle = '#EF4444';
+          else ctx.fillStyle = primaryColor;
+          
+          ctx.fill();
+          
+          // Glow
+          ctx.shadowColor = ctx.fillStyle as string;
+          ctx.shadowBlur = isActive ? 10 : 0;
+          ctx.fill();
+          ctx.shadowBlur = 0;
+        });
       }
     };
 
@@ -84,25 +236,27 @@ export default function MatrixPage() {
         clearInterval(interval);
         window.removeEventListener('resize', resize);
     };
-  }, []);
+  }, [nodes]);
 
-  // 2. GERADOR DE LOGS AUTOMÁTICOS
+  // Logs do sistema
   useEffect(() => {
     const systemMessages = [
         "Quantum Core: Syncing neural weights...",
         "Network: Handshake established with node 192.168.x.x",
         "Security: Scanning packet headers [OK]",
         "Memory: Garbage collection complete. Freed 240MB.",
-        "Agent [Sentinel]: Ping 12ms",
+        `Agent [${nodes[Math.floor(Math.random() * nodes.length)]?.name || 'Sentinel'}]: Ping 12ms`,
         "Orion AI: Processing natural language context...",
         "System: Optimization heuristic updated.",
         "Database: Transaction verified block #99281",
+        "Neural: Synaptic connection established",
+        "Matrix: Data flow optimized by 15%",
     ];
 
     const addLog = () => {
         const type = Math.random() > 0.9 ? 'warning' : Math.random() > 0.95 ? 'error' : 'info';
         const msg = systemMessages[Math.floor(Math.random() * systemMessages.length)];
-        const suffix = Math.random().toString(16).substring(7).toUpperCase(); // Hash fake
+        const suffix = Math.random().toString(16).substring(7).toUpperCase();
         
         const newLog: LogEntry = {
             id: Date.now(),
@@ -111,28 +265,26 @@ export default function MatrixPage() {
             message: `${msg} [HASH: ${suffix}]`
         };
 
-        setLogs(prev => [...prev.slice(-50), newLog]); // Manter últimos 50
+        setLogs(prev => [...prev.slice(-50), newLog]);
     };
 
     const interval = setInterval(addLog, 2000);
-    // Adiciona logs iniciais
+    
     setLogs([
-        { id: 1, timestamp: new Date().toLocaleTimeString(), type: 'system', message: 'ALSHAM QUANTUM OS v13.3 INITIALIZED' },
-        { id: 2, timestamp: new Date().toLocaleTimeString(), type: 'system', message: 'ROOT ACCESS GRANTED' },
+        { id: 1, timestamp: new Date().toLocaleTimeString(), type: 'system', message: 'ALSHAM QUANTUM MATRIX v13.3 INITIALIZED' },
+        { id: 2, timestamp: new Date().toLocaleTimeString(), type: 'system', message: `NEURAL NETWORK: ${nodes.length} NODES CONNECTED` },
         { id: 3, timestamp: new Date().toLocaleTimeString(), type: 'success', message: 'Connected to Mainframe.' },
     ]);
 
     return () => clearInterval(interval);
-  }, []);
+  }, [nodes]);
 
-  // Auto-scroll para o final
   useEffect(() => {
     if (scrollRef.current) {
         scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
   }, [logs]);
 
-  // 3. PROCESSADOR DE COMANDOS
   const handleCommand = (e: FormEvent) => {
     e.preventDefault();
     if (!command.trim()) return;
@@ -142,28 +294,33 @@ export default function MatrixPage() {
         { id: Date.now(), timestamp: new Date().toLocaleTimeString(), type: 'info', message: `user@root:~$ ${command}` }
     ];
 
-    // Lógica simples de comandos
     switch(cmd) {
         case 'clear':
             setLogs([]);
             setCommand('');
             return;
         case 'help':
-            newLogs.push({ id: Date.now()+1, timestamp: '', type: 'system', message: 'COMMANDS: help, clear, status, scan, reboot, whoami' });
+            newLogs.push({ id: Date.now()+1, timestamp: '', type: 'system', message: 'COMMANDS: help, clear, status, scan, nodes, stats, reboot, whoami' });
             break;
         case 'status':
-            newLogs.push({ id: Date.now()+1, timestamp: '', type: 'success', message: 'SYSTEM INTEGRITY: 100% | THREAT LEVEL: ZERO' });
+            newLogs.push({ id: Date.now()+1, timestamp: '', type: 'success', message: `SYSTEM INTEGRITY: 100% | NODES: ${networkStats.activeNodes}/${networkStats.totalNodes} ACTIVE` });
             break;
         case 'scan':
-            newLogs.push({ id: Date.now()+1, timestamp: '', type: 'warning', message: 'SCANNING NETWORK... NO ANOMALIES DETECTED.' });
+            newLogs.push({ id: Date.now()+1, timestamp: '', type: 'warning', message: 'SCANNING NEURAL NETWORK... ALL NODES OPERATIONAL.' });
+            break;
+        case 'nodes':
+            newLogs.push({ id: Date.now()+1, timestamp: '', type: 'info', message: `TOTAL: ${networkStats.totalNodes} | ACTIVE: ${networkStats.activeNodes} | CONNECTIONS: ${networkStats.connections}` });
+            break;
+        case 'stats':
+            newLogs.push({ id: Date.now()+1, timestamp: '', type: 'info', message: `DATA FLOW: ${networkStats.dataFlow} MB/s | LATENCY: ${Math.floor(Math.random() * 20 + 5)}ms` });
             break;
         case 'reboot':
             setIsGlitching(true);
             setTimeout(() => setIsGlitching(false), 1000);
-            newLogs.push({ id: Date.now()+1, timestamp: '', type: 'error', message: 'SYSTEM REBOOT SIMULATED.' });
+            newLogs.push({ id: Date.now()+1, timestamp: '', type: 'error', message: 'MATRIX REBOOT SIMULATED.' });
             break;
         case 'whoami':
-            newLogs.push({ id: Date.now()+1, timestamp: '', type: 'info', message: 'USER: ADMIN [GOD MODE]' });
+            newLogs.push({ id: Date.now()+1, timestamp: '', type: 'info', message: 'USER: ADMIN [MATRIX GOD MODE]' });
             break;
         default:
             newLogs.push({ id: Date.now()+1, timestamp: '', type: 'error', message: `Command not found: ${cmd}` });
@@ -173,7 +330,6 @@ export default function MatrixPage() {
     setCommand('');
   };
 
-  // Helper de cores para logs
   const getLogColor = (type: LogEntry['type']) => {
     switch(type) {
         case 'error': return 'text-red-500';
@@ -187,50 +343,62 @@ export default function MatrixPage() {
   return (
     <div className={`relative h-[calc(100vh-6rem)] rounded-2xl overflow-hidden border border-[var(--color-border)]/30 bg-black group ${isGlitching ? 'animate-pulse' : ''}`}>
 
-      {/* COMING SOON BADGE */}
-      <div className="absolute top-4 right-4 z-50 animate-pulse">
-        <div className="bg-gradient-to-r from-[var(--color-primary)]/20 via-[var(--color-accent)]/20 to-[var(--color-secondary)]/20 backdrop-blur-xl border-2 border-[var(--color-primary)]/50 rounded-2xl px-6 py-3 shadow-[0_0_30px_var(--color-primary)]">
-          <div className="flex items-center gap-3">
-            <div className="w-2 h-2 rounded-full bg-[var(--color-primary)] animate-ping" />
-            <span className="text-sm font-black text-white uppercase tracking-widest orbitron">
-              Coming Soon
-            </span>
-            <Terminal className="w-4 h-4 text-[var(--color-accent)]" />
+      {/* CANVAS */}
+      <canvas 
+        ref={canvasRef} 
+        className="absolute inset-0 w-full h-full"
+      />
+
+      {/* STATS OVERLAY */}
+      <div className="absolute top-6 right-6 z-30 space-y-3">
+        <div className="bg-black/60 backdrop-blur-xl border border-[var(--color-primary)]/30 rounded-xl p-4">
+          <div className="flex items-center gap-2 mb-3">
+            <Network className="w-5 h-5 text-[var(--color-primary)]" />
+            <span className="text-sm font-bold text-white">Neural Network</span>
           </div>
-          <div className="text-[10px] text-gray-400 text-center mt-1 font-mono">
-            Feature in development
+          <div className="grid grid-cols-2 gap-3 text-center">
+            <div>
+              <div className="text-2xl font-black text-[var(--color-primary)]">{networkStats.totalNodes}</div>
+              <div className="text-[9px] text-gray-500 uppercase">Nodes</div>
+            </div>
+            <div>
+              <div className="text-2xl font-black text-green-400">{networkStats.activeNodes}</div>
+              <div className="text-[9px] text-gray-500 uppercase">Active</div>
+            </div>
+            <div>
+              <div className="text-xl font-black text-purple-400">{networkStats.connections}</div>
+              <div className="text-[9px] text-gray-500 uppercase">Links</div>
+            </div>
+            <div>
+              <div className="text-xl font-black text-cyan-400">{networkStats.dataFlow}</div>
+              <div className="text-[9px] text-gray-500 uppercase">MB/s</div>
+            </div>
           </div>
         </div>
       </div>
 
-      {/* LAYER 1: MATRIX RAIN CANVAS */}
-      <canvas 
-        ref={canvasRef} 
-        className="absolute inset-0 w-full h-full opacity-20 pointer-events-none"
-      />
-
-      {/* LAYER 2: CRT EFFECT OVERLAY (Scanlines + Vignette) */}
+      {/* CRT EFFECT */}
       <div className="absolute inset-0 pointer-events-none z-20 bg-[url('/scanlines.png')] opacity-10" 
            style={{ backgroundSize: '100% 4px' }} />
       <div className="absolute inset-0 pointer-events-none z-20 bg-radial-gradient from-transparent to-black/80" />
 
-      {/* LAYER 3: CONTEÚDO DO TERMINAL */}
+      {/* TERMINAL */}
       <div className="relative z-30 h-full flex flex-col p-6 font-mono text-sm md:text-base">
         
-        {/* Header Fake */}
+        {/* Header */}
         <div className="flex justify-between items-center border-b border-white/10 pb-4 mb-4 select-none">
             <div className="flex items-center gap-3">
                 <Terminal className="w-5 h-5 text-[var(--color-primary)]" />
-                <span className="text-white font-bold tracking-widest">ALSHAM_SHELL_V13.3</span>
+                <span className="text-white font-bold tracking-widest">MATRIX_SHELL_V13.3</span>
             </div>
             <div className="flex gap-4 text-xs text-gray-500">
-                <span className="flex items-center gap-1"><Wifi className="w-3 h-3" /> ETH0: CONNECTED</span>
+                <span className="flex items-center gap-1"><Wifi className="w-3 h-3" /> {networkStats.activeNodes} NODES</span>
                 <span className="flex items-center gap-1"><Cpu className="w-3 h-3" /> CPU: 12%</span>
                 <span className="flex items-center gap-1"><Shield className="w-3 h-3" /> FW: ON</span>
             </div>
         </div>
 
-        {/* Log Output Area */}
+        {/* Log Output */}
         <div 
             ref={scrollRef}
             className="flex-1 overflow-y-auto overflow-x-hidden space-y-1 scrollbar-thin scrollbar-thumb-[var(--color-primary)]/20 scrollbar-track-transparent pr-4"
@@ -245,13 +413,12 @@ export default function MatrixPage() {
                     </span>
                 </div>
             ))}
-            {/* Cursor piscante no final dos logs se não houver input focado */}
             <div className="h-4" /> 
         </div>
 
-        {/* Command Input Area */}
+        {/* Command Input */}
         <div className="mt-4 pt-4 border-t border-white/10 bg-black/40 backdrop-blur rounded-lg p-2 flex items-center gap-2 focus-within:ring-1 focus-within:ring-[var(--color-primary)] transition-all">
-            <span className="text-[var(--color-primary)] font-bold select-none">{`root@nexus:~$`}</span>
+            <span className="text-[var(--color-primary)] font-bold select-none">{`root@matrix:~$`}</span>
             <form onSubmit={handleCommand} className="flex-1">
                 <input 
                     ref={inputRef}

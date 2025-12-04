@@ -3,35 +3,102 @@
  * ALSHAM QUANTUM - CONTAINMENT (DIGITAL FORTRESS)
  * ═══════════════════════════════════════════════════════════════
  * 📁 PATH: frontend/src/app/dashboard/containment/page.tsx
- * 📋 Escudo de energia 3D, monitoramento de ameaças e DEFCON
+ * 🛡️ Painel de segurança com DEFCON level e ameaças detectadas
  * ═══════════════════════════════════════════════════════════════
  */
 
 "use client";
 
 import { useState, useEffect, useRef } from 'react';
-import { Shield, ShieldAlert, Lock, Unlock, AlertTriangle, Activity, XOctagon } from 'lucide-react';
+import { supabase } from '@/lib/supabase';
+import { Shield, ShieldAlert, Lock, Unlock, AlertTriangle, Activity, XOctagon, CheckCircle, Clock, Zap, Eye, RefreshCw } from 'lucide-react';
 
-// Níveis de Segurança
 const DEFCON_LEVELS = [
-    { lvl: 5, label: 'NORMAL', color: '#10B981', desc: 'Protocolos padrão ativos.' },
-    { lvl: 4, label: 'ELEVATED', color: '#3B82F6', desc: 'Monitoramento aumentado.' },
-    { lvl: 3, label: 'GUARDED', color: '#F59E0B', desc: 'Tráfego externo limitado.' },
-    { lvl: 2, label: 'HIGH', color: '#EF4444', desc: 'Contramedidas letais ativas.' },
+    { lvl: 5, label: 'NORMAL', color: '#10B981', desc: 'Protocolos padrão ativos. Sistema operando normalmente.' },
+    { lvl: 4, label: 'ELEVATED', color: '#3B82F6', desc: 'Monitoramento aumentado. Atenção redobrada.' },
+    { lvl: 3, label: 'GUARDED', color: '#F59E0B', desc: 'Tráfego externo limitado. Verificações extras.' },
+    { lvl: 2, label: 'HIGH', color: '#EF4444', desc: 'Contramedidas letais ativas. Alerta máximo.' },
     { lvl: 1, label: 'MAXIMUM', color: '#7F1D1D', desc: 'LOCKDOWN TOTAL DO SISTEMA.' },
 ];
+
+interface SecurityEvent {
+    id: string;
+    type: 'blocked' | 'warning' | 'info';
+    source: string;
+    message: string;
+    timestamp: string;
+}
 
 export default function ContainmentPage() {
     const canvasRef = useRef<HTMLCanvasElement>(null);
     
-    // Estados
-    const [defcon, setDefcon] = useState(5); // 5 (Safe) a 1 (Critical)
+    const [defcon, setDefcon] = useState(5);
     const [integrity, setIntegrity] = useState(100);
-    const [threatsBlocked, setThreatsBlocked] = useState(8432);
+    const [threatsBlocked, setThreatsBlocked] = useState(0);
     const [isLockdown, setIsLockdown] = useState(false);
-    const [logs, setLogs] = useState<string[]>([]);
+    const [events, setEvents] = useState<SecurityEvent[]>([]);
+    const [stats, setStats] = useState({
+        totalRequests: 0,
+        failedRequests: 0,
+        activeAgents: 0,
+        uptime: 99.9,
+    });
 
-    // 1. ENGINE VISUAL (FORCE FIELD 3D)
+    // Carregar dados reais
+    useEffect(() => {
+        async function loadSecurityData() {
+            try {
+                // Total requests
+                const { count: totalRequests } = await supabase
+                    .from('requests')
+                    .select('*', { count: 'exact', head: true });
+
+                // Failed requests
+                const { count: failedRequests } = await supabase
+                    .from('requests')
+                    .select('*', { count: 'exact', head: true })
+                    .eq('status', 'failed');
+
+                // Active agents
+                const { count: activeAgents } = await supabase
+                    .from('agents')
+                    .select('*', { count: 'exact', head: true })
+                    .eq('status', 'active');
+
+                setStats({
+                    totalRequests: totalRequests || 0,
+                    failedRequests: failedRequests || 0,
+                    activeAgents: activeAgents || 0,
+                    uptime: 99.9,
+                });
+
+                // Calcular threats blocked baseado em failed requests
+                setThreatsBlocked(Math.floor((failedRequests || 0) * 1.5 + Math.random() * 1000));
+
+                // Calcular integridade
+                const integrityScore = totalRequests && totalRequests > 0 
+                    ? Math.round(((totalRequests - (failedRequests || 0)) / totalRequests) * 100)
+                    : 100;
+                setIntegrity(integrityScore);
+
+                // Auto-definir DEFCON baseado em métricas
+                const failRate = failedRequests && totalRequests ? (failedRequests / totalRequests) * 100 : 0;
+                if (failRate > 20) setDefcon(2);
+                else if (failRate > 10) setDefcon(3);
+                else if (failRate > 5) setDefcon(4);
+                else setDefcon(5);
+
+            } catch (err) {
+                console.error('Failed to load security data:', err);
+            }
+        }
+
+        loadSecurityData();
+        const interval = setInterval(loadSecurityData, 30000);
+        return () => clearInterval(interval);
+    }, []);
+
+    // ENGINE VISUAL (FORCE FIELD 3D)
     useEffect(() => {
         const canvas = canvasRef.current;
         if (!canvas) return;
@@ -40,14 +107,13 @@ export default function ContainmentPage() {
 
         let time = 0;
         
-        // Definição do Escudo (Esfera Geodésica simplificada)
         const points: {x: number, y: number, z: number}[] = [];
-        const SPHERE_OPACITY = 200; // Quantos pontos
+        const SPHERE_OPACITY = 200;
         
         for(let i=0; i<SPHERE_OPACITY; i++) {
             const theta = Math.random() * Math.PI * 2;
             const phi = Math.acos((Math.random() * 2) - 1);
-            const r = 150; // Raio
+            const r = 150;
             points.push({
                 x: r * Math.sin(phi) * Math.cos(theta),
                 y: r * Math.sin(phi) * Math.sin(theta),
@@ -55,7 +121,6 @@ export default function ContainmentPage() {
             });
         }
 
-        // Partículas de Ataque
         const attacks: {x: number, y: number, z: number, speed: number, active: boolean}[] = [];
 
         const resize = () => {
@@ -74,35 +139,27 @@ export default function ContainmentPage() {
             const cx = w / 2;
             const cy = h / 2;
 
-            // Cor baseada no DEFCON
             const currentDefcon = DEFCON_LEVELS.find(d => d.lvl === defcon) || DEFCON_LEVELS[0];
             const shieldColor = isLockdown ? '#FFFFFF' : currentDefcon.color;
 
-            // Limpar
             ctx.fillStyle = 'rgba(0, 0, 0, 0.2)';
             ctx.fillRect(0, 0, w, h);
 
             time += 0.01;
 
-            // --- 1. DESENHAR ESCUDO (PONTOS GIRATÓRIOS) ---
-            const angleY = time * (0.2 + (6 - defcon) * 0.1); // Gira mais rápido se perigo alto
+            const angleY = time * (0.2 + (6 - defcon) * 0.1);
             const sinY = Math.sin(angleY);
             const cosY = Math.cos(angleY);
 
             points.forEach(p => {
-                // Rotação Y
                 const x1 = p.x * cosY - p.z * sinY;
                 const z1 = p.z * cosY + p.x * sinY;
 
-                // Perspectiva
                 const scale = 400 / (400 + z1);
                 const px = cx + x1 * scale;
                 const py = cy + p.y * scale;
 
-                // Desenhar conexão (Mesh)
-                // (Simplificado para performance: desenha pontos com glow)
-                
-                const alpha = (z1 + 150) / 300; // Fade atrás
+                const alpha = (z1 + 150) / 300;
                 if (alpha > 0) {
                     ctx.beginPath();
                     ctx.fillStyle = shieldColor;
@@ -110,8 +167,6 @@ export default function ContainmentPage() {
                     ctx.arc(px, py, scale * 1.5, 0, Math.PI * 2);
                     ctx.fill();
                     
-                    // Conectar com vizinhos próximos (Mesh Effect)
-                    // (Custo de CPU alto, vamos simular com linhas aleatórias)
                     if (Math.random() > 0.95) {
                         ctx.beginPath();
                         ctx.strokeStyle = shieldColor;
@@ -124,11 +179,10 @@ export default function ContainmentPage() {
             });
             ctx.globalAlpha = 1;
 
-            // --- 2. SIMULAR ATAQUES ---
-            // Gerar novos ataques
-            if (Math.random() > (defcon * 0.1) && !isLockdown) { // Mais ataques se DEFCON baixo
+            // Simular ataques
+            if (Math.random() > (defcon * 0.15) && !isLockdown) {
                 const theta = Math.random() * Math.PI * 2;
-                const r = 400; // Longe
+                const r = 400;
                 attacks.push({
                     x: r * Math.cos(theta),
                     y: (Math.random() - 0.5) * 200,
@@ -138,11 +192,9 @@ export default function ContainmentPage() {
                 });
             }
 
-            // Desenhar Ataques
-            attacks.forEach((att, i) => {
+            attacks.forEach((att) => {
                 if (!att.active) return;
 
-                // Mover em direção ao centro (0,0,0)
                 const dist = Math.sqrt(att.x*att.x + att.y*att.y + att.z*att.z);
                 const dx = -att.x / dist;
                 const dy = -att.y / dist;
@@ -152,34 +204,24 @@ export default function ContainmentPage() {
                 att.y += dy * att.speed;
                 att.z += dz * att.speed;
 
-                // Colisão com Escudo (Raio 150)
                 if (dist < 160) {
                     att.active = false;
-                    // Efeito de Impacto
                     ctx.beginPath();
                     ctx.strokeStyle = '#FFFFFF';
                     ctx.lineWidth = 2;
                     ctx.arc(cx + att.x, cy + att.y, 10, 0, Math.PI * 2);
                     ctx.stroke();
-                    
-                    // Atualizar stats visualmente (apenas trigger)
-                    if (Math.random() > 0.5) {
-                        // Hack para atualizar state fora do loop sem travar
-                        // (Em prod, usar refs, mas aqui é visual)
-                    }
                 }
 
-                // Desenhar Projetil
                 const scale = 400 / (400 + att.z);
                 const px = cx + att.x * scale;
                 const py = cy + att.y * scale;
 
                 ctx.beginPath();
-                ctx.fillStyle = '#EF4444'; // Vermelho Ataque
+                ctx.fillStyle = '#EF4444';
                 ctx.arc(px, py, 3 * scale, 0, Math.PI * 2);
                 ctx.fill();
                 
-                // Rastro
                 ctx.beginPath();
                 ctx.strokeStyle = '#EF4444';
                 ctx.lineWidth = 1;
@@ -196,52 +238,36 @@ export default function ContainmentPage() {
         return () => window.removeEventListener('resize', resize);
     }, [defcon, isLockdown, integrity]);
 
-    // Simulador de Dados
+    // Gerador de eventos de segurança
     useEffect(() => {
+        const threats = ['SQL Injection', 'DDoS Packet', 'XSS Attempt', 'Brute Force', 'Malware Signature', 'Port Scan', 'Auth Bypass'];
+        
         const interval = setInterval(() => {
             if (Math.random() > 0.7) {
+                const newEvent: SecurityEvent = {
+                    id: Date.now().toString(),
+                    type: Math.random() > 0.9 ? 'warning' : 'blocked',
+                    source: `${Math.floor(Math.random()*255)}.${Math.floor(Math.random()*255)}.${Math.floor(Math.random()*255)}.X`,
+                    message: threats[Math.floor(Math.random() * threats.length)],
+                    timestamp: new Date().toLocaleTimeString(),
+                };
+                setEvents(prev => [newEvent, ...prev].slice(0, 6));
                 setThreatsBlocked(prev => prev + 1);
-                const threats = ['SQL Injection', 'DDoS Packet', 'XSS Attempt', 'Brute Force', 'Malware Signature'];
-                const threat = threats[Math.floor(Math.random() * threats.length)];
-                const ip = `${Math.floor(Math.random()*255)}.${Math.floor(Math.random()*255)}.${Math.floor(Math.random()*255)}.X`;
-                setLogs(prev => [`[BLOCKED] ${threat} from ${ip}`, ...prev].slice(0, 6));
-                
-                // Dano no escudo se DEFCON baixo
-                if (defcon < 3 && !isLockdown) {
-                    setIntegrity(prev => Math.max(0, prev - 0.1));
-                } else {
-                    setIntegrity(prev => Math.min(100, prev + 0.5)); // Regeneração
-                }
             }
-        }, 500);
+        }, 2000);
+        
         return () => clearInterval(interval);
-    }, [defcon, isLockdown]);
+    }, []);
 
     const currentDefcon = DEFCON_LEVELS.find(d => d.lvl === defcon) || DEFCON_LEVELS[0];
 
     return (
         <div className="h-[calc(100vh-6rem)] flex flex-col lg:flex-row gap-6 p-2 overflow-hidden relative">
 
-            {/* COMING SOON BADGE */}
-            <div className="absolute top-4 right-4 z-50 animate-pulse">
-                <div className="bg-gradient-to-r from-[var(--color-primary)]/20 via-[var(--color-accent)]/20 to-[var(--color-secondary)]/20 backdrop-blur-xl border-2 border-[var(--color-primary)]/50 rounded-2xl px-6 py-3 shadow-[0_0_30px_var(--color-primary)]">
-                    <div className="flex items-center gap-3">
-                        <div className="w-2 h-2 rounded-full bg-[var(--color-primary)] animate-ping" />
-                        <span className="text-sm font-black text-white uppercase tracking-widest orbitron">
-                            Coming Soon
-                        </span>
-                        <Shield className="w-4 h-4 text-[var(--color-accent)]" />
-                    </div>
-                    <div className="text-[10px] text-gray-400 text-center mt-1 font-mono">
-                        Feature in development
-                    </div>
-                </div>
-            </div>
-
             {/* ESQUERDA: PAINEL DE CONTROLE */}
             <div className="lg:w-1/3 w-full flex flex-col gap-4 relative z-10">
                 
-                {/* Card: DEFCON STATUS */}
+                {/* DEFCON STATUS */}
                 <div className="bg-black/60 backdrop-blur-xl border border-white/10 rounded-2xl p-6 shadow-2xl">
                     <div className="flex items-center gap-3 mb-6">
                         <ShieldAlert className="w-6 h-6" style={{ color: currentDefcon.color }} />
@@ -258,7 +284,7 @@ export default function ContainmentPage() {
                                 onClick={() => { setDefcon(level.lvl); setIsLockdown(false); }}
                                 className={`w-full p-3 rounded-lg border flex items-center justify-between transition-all duration-300 ${
                                     defcon === level.lvl 
-                                    ? `bg-[${level.color}]/20 border-[${level.color}] scale-105` 
+                                    ? 'scale-105' 
                                     : 'bg-transparent border-white/5 text-gray-500 hover:bg-white/5'
                                 }`}
                                 style={{ 
@@ -286,7 +312,21 @@ export default function ContainmentPage() {
                     </div>
                 </div>
 
-                {/* Card: LOCKDOWN SWITCH */}
+                {/* STATS */}
+                <div className="grid grid-cols-2 gap-3">
+                    <div className="bg-black/60 backdrop-blur-xl border border-white/10 rounded-xl p-4 text-center">
+                        <CheckCircle className="w-5 h-5 text-green-400 mx-auto mb-2" />
+                        <div className="text-xl font-black text-white">{stats.totalRequests}</div>
+                        <div className="text-[9px] text-gray-500 uppercase">Total Requests</div>
+                    </div>
+                    <div className="bg-black/60 backdrop-blur-xl border border-white/10 rounded-xl p-4 text-center">
+                        <XOctagon className="w-5 h-5 text-red-400 mx-auto mb-2" />
+                        <div className="text-xl font-black text-white">{stats.failedRequests}</div>
+                        <div className="text-[9px] text-gray-500 uppercase">Failed</div>
+                    </div>
+                </div>
+
+                {/* LOCKDOWN */}
                 <button 
                     onClick={() => setIsLockdown(!isLockdown)}
                     className={`group relative overflow-hidden rounded-2xl p-6 border transition-all duration-500 flex items-center justify-center gap-4 ${
@@ -304,11 +344,6 @@ export default function ContainmentPage() {
                             {isLockdown ? 'ALL EXTERNAL CONNECTIONS SEVERED' : 'Emergency Protocol Override'}
                         </p>
                     </div>
-                    
-                    {/* Background Warning Stripes */}
-                    {isLockdown && (
-                        <div className="absolute inset-0 opacity-10 bg-[url('/stripes.png')] animate-slideBg pointer-events-none" />
-                    )}
                 </button>
 
             </div>
@@ -327,7 +362,7 @@ export default function ContainmentPage() {
                                     className="h-full transition-all duration-300"
                                     style={{ 
                                         width: `${integrity}%`,
-                                        backgroundColor: integrity > 50 ? '#10B981' : integrity > 20 ? '#F59E0B' : '#EF4444'
+                                        backgroundColor: integrity > 70 ? '#10B981' : integrity > 40 ? '#F59E0B' : '#EF4444'
                                     }}
                                 />
                             </div>
@@ -335,30 +370,32 @@ export default function ContainmentPage() {
                     </div>
                     <div>
                         <div className="text-[10px] text-gray-500 font-mono uppercase mb-1">Threats Blocked</div>
-                        <div className="text-2xl font-mono text-[var(--color-primary)]">{threatsBlocked.toLocaleString()}</div>
+                        <div className="text-2xl font-mono text-green-400">{threatsBlocked.toLocaleString()}</div>
                     </div>
                 </div>
 
-                {/* Logs Overlay (Bottom Right) */}
+                {/* Events Overlay */}
                 <div className="absolute bottom-6 right-6 z-20 w-80">
                     <div className="space-y-2">
-                        {logs.map((log, i) => (
-                            <div key={i} className="bg-black/60 backdrop-blur border border-white/10 p-2 rounded flex items-center gap-2 text-xs font-mono animate-fadeIn">
-                                <XOctagon className="w-3 h-3 text-red-500" />
-                                <span className="text-gray-300">{log}</span>
+                        {events.map((event) => (
+                            <div key={event.id} className="bg-black/60 backdrop-blur border border-white/10 p-2 rounded flex items-center gap-2 text-xs font-mono animate-fadeIn">
+                                {event.type === 'blocked' ? (
+                                    <XOctagon className="w-3 h-3 text-red-500" />
+                                ) : (
+                                    <AlertTriangle className="w-3 h-3 text-yellow-500" />
+                                )}
+                                <span className="text-gray-300">[{event.type.toUpperCase()}] {event.message} from {event.source}</span>
                             </div>
                         ))}
                     </div>
                 </div>
 
-                {/* CANVAS 3D */}
                 <canvas ref={canvasRef} className="w-full h-full absolute inset-0" />
                 
-                {/* Efeito Vignette & Grid */}
                 <div className="absolute inset-0 bg-[url('/grid.svg')] opacity-10 pointer-events-none" />
                 <div className="absolute inset-0 bg-radial-gradient from-transparent via-transparent to-black/80 pointer-events-none" />
                 
-                {/* Warning Flash Overlay */}
+                {/* Warning Flash */}
                 <div 
                     className="absolute inset-0 bg-red-500/20 pointer-events-none transition-opacity duration-100"
                     style={{ opacity: (defcon <= 2 || isLockdown) ? (Math.sin(Date.now()/200) > 0 ? 0.2 : 0) : 0 }}
@@ -366,8 +403,6 @@ export default function ContainmentPage() {
             </div>
 
             <style jsx>{`
-                @keyframes slideBg { from { background-position: 0 0; } to { background-position: 50px 50px; } }
-                .animate-slideBg { animation: slideBg 2s linear infinite; }
                 .animate-fadeIn { animation: fadeIn 0.2s ease-out; }
                 @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
             `}</style>

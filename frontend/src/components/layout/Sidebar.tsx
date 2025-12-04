@@ -15,7 +15,7 @@ import {
   LayoutDashboard, Users, Network, Activity, Sparkles, Wallet, 
   Trophy, MessageSquare, Terminal, Shield, Settings, Database, 
   Inbox, Code, Star, Eye, Globe, Cpu, BarChart3, Radio, Headphones, X,
-  ChevronRight, Zap, Brain
+  ChevronRight, Zap, Brain, Crown, Dna
 } from 'lucide-react';
 
 // Props para controle Mobile
@@ -24,25 +24,38 @@ interface SidebarProps {
   onClose?: () => void;
 }
 
-// Configuração dos Grupos de Menu
+// Configuração dos Grupos de Menu - ORDEM FINAL
 const MENU_GROUPS = [
   {
-    title: "CORE SYSTEM",
+    title: "COMMAND CENTER",
     items: [
       { name: 'Cockpit', href: '/dashboard', icon: LayoutDashboard },
-      { name: 'Sentinelas', href: '/dashboard/agents', icon: Users, badge: '139' },
       { name: 'Requests', href: '/dashboard/requests', icon: Inbox, badge: 'NEW' },
+      { name: 'Quantum Brain', href: '/dashboard/quantum-brain', icon: Brain, badge: 'LIVE', special: true },
+      { name: 'ORION Command', href: '/dashboard/orion', icon: Crown, color: 'text-yellow-500' },
     ]
   },
   {
-    title: "INTELLIGENCE LAYER",
+    title: "NEURAL LAYER",
     items: [
-      { name: 'Quantum Brain', href: '/dashboard/quantum-brain', icon: Brain, badge: '139', special: true },
-      { name: 'Neural Nexus', href: '/dashboard/nexus', icon: Network },
-      { name: 'Orion AI', href: '/dashboard/orion', icon: MessageSquare },
-      { name: 'The Void', href: '/dashboard/void', icon: Eye },
-      { name: 'Evolution Lab', href: '/dashboard/evolution', icon: Activity },
-      { name: 'Singularity', href: '/dashboard/singularity', icon: Star, special: true },
+      { name: 'Neural Nexus', href: '/dashboard/nexus', icon: Network, color: 'text-cyan-500' },
+      { name: 'The Matrix', href: '/dashboard/matrix', icon: Terminal, color: 'text-green-500' },
+      { name: 'Evolution Lab', href: '/dashboard/evolution', icon: Dna, badge: 'AI', color: 'text-purple-500' },
+      { name: 'The VOID', href: '/dashboard/void', icon: Eye, color: 'text-purple-400' },
+    ]
+  },
+  {
+    title: "SECURITY",
+    items: [
+      { name: 'Containment', href: '/dashboard/containment', icon: Shield, color: 'text-red-500' },
+      { name: 'Network', href: '/dashboard/network', icon: Globe, color: 'text-blue-500' },
+      { name: 'Singularity', href: '/dashboard/singularity', icon: Star, special: true, color: 'text-yellow-400' },
+    ]
+  },
+  {
+    title: "AGENTS",
+    items: [
+      { name: 'Sentinelas', href: '/dashboard/agents', icon: Users, badge: '139' },
     ]
   },
   {
@@ -56,11 +69,8 @@ const MENU_GROUPS = [
     ]
   },
   {
-    title: "INFRASTRUCTURE",
+    title: "SYSTEM",
     items: [
-      { name: 'The Matrix', href: '/dashboard/matrix', icon: Terminal },
-      { name: 'Containment', href: '/dashboard/containment', icon: Shield },
-      { name: 'Network', href: '/dashboard/network', icon: Globe },
       { name: 'Gamification', href: '/dashboard/gamification', icon: Cpu },
       { name: 'API Playground', href: '/dashboard/api', icon: Code },
       { name: 'Settings', href: '/dashboard/settings', icon: Settings },
@@ -120,7 +130,7 @@ export default function Sidebar({ isOpen = true, onClose }: SidebarProps) {
         </div>
 
         {/* 2. NAVIGATION: SCROLL AREA */}
-        <nav className="h-[calc(100vh-160px)] overflow-y-auto py-6 px-4 space-y-8 scrollbar-thin scrollbar-thumb-white/5 scrollbar-track-transparent hover:scrollbar-thumb-[var(--color-primary)]/20">
+        <nav className="h-[calc(100vh-160px)] overflow-y-auto py-6 px-4 space-y-6 scrollbar-thin scrollbar-thumb-white/5 scrollbar-track-transparent hover:scrollbar-thumb-[var(--color-primary)]/20">
           {MENU_GROUPS.map((group, groupIdx) => (
             <div key={groupIdx}>
               <h3 className="px-4 text-[10px] font-bold text-gray-500/70 uppercase tracking-[0.2em] mb-3 font-mono flex items-center gap-2">
@@ -133,6 +143,7 @@ export default function Sidebar({ isOpen = true, onClose }: SidebarProps) {
                   const Icon = item.icon;
                   const isActive = pathname === item.href;
                   const isSpecial = item.special;
+                  const itemColor = item.color;
                   
                   return (
                     <Link
@@ -162,7 +173,7 @@ export default function Sidebar({ isOpen = true, onClose }: SidebarProps) {
                             ? 'text-[var(--color-primary)] drop-shadow-[0_0_8px_rgba(var(--color-primary-rgb),0.5)]' 
                             : isSpecial 
                               ? 'text-[var(--color-accent)]'
-                              : 'text-gray-500 group-hover:text-gray-300'
+                              : itemColor || 'text-gray-500 group-hover:text-gray-300'
                         }`} />
                         
                         <span className={`text-sm font-medium tracking-wide ${isSpecial ? 'text-[var(--color-accent)] font-bold' : ''}`}>
@@ -176,7 +187,11 @@ export default function Sidebar({ isOpen = true, onClose }: SidebarProps) {
                           <span className={`px-1.5 py-0.5 rounded text-[9px] font-bold border tracking-wider ${
                             isActive 
                               ? 'bg-[var(--color-primary)] text-black border-[var(--color-primary)]'
-                              : 'bg-white/5 text-gray-400 border-white/10 group-hover:border-white/30'
+                              : item.badge === 'LIVE' 
+                                ? 'bg-green-500/20 text-green-400 border-green-500/30 animate-pulse'
+                                : item.badge === 'AI'
+                                  ? 'bg-purple-500/20 text-purple-400 border-purple-500/30'
+                                  : 'bg-white/5 text-gray-400 border-white/10 group-hover:border-white/30'
                           }`}>
                             {item.badge}
                           </span>

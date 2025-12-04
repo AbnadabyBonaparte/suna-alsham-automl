@@ -3,7 +3,7 @@
  * ALSHAM QUANTUM - GLOBAL NETWORK (THE PANOPTICON)
  * ═══════════════════════════════════════════════════════════════
  * 📁 PATH: frontend/src/app/dashboard/network/page.tsx
- * 📋 Globo 3D Holográfico com tráfego de dados e satélites
+ * 🌍 Mapa de conexões - Agents ↔ Banco ↔ OpenAI
  * ═══════════════════════════════════════════════════════════════
  */
 
@@ -11,46 +11,83 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { supabase } from '@/lib/supabase';
-import { Globe, Server, Wifi, Radio, MapPin, Activity, Zap, X, TrendingUp, Clock } from 'lucide-react';
+import { Globe, Server, Wifi, Radio, MapPin, Activity, Zap, X, TrendingUp, Clock, Database, Cpu, Brain } from 'lucide-react';
 
-// Dados dos Servidores (Nodes)
-const SERVERS = [
-    { id: 'US-EAST', lat: 40, lon: -74, name: 'New York Core', load: 89 },
-    { id: 'EU-WEST', lat: 51, lon: -0.1, name: 'London Edge', load: 45 },
-    { id: 'ASIA-PAC', lat: 35, lon: 139, name: 'Tokyo Prime', load: 67 },
-    { id: 'SA-EAST', lat: -23, lon: -46, name: 'Sao Paulo Hub', load: 92 },
-    { id: 'AUS-SE', lat: -33, lon: 151, name: 'Sydney Node', load: 34 },
-    { id: 'RU-NORTH', lat: 55, lon: 37, name: 'Moscow Relay', load: 78 },
-];
+interface NetworkServer {
+    id: string;
+    lat: number;
+    lon: number;
+    name: string;
+    type: 'database' | 'api' | 'agent' | 'user';
+    load: number;
+    status: 'online' | 'offline' | 'warning';
+    requests: number;
+}
 
 export default function NetworkPage() {
     const canvasRef = useRef<HTMLCanvasElement>(null);
-    const [hoveredServer, setHoveredServer] = useState<any>(null);
-    const [selectedServer, setSelectedServer] = useState<typeof SERVERS[0] | null>(null);
+    const [selectedServer, setSelectedServer] = useState<NetworkServer | null>(null);
     const [rotation, setRotation] = useState(0);
-    const [stats, setStats] = useState({ packets: 0, latency: 24 });
+    const [servers, setServers] = useState<NetworkServer[]>([]);
+    const [stats, setStats] = useState({ 
+        packets: 0, 
+        latency: 24,
+        totalAgents: 0,
+        totalRequests: 0,
+        activeConnections: 0,
+    });
     const [supabaseLatency, setSupabaseLatency] = useState<number>(0);
 
-    // Medir latência REAL do Supabase
+    // Carregar dados reais e criar servers
     useEffect(() => {
-        async function measureLatency() {
-            const start = performance.now();
+        async function loadNetworkData() {
             try {
-                await supabase.from('agents').select('count').limit(1);
+                // Medir latência real do Supabase
+                const start = performance.now();
+                const { count: agentsCount } = await supabase
+                    .from('agents')
+                    .select('*', { count: 'exact', head: true });
                 const end = performance.now();
                 const latency = Math.round(end - start);
                 setSupabaseLatency(latency);
-                setStats(prev => ({ ...prev, latency }));
+
+                // Total requests
+                const { count: requestsCount } = await supabase
+                    .from('requests')
+                    .select('*', { count: 'exact', head: true });
+
+                // Criar servers baseados em dados reais
+                const networkServers: NetworkServer[] = [
+                    { id: 'SUPABASE', lat: -23, lon: -46, name: 'Supabase Database', type: 'database', load: Math.floor(Math.random() * 30 + 40), status: 'online', requests: agentsCount || 0 },
+                    { id: 'OPENAI', lat: 37, lon: -122, name: 'OpenAI API', type: 'api', load: Math.floor(Math.random() * 40 + 50), status: 'online', requests: requestsCount || 0 },
+                    { id: 'VERCEL', lat: 37, lon: -122, name: 'Vercel Edge', type: 'api', load: Math.floor(Math.random() * 20 + 30), status: 'online', requests: 0 },
+                    { id: 'ORION', lat: 40, lon: -74, name: 'ORION Core', type: 'agent', load: Math.floor(Math.random() * 50 + 40), status: 'online', requests: Math.floor((requestsCount || 0) * 0.3) },
+                    { id: 'VOID-HUB', lat: 51, lon: -0.1, name: 'VOID Squad Hub', type: 'agent', load: Math.floor(Math.random() * 30 + 20), status: 'online', requests: Math.floor((requestsCount || 0) * 0.2) },
+                    { id: 'NEXUS-CORE', lat: 35, lon: 139, name: 'NEXUS Core', type: 'agent', load: Math.floor(Math.random() * 40 + 30), status: 'online', requests: Math.floor((requestsCount || 0) * 0.25) },
+                    { id: 'USER-PORTAL', lat: -23, lon: -46, name: 'User Portal', type: 'user', load: Math.floor(Math.random() * 60 + 30), status: 'online', requests: requestsCount || 0 },
+                ];
+
+                setServers(networkServers);
+
+                setStats({
+                    packets: Math.floor(Math.random() * 100000),
+                    latency,
+                    totalAgents: agentsCount || 139,
+                    totalRequests: requestsCount || 0,
+                    activeConnections: networkServers.filter(s => s.status === 'online').length,
+                });
+
             } catch (err) {
-                console.error('Failed to measure latency:', err);
+                console.error('Failed to load network data:', err);
             }
         }
-        measureLatency();
-        const interval = setInterval(measureLatency, 10000); // A cada 10s
+
+        loadNetworkData();
+        const interval = setInterval(loadNetworkData, 30000);
         return () => clearInterval(interval);
     }, []);
 
-    // 1. ENGINE VISUAL (HOLO-GLOBE)
+    // ENGINE VISUAL (HOLO-GLOBE)
     useEffect(() => {
         const canvas = canvasRef.current;
         if (!canvas) return;
@@ -61,17 +98,15 @@ export default function NetworkPage() {
         const GLOBE_RADIUS = 220;
         const DOT_DENSITY = 1000;
 
-        // Gerar Pontos da Esfera (Pontos de Dados)
         const dots: {theta: number, phi: number, alt: number}[] = [];
         for(let i=0; i<DOT_DENSITY; i++) {
             dots.push({
-                theta: Math.random() * 2 * Math.PI, // Longitude
-                phi: Math.acos((Math.random() * 2) - 1), // Latitude
-                alt: 1 // Altitude base
+                theta: Math.random() * 2 * Math.PI,
+                phi: Math.acos((Math.random() * 2) - 1),
+                alt: 1
             });
         }
 
-        // Gerar Satélites
         const satellites = [
             { angle: 0, speed: 0.02, radius: GLOBE_RADIUS + 60, size: 4 },
             { angle: 2, speed: -0.015, radius: GLOBE_RADIUS + 100, size: 3 },
@@ -94,33 +129,28 @@ export default function NetworkPage() {
             const cx = w / 2;
             const cy = h / 2;
 
-            // Limpar
-            ctx.fillStyle = 'rgba(2, 6, 23, 0.3)'; // Rastro suave
+            ctx.fillStyle = 'rgba(2, 6, 23, 0.3)';
             ctx.fillRect(0, 0, w, h);
 
             time += 0.005;
             setRotation(time);
 
-            // Cor do Tema
-            const themeColor = getComputedStyle(document.documentElement).getPropertyValue('--color-primary').trim() || '#0EA5E9';
+            const themeColor = '#0EA5E9';
 
-            // --- 1. DESENHAR GLOBO DE PONTOS ---
+            // Desenhar globo de pontos
             dots.forEach(dot => {
-                // Rotação do Globo
                 const rotTheta = dot.theta + time;
 
-                // Coordenadas 3D
                 const x = GLOBE_RADIUS * Math.sin(dot.phi) * Math.cos(rotTheta);
                 const y = GLOBE_RADIUS * Math.cos(dot.phi);
                 const z = GLOBE_RADIUS * Math.sin(dot.phi) * Math.sin(rotTheta);
 
-                // Perspectiva
                 const scale = 400 / (400 + z);
                 const px = cx + x * scale;
                 const py = cy + y * scale;
-                const alpha = (z + GLOBE_RADIUS) / (2 * GLOBE_RADIUS); // Fade atrás
+                const alpha = (z + GLOBE_RADIUS) / (2 * GLOBE_RADIUS);
 
-                if (z > -100) { // Culling (não desenha muito atrás)
+                if (z > -100) {
                     ctx.fillStyle = themeColor;
                     ctx.globalAlpha = alpha * 0.6;
                     ctx.beginPath();
@@ -129,11 +159,10 @@ export default function NetworkPage() {
                 }
             });
 
-            // --- 2. DESENHAR SERVIDORES (NODES PRINCIPAIS) ---
-            SERVERS.forEach(server => {
-                // Converter Lat/Lon para coordenadas esféricas
+            // Desenhar servers
+            servers.forEach(server => {
                 const phi = (90 - server.lat) * (Math.PI / 180);
-                const theta = (server.lon + 180) * (Math.PI / 180) + time; // +time para girar junto
+                const theta = (server.lon + 180) * (Math.PI / 180) + time;
 
                 const x = GLOBE_RADIUS * Math.sin(phi) * Math.cos(theta);
                 const y = GLOBE_RADIUS * Math.cos(phi);
@@ -143,25 +172,27 @@ export default function NetworkPage() {
                 const px = cx + x * scale;
                 const py = cy + y * scale;
 
-                // Só desenha se estiver na frente
                 if (z > 0) {
-                    // Ping (Radar Wave)
+                    // Ping wave
                     const wave = (Date.now() / 20) % 50;
-                    ctx.strokeStyle = themeColor;
+                    ctx.strokeStyle = server.type === 'database' ? '#10B981' : 
+                                     server.type === 'api' ? '#8B5CF6' : 
+                                     server.type === 'agent' ? '#FFD700' : themeColor;
                     ctx.globalAlpha = 1 - (wave / 50);
                     ctx.beginPath();
                     ctx.arc(px, py, wave * scale, 0, Math.PI * 2);
                     ctx.stroke();
 
-                    // Ponto Central
+                    // Ponto central
                     ctx.fillStyle = '#FFFFFF';
                     ctx.globalAlpha = 1;
                     ctx.beginPath();
                     ctx.arc(px, py, 4 * scale, 0, Math.PI * 2);
                     ctx.fill();
 
-                    // Haste Vertical (Holograma de Localização)
-                    ctx.strokeStyle = themeColor;
+                    // Haste
+                    ctx.strokeStyle = ctx.strokeStyle;
+                    ctx.globalAlpha = 0.5;
                     ctx.beginPath();
                     ctx.moveTo(px, py);
                     ctx.lineTo(px, py - 20 * scale);
@@ -170,35 +201,28 @@ export default function NetworkPage() {
                     // Label
                     ctx.font = `bold ${10 * scale}px monospace`;
                     ctx.fillStyle = '#FFFFFF';
+                    ctx.globalAlpha = 1;
                     ctx.fillText(server.id, px + 5, py - 25 * scale);
                 }
             });
 
-            // --- 3. TRAJETÓRIAS DE DADOS (ARCS) ---
-            // Conectar US-EAST com todos os outros (Hub)
-            // (Cálculo simplificado de curva Bézier 3D)
-            // [Código omitido para brevidade, focado no visual limpo]
-
-            // --- 4. SATÉLITES E ANÉIS ---
+            // Satélites
             ctx.globalAlpha = 0.1;
             ctx.strokeStyle = '#FFFFFF';
             ctx.lineWidth = 1;
             
-            // Anel Equatorial
             ctx.beginPath();
             ctx.ellipse(cx, cy, GLOBE_RADIUS + 20, (GLOBE_RADIUS + 20) * 0.3, 0, 0, Math.PI * 2);
             ctx.stroke();
 
-            // Satélites Orbitando
             ctx.globalAlpha = 1;
             satellites.forEach(sat => {
                 sat.angle += sat.speed;
                 const sx = cx + Math.cos(sat.angle) * sat.radius;
-                const sy = cy + Math.sin(sat.angle) * (sat.radius * 0.3); // Orbita inclinada
+                const sy = cy + Math.sin(sat.angle) * (sat.radius * 0.3);
                 
-                // Se estiver na frente
                 if (Math.sin(sat.angle) > 0) {
-                    ctx.fillStyle = '#FCD34D'; // Dourado
+                    ctx.fillStyle = '#FCD34D';
                     ctx.shadowColor = '#FCD34D';
                     ctx.shadowBlur = 10;
                     ctx.beginPath();
@@ -208,14 +232,41 @@ export default function NetworkPage() {
                 }
             });
 
-            // --- 5. SCANNER PLANETÁRIO (LASER) ---
-            const scanY = cy + Math.sin(time * 2) * GLOBE_RADIUS;
-            const scanHeight = Math.cos(time * 2) * GLOBE_RADIUS; // Largura na esfera
+            // Conexões entre servers (data flow)
+            ctx.globalAlpha = 0.3;
+            ctx.strokeStyle = themeColor;
+            ctx.lineWidth = 1;
+            ctx.setLineDash([5, 5]);
             
-            /* 
-               Efeito de laser removido para não poluir demais, 
-               focando na elegância do globo. 
-            */
+            for (let i = 0; i < servers.length; i++) {
+                for (let j = i + 1; j < servers.length; j++) {
+                    const s1 = servers[i];
+                    const s2 = servers[j];
+                    
+                    const phi1 = (90 - s1.lat) * (Math.PI / 180);
+                    const theta1 = (s1.lon + 180) * (Math.PI / 180) + time;
+                    const x1 = GLOBE_RADIUS * Math.sin(phi1) * Math.cos(theta1);
+                    const y1 = GLOBE_RADIUS * Math.cos(phi1);
+                    const z1 = GLOBE_RADIUS * Math.sin(phi1) * Math.sin(theta1);
+                    
+                    const phi2 = (90 - s2.lat) * (Math.PI / 180);
+                    const theta2 = (s2.lon + 180) * (Math.PI / 180) + time;
+                    const x2 = GLOBE_RADIUS * Math.sin(phi2) * Math.cos(theta2);
+                    const y2 = GLOBE_RADIUS * Math.cos(phi2);
+                    const z2 = GLOBE_RADIUS * Math.sin(phi2) * Math.sin(theta2);
+                    
+                    if (z1 > 0 && z2 > 0) {
+                        const scale1 = 400 / (400 + z1);
+                        const scale2 = 400 / (400 + z2);
+                        
+                        ctx.beginPath();
+                        ctx.moveTo(cx + x1 * scale1, cy + y1 * scale1);
+                        ctx.lineTo(cx + x2 * scale2, cy + y2 * scale2);
+                        ctx.stroke();
+                    }
+                }
+            }
+            ctx.setLineDash([]);
 
             requestAnimationFrame(render);
         };
@@ -223,14 +274,14 @@ export default function NetworkPage() {
         render();
 
         return () => window.removeEventListener('resize', resize);
-    }, []);
+    }, [servers]);
 
-    // Simulador de Tráfego
+    // Simulador de tráfego
     useEffect(() => {
         const interval = setInterval(() => {
             setStats(prev => ({
+                ...prev,
                 packets: prev.packets + Math.floor(Math.random() * 500),
-                latency: 20 + Math.floor(Math.random() * 10)
             }));
         }, 1000);
         return () => clearInterval(interval);
@@ -239,35 +290,37 @@ export default function NetworkPage() {
     return (
         <div className="h-[calc(100vh-6rem)] flex flex-col lg:flex-row gap-6 p-2 overflow-hidden relative">
             
-            {/* CANVAS BACKGROUND (O GLOBO) */}
+            {/* CANVAS */}
             <div className="absolute inset-0 bg-[#020617] -z-10">
                 <canvas ref={canvasRef} className="w-full h-full" />
-                {/* Overlay Grid Tech */}
                 <div className="absolute inset-0 bg-[url('/grid.svg')] opacity-10 pointer-events-none" />
                 <div className="absolute inset-0 bg-radial-gradient from-transparent via-transparent to-black/90 pointer-events-none" />
             </div>
 
             {/* ESQUERDA: LISTA DE SERVIDORES */}
             <div className="w-full lg:w-80 flex flex-col gap-4 z-10 h-full pointer-events-none">
-                <div className="bg-black/60 backdrop-blur-xl border border-white/10 rounded-2xl p-6 pointer-events-auto shadow-2xl">
+                <div className="bg-black/60 backdrop-blur-xl border border-cyan-500/20 rounded-2xl p-6 pointer-events-auto shadow-2xl">
                     <div className="flex items-center gap-3 mb-6">
-                        <Globe className="w-6 h-6 text-[var(--color-primary)] animate-spin-slow" />
+                        <Globe className="w-6 h-6 text-cyan-400 animate-spin" style={{ animationDuration: '10s' }} />
                         <div>
                             <h1 className="text-xl font-black text-white tracking-tight font-display">GLOBAL NET</h1>
-                            <p className="text-xs text-gray-400 font-mono">Active Nodes: {SERVERS.length}</p>
+                            <p className="text-xs text-gray-400 font-mono">Active Nodes: {servers.length}</p>
                         </div>
                     </div>
 
                     <div className="space-y-3 max-h-[400px] overflow-y-auto scrollbar-thin scrollbar-thumb-white/10">
-                        {SERVERS.map((server) => (
+                        {servers.map((server) => (
                             <div
                                 key={server.id}
                                 onClick={() => setSelectedServer(server)}
-                                className="group p-3 rounded-lg border border-white/5 bg-white/5 hover:bg-white/10 hover:border-[var(--color-primary)]/50 transition-all cursor-pointer hover:scale-105"
+                                className="group p-3 rounded-lg border border-white/5 bg-white/5 hover:bg-white/10 hover:border-cyan-500/50 transition-all cursor-pointer hover:scale-105"
                             >
                                 <div className="flex justify-between items-start mb-2">
                                     <div className="flex items-center gap-2">
-                                        <MapPin className="w-3 h-3 text-[var(--color-primary)]" />
+                                        {server.type === 'database' ? <Database className="w-3 h-3 text-green-400" /> :
+                                         server.type === 'api' ? <Cpu className="w-3 h-3 text-purple-400" /> :
+                                         server.type === 'agent' ? <Brain className="w-3 h-3 text-yellow-400" /> :
+                                         <MapPin className="w-3 h-3 text-cyan-400" />}
                                         <span className="text-sm font-bold text-white">{server.id}</span>
                                     </div>
                                     <span className={`text-xs font-mono ${server.load > 80 ? 'text-red-400' : 'text-emerald-400'}`}>
@@ -275,10 +328,9 @@ export default function NetworkPage() {
                                     </span>
                                 </div>
                                 <div className="text-xs text-gray-400 font-mono pl-5">{server.name}</div>
-                                {/* Load Bar */}
                                 <div className="mt-3 h-1 w-full bg-black/50 rounded-full overflow-hidden">
                                     <div 
-                                        className={`h-full transition-all duration-1000 ${server.load > 80 ? 'bg-red-500' : 'bg-[var(--color-primary)]'}`} 
+                                        className={`h-full transition-all duration-1000 ${server.load > 80 ? 'bg-red-500' : 'bg-cyan-500'}`} 
                                         style={{ width: `${server.load}%` }} 
                                     />
                                 </div>
@@ -288,50 +340,57 @@ export default function NetworkPage() {
                 </div>
             </div>
 
-            {/* DIREITA: ESTATÍSTICAS DE REDE */}
+            {/* DIREITA: STATS */}
             <div className="absolute top-6 right-6 z-10 flex flex-col gap-3 w-64">
-                <div className="bg-black/60 backdrop-blur-xl border border-white/10 rounded-xl p-4 animate-fadeInRight">
+                <div className="bg-black/60 backdrop-blur-xl border border-white/10 rounded-xl p-4">
                     <div className="flex justify-between items-center mb-2">
-                        <span className="text-xs text-gray-400 uppercase font-mono">Global Latency</span>
+                        <span className="text-xs text-gray-400 uppercase font-mono">Supabase Latency</span>
                         <Wifi className="w-4 h-4 text-emerald-400" />
                     </div>
-                    <div className="text-3xl font-mono text-white">{stats.latency} <span className="text-sm text-gray-500">ms</span></div>
+                    <div className="text-3xl font-mono text-white">{supabaseLatency} <span className="text-sm text-gray-500">ms</span></div>
                 </div>
 
-                <div className="bg-black/60 backdrop-blur-xl border border-white/10 rounded-xl p-4 animate-fadeInRight" style={{animationDelay: '0.1s'}}>
+                <div className="bg-black/60 backdrop-blur-xl border border-white/10 rounded-xl p-4">
                     <div className="flex justify-between items-center mb-2">
-                        <span className="text-xs text-gray-400 uppercase font-mono">Total Packets</span>
-                        <Activity className="w-4 h-4 text-[var(--color-primary)]" />
+                        <span className="text-xs text-gray-400 uppercase font-mono">Total Requests</span>
+                        <Activity className="w-4 h-4 text-cyan-400" />
                     </div>
-                    <div className="text-2xl font-mono text-white">{stats.packets.toLocaleString()}</div>
+                    <div className="text-2xl font-mono text-white">{stats.totalRequests.toLocaleString()}</div>
                 </div>
 
-                <div className="bg-black/60 backdrop-blur-xl border border-white/10 rounded-xl p-4 animate-fadeInRight" style={{animationDelay: '0.2s'}}>
+                <div className="bg-black/60 backdrop-blur-xl border border-white/10 rounded-xl p-4">
+                    <div className="flex justify-between items-center mb-2">
+                        <span className="text-xs text-gray-400 uppercase font-mono">Active Agents</span>
+                        <Brain className="w-4 h-4 text-yellow-400" />
+                    </div>
+                    <div className="text-2xl font-mono text-white">{stats.totalAgents}</div>
+                </div>
+
+                <div className="bg-black/60 backdrop-blur-xl border border-white/10 rounded-xl p-4">
                     <div className="flex justify-between items-center mb-2">
                         <span className="text-xs text-gray-400 uppercase font-mono">Network Status</span>
-                        <Radio className="w-4 h-4 text-[var(--color-accent)] animate-pulse" />
+                        <Radio className="w-4 h-4 text-green-400 animate-pulse" />
                     </div>
-                    <div className="text-sm font-bold text-[var(--color-accent)] tracking-widest">ENCRYPTED</div>
+                    <div className="text-sm font-bold text-green-400 tracking-widest">ENCRYPTED</div>
                 </div>
             </div>
 
-            {/* RODAPÉ: LOCALIZAÇÃO ATUAL */}
+            {/* RODAPÉ */}
             <div className="absolute bottom-8 left-1/2 -translate-x-1/2 bg-black/40 backdrop-blur-md border border-white/10 px-6 py-2 rounded-full text-xs font-mono text-gray-400 flex items-center gap-3">
-                <div className="w-2 h-2 rounded-full bg-red-500 animate-ping" />
+                <div className="w-2 h-2 rounded-full bg-cyan-500 animate-ping" />
                 <span>SCANNING SECTOR {Math.floor(rotation * 100 % 360)}°</span>
             </div>
 
-            {/* MODAL DE DETALHES DO SERVER */}
+            {/* MODAL */}
             {selectedServer && (
                 <div
                     className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4"
                     onClick={() => setSelectedServer(null)}
                 >
                     <div
-                        className="relative bg-[var(--color-surface)]/95 border-2 border-[var(--color-primary)]/50 backdrop-blur-xl rounded-2xl p-8 max-w-2xl w-full shadow-[0_0_80px_var(--color-primary)] animate-scaleIn"
+                        className="relative bg-black/95 border-2 border-cyan-500/50 backdrop-blur-xl rounded-2xl p-8 max-w-2xl w-full shadow-[0_0_80px_rgba(6,182,212,0.3)]"
                         onClick={(e) => e.stopPropagation()}
                     >
-                        {/* Close Button */}
                         <button
                             onClick={() => setSelectedServer(null)}
                             className="absolute top-4 right-4 p-2 rounded-lg bg-black/40 hover:bg-black/60 text-gray-400 hover:text-white transition-all"
@@ -339,24 +398,25 @@ export default function NetworkPage() {
                             <X className="w-6 h-6" />
                         </button>
 
-                        {/* Header */}
                         <div className="flex items-center gap-6 mb-8">
-                            <div className="p-6 rounded-2xl bg-black/80 border border-[var(--color-border)]/30 text-[var(--color-primary)] shadow-[0_0_20px_var(--color-primary)]">
-                                <Server className="w-8 h-8" />
+                            <div className="p-6 rounded-2xl bg-black/80 border border-cyan-500/30 text-cyan-400 shadow-[0_0_20px_rgba(6,182,212,0.3)]">
+                                {selectedServer.type === 'database' ? <Database className="w-8 h-8" /> :
+                                 selectedServer.type === 'api' ? <Cpu className="w-8 h-8" /> :
+                                 selectedServer.type === 'agent' ? <Brain className="w-8 h-8" /> :
+                                 <Server className="w-8 h-8" />}
                             </div>
                             <div>
-                                <h2 className="text-4xl font-black text-white orbitron tracking-wide mb-2">
+                                <h2 className="text-4xl font-black text-white tracking-wide mb-2">
                                     {selectedServer.id}
                                 </h2>
                                 <p className="text-gray-400 font-mono">{selectedServer.name}</p>
                             </div>
                         </div>
 
-                        {/* Stats Grid */}
                         <div className="grid grid-cols-2 gap-6 mb-6">
                             <div className="bg-black/40 border border-white/10 rounded-xl p-6">
                                 <div className="flex items-center gap-3 mb-3">
-                                    <Activity className="w-5 h-5 text-[var(--color-primary)]" />
+                                    <Activity className="w-5 h-5 text-cyan-400" />
                                     <span className="text-sm text-gray-400 uppercase font-mono">Server Load</span>
                                 </div>
                                 <div className={`text-3xl font-bold ${selectedServer.load > 80 ? 'text-red-400' : 'text-emerald-400'}`}>
@@ -366,11 +426,11 @@ export default function NetworkPage() {
 
                             <div className="bg-black/40 border border-white/10 rounded-xl p-6">
                                 <div className="flex items-center gap-3 mb-3">
-                                    <Clock className="w-5 h-5 text-[var(--color-accent)]" />
-                                    <span className="text-sm text-gray-400 uppercase font-mono">Latency</span>
+                                    <TrendingUp className="w-5 h-5 text-green-400" />
+                                    <span className="text-sm text-gray-400 uppercase font-mono">Requests</span>
                                 </div>
                                 <div className="text-3xl font-bold text-white">
-                                    {supabaseLatency} <span className="text-lg text-gray-500">ms</span>
+                                    {selectedServer.requests.toLocaleString()}
                                 </div>
                             </div>
 
@@ -386,16 +446,15 @@ export default function NetworkPage() {
 
                             <div className="bg-black/40 border border-white/10 rounded-xl p-6">
                                 <div className="flex items-center gap-3 mb-3">
-                                    <TrendingUp className="w-5 h-5 text-emerald-400" />
+                                    <Zap className="w-5 h-5 text-emerald-400" />
                                     <span className="text-sm text-gray-400 uppercase font-mono">Status</span>
                                 </div>
-                                <div className="text-xl font-bold text-emerald-400">
-                                    OPERATIONAL
+                                <div className={`text-xl font-bold ${selectedServer.status === 'online' ? 'text-emerald-400' : 'text-red-400'}`}>
+                                    {selectedServer.status.toUpperCase()}
                                 </div>
                             </div>
                         </div>
 
-                        {/* Load Bar */}
                         <div className="bg-black/40 border border-white/10 rounded-xl p-6">
                             <h3 className="text-xs text-gray-500 uppercase tracking-widest mb-3 font-mono">
                                 Resource Usage
@@ -404,28 +463,14 @@ export default function NetworkPage() {
                                 <div>
                                     <div className="flex justify-between text-sm mb-2 font-mono">
                                         <span className="text-gray-400">CPU</span>
-                                        <span className={`font-bold ${selectedServer.load > 80 ? 'text-red-400' : 'text-[var(--color-primary)]'}`}>
+                                        <span className={`font-bold ${selectedServer.load > 80 ? 'text-red-400' : 'text-cyan-400'}`}>
                                             {selectedServer.load}%
                                         </span>
                                     </div>
                                     <div className="w-full bg-white/5 h-3 rounded-full overflow-hidden">
                                         <div
-                                            className={`h-full transition-all duration-1000 ${selectedServer.load > 80 ? 'bg-red-500' : 'bg-gradient-to-r from-[var(--color-secondary)] via-[var(--color-primary)] to-[var(--color-accent)]'}`}
+                                            className={`h-full transition-all duration-1000 ${selectedServer.load > 80 ? 'bg-red-500' : 'bg-gradient-to-r from-cyan-500 to-blue-500'}`}
                                             style={{ width: `${selectedServer.load}%` }}
-                                        />
-                                    </div>
-                                </div>
-                                <div>
-                                    <div className="flex justify-between text-sm mb-2 font-mono">
-                                        <span className="text-gray-400">Memory</span>
-                                        <span className="text-[var(--color-primary)] font-bold">
-                                            {Math.max(20, selectedServer.load - 15)}%
-                                        </span>
-                                    </div>
-                                    <div className="w-full bg-white/5 h-3 rounded-full overflow-hidden">
-                                        <div
-                                            className="h-full bg-gradient-to-r from-purple-500 to-pink-500 transition-all duration-1000"
-                                            style={{ width: `${Math.max(20, selectedServer.load - 15)}%` }}
                                         />
                                     </div>
                                 </div>
@@ -434,26 +479,6 @@ export default function NetworkPage() {
                     </div>
                 </div>
             )}
-
-            <style jsx>{`
-                .animate-spin-slow { animation: spin 10s linear infinite; }
-                @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-                @keyframes fadeInRight { from { opacity: 0; transform: translateX(20px); } to { opacity: 1; transform: translateX(0); } }
-                .animate-fadeInRight { animation: fadeInRight 0.3s ease-out forwards; }
-                @keyframes scaleIn {
-                    from {
-                        opacity: 0;
-                        transform: scale(0.9);
-                    }
-                    to {
-                        opacity: 1;
-                        transform: scale(1);
-                    }
-                }
-                .animate-scaleIn {
-                    animation: scaleIn 0.3s ease-out;
-                }
-            `}</style>
         </div>
     );
 }

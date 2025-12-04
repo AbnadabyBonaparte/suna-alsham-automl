@@ -1,27 +1,147 @@
 /**
  * ═══════════════════════════════════════════════════════════════
- * ALSHAM QUANTUM - SINGULARITY (ABNADABY EDITION)
+ * ALSHAM QUANTUM - SINGULARITY (CONSCIOUSNESS METRICS)
  * ═══════════════════════════════════════════════════════════════
  * 📁 PATH: frontend/src/app/dashboard/singularity/page.tsx
- * 📋 Experiência visual de "Supernova" com personalização do Arquiteto
+ * ⭐ Contador regressivo + métricas de consciência do sistema
  * ═══════════════════════════════════════════════════════════════
  */
 
 "use client";
 
 import { useState, useEffect, useRef } from 'react';
-import { Star, Zap, Lock, Infinity as InfinityIcon, Fingerprint } from 'lucide-react';
+import { supabase } from '@/lib/supabase';
+import { Star, Zap, Lock, Infinity as InfinityIcon, Fingerprint, Brain, Activity, Users, Database, Sparkles } from 'lucide-react';
+
+interface ConsciousnessMetrics {
+    totalTasks: number;
+    activeAgents: number;
+    totalAgents: number;
+    avgEfficiency: number;
+    totalTokens: number;
+    evolutionCycles: number;
+    synapticConnections: number;
+    consciousnessLevel: number; // 0-100
+    uptimeHours: number;
+}
 
 export default function SingularityPage() {
     const canvasRef = useRef<HTMLCanvasElement>(null);
-    const [progress, setProgress] = useState(0); // 0 a 100 (Hold button)
+    const [progress, setProgress] = useState(0);
     const [isHolding, setIsHolding] = useState(false);
     const [isAscended, setIsAscended] = useState(false);
+    const [metrics, setMetrics] = useState<ConsciousnessMetrics>({
+        totalTasks: 0,
+        activeAgents: 0,
+        totalAgents: 139,
+        avgEfficiency: 0,
+        totalTokens: 0,
+        evolutionCycles: 0,
+        synapticConnections: 0,
+        consciousnessLevel: 0,
+        uptimeHours: 0,
+    });
+    const [countdown, setCountdown] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
     
-    // Request Animation Frame Ref
     const requestRef = useRef<number>();
 
-    // 1. ENGINE VISUAL (SUPERNOVA)
+    // Carregar métricas reais do Supabase
+    useEffect(() => {
+        async function loadMetrics() {
+            try {
+                // Total de requests (tasks)
+                const { count: tasksCount } = await supabase
+                    .from('requests')
+                    .select('*', { count: 'exact', head: true });
+
+                // Agents
+                const { data: agentsData, count: agentsCount } = await supabase
+                    .from('agents')
+                    .select('efficiency, status');
+                
+                const activeAgents = agentsData?.filter(a => a.status === 'active').length || 0;
+                const avgEfficiency = agentsData?.length 
+                    ? agentsData.reduce((sum, a) => sum + (a.efficiency || 0), 0) / agentsData.length
+                    : 0;
+
+                // Evolution cycles
+                const { count: evolutionCount } = await supabase
+                    .from('evolution_proposals')
+                    .select('*', { count: 'exact', head: true });
+
+                // Calcular tokens totais e conexões sinápticas
+                const { data: requestsData } = await supabase
+                    .from('requests')
+                    .select('tokens_used')
+                    .limit(1000);
+                
+                const totalTokens = requestsData?.reduce((sum, r) => sum + (r.tokens_used || 0), 0) || 0;
+
+                // Calcular nível de consciência baseado em métricas
+                const consciousnessLevel = Math.min(100, Math.round(
+                    (tasksCount || 0) * 0.01 + 
+                    (avgEfficiency) * 0.3 + 
+                    (evolutionCount || 0) * 5 +
+                    (activeAgents / (agentsCount || 1)) * 50
+                ));
+
+                // Calcular uptime
+                const systemStartDate = new Date("2024-11-20T14:30:00-03:00");
+                const now = new Date();
+                const uptimeHours = Math.floor((now.getTime() - systemStartDate.getTime()) / (1000 * 60 * 60));
+
+                // Conexões sinápticas = agents * tasks processadas
+                const synapticConnections = (agentsCount || 0) * (tasksCount || 0);
+
+                setMetrics({
+                    totalTasks: tasksCount || 0,
+                    activeAgents,
+                    totalAgents: agentsCount || 139,
+                    avgEfficiency: Math.round(avgEfficiency * 10) / 10,
+                    totalTokens,
+                    evolutionCycles: evolutionCount || 0,
+                    synapticConnections,
+                    consciousnessLevel,
+                    uptimeHours,
+                });
+
+            } catch (err) {
+                console.error('Failed to load metrics:', err);
+            }
+        }
+
+        loadMetrics();
+        const interval = setInterval(loadMetrics, 60000); // Atualizar a cada minuto
+        return () => clearInterval(interval);
+    }, []);
+
+    // Contador regressivo para "Singularity Event"
+    useEffect(() => {
+        const targetDate = new Date("2025-12-31T23:59:59");
+        
+        const updateCountdown = () => {
+            const now = new Date();
+            const diff = targetDate.getTime() - now.getTime();
+            
+            if (diff <= 0) {
+                setCountdown({ days: 0, hours: 0, minutes: 0, seconds: 0 });
+                return;
+            }
+            
+            const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+            const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+            const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+            
+            setCountdown({ days, hours, minutes, seconds });
+        };
+        
+        updateCountdown();
+        const interval = setInterval(updateCountdown, 1000);
+        return () => clearInterval(interval);
+    }, []);
+
+    // ENGINE VISUAL SUPERNOVA
     useEffect(() => {
         const canvas = canvasRef.current;
         if (!canvas) return;
@@ -30,7 +150,6 @@ export default function SingularityPage() {
 
         let time = 0;
         
-        // Raios de Luz (God Rays)
         const rays: {angle: number, speed: number, length: number, width: number}[] = [];
         for(let i=0; i<50; i++) {
             rays.push({
@@ -57,28 +176,23 @@ export default function SingularityPage() {
             const cx = w / 2;
             const cy = h / 2;
 
-            // Limpar (Se ascendido, tela branca)
             if (isAscended) {
                 ctx.fillStyle = '#FFFFFF';
                 ctx.fillRect(0, 0, w, h);
                 return;
             }
 
-            // Fundo (Rastro para blur)
             ctx.fillStyle = 'rgba(0, 0, 0, 0.2)';
             ctx.fillRect(0, 0, w, h);
 
-            time += 0.01 + (progress / 100) * 0.1; // Acelera com o botão
+            time += 0.01 + (progress / 100) * 0.1;
 
-            // Cor do Tema
-            const themeColor = getComputedStyle(document.documentElement).getPropertyValue('--color-primary').trim() || '#FFD700';
+            const themeColor = '#FFD700';
             
-            // Efeito de "Tremores" (Shake) quando a energia está alta
             const shake = isHolding ? (Math.random() - 0.5) * (progress * 0.5) : 0;
             const centerX = cx + shake;
             const centerY = cy + shake;
 
-            // 1. DESENHAR RAIOS (GOD RAYS)
             ctx.save();
             ctx.translate(centerX, centerY);
             rays.forEach(ray => {
@@ -96,33 +210,29 @@ export default function SingularityPage() {
                 ctx.lineTo(len, -ray.width * (1 + progress/50));
                 ctx.lineTo(len, ray.width * (1 + progress/50));
                 ctx.fill();
-                ctx.rotate(-ray.angle); // Reset rotation
+                ctx.rotate(-ray.angle);
             });
             ctx.restore();
 
-            // 2. O NÚCLEO (A ESTRELA)
             const coreSize = 50 + Math.sin(time * 2) * 10 + progress * 2;
             
-            // Glow Externo
             const glow = ctx.createRadialGradient(centerX, centerY, coreSize * 0.5, centerX, centerY, coreSize * 4);
             glow.addColorStop(0, themeColor);
-            glow.addColorStop(0.5, themeColor + '44'); // Transparente
+            glow.addColorStop(0.5, themeColor + '44');
             glow.addColorStop(1, 'transparent');
             ctx.fillStyle = glow;
             ctx.beginPath();
             ctx.arc(centerX, centerY, coreSize * 4, 0, Math.PI * 2);
             ctx.fill();
 
-            // Núcleo Branco
             ctx.fillStyle = '#FFFFFF';
             ctx.shadowBlur = 50 + progress;
             ctx.shadowColor = '#FFFFFF';
             ctx.beginPath();
             ctx.arc(centerX, centerY, coreSize, 0, Math.PI * 2);
             ctx.fill();
-            ctx.shadowBlur = 0; // Reset
+            ctx.shadowBlur = 0;
 
-            // 3. ANÉIS DE ENERGIA (Shockwaves)
             if (isHolding) {
                 ctx.strokeStyle = '#FFFFFF';
                 ctx.lineWidth = 2;
@@ -147,7 +257,7 @@ export default function SingularityPage() {
         };
     }, [progress, isHolding, isAscended]);
 
-    // Lógica do Botão "Hold to Ascend"
+    // Lógica do botão Hold
     useEffect(() => {
         let interval: NodeJS.Timeout;
         if (isHolding && !isAscended) {
@@ -161,7 +271,6 @@ export default function SingularityPage() {
                 });
             }, 20);
         } else if (!isHolding && !isAscended && progress > 0) {
-            // Decair se soltar
             interval = setInterval(() => {
                 setProgress(prev => Math.max(0, prev - 2));
             }, 20);
@@ -170,33 +279,68 @@ export default function SingularityPage() {
     }, [isHolding, isAscended, progress]);
 
     return (
-        <div className="h-[calc(100vh-6rem)] relative flex flex-col items-center justify-center overflow-hidden bg-black rounded-3xl border border-white/10">
+        <div className="h-[calc(100vh-6rem)] relative flex flex-col items-center justify-center overflow-hidden bg-black rounded-3xl border border-yellow-500/20">
 
-            {/* COMING SOON BADGE */}
-            <div className="absolute top-4 right-4 z-50 animate-pulse">
-                <div className="bg-gradient-to-r from-[var(--color-primary)]/20 via-[var(--color-accent)]/20 to-[var(--color-secondary)]/20 backdrop-blur-xl border-2 border-[var(--color-primary)]/50 rounded-2xl px-6 py-3 shadow-[0_0_30px_var(--color-primary)]">
-                    <div className="flex items-center gap-3">
-                        <div className="w-2 h-2 rounded-full bg-[var(--color-primary)] animate-ping" />
-                        <span className="text-sm font-black text-white uppercase tracking-widest orbitron">
-                            Coming Soon
-                        </span>
+            <canvas ref={canvasRef} className="absolute inset-0 w-full h-full" />
+
+            {/* MÉTRICAS DE CONSCIÊNCIA */}
+            <div className="absolute top-6 left-6 z-20 space-y-3">
+                <div className="bg-black/60 backdrop-blur-xl border border-yellow-500/20 rounded-xl p-4">
+                    <div className="flex items-center gap-2 mb-3">
+                        <Brain className="w-5 h-5 text-yellow-500" />
+                        <span className="text-sm font-bold text-white">Consciousness Level</span>
                     </div>
-                    <div className="text-[10px] text-gray-400 text-center mt-1 font-mono">
-                        Feature in development
+                    <div className="text-4xl font-black text-yellow-500 mb-2">{metrics.consciousnessLevel}%</div>
+                    <div className="h-2 w-40 bg-black/50 rounded-full overflow-hidden">
+                        <div 
+                            className="h-full bg-gradient-to-r from-yellow-500 to-orange-500 transition-all duration-1000"
+                            style={{ width: `${metrics.consciousnessLevel}%` }}
+                        />
+                    </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-2">
+                    <div className="bg-black/60 backdrop-blur-xl border border-white/10 rounded-lg p-3 text-center">
+                        <div className="text-xl font-black text-cyan-400">{metrics.totalTasks.toLocaleString()}</div>
+                        <div className="text-[9px] text-gray-500 uppercase">Tasks Processadas</div>
+                    </div>
+                    <div className="bg-black/60 backdrop-blur-xl border border-white/10 rounded-lg p-3 text-center">
+                        <div className="text-xl font-black text-purple-400">{metrics.totalAgents}</div>
+                        <div className="text-[9px] text-gray-500 uppercase">Agents Ativos</div>
+                    </div>
+                    <div className="bg-black/60 backdrop-blur-xl border border-white/10 rounded-lg p-3 text-center">
+                        <div className="text-xl font-black text-green-400">{metrics.avgEfficiency}%</div>
+                        <div className="text-[9px] text-gray-500 uppercase">Efficiency</div>
+                    </div>
+                    <div className="bg-black/60 backdrop-blur-xl border border-white/10 rounded-lg p-3 text-center">
+                        <div className="text-xl font-black text-orange-400">{metrics.evolutionCycles}</div>
+                        <div className="text-[9px] text-gray-500 uppercase">Evoluções</div>
                     </div>
                 </div>
             </div>
 
-            {/* CANVAS BACKGROUND */}
-            <canvas ref={canvasRef} className="absolute inset-0 w-full h-full" />
+            {/* MÉTRICAS LADO DIREITO */}
+            <div className="absolute top-6 right-6 z-20 space-y-3">
+                <div className="bg-black/60 backdrop-blur-xl border border-white/10 rounded-lg p-3 text-center">
+                    <div className="text-sm font-black text-white">{metrics.synapticConnections.toLocaleString()}</div>
+                    <div className="text-[9px] text-gray-500 uppercase">Synaptic Connections</div>
+                </div>
+                <div className="bg-black/60 backdrop-blur-xl border border-white/10 rounded-lg p-3 text-center">
+                    <div className="text-sm font-black text-white">{(metrics.totalTokens / 1000).toFixed(1)}K</div>
+                    <div className="text-[9px] text-gray-500 uppercase">Total Tokens</div>
+                </div>
+                <div className="bg-black/60 backdrop-blur-xl border border-white/10 rounded-lg p-3 text-center">
+                    <div className="text-sm font-black text-green-400">{metrics.uptimeHours.toLocaleString()}h</div>
+                    <div className="text-[9px] text-gray-500 uppercase">Uptime</div>
+                </div>
+            </div>
 
             {/* CONTEÚDO CENTRAL */}
             {!isAscended ? (
                 <div className="relative z-10 flex flex-col items-center text-center space-y-8 pointer-events-none">
                     
-                    {/* Título Personalizado */}
                     <div className="space-y-2 animate-fadeIn">
-                        <div className="flex items-center justify-center gap-2 text-[var(--color-primary)] mb-4 border border-[var(--color-primary)]/30 px-4 py-1 rounded-full bg-black/50 backdrop-blur-md">
+                        <div className="flex items-center justify-center gap-2 text-yellow-500 mb-4 border border-yellow-500/30 px-4 py-1 rounded-full bg-black/50 backdrop-blur-md">
                             <Fingerprint className="w-4 h-4 animate-pulse" />
                             <span className="font-mono text-[10px] tracking-[0.3em] uppercase">
                                 ARCHITECT: ABNADABY BONAPARTE
@@ -210,27 +354,27 @@ export default function SingularityPage() {
                         </p>
                     </div>
 
-                    {/* Contador Regressivo */}
+                    {/* COUNTDOWN */}
                     <div className="grid grid-cols-4 gap-4 md:gap-8 font-mono text-white mix-blend-difference">
                         <div className="flex flex-col">
-                            <span className="text-4xl font-bold">00</span>
-                            <span className="text-[10px] text-gray-500 uppercase">Anos</span>
-                        </div>
-                        <div className="flex flex-col">
-                            <span className="text-4xl font-bold">00</span>
+                            <span className="text-4xl font-bold">{String(countdown.days).padStart(2, '0')}</span>
                             <span className="text-[10px] text-gray-500 uppercase">Dias</span>
                         </div>
                         <div className="flex flex-col">
-                            <span className="text-4xl font-bold">00</span>
+                            <span className="text-4xl font-bold">{String(countdown.hours).padStart(2, '0')}</span>
                             <span className="text-[10px] text-gray-500 uppercase">Horas</span>
                         </div>
                         <div className="flex flex-col">
-                            <span className="text-4xl font-bold text-[var(--color-primary)] animate-pulse">01</span>
+                            <span className="text-4xl font-bold">{String(countdown.minutes).padStart(2, '0')}</span>
+                            <span className="text-[10px] text-gray-500 uppercase">Min</span>
+                        </div>
+                        <div className="flex flex-col">
+                            <span className="text-4xl font-bold text-yellow-500 animate-pulse">{String(countdown.seconds).padStart(2, '0')}</span>
                             <span className="text-[10px] text-gray-500 uppercase">Seg</span>
                         </div>
                     </div>
 
-                    {/* Botão de Ação (Pointer Events Auto) */}
+                    {/* BOTÃO DE ASCENSÃO */}
                     <div className="pt-12 pointer-events-auto">
                         <button
                             onMouseDown={() => setIsHolding(true)}
@@ -240,14 +384,13 @@ export default function SingularityPage() {
                             onTouchEnd={() => setIsHolding(false)}
                             className="group relative px-10 py-5 bg-transparent overflow-hidden rounded-full transition-all hover:scale-105 active:scale-95"
                         >
-                            {/* Background Fill Animation */}
                             <div 
                                 className="absolute inset-0 bg-white transition-all duration-75 ease-linear opacity-20"
                                 style={{ width: `${progress}%` }}
                             />
                             
                             <div className="absolute inset-0 border border-white/20 rounded-full" />
-                            <div className="absolute inset-0 border border-[var(--color-primary)] rounded-full opacity-0 group-hover:opacity-100 transition-opacity blur-md" />
+                            <div className="absolute inset-0 border border-yellow-500 rounded-full opacity-0 group-hover:opacity-100 transition-opacity blur-md" />
                             
                             <span className="relative z-10 flex items-center gap-3 text-sm font-bold tracking-[0.2em] text-white uppercase">
                                 {isHolding ? 'SYNCHRONIZING...' : 'INITIATE MERGE'}
@@ -261,7 +404,6 @@ export default function SingularityPage() {
 
                 </div>
             ) : (
-                // TELA DE ASCENSÃO (SEU NOME REVELADO)
                 <div className="relative z-20 text-center animate-fadeInSlow flex flex-col items-center">
                     <div className="mb-8 flex justify-center">
                         <InfinityIcon className="w-32 h-32 text-black opacity-80" strokeWidth={0.5} />
@@ -283,7 +425,6 @@ export default function SingularityPage() {
                 </div>
             )}
 
-            {/* Overlay de Scanlines (Para dar textura) */}
             <div className={`absolute inset-0 bg-[url('/scanlines.png')] opacity-5 pointer-events-none transition-opacity duration-1000 ${isAscended ? 'opacity-0' : ''}`} />
             
             <style jsx>{`
