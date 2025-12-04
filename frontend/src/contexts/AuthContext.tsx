@@ -1,8 +1,8 @@
 "use client";
 
 import { createContext, useContext, useEffect, useState } from 'react';
-import { User, Session, AuthError } from '@supabase/supabase-js';
-import { supabase } from '@/lib/supabase';
+import { User, Session, AuthError, SupabaseClient } from '@supabase/supabase-js';
+import { createClient } from '@supabase/supabase-js';
 import { useRouter } from 'next/navigation';
 
 interface AuthContextType {
@@ -16,6 +16,25 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+// Lazy client initialization para evitar erros durante build
+let _supabaseClient: SupabaseClient | null = null;
+
+function getSupabaseClient(): SupabaseClient {
+    if (_supabaseClient) {
+        return _supabaseClient;
+    }
+    
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+    
+    if (!supabaseUrl || !supabaseAnonKey) {
+        throw new Error('Missing Supabase environment variables');
+    }
+    
+    _supabaseClient = createClient(supabaseUrl, supabaseAnonKey);
+    return _supabaseClient;
+}
+
 export function AuthProvider({ children }: { children: React.ReactNode }) {
     const [user, setUser] = useState<User | null>(null);
     const [session, setSession] = useState<Session | null>(null);
@@ -23,6 +42,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const router = useRouter();
 
     useEffect(() => {
+        const supabase = getSupabaseClient();
+        
         supabase.auth.getSession().then(({ data: { session } }) => {
             setSession(session);
             setUser(session?.user ?? null);
@@ -39,6 +60,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }, []);
 
     const signIn = async (email: string, password: string) => {
+        const supabase = getSupabaseClient();
         const { error } = await supabase.auth.signInWithPassword({
             email,
             password,
@@ -52,6 +74,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
 
     const signUp = async (email: string, password: string) => {
+        const supabase = getSupabaseClient();
         const { error } = await supabase.auth.signUp({
             email,
             password,
@@ -65,6 +88,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
 
     const signOut = async () => {
+        const supabase = getSupabaseClient();
         await supabase.auth.signOut();
         router.push('/login');
     };
