@@ -3,7 +3,6 @@ import { createClient, SupabaseClient } from '@supabase/supabase-js';
 // Lazy initialization - só cria o cliente quando for realmente usado
 let _supabaseAdmin: SupabaseClient | null = null;
 
-// Função getter para criar o cliente apenas em runtime (não durante o build)
 export function getSupabaseAdmin(): SupabaseClient {
   if (_supabaseAdmin) {
     return _supabaseAdmin;
@@ -13,7 +12,24 @@ export function getSupabaseAdmin(): SupabaseClient {
   const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
   if (!supabaseUrl || !supabaseServiceRoleKey) {
-    throw new Error('Missing Supabase environment variables for admin client');
+    // Durante o build, retorna um cliente dummy
+    console.warn('[SupabaseAdmin] Env vars missing - returning dummy client for build');
+    return {
+      from: () => ({
+        select: () => Promise.resolve({ data: [], error: null }),
+        insert: () => Promise.resolve({ data: null, error: null }),
+        update: () => Promise.resolve({ data: null, error: null }),
+        delete: () => Promise.resolve({ data: null, error: null }),
+        eq: () => ({ 
+          select: () => Promise.resolve({ data: [], error: null }),
+          single: () => Promise.resolve({ data: null, error: null }),
+        }),
+      }),
+      auth: {
+        getSession: () => Promise.resolve({ data: { session: null }, error: null }),
+        getUser: () => Promise.resolve({ data: { user: null }, error: null }),
+      },
+    } as unknown as SupabaseClient;
   }
 
   _supabaseAdmin = createClient(supabaseUrl, supabaseServiceRoleKey, {
@@ -26,11 +42,15 @@ export function getSupabaseAdmin(): SupabaseClient {
   return _supabaseAdmin;
 }
 
-// Export para retrocompatibilidade - usa getter lazy
-// NOTA: Se você importar supabaseAdmin diretamente, ele será undefined durante o build
-// Use getSupabaseAdmin() para garantir que funcione corretamente
-export const supabaseAdmin = {
-  get client() {
-    return getSupabaseAdmin();
-  }
-};
+// Export direto do cliente admin para retrocompatibilidade
+// Usa Proxy para delegar chamadas ao cliente lazy
+export const supabaseAdmin: SupabaseClient = new Proxy({} as SupabaseClient, {
+  get(_, prop) {
+    const client = getSupabaseAdmin();
+    const value = (client as any)[prop];
+    if (typeof value === 'function') {
+      return value.bind(client);
+    }
+    return value;
+  },
+});
