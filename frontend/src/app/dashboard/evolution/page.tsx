@@ -1,366 +1,510 @@
 /**
  * ═══════════════════════════════════════════════════════════════
- * ALSHAM QUANTUM - EVOLUTION LAB (GENESIS EDITION)
+ * ALSHAM QUANTUM - AGENT AUTO-EVOLUTION LAB
  * ═══════════════════════════════════════════════════════════════
  * 📁 PATH: frontend/src/app/dashboard/evolution/page.tsx
- * 📋 Simulação de DNA Digital e Algoritmos Genéticos
+ * 🧬 Sistema de Auto-Evolução de Agents usando Claude API
  * ═══════════════════════════════════════════════════════════════
  */
 
 "use client";
 
-import { useState, useEffect, useRef } from 'react';
-import { useAgents } from '@/hooks/useAgents';
+import { useState, useEffect } from 'react';
+import { useNotificationStore } from '@/stores/useNotificationStore';
 import {
-    Dna, GitBranch, Zap, RefreshCw,
-    TrendingUp, AlertTriangle, CheckCircle, Microscope
+    Dna, Brain, TrendingDown, Zap, X, Check, AlertTriangle,
+    Clock, Target, Activity, History, ChevronRight, Sparkles,
+    RefreshCw, CheckCircle2, XCircle, ArrowRight
 } from 'lucide-react';
 
+interface AgentCandidate {
+  agent_id: string;
+  agent_name: string;
+  agent_role: string;
+  total_requests: number;
+  successful_requests: number;
+  failed_requests: number;
+  success_rate: number;
+  avg_processing_time_ms: number;
+  current_efficiency: number;
+  evolution_count: number;
+  last_evolved_at: string | null;
+  recommendation: 'urgent' | 'recommended' | 'stable';
+  issues: string[];
+}
+
+interface Proposal {
+  proposal_id: string;
+  agent_id: string;
+  agent_name: string;
+  current_prompt: string;
+  proposed_prompt: string;
+  analysis: {
+    weaknesses: string[];
+    improvements: string[];
+    expected_gain: string;
+    confidence: 'high' | 'medium' | 'low';
+    reasoning: string;
+  };
+}
+
+interface EvolutionHistory {
+  id: string;
+  agent_id: string;
+  status: 'pending' | 'approved' | 'rejected' | 'merged';
+  created_at: string;
+  analysis: any;
+}
+
 export default function EvolutionPage() {
-    const canvasRef = useRef<HTMLCanvasElement>(null);
-    const { agents, loading } = useAgents();
+    const { addNotification } = useNotificationStore();
 
-    // Calcular stats REAIS dos agents
-    const avgEfficiency = agents.length > 0
-        ? agents.reduce((sum, a) => sum + a.efficiency, 0) / agents.length
-        : 87.4;
+    const [loading, setLoading] = useState(true);
+    const [analyzing, setAnalyzing] = useState(false);
+    const [candidates, setCandidates] = useState<AgentCandidate[]>([]);
+    const [history, setHistory] = useState<EvolutionHistory[]>([]);
 
-    const mutationsByRole = agents.reduce((acc, agent) => {
-        acc[agent.role] = (acc[agent.role] || 0) + 1;
-        return acc;
-    }, {} as Record<string, number>);
+    // Modal de proposta
+    const [showProposalModal, setShowProposalModal] = useState(false);
+    const [currentProposal, setCurrentProposal] = useState<Proposal | null>(null);
+    const [proposing, setProposing] = useState(false);
+    const [applying, setApplying] = useState(false);
 
-    // Estado da Simulação
-    const [generation, setGeneration] = useState(agents.length || 12);
-    const [fitness, setFitness] = useState(avgEfficiency);
-    const [mutationRate, setMutationRate] = useState(0.05);
-    const [isEvolving, setIsEvolving] = useState(false);
-    const [logs, setLogs] = useState<string[]>([]);
+    // Tabs
+    const [activeTab, setActiveTab] = useState<'candidates' | 'history'>('candidates');
 
-    // Atualizar fitness quando agents mudarem
+    // 1. Carregar candidatos e histórico
     useEffect(() => {
-        if (agents.length > 0) {
-            setFitness(avgEfficiency);
-            setGeneration(agents.length);
-        }
-    }, [agents, avgEfficiency]);
+        loadData();
+    }, []);
 
-    // 1. ENGINE VISUAL (DNA HELIX)
-    useEffect(() => {
-        const canvas = canvasRef.current;
-        if (!canvas) return;
-        const ctx = canvas.getContext('2d');
-        if (!ctx) return;
+    const loadData = async () => {
+        setLoading(true);
+        try {
+            // Buscar candidatos
+            const candidatesRes = await fetch('/api/evolution/analyze');
+            const candidatesData = await candidatesRes.json();
 
-        let animationId: number;
-        let time = 0;
-
-        // Configuração do DNA
-        const strands = 2; // Dupla hélice
-        const particlesPerStrand = 40;
-        const particles: {y: number, offset: number}[] = [];
-
-        for(let i=0; i<particlesPerStrand; i++) {
-            particles.push({
-                y: i * 15, // Espaçamento vertical
-                offset: i * 0.2 // Defasagem da onda
-            });
-        }
-
-        const resize = () => {
-            const parent = canvas.parentElement;
-            if(parent) {
-                canvas.width = parent.clientWidth;
-                canvas.height = parent.clientHeight;
+            if (candidatesData.success) {
+                setCandidates(candidatesData.candidates || []);
             }
-        };
-        window.addEventListener('resize', resize);
-        resize();
 
-        const render = () => {
-            const w = canvas.width;
-            const h = canvas.height;
-            const cx = w / 2;
-            
-            // Limpar
-            ctx.fillStyle = 'rgba(0, 0, 0, 0.1)'; // Trail suave
-            ctx.fillRect(0, 0, w, h);
+            // Buscar histórico
+            const historyRes = await fetch('/api/evolution/apply');
+            const historyData = await historyRes.json();
 
-            // Velocidade baseada no estado
-            time += isEvolving ? 0.15 : 0.02;
+            if (historyData.success) {
+                setHistory(historyData.proposals || []);
+            }
+        } catch (error) {
+            console.error('Erro ao carregar dados:', error);
+            addNotification('Erro ao carregar dados de evolução', 'error');
+        } finally {
+            setLoading(false);
+        }
+    };
 
-            // Cor do Tema
-            const themeColor = getComputedStyle(document.documentElement).getPropertyValue('--color-primary').trim() || '#00FFD0';
-            const accentColor = getComputedStyle(document.documentElement).getPropertyValue('--color-accent').trim() || '#0EA5E9';
+    // 2. Analisar agent com Claude
+    const handleAnalyzeAgent = async (agentId: string, agentName: string) => {
+        setProposing(true);
+        setAnalyzing(true);
 
-            // Desenhar Hélice
-            particles.forEach((p, i) => {
-                const y = p.y + (h/2 - (particlesPerStrand * 15)/2); // Centralizar verticalmente
-                
-                // Largura da hélice (pulsa se estiver evoluindo)
-                const amplitude = isEvolving ? 120 + Math.sin(time * 10)*20 : 100;
+        try {
+            const res = await fetch('/api/evolution/propose', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ agent_id: agentId }),
+            });
 
-                // Calcular posições X das duas fitas
-                const x1 = cx + Math.sin(time + p.offset) * amplitude;
-                const x2 = cx + Math.sin(time + p.offset + Math.PI) * amplitude; // +PI para oposto (180 graus)
+            const data = await res.json();
 
-                // Profundidade (Z) simulada pelo tamanho/cor
-                const z1 = Math.cos(time + p.offset); 
-                const z2 = Math.cos(time + p.offset + Math.PI);
+            if (data.success) {
+                setCurrentProposal({
+                    proposal_id: data.proposal_id,
+                    agent_id: agentId,
+                    agent_name: agentName,
+                    current_prompt: data.current_prompt,
+                    proposed_prompt: data.proposed_prompt,
+                    analysis: data.analysis,
+                });
+                setShowProposalModal(true);
+                addNotification(`Proposta de evolução gerada para ${agentName}!`, 'success');
+            } else {
+                addNotification(`Erro: ${data.error}`, 'error');
+            }
+        } catch (error) {
+            console.error('Erro ao analisar agent:', error);
+            addNotification('Erro ao analisar agent com Claude', 'error');
+        } finally {
+            setProposing(false);
+            setAnalyzing(false);
+        }
+    };
 
-                // Desenhar Conexões (Pares de Base)
-                if (i % 2 === 0) { // Apenas a cada 2 pontos para não poluir
-                    ctx.beginPath();
-                    ctx.moveTo(x1, y);
-                    ctx.lineTo(x2, y);
-                    ctx.strokeStyle = `rgba(255, 255, 255, 0.1)`;
-                    ctx.lineWidth = 1;
-                    ctx.stroke();
+    // 3. Aprovar ou rejeitar evolução
+    const handleApplyEvolution = async (action: 'approve' | 'reject') => {
+        if (!currentProposal) return;
+
+        setApplying(true);
+
+        try {
+            const res = await fetch('/api/evolution/apply', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    proposal_id: currentProposal.proposal_id,
+                    action,
+                }),
+            });
+
+            const data = await res.json();
+
+            if (data.success) {
+                if (action === 'approve') {
+                    addNotification(`🧬 Agent ${currentProposal.agent_name} evoluído com sucesso!`, 'success');
+                } else {
+                    addNotification(`Proposta para ${currentProposal.agent_name} rejeitada`, 'info');
                 }
-
-                // Desenhar Fita 1
-                const size1 = 3 + z1 * 2;
-                const alpha1 = 0.5 + z1 * 0.4;
-                ctx.beginPath();
-                ctx.arc(x1, y, size1, 0, Math.PI * 2);
-                ctx.fillStyle = isEvolving && Math.random() > 0.8 ? '#FFF' : themeColor; // Flash branco na evolução
-                ctx.globalAlpha = alpha1;
-                ctx.shadowBlur = isEvolving ? 20 : 10;
-                ctx.shadowColor = themeColor;
-                ctx.fill();
-
-                // Desenhar Fita 2
-                const size2 = 3 + z2 * 2;
-                const alpha2 = 0.5 + z2 * 0.4;
-                ctx.beginPath();
-                ctx.arc(x2, y, size2, 0, Math.PI * 2);
-                ctx.fillStyle = isEvolving && Math.random() > 0.8 ? '#FFF' : accentColor;
-                ctx.globalAlpha = alpha2;
-                ctx.shadowColor = accentColor;
-                ctx.fill();
-
-                // Reset
-                ctx.globalAlpha = 1;
-                ctx.shadowBlur = 0;
-            });
-
-            animationId = requestAnimationFrame(render);
-        };
-
-        render();
-
-        return () => {
-            window.removeEventListener('resize', resize);
-            cancelAnimationFrame(animationId);
-        };
-    }, [isEvolving]);
-
-    // 2. SIMULAÇÃO DE DADOS
-    const handleEvolve = () => {
-        if(isEvolving) return;
-        setIsEvolving(true);
-        setLogs(prev => ["Iniciando sequência de mutação genética...", ...prev]);
-
-        let steps = 0;
-        const interval = setInterval(() => {
-            steps++;
-            
-            // Atualizar dados aleatoriamente
-            setFitness(prev => Math.min(99.9, prev + (Math.random() - 0.3)));
-            setGeneration(prev => prev + 1);
-            
-            // Logs fake
-            if(Math.random() > 0.7) {
-                const mutations = ['Optimizing Neural Weights', 'Pruning Synapses', 'Recompiling Kernel', 'Genetic Drift Detected'];
-                setLogs(prev => [`> ${mutations[Math.floor(Math.random()*mutations.length)]} [OK]`, ...prev].slice(0, 8));
+                setShowProposalModal(false);
+                setCurrentProposal(null);
+                loadData(); // Recarregar dados
+            } else {
+                addNotification(`Erro: ${data.error}`, 'error');
             }
-
-            if(steps > 20) {
-                clearInterval(interval);
-                setIsEvolving(false);
-                setLogs(prev => ["Evolução concluída. Sistema estável.", ...prev]);
-            }
-        }, 150);
+        } catch (error) {
+            console.error('Erro ao aplicar evolução:', error);
+            addNotification('Erro ao processar ação', 'error');
+        } finally {
+            setApplying(false);
+        }
     };
 
     return (
-        <div className="h-[calc(100vh-6rem)] flex flex-col lg:flex-row gap-6 p-2 overflow-hidden relative">
-            
-            {/* ESQUERDA: O DNA VISUALIZER */}
-            <div className="lg:w-2/3 w-full h-full relative rounded-3xl overflow-hidden border border-white/10 bg-[#02040a] group shadow-2xl flex flex-col">
-                
-                {/* Header Flutuante */}
-                <div className="absolute top-6 left-6 z-20">
-                    <div className="flex items-center gap-3 mb-2">
-                        <div className={`p-2 rounded-lg border ${isEvolving ? 'bg-purple-500/20 border-purple-500 text-purple-400 animate-pulse' : 'bg-[var(--color-primary)]/10 border-[var(--color-primary)] text-[var(--color-primary)]'}`}>
-                            <Dna className="w-6 h-6" />
-                        </div>
-                        <div>
-                            <h1 className="text-2xl font-bold text-white tracking-tight font-display">GENESIS CHAMBER</h1>
-                            <p className="text-xs text-gray-400 font-mono uppercase tracking-widest">Genetic Algorithm v9.2</p>
-                        </div>
+        <div className="h-[calc(100vh-6rem)] flex flex-col gap-6 p-2 overflow-hidden">
+            {/* HEADER */}
+            <div className="flex items-center justify-between px-4">
+                <div className="flex items-center gap-4">
+                    <div className="p-3 rounded-xl bg-purple-500/20 border border-purple-500">
+                        <Dna className="w-7 h-7 text-purple-400" />
+                    </div>
+                    <div>
+                        <h1 className="text-3xl font-bold text-white tracking-tight font-display">
+                            EVOLUTION LAB
+                        </h1>
+                        <p className="text-sm text-gray-400 font-mono">
+                            Auto-evolução de agents com Claude API
+                        </p>
                     </div>
                 </div>
 
-                {/* CANVAS */}
-                <canvas ref={canvasRef} className="flex-1 w-full h-full cursor-crosshair" />
-
-                {/* Footer de Controle */}
-                <div className="absolute bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-black/90 to-transparent flex items-end justify-between">
-                    <div className="flex gap-8">
-                        <div>
-                            <div className="text-[10px] text-gray-500 font-mono uppercase mb-1">Generation</div>
-                            <div className="text-3xl font-mono text-white tabular-nums">
-                                #{generation.toLocaleString()}
-                            </div>
-                        </div>
-                        <div>
-                            <div className="text-[10px] text-gray-500 font-mono uppercase mb-1">Fitness Score</div>
-                            <div className={`text-3xl font-mono tabular-nums flex items-center gap-2 ${fitness > 90 ? 'text-emerald-400' : 'text-[var(--color-primary)]'}`}>
-                                {fitness.toFixed(1)}%
-                                {isEvolving && <TrendingUp className="w-5 h-5 animate-bounce" />}
-                            </div>
-                        </div>
-                    </div>
-
-                    <button 
-                        onClick={handleEvolve}
-                        disabled={isEvolving}
-                        className={`
-                            px-8 py-4 rounded-xl font-bold text-sm tracking-widest uppercase transition-all
-                            flex items-center gap-3
-                            ${isEvolving 
-                                ? 'bg-gray-800 text-gray-500 cursor-not-allowed border border-gray-700' 
-                                : 'bg-[var(--color-primary)] text-black hover:bg-[var(--color-accent)] shadow-[0_0_30px_rgba(var(--color-primary-rgb),0.3)] hover:scale-105'
-                            }
-                        `}
-                    >
-                        {isEvolving ? (
-                            <><RefreshCw className="w-5 h-5 animate-spin" /> MUTATING...</>
-                        ) : (
-                            <><Zap className="w-5 h-5" /> DEPLOY EVOLUTION</>
-                        )}
-                    </button>
-                </div>
+                <button
+                    onClick={loadData}
+                    disabled={loading}
+                    className="flex items-center gap-2 px-4 py-2 rounded-lg bg-[var(--color-primary)]/10 border border-[var(--color-primary)] text-[var(--color-primary)] hover:bg-[var(--color-primary)]/20 transition disabled:opacity-50"
+                >
+                    <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+                    Atualizar
+                </button>
             </div>
 
-            {/* DIREITA: PAINEL DE DADOS (GENÉTICA) */}
-            <div className="lg:w-1/3 w-full h-full flex flex-col gap-4">
+            {/* TABS */}
+            <div className="flex gap-2 px-4">
+                <button
+                    onClick={() => setActiveTab('candidates')}
+                    className={`px-6 py-3 rounded-lg font-bold text-sm transition flex items-center gap-2 ${
+                        activeTab === 'candidates'
+                            ? 'bg-[var(--color-primary)] text-black'
+                            : 'bg-white/5 text-gray-400 hover:bg-white/10'
+                    }`}
+                >
+                    <Target className="w-4 h-4" />
+                    Candidatos ({candidates.length})
+                </button>
+                <button
+                    onClick={() => setActiveTab('history')}
+                    className={`px-6 py-3 rounded-lg font-bold text-sm transition flex items-center gap-2 ${
+                        activeTab === 'history'
+                            ? 'bg-[var(--color-primary)] text-black'
+                            : 'bg-white/5 text-gray-400 hover:bg-white/10'
+                    }`}
+                >
+                    <History className="w-4 h-4" />
+                    Histórico ({history.length})
+                </button>
+            </div>
 
-                {/* Loading State */}
-                {loading && (
-                    <div className="bg-black/40 backdrop-blur-xl border border-white/10 rounded-2xl p-6 flex items-center justify-center gap-3">
-                        <RefreshCw className="w-5 h-5 text-[var(--color-primary)] animate-spin" />
-                        <span className="text-gray-400 font-mono text-sm">Loading Genetic Data...</span>
+            {/* CONTENT */}
+            <div className="flex-1 overflow-y-auto px-4">
+                {loading ? (
+                    <div className="flex items-center justify-center h-full">
+                        <div className="flex flex-col items-center gap-4">
+                            <RefreshCw className="w-12 h-12 text-[var(--color-primary)] animate-spin" />
+                            <p className="text-gray-400">Carregando dados de evolução...</p>
+                        </div>
                     </div>
-                )}
-
-                {/* Card: Mutations by Role */}
-                <div className="bg-black/40 backdrop-blur-xl border border-white/10 rounded-2xl p-6 flex-shrink-0">
-                    <div className="flex items-center gap-2 mb-6 text-white/80">
-                        <Microscope className="w-5 h-5 text-[var(--color-secondary)]" />
-                        <span className="font-bold text-sm tracking-wider">MUTATIONS BY ROLE</span>
-                    </div>
-
-                    <div className="space-y-4">
-                        {Object.entries(mutationsByRole).length > 0 ? (
-                            Object.entries(mutationsByRole).map(([role, count]) => (
-                                <div key={role}>
-                                    <div className="flex justify-between text-xs mb-2">
-                                        <span className="text-gray-400 uppercase font-mono">{role}</span>
-                                        <span className="text-white font-mono">{count} units</span>
+                ) : (
+                    <>
+                        {/* TAB: CANDIDATOS */}
+                        {activeTab === 'candidates' && (
+                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                                {candidates.length === 0 ? (
+                                    <div className="col-span-full flex flex-col items-center justify-center h-64 bg-black/40 backdrop-blur-xl border border-white/10 rounded-2xl">
+                                        <CheckCircle2 className="w-16 h-16 text-emerald-400 mb-4" />
+                                        <p className="text-xl font-bold text-white">Todos os agents estão saudáveis!</p>
+                                        <p className="text-sm text-gray-400 mt-2">Nenhum candidato para evolução identificado</p>
                                     </div>
-                                    <div className="h-2 bg-white/5 rounded-full overflow-hidden">
+                                ) : (
+                                    candidates.map((candidate) => (
                                         <div
-                                            className="h-full bg-gradient-to-r from-[var(--color-primary)] to-[var(--color-accent)]"
-                                            style={{ width: `${(count / agents.length) * 100}%` }}
-                                        />
-                                    </div>
-                                </div>
-                            ))
-                        ) : (
-                            <div className="text-center text-gray-600 text-sm italic">
-                                No agents detected
+                                            key={candidate.agent_id}
+                                            className="bg-black/40 backdrop-blur-xl border border-white/10 rounded-2xl p-6 hover:border-[var(--color-primary)]/50 transition group"
+                                        >
+                                            {/* Header */}
+                                            <div className="flex items-start justify-between mb-4">
+                                                <div>
+                                                    <h3 className="text-lg font-bold text-white">{candidate.agent_name}</h3>
+                                                    <p className="text-xs text-gray-400 font-mono">{candidate.agent_role}</p>
+                                                </div>
+                                                <div className={`px-3 py-1 rounded-full text-xs font-bold ${
+                                                    candidate.recommendation === 'urgent'
+                                                        ? 'bg-red-500/20 text-red-400 border border-red-500'
+                                                        : 'bg-yellow-500/20 text-yellow-400 border border-yellow-500'
+                                                }`}>
+                                                    {candidate.recommendation === 'urgent' ? '🔴 URGENTE' : '⚠️ RECOMENDADO'}
+                                                </div>
+                                            </div>
+
+                                            {/* Métricas */}
+                                            <div className="grid grid-cols-3 gap-4 mb-4">
+                                                <div>
+                                                    <div className="text-xs text-gray-400 mb-1">Taxa de Sucesso</div>
+                                                    <div className={`text-2xl font-bold ${
+                                                        candidate.success_rate >= 75 ? 'text-emerald-400' :
+                                                        candidate.success_rate >= 50 ? 'text-yellow-400' : 'text-red-400'
+                                                    }`}>
+                                                        {candidate.success_rate.toFixed(1)}%
+                                                    </div>
+                                                </div>
+                                                <div>
+                                                    <div className="text-xs text-gray-400 mb-1">Requests</div>
+                                                    <div className="text-2xl font-bold text-white">{candidate.total_requests}</div>
+                                                </div>
+                                                <div>
+                                                    <div className="text-xs text-gray-400 mb-1">Evoluções</div>
+                                                    <div className="text-2xl font-bold text-[var(--color-primary)]">{candidate.evolution_count}</div>
+                                                </div>
+                                            </div>
+
+                                            {/* Issues */}
+                                            <div className="mb-4 space-y-1">
+                                                {candidate.issues.slice(0, 3).map((issue, i) => (
+                                                    <div key={i} className="flex items-start gap-2 text-xs text-gray-400">
+                                                        <AlertTriangle className="w-3 h-3 text-yellow-500 mt-0.5 flex-shrink-0" />
+                                                        <span>{issue}</span>
+                                                    </div>
+                                                ))}
+                                            </div>
+
+                                            {/* Action Button */}
+                                            <button
+                                                onClick={() => handleAnalyzeAgent(candidate.agent_id, candidate.agent_name)}
+                                                disabled={proposing}
+                                                className="w-full px-4 py-3 rounded-lg bg-gradient-to-r from-purple-500 to-pink-500 text-white font-bold text-sm hover:from-purple-600 hover:to-pink-600 transition disabled:opacity-50 flex items-center justify-center gap-2 group-hover:scale-105"
+                                            >
+                                                <Brain className="w-4 h-4" />
+                                                Analisar com Claude
+                                                <Sparkles className="w-4 h-4" />
+                                            </button>
+                                        </div>
+                                    ))
+                                )}
                             </div>
                         )}
-                    </div>
-                </div>
 
-                {/* Card: Status Atual */}
-                <div className="bg-black/40 backdrop-blur-xl border border-white/10 rounded-2xl p-6 flex-1 flex flex-col">
-                    <div className="flex items-center gap-2 mb-6 text-white/80">
-                        <TrendingUp className="w-5 h-5 text-emerald-400" />
-                        <span className="font-bold text-sm tracking-wider">SYSTEM PARAMETERS</span>
-                    </div>
+                        {/* TAB: HISTÓRICO */}
+                        {activeTab === 'history' && (
+                            <div className="space-y-3">
+                                {history.length === 0 ? (
+                                    <div className="flex flex-col items-center justify-center h-64 bg-black/40 backdrop-blur-xl border border-white/10 rounded-2xl">
+                                        <History className="w-16 h-16 text-gray-600 mb-4" />
+                                        <p className="text-xl font-bold text-white">Nenhuma evolução aplicada ainda</p>
+                                        <p className="text-sm text-gray-400 mt-2">O histórico aparecerá aqui</p>
+                                    </div>
+                                ) : (
+                                    history.map((item) => (
+                                        <div
+                                            key={item.id}
+                                            className="bg-black/40 backdrop-blur-xl border border-white/10 rounded-xl p-4 flex items-center justify-between"
+                                        >
+                                            <div className="flex items-center gap-4">
+                                                <div className={`p-2 rounded-lg ${
+                                                    item.status === 'merged' ? 'bg-emerald-500/20 text-emerald-400' :
+                                                    item.status === 'rejected' ? 'bg-red-500/20 text-red-400' :
+                                                    'bg-yellow-500/20 text-yellow-400'
+                                                }`}>
+                                                    {item.status === 'merged' ? <CheckCircle2 className="w-5 h-5" /> :
+                                                     item.status === 'rejected' ? <XCircle className="w-5 h-5" /> :
+                                                     <Clock className="w-5 h-5" />}
+                                                </div>
+                                                <div>
+                                                    <div className="text-sm font-bold text-white">Agent: {item.agent_id}</div>
+                                                    <div className="text-xs text-gray-400">
+                                                        {new Date(item.created_at).toLocaleString('pt-BR')}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div className={`px-3 py-1 rounded-full text-xs font-bold uppercase ${
+                                                item.status === 'merged' ? 'bg-emerald-500/20 text-emerald-400' :
+                                                item.status === 'rejected' ? 'bg-red-500/20 text-red-400' :
+                                                'bg-yellow-500/20 text-yellow-400'
+                                            }`}>
+                                                {item.status === 'merged' ? '✅ Aplicado' :
+                                                 item.status === 'rejected' ? '❌ Rejeitado' : '⏳ Pendente'}
+                                            </div>
+                                        </div>
+                                    ))
+                                )}
+                            </div>
+                        )}
+                    </>
+                )}
+            </div>
 
-                    <div className="space-y-6 flex-1">
-                        {/* Stat 1 */}
-                        <div>
-                            <div className="flex justify-between text-xs mb-2">
-                                <span className="text-gray-400">Mutation Rate</span>
-                                <span className="text-white font-mono">{(mutationRate * 100).toFixed(1)}%</span>
+            {/* MODAL DE PROPOSTA */}
+            {showProposalModal && currentProposal && (
+                <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+                    <div className="bg-[#02040a] border border-white/20 rounded-3xl max-w-6xl w-full max-h-[90vh] overflow-hidden flex flex-col">
+                        {/* Header */}
+                        <div className="p-6 border-b border-white/10 flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                                <div className="p-2 rounded-lg bg-purple-500/20 border border-purple-500">
+                                    <Sparkles className="w-6 h-6 text-purple-400" />
+                                </div>
+                                <div>
+                                    <h2 className="text-2xl font-bold text-white">Proposta de Evolução</h2>
+                                    <p className="text-sm text-gray-400">{currentProposal.agent_name}</p>
+                                </div>
                             </div>
-                            <div className="h-2 bg-white/5 rounded-full overflow-hidden">
-                                <div className="h-full bg-purple-500" style={{ width: `${mutationRate * 1000}%` }} />
-                            </div>
-                            <div className="flex justify-between mt-1">
-                                <button onClick={() => setMutationRate(Math.max(0, mutationRate - 0.01))} className="text-gray-600 hover:text-white">-</button>
-                                <button onClick={() => setMutationRate(Math.min(0.2, mutationRate + 0.01))} className="text-gray-600 hover:text-white">+</button>
-                            </div>
+                            <button
+                                onClick={() => setShowProposalModal(false)}
+                                className="p-2 hover:bg-white/10 rounded-lg transition"
+                            >
+                                <X className="w-6 h-6 text-gray-400" />
+                            </button>
                         </div>
 
-                        {/* Stat 2 */}
-                        <div>
-                            <div className="flex justify-between text-xs mb-2">
-                                <span className="text-gray-400">Avg Efficiency (Real)</span>
-                                <span className="text-emerald-400 font-mono">{avgEfficiency.toFixed(1)}%</span>
-                            </div>
-                            <div className="h-2 bg-white/5 rounded-full overflow-hidden">
-                                <div className="h-full bg-emerald-500" style={{ width: `${avgEfficiency}%` }} />
-                            </div>
-                        </div>
+                        {/* Content */}
+                        <div className="flex-1 overflow-y-auto p-6 space-y-6">
+                            {/* Análise */}
+                            <div className="bg-black/40 border border-white/10 rounded-xl p-6">
+                                <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
+                                    <Brain className="w-5 h-5 text-purple-400" />
+                                    Análise do Claude
+                                </h3>
 
-                        {/* Stat 3 */}
-                        <div>
-                            <div className="flex justify-between text-xs mb-2">
-                                <span className="text-gray-400">Total Agents</span>
-                                <span className="text-[var(--color-primary)] font-mono">{agents.length}</span>
-                            </div>
-                            <div className="h-2 bg-white/5 rounded-full overflow-hidden">
-                                <div className="h-full bg-[var(--color-primary)]" style={{ width: `${Math.min(100, (agents.length / 20) * 100)}%` }} />
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                {/* Card: Logs de Compilação */}
-                <div className="bg-black/40 backdrop-blur-xl border border-white/10 rounded-2xl p-6 h-1/2 flex flex-col">
-                    <div className="flex items-center gap-2 mb-4 text-white/80">
-                        <GitBranch className="w-5 h-5 text-[var(--color-primary)]" />
-                        <span className="font-bold text-sm tracking-wider">EVOLUTION LOGS</span>
-                    </div>
-                    
-                    <div className="flex-1 overflow-hidden relative font-mono text-xs space-y-2">
-                        <div className="absolute inset-0 overflow-y-auto scrollbar-hide">
-                            {logs.length === 0 && <span className="text-gray-600 italic">Awaiting initialization...</span>}
-                            {logs.map((log, i) => (
-                                <div key={i} className="flex gap-2 animate-fadeIn">
-                                    <span className="text-gray-600">[{new Date().toLocaleTimeString()}]</span>
-                                    <span className={log.includes('Error') ? 'text-red-400' : 'text-[var(--color-text-secondary)]'}>
-                                        {log}
+                                {/* Confidence */}
+                                <div className="mb-4">
+                                    <span className={`px-3 py-1 rounded-full text-xs font-bold ${
+                                        currentProposal.analysis.confidence === 'high' ? 'bg-emerald-500/20 text-emerald-400' :
+                                        currentProposal.analysis.confidence === 'medium' ? 'bg-yellow-500/20 text-yellow-400' :
+                                        'bg-red-500/20 text-red-400'
+                                    }`}>
+                                        Confiança: {currentProposal.analysis.confidence}
+                                    </span>
+                                    <span className="ml-3 text-sm text-gray-400">
+                                        Ganho esperado: {currentProposal.analysis.expected_gain}
                                     </span>
                                 </div>
-                            ))}
+
+                                {/* Weaknesses */}
+                                <div className="mb-4">
+                                    <div className="text-sm font-bold text-red-400 mb-2">❌ Fraquezas Identificadas:</div>
+                                    <ul className="list-disc list-inside space-y-1 text-sm text-gray-300">
+                                        {currentProposal.analysis.weaknesses.map((w, i) => (
+                                            <li key={i}>{w}</li>
+                                        ))}
+                                    </ul>
+                                </div>
+
+                                {/* Improvements */}
+                                <div className="mb-4">
+                                    <div className="text-sm font-bold text-emerald-400 mb-2">✅ Melhorias Propostas:</div>
+                                    <ul className="list-disc list-inside space-y-1 text-sm text-gray-300">
+                                        {currentProposal.analysis.improvements.map((imp, i) => (
+                                            <li key={i}>{imp}</li>
+                                        ))}
+                                    </ul>
+                                </div>
+
+                                {/* Reasoning */}
+                                {currentProposal.analysis.reasoning && (
+                                    <div className="mt-4 p-4 bg-white/5 rounded-lg">
+                                        <div className="text-xs font-bold text-gray-400 mb-2">Justificativa:</div>
+                                        <p className="text-sm text-gray-300">{currentProposal.analysis.reasoning}</p>
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* Diff de Prompts */}
+                            <div className="grid grid-cols-2 gap-4">
+                                {/* Current Prompt */}
+                                <div className="bg-red-500/10 border border-red-500/30 rounded-xl p-4">
+                                    <div className="text-sm font-bold text-red-400 mb-3 flex items-center gap-2">
+                                        <X className="w-4 h-4" />
+                                        Prompt Atual
+                                    </div>
+                                    <div className="bg-black/40 rounded-lg p-4 font-mono text-xs text-gray-300 max-h-64 overflow-y-auto whitespace-pre-wrap">
+                                        {currentProposal.current_prompt}
+                                    </div>
+                                </div>
+
+                                {/* Proposed Prompt */}
+                                <div className="bg-emerald-500/10 border border-emerald-500/30 rounded-xl p-4">
+                                    <div className="text-sm font-bold text-emerald-400 mb-3 flex items-center gap-2">
+                                        <Check className="w-4 h-4" />
+                                        Prompt Proposto
+                                    </div>
+                                    <div className="bg-black/40 rounded-lg p-4 font-mono text-xs text-gray-300 max-h-64 overflow-y-auto whitespace-pre-wrap">
+                                        {currentProposal.proposed_prompt}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Footer Actions */}
+                        <div className="p-6 border-t border-white/10 flex gap-3">
+                            <button
+                                onClick={() => handleApplyEvolution('reject')}
+                                disabled={applying}
+                                className="flex-1 px-6 py-4 rounded-xl bg-red-500/20 border border-red-500 text-red-400 font-bold hover:bg-red-500/30 transition disabled:opacity-50 flex items-center justify-center gap-2"
+                            >
+                                <XCircle className="w-5 h-5" />
+                                Rejeitar
+                            </button>
+                            <button
+                                onClick={() => handleApplyEvolution('approve')}
+                                disabled={applying}
+                                className="flex-1 px-6 py-4 rounded-xl bg-gradient-to-r from-emerald-500 to-cyan-500 text-white font-bold hover:from-emerald-600 hover:to-cyan-600 transition disabled:opacity-50 flex items-center justify-center gap-2"
+                            >
+                                <CheckCircle2 className="w-5 h-5" />
+                                {applying ? 'Aplicando...' : 'Aprovar e Aplicar'}
+                                <Zap className="w-5 h-5" />
+                            </button>
                         </div>
                     </div>
                 </div>
+            )}
 
-            </div>
-
-            <style jsx>{`
-                @keyframes fadeIn { from { opacity: 0; transform: translateX(-10px); } to { opacity: 1; transform: translateX(0); } }
-                .animate-fadeIn { animation: fadeIn 0.2s ease-out; }
-            `}</style>
+            {/* Loading Overlay */}
+            {analyzing && (
+                <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-40 flex items-center justify-center">
+                    <div className="bg-[#02040a] border border-purple-500 rounded-2xl p-8 flex flex-col items-center gap-4">
+                        <Brain className="w-16 h-16 text-purple-400 animate-pulse" />
+                        <div className="text-xl font-bold text-white">Claude está analisando...</div>
+                        <p className="text-sm text-gray-400">Gerando proposta de evolução inteligente</p>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }
