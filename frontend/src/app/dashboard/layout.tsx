@@ -3,7 +3,7 @@
  * ALSHAM QUANTUM - DASHBOARD LAYOUT RESPONSIVO + PROTEGIDO
  * ═══════════════════════════════════════════════════════════════
  * 📁 PATH: frontend/src/app/dashboard/layout.tsx
- * 📋 Estrutura: Sidebar fixa + Conteúdo à direita + Auth Guard
+ * 📋 Estrutura: Sidebar fixa + Conteúdo à direita + Auth Guard + ORION
  * ═══════════════════════════════════════════════════════════════
  */
 'use client';
@@ -12,6 +12,7 @@ import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import Sidebar from '@/components/layout/Sidebar';
+import OrionAssistant from '@/components/orion/OrionAssistant';
 import { ToastContainer } from '@/components/ui/ToastContainer';
 import { Menu, Sparkles, Loader2 } from 'lucide-react';
 
@@ -88,6 +89,9 @@ export default function DashboardLayout({
 
       {/* Global Toast Notifications */}
       <ToastContainer />
+      
+      {/* ORION J.A.R.V.I.S. - Assistente Global */}
+      <OrionAssistant />
     </div>
   );
 }
