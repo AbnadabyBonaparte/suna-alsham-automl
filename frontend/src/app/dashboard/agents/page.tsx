@@ -342,7 +342,7 @@ export default function AgentsPage() {
 
                 <div className="bg-black/40 border border-white/10 rounded-xl p-6">
                   <div className="flex items-center gap-3 mb-3">
-                    <ZapIcon className="w-5 h-5 text-yellow-400" />
+                    <ZapIcon className="w-5 h-5" style={{ color: 'var(--color-warning)' }} />
                     <span className="text-sm text-gray-400 uppercase font-mono">Role</span>
                   </div>
                   <div className="text-xl font-bold text-white">
@@ -406,10 +406,10 @@ export default function AgentsPage() {
 
               {/* Resultado/Erro */}
               {result && (
-                <div className="mt-6 bg-green-500/10 border border-green-500/50 rounded-xl p-6">
+                <div className="mt-6 rounded-xl p-6" style={{ background: 'var(--color-success)/10', border: '1px solid var(--color-success)/50' }}>
                   <div className="flex items-center gap-3 mb-3">
-                    <CheckCircle className="w-6 h-6 text-green-500" />
-                    <h4 className="text-lg font-bold text-green-500">SUCESSO!</h4>
+                    <CheckCircle className="w-6 h-6" style={{ color: 'var(--color-success)' }} />
+                    <h4 className="text-lg font-bold" style={{ color: 'var(--color-success)' }}>SUCESSO!</h4>
                   </div>
                   <p className="text-sm text-gray-300 font-mono leading-relaxed">
                     {result}
@@ -418,10 +418,10 @@ export default function AgentsPage() {
               )}
 
               {error && (
-                <div className="mt-6 bg-red-500/10 border border-red-500/50 rounded-xl p-6">
+                <div className="mt-6 rounded-xl p-6" style={{ background: 'var(--color-error)/10', border: '1px solid var(--color-error)/50' }}>
                   <div className="flex items-center gap-3 mb-3">
-                    <AlertCircle className="w-6 h-6 text-red-500" />
-                    <h4 className="text-lg font-bold text-red-500">ERRO!</h4>
+                    <AlertCircle className="w-6 h-6" style={{ color: 'var(--color-error)' }} />
+                    <h4 className="text-lg font-bold" style={{ color: 'var(--color-error)' }}>ERRO!</h4>
                   </div>
                   <p className="text-sm text-gray-300 font-mono leading-relaxed">
                     {error}

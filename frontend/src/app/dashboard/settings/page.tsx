@@ -199,15 +199,15 @@ export default function SettingsPage() {
                     <div className="flex items-center gap-4">
                         {/* Feedback Messages */}
                         {saveSuccess && (
-                            <div className="flex items-center gap-2 px-4 py-2 bg-emerald-500/20 border border-emerald-500/50 rounded-full animate-fade-in">
-                                <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                                <span className="text-xs font-bold text-emerald-400">SAVED SUCCESSFULLY</span>
+                            <div className="flex items-center gap-2 px-4 py-2 rounded-full animate-fade-in" style={{ background: 'var(--color-success)/20', border: '1px solid var(--color-success)/50' }}>
+                                <div className="w-2 h-2 rounded-full animate-pulse" style={{ background: 'var(--color-success)' }} />
+                                <span className="text-xs font-bold" style={{ color: 'var(--color-success)' }}>SAVED SUCCESSFULLY</span>
                             </div>
                         )}
                         {saveError && (
-                            <div className="flex items-center gap-2 px-4 py-2 bg-red-500/20 border border-red-500/50 rounded-full animate-fade-in">
-                                <div className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
-                                <span className="text-xs font-bold text-red-400">ERROR: {saveError}</span>
+                            <div className="flex items-center gap-2 px-4 py-2 rounded-full animate-fade-in" style={{ background: 'var(--color-error)/20', border: '1px solid var(--color-error)/50' }}>
+                                <div className="w-2 h-2 rounded-full animate-pulse" style={{ background: 'var(--color-error)' }} />
+                                <span className="text-xs font-bold" style={{ color: 'var(--color-error)' }}>ERROR: {saveError}</span>
                             </div>
                         )}
                         <button
@@ -256,8 +256,8 @@ export default function SettingsPage() {
                                                 ID: {profile?.id.slice(0, 8).toUpperCase() || 'UNKNOWN'}
                                             </div>
                                             <div className="flex items-center justify-end gap-1 mt-1">
-                                                <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                                                <span className="text-xs text-emerald-500 font-bold">AUTHORIZED</span>
+                                                <div className="w-2 h-2 rounded-full animate-pulse" style={{ background: 'var(--color-success)' }} />
+                                                <span className="text-xs font-bold" style={{ color: 'var(--color-success)' }}>AUTHORIZED</span>
                                             </div>
                                         </div>
                                     </>
@@ -292,8 +292,8 @@ export default function SettingsPage() {
                                     />
                                 </div>
                                 {error && (
-                                    <div className="p-3 bg-red-500/10 border border-red-500/30 rounded-xl">
-                                        <p className="text-xs text-red-400 font-mono">{error}</p>
+                                    <div className="p-3 rounded-xl" style={{ background: 'var(--color-error)/10', border: '1px solid var(--color-error)/30' }}>
+                                        <p className="text-xs font-mono" style={{ color: 'var(--color-error)' }}>{error}</p>
                                     </div>
                                 )}
                             </div>
@@ -328,7 +328,7 @@ export default function SettingsPage() {
                                         <Monitor className="w-5 h-5 text-gray-400" />
                                         <span className="text-sm font-bold text-white">Graphics Quality</span>
                                     </div>
-                                    <span className="text-xs font-mono text-yellow-400">ULTRA</span>
+                                    <span className="text-xs font-mono" style={{ color: 'var(--color-warning)' }}>ULTRA</span>
                                 </div>
                                 <div className="flex gap-2 mb-2">
                                     {[20, 40, 60, 80, 100].map((val) => (
@@ -351,10 +351,10 @@ export default function SettingsPage() {
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             {/* Switches Industriais */}
                             {[
-                                { label: 'Stealth Mode', state: stealthMode, set: setStealthMode, icon: Eye, color: 'text-red-400' },
-                                { label: 'Auto-Training', state: true, set: () => {}, icon: BrainCircuit, color: 'text-purple-400' },
-                                { label: 'Quantum Sync', state: true, set: () => {}, icon: RefreshCw, color: 'text-cyan-400' },
-                                { label: 'Firewall Guard', state: true, set: () => {}, icon: Shield, color: 'text-emerald-400' },
+                                { label: 'Stealth Mode', state: stealthMode, set: setStealthMode, icon: Eye, colorVar: '--color-error' },
+                                { label: 'Auto-Training', state: true, set: () => {}, icon: BrainCircuit, colorVar: '--color-accent' },
+                                { label: 'Quantum Sync', state: true, set: () => {}, icon: RefreshCw, colorVar: '--color-primary' },
+                                { label: 'Firewall Guard', state: true, set: () => {}, icon: Shield, colorVar: '--color-success' },
                             ].map((opt, i) => (
                                 <div
                                     key={i}
@@ -367,7 +367,7 @@ export default function SettingsPage() {
                                     `}
                                 >
                                     <div className="flex items-center gap-3">
-                                        <opt.icon className={`w-5 h-5 ${opt.color}`} />
+                                        <opt.icon className="w-5 h-5" style={{ color: `var(${opt.colorVar})` }} />
                                         <span className={`font-bold text-sm ${opt.state ? 'text-white' : 'text-gray-500'}`}>{opt.label}</span>
                                     </div>
 

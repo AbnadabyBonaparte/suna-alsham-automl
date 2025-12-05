@@ -32,24 +32,24 @@ function TicketModal({ ticket, onClose }: TicketModalProps) {
     if (!ticket) return null;
 
     const statusColors = {
-        open: { bg: 'bg-red-500/10', border: 'border-red-500/30', text: 'text-red-400' },
-        in_progress: { bg: 'bg-yellow-500/10', border: 'border-yellow-500/30', text: 'text-yellow-400' },
-        resolved: { bg: 'bg-emerald-500/10', border: 'border-emerald-500/30', text: 'text-emerald-400' },
-        closed: { bg: 'bg-gray-500/10', border: 'border-gray-500/30', text: 'text-gray-400' },
+        open: { bg: 'var(--color-error)/10', border: 'var(--color-error)/30', text: 'var(--color-error)' },
+        in_progress: { bg: 'var(--color-warning)/10', border: 'var(--color-warning)/30', text: 'var(--color-warning)' },
+        resolved: { bg: 'var(--color-success)/10', border: 'var(--color-success)/30', text: 'var(--color-success)' },
+        closed: { bg: 'rgba(107, 114, 128, 0.1)', border: 'rgba(107, 114, 128, 0.3)', text: '#9CA3AF' },
     };
 
     const priorityColors = {
-        low: 'text-blue-400',
-        normal: 'text-gray-400',
-        high: 'text-orange-400',
-        critical: 'text-red-400',
+        low: 'var(--color-primary)',
+        normal: '#9CA3AF',
+        high: 'var(--color-warning)',
+        critical: 'var(--color-error)',
     };
 
     const colors = statusColors[ticket.status];
 
     return (
         <div className="fixed inset-0 z-[9998] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fadeIn">
-            <div className={`relative w-full max-w-2xl ${colors.bg} backdrop-blur-xl border ${colors.border} rounded-3xl p-8 shadow-2xl`}>
+            <div className="relative w-full max-w-2xl backdrop-blur-xl rounded-3xl p-8 shadow-2xl" style={{ background: colors.bg, border: `1px solid ${colors.border}` }}>
                 {/* Close Button */}
                 <button
                     onClick={onClose}
@@ -60,16 +60,16 @@ function TicketModal({ ticket, onClose }: TicketModalProps) {
 
                 {/* Header */}
                 <div className="flex items-start gap-4 mb-6">
-                    <div className={`p-3 rounded-xl ${colors.bg} border ${colors.border}`}>
-                        <LifeBuoy className={`w-8 h-8 ${colors.text}`} />
+                    <div className="p-3 rounded-xl" style={{ background: colors.bg, border: `1px solid ${colors.border}` }}>
+                        <LifeBuoy className="w-8 h-8" style={{ color: colors.text }} />
                     </div>
                     <div className="flex-1">
                         <h2 className="text-2xl font-bold text-white mb-1">{ticket.title}</h2>
                         <div className="flex gap-2 text-xs">
-                            <span className={`px-2 py-1 rounded ${colors.bg} ${colors.text} border ${colors.border} uppercase font-bold`}>
+                            <span className="px-2 py-1 rounded uppercase font-bold" style={{ background: colors.bg, color: colors.text, border: `1px solid ${colors.border}` }}>
                                 {ticket.status.replace('_', ' ')}
                             </span>
-                            <span className={`px-2 py-1 rounded bg-white/5 ${priorityColors[ticket.priority]} border border-white/10 uppercase font-bold`}>
+                            <span className="px-2 py-1 rounded bg-white/5 border border-white/10 uppercase font-bold" style={{ color: priorityColors[ticket.priority] }}>
                                 {ticket.priority}
                             </span>
                         </div>
@@ -88,13 +88,16 @@ function TicketModal({ ticket, onClose }: TicketModalProps) {
                         <div className="text-xs text-gray-400 uppercase mb-1">Sentiment Score</div>
                         <div className="flex items-baseline gap-2">
                             <span className="text-2xl font-bold text-white">{ticket.sentiment}/100</span>
-                            <Activity className={`w-4 h-4 ${ticket.sentiment > 70 ? 'text-emerald-400' : ticket.sentiment > 40 ? 'text-yellow-400' : 'text-red-400'}`} />
+                            <Activity className="w-4 h-4" style={{ color: ticket.sentiment > 70 ? 'var(--color-success)' : ticket.sentiment > 40 ? 'var(--color-warning)' : 'var(--color-error)' }} />
                         </div>
                         {/* Sentiment Bar */}
                         <div className="mt-2 h-2 w-full bg-black/50 rounded-full overflow-hidden">
                             <div
-                                className={`h-full transition-all ${ticket.sentiment > 70 ? 'bg-emerald-500' : ticket.sentiment > 40 ? 'bg-yellow-500' : 'bg-red-500'}`}
-                                style={{ width: `${ticket.sentiment}%` }}
+                                className="h-full transition-all"
+                                style={{
+                                    width: `${ticket.sentiment}%`,
+                                    background: ticket.sentiment > 70 ? 'var(--color-success)' : ticket.sentiment > 40 ? 'var(--color-warning)' : 'var(--color-error)'
+                                }}
                             />
                         </div>
                     </div>
@@ -323,7 +326,7 @@ export default function SupportPage() {
                 {/* Header Flutuante */}
                 <div className="absolute top-6 left-6 z-20">
                     <div className="flex items-center gap-3 mb-2">
-                        <div className="p-2 rounded-lg bg-blue-500/10 border border-blue-500/30 text-blue-400">
+                        <div className="p-2 rounded-lg" style={{ background: 'var(--color-primary)/10', border: '1px solid var(--color-primary)/30', color: 'var(--color-primary)' }}>
                             <LifeBuoy className="w-6 h-6" />
                         </div>
                         <div>
@@ -337,14 +340,14 @@ export default function SupportPage() {
 
                 {/* Legenda */}
                 <div className="absolute bottom-6 left-6 z-20 flex gap-4 text-xs font-mono font-bold">
-                    <div className="flex items-center gap-2 text-red-400">
-                        <div className="w-3 h-3 bg-red-500 rounded-sm shadow-[0_0_10px_red]" /> CRITICAL ({stats.critical_count})
+                    <div className="flex items-center gap-2" style={{ color: 'var(--color-error)' }}>
+                        <div className="w-3 h-3 rounded-sm shadow-[0_0_10px_var(--color-error)]" style={{ background: 'var(--color-error)' }} /> CRITICAL ({stats.critical_count})
                     </div>
-                    <div className="flex items-center gap-2 text-yellow-400">
-                        <div className="w-3 h-3 bg-yellow-500 rounded-sm" /> PENDING ({stats.in_progress})
+                    <div className="flex items-center gap-2" style={{ color: 'var(--color-warning)' }}>
+                        <div className="w-3 h-3 rounded-sm" style={{ background: 'var(--color-warning)' }} /> PENDING ({stats.in_progress})
                     </div>
-                    <div className="flex items-center gap-2 text-emerald-400">
-                        <div className="w-3 h-3 bg-emerald-500 rounded-sm opacity-30" /> SOLVED ({stats.resolved})
+                    <div className="flex items-center gap-2" style={{ color: 'var(--color-success)' }}>
+                        <div className="w-3 h-3 rounded-sm opacity-30" style={{ background: 'var(--color-success)' }} /> SOLVED ({stats.resolved})
                     </div>
                 </div>
 
@@ -382,7 +385,7 @@ export default function SupportPage() {
                         <div className="text-[10px] text-gray-400 font-mono uppercase mb-1">Auto-Resolution Rate</div>
                         <div className="text-4xl font-mono text-white font-bold flex items-baseline gap-2">
                             {autoResolutionRate}%
-                            <span className="text-sm text-emerald-400 flex items-center"><Zap className="w-3 h-3" /></span>
+                            <span className="text-sm flex items-center" style={{ color: 'var(--color-success)' }}><Zap className="w-3 h-3" /></span>
                         </div>
                         <p className="text-xs text-gray-500 mt-2">AI handling {stats.resolved} tickets</p>
                     </div>
@@ -393,18 +396,21 @@ export default function SupportPage() {
                 <div className="bg-black/40 backdrop-blur-xl border border-white/10 rounded-2xl p-6">
                     <div className="flex justify-between items-center mb-4">
                         <h3 className="text-sm font-bold text-white flex items-center gap-2">
-                            <Activity className="w-4 h-4 text-red-400" />
+                            <Activity className="w-4 h-4" style={{ color: 'var(--color-error)' }} />
                             AVG SENTIMENT
                         </h3>
-                        <span className={`text-xs font-mono font-bold ${stats.avg_sentiment > 70 ? 'text-emerald-400' : stats.avg_sentiment > 40 ? 'text-yellow-400' : 'text-red-400'}`}>
+                        <span className="text-xs font-mono font-bold" style={{ color: stats.avg_sentiment > 70 ? 'var(--color-success)' : stats.avg_sentiment > 40 ? 'var(--color-warning)' : 'var(--color-error)' }}>
                             {stats.avg_sentiment.toFixed(1)}/100
                         </span>
                     </div>
                     {/* Bar */}
                     <div className="h-3 w-full bg-black/50 rounded-full overflow-hidden">
                         <div
-                            className={`h-full transition-all ${stats.avg_sentiment > 70 ? 'bg-emerald-500' : stats.avg_sentiment > 40 ? 'bg-yellow-500' : 'bg-red-500'}`}
-                            style={{ width: `${stats.avg_sentiment}%` }}
+                            className="h-full transition-all"
+                            style={{
+                                width: `${stats.avg_sentiment}%`,
+                                background: stats.avg_sentiment > 70 ? 'var(--color-success)' : stats.avg_sentiment > 40 ? 'var(--color-warning)' : 'var(--color-error)'
+                            }}
                         />
                     </div>
                 </div>
@@ -413,16 +419,16 @@ export default function SupportPage() {
                 <div className="bg-black/40 backdrop-blur-xl border border-white/10 rounded-2xl p-6">
                     <h3 className="text-sm font-bold text-white mb-4 uppercase tracking-widest">Ticket Status</h3>
                     <div className="grid grid-cols-2 gap-3">
-                        <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-3">
-                            <div className="text-2xl font-mono font-bold text-red-400">{stats.open}</div>
+                        <div className="rounded-xl p-3" style={{ background: 'var(--color-error)/10', border: '1px solid var(--color-error)/20' }}>
+                            <div className="text-2xl font-mono font-bold" style={{ color: 'var(--color-error)' }}>{stats.open}</div>
                             <div className="text-[10px] text-gray-400 uppercase">Open</div>
                         </div>
-                        <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-xl p-3">
-                            <div className="text-2xl font-mono font-bold text-yellow-400">{stats.in_progress}</div>
+                        <div className="rounded-xl p-3" style={{ background: 'var(--color-warning)/10', border: '1px solid var(--color-warning)/20' }}>
+                            <div className="text-2xl font-mono font-bold" style={{ color: 'var(--color-warning)' }}>{stats.in_progress}</div>
                             <div className="text-[10px] text-gray-400 uppercase">In Progress</div>
                         </div>
-                        <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-xl p-3">
-                            <div className="text-2xl font-mono font-bold text-emerald-400">{stats.resolved}</div>
+                        <div className="rounded-xl p-3" style={{ background: 'var(--color-success)/10', border: '1px solid var(--color-success)/20' }}>
+                            <div className="text-2xl font-mono font-bold" style={{ color: 'var(--color-success)' }}>{stats.resolved}</div>
                             <div className="text-[10px] text-gray-400 uppercase">Resolved</div>
                         </div>
                         <div className="bg-gray-500/10 border border-gray-500/20 rounded-xl p-3">

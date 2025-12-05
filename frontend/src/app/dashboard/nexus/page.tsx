@@ -367,20 +367,20 @@ export default function NexusPage() {
         }
     };
 
-    const getRoleColor = (role: string) => {
+    const getRoleColor = (role: string): string => {
         switch(role) {
-            case 'CORE': return 'text-yellow-400 border-yellow-400';
-            case 'GUARD': return 'text-purple-400 border-purple-400';
-            case 'ANALYST': return 'text-blue-400 border-blue-400';
-            case 'CHAOS': return 'text-red-400 border-red-400';
-            case 'API': return 'text-green-400 border-green-400';
-            case 'WEBHOOK': return 'text-pink-400 border-pink-400';
-            default: return 'text-cyan-400 border-cyan-400';
+            case 'CORE': return 'var(--color-warning)';
+            case 'GUARD': return 'var(--color-accent)';
+            case 'ANALYST': return 'var(--color-primary)';
+            case 'CHAOS': return 'var(--color-error)';
+            case 'API': return 'var(--color-success)';
+            case 'WEBHOOK': return '#EC4899';
+            default: return 'var(--color-primary)';
         }
     };
 
     return (
-        <div className="relative h-[calc(100vh-6rem)] w-full overflow-hidden rounded-3xl border border-cyan-500/20 bg-[#020617] group">
+        <div className="relative h-[calc(100vh-6rem)] w-full overflow-hidden rounded-3xl border border-[var(--color-primary)]/20 bg-[#020617] group">
 
             <canvas
                 ref={canvasRef}
@@ -393,9 +393,9 @@ export default function NexusPage() {
 
             {/* HEADER */}
             <div className="absolute top-6 left-6 pointer-events-none z-20">
-                <div className="bg-black/40 backdrop-blur-xl border border-cyan-500/20 p-6 rounded-2xl shadow-2xl">
+                <div className="bg-black/40 backdrop-blur-xl border border-[var(--color-primary)]/20 p-6 rounded-2xl shadow-2xl">
                     <div className="flex items-center gap-3 mb-2">
-                        <Globe className="w-6 h-6 text-cyan-400 animate-pulse" />
+                        <Globe className="w-6 h-6 animate-pulse" style={{ color: 'var(--color-primary)' }} />
                         <h1 className="text-2xl font-black text-white tracking-tight font-display">
                             NEURAL NEXUS
                         </h1>
@@ -412,19 +412,19 @@ export default function NexusPage() {
                 <div className="bg-black/60 backdrop-blur-xl border border-white/10 rounded-xl p-4">
                     <div className="grid grid-cols-2 gap-4">
                         <div className="text-center">
-                            <div className="text-2xl font-black text-cyan-400">{stats.totalAgents}</div>
+                            <div className="text-2xl font-black" style={{ color: 'var(--color-primary)' }}>{stats.totalAgents}</div>
                             <div className="text-[9px] text-gray-500 uppercase">Agents</div>
                         </div>
                         <div className="text-center">
-                            <div className="text-2xl font-black text-green-400">{stats.totalAPIs}</div>
+                            <div className="text-2xl font-black" style={{ color: 'var(--color-success)' }}>{stats.totalAPIs}</div>
                             <div className="text-[9px] text-gray-500 uppercase">APIs</div>
                         </div>
                         <div className="text-center">
-                            <div className="text-xl font-black text-purple-400">{stats.activeConnections}</div>
+                            <div className="text-xl font-black" style={{ color: 'var(--color-accent)' }}>{stats.activeConnections}</div>
                             <div className="text-[9px] text-gray-500 uppercase">Active</div>
                         </div>
                         <div className="text-center">
-                            <div className="text-xl font-black text-orange-400">{stats.dataTransferred}MB</div>
+                            <div className="text-xl font-black" style={{ color: 'var(--color-warning)' }}>{stats.dataTransferred}MB</div>
                             <div className="text-[9px] text-gray-500 uppercase">Data</div>
                         </div>
                     </div>
@@ -435,7 +435,7 @@ export default function NexusPage() {
             <div className="absolute bottom-6 left-6 z-20 w-80">
                 <div className="bg-black/60 backdrop-blur-xl border border-white/10 rounded-xl p-4">
                     <h3 className="text-sm font-bold text-white mb-3 flex items-center gap-2">
-                        <Link className="w-4 h-4 text-cyan-400" />
+                        <Link className="w-4 h-4" style={{ color: 'var(--color-primary)' }} />
                         Active Integrations
                     </h3>
                     <div className="space-y-2">
@@ -446,11 +446,11 @@ export default function NexusPage() {
                             >
                                 <div className="flex items-center gap-3">
                                     {integration.status === 'connected' ? (
-                                        <CheckCircle className="w-4 h-4 text-green-400" />
+                                        <CheckCircle className="w-4 h-4" style={{ color: 'var(--color-success)' }} />
                                     ) : integration.status === 'pending' ? (
-                                        <Clock className="w-4 h-4 text-yellow-400" />
+                                        <Clock className="w-4 h-4" style={{ color: 'var(--color-warning)' }} />
                                     ) : (
-                                        <XCircle className="w-4 h-4 text-red-400" />
+                                        <XCircle className="w-4 h-4" style={{ color: 'var(--color-error)' }} />
                                     )}
                                     <div>
                                         <div className="text-sm font-medium text-white">{integration.name}</div>
@@ -472,7 +472,7 @@ export default function NexusPage() {
                         onClick={() => setFilter(f)}
                         className={`px-6 py-2 rounded-full text-xs font-bold tracking-widest transition-all ${
                             filter === f 
-                            ? 'bg-cyan-500 text-black shadow-[0_0_20px_var(--color-primary)] scale-105' 
+                            ? 'bg-[var(--color-primary)] text-black shadow-[0_0_20px_var(--color-primary)] scale-105' 
                             : 'text-white/60 hover:bg-white/10 hover:text-white'
                         }`}
                     >
@@ -486,9 +486,9 @@ export default function NexusPage() {
                 <div className="absolute top-6 right-6 mt-44 w-80 bg-black/60 backdrop-blur-2xl border border-white/10 p-6 rounded-2xl shadow-2xl animate-slideInRight z-30">
                     <div className="flex justify-between items-start mb-6">
                         <div>
-                            <h2 className={`text-xl font-bold mb-1 ${getRoleColor(selectedNode.role).split(' ')[0]}`}>
-                                {selectedNode.name}
-                            </h2>
+                        <h2 className="text-xl font-bold mb-1" style={{ color: getRoleColor(selectedNode.role) }}>
+                            {selectedNode.name}
+                        </h2>
                             <span className="text-xs font-mono text-white/50 bg-white/5 px-2 py-1 rounded">
                                 {selectedNode.role}
                             </span>
@@ -502,7 +502,7 @@ export default function NexusPage() {
                         <div className="bg-white/5 rounded-xl p-4 border border-white/5">
                             <div className="flex justify-between mb-2 text-sm text-gray-400">
                                 <span>Status</span>
-                                <span className={selectedNode.active ? 'text-green-400' : 'text-red-400'}>
+                                <span style={{ color: selectedNode.active ? 'var(--color-success)' : 'var(--color-error)' }}>
                                     {selectedNode.active ? 'ACTIVE' : 'IDLE'}
                                 </span>
                             </div>
@@ -510,12 +510,12 @@ export default function NexusPage() {
 
                         <div className="grid grid-cols-2 gap-3">
                             <div className="bg-white/5 rounded-xl p-3 border border-white/5 flex flex-col items-center text-center">
-                                <Radio className="w-5 h-5 text-cyan-400 mb-2" />
+                                <Radio className="w-5 h-5 mb-2" style={{ color: 'var(--color-primary)' }} />
                                 <span className="text-xs text-gray-400">Type</span>
                                 <span className="text-sm font-mono text-white">{selectedNode.type}</span>
                             </div>
                             <div className="bg-white/5 rounded-xl p-3 border border-white/5 flex flex-col items-center text-center">
-                                <Scan className="w-5 h-5 text-purple-400 mb-2" />
+                                <Scan className="w-5 h-5 mb-2" style={{ color: 'var(--color-accent)' }} />
                                 <span className="text-xs text-gray-400">Conns</span>
                                 <span className="text-sm font-mono text-white">{selectedNode.connections.length}</span>
                             </div>

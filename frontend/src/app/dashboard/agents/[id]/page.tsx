@@ -115,13 +115,13 @@ export default function AgentDetailPage() {
             <div className="p-8 max-w-7xl mx-auto min-h-screen bg-black/50 flex items-center justify-center">
                 <div className="text-center space-y-6">
                     <div className="relative">
-                        <div className="absolute inset-0 bg-red-500/20 blur-3xl rounded-full" />
-                        <AlertTriangle className="w-24 h-24 text-red-500 mx-auto relative z-10" />
+                        <div className="absolute inset-0 blur-3xl rounded-full" style={{ background: 'var(--color-error)/20' }} />
+                        <AlertTriangle className="w-24 h-24 mx-auto relative z-10" style={{ color: 'var(--color-error)' }} />
                     </div>
                     <div>
                         <h1 className="text-4xl font-bold text-white mb-2">Agent Not Found</h1>
                         <p className="text-zinc-400 mb-6">
-                            The agent with ID <span className="font-mono text-red-400">{params.id}</span> does not exist in the system.
+                            The agent with ID <span className="font-mono" style={{ color: 'var(--color-error)' }}>{params.id}</span> does not exist in the system.
                         </p>
                     </div>
                     <Button
@@ -151,7 +151,7 @@ export default function AgentDetailPage() {
                     <h1 className="text-4xl font-bold text-white flex items-center gap-3">
                         {agent.name}
                         <Badge variant="outline" className={`
-                    ${agent.status === 'ACTIVE' ? 'border-green-500 text-green-400' : 'border-zinc-700 text-zinc-500'}
+                    ${agent.status === 'ACTIVE' ? 'border-[var(--color-success)] text-[var(--color-success)]' : 'border-zinc-700 text-zinc-500'}
                 `}>
                             {agent.status}
                         </Badge>
@@ -164,7 +164,7 @@ export default function AgentDetailPage() {
                     onClick={handleEvolve}
                     disabled={isEvolving}
                     className={`
-                bg-purple-600/20 border border-purple-500/50 text-purple-300 hover:bg-purple-600/40
+                bg-[var(--color-accent)]/20 border border-[var(--color-accent)]/50 text-[var(--color-accent)] hover:bg-[var(--color-accent)]/40
                 ${isEvolving ? 'animate-pulse' : ''}
             `}
                 >
@@ -216,7 +216,7 @@ export default function AgentDetailPage() {
                             </div>
                             <div className="flex justify-between text-sm">
                                 <span className="text-zinc-500">Status</span>
-                                <span className={`font-mono font-bold ${agent.status === 'ACTIVE' ? 'text-green-400' : 'text-zinc-500'}`}>
+                                <span className="font-mono font-bold" style={{ color: agent.status === 'ACTIVE' ? 'var(--color-success)' : '#71717A' }}>
                                     {agent.status}
                                 </span>
                             </div>
@@ -237,7 +237,7 @@ export default function AgentDetailPage() {
                             </CardTitle>
                         </CardHeader>
                         <CardContent className="flex-1">
-                            <div className="bg-black/80 rounded-lg p-4 font-mono text-xs h-[400px] overflow-y-auto space-y-2 text-green-400/80 border border-white/5">
+                            <div className="bg-black/80 rounded-lg p-4 font-mono text-xs h-[400px] overflow-y-auto space-y-2 border border-white/5" style={{ color: 'var(--color-success)/80' }}>
                                 <p className="opacity-50">Initializing connection to {agent.name}...</p>
                                 <p className="opacity-70">Secure channel established.</p>
                                 <p className="text-[var(--color-primary)] font-bold">&gt; Current task: {agent.current_task || 'Awaiting orders'}</p>

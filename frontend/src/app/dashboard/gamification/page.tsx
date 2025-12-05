@@ -200,7 +200,7 @@ export default function GamificationPage() {
                 {/* Card: Leaderboard */}
                 <div className="flex-1 bg-black/60 backdrop-blur-xl border border-white/10 rounded-3xl p-6 overflow-hidden">
                     <div className="flex items-center gap-3 mb-6">
-                        <Trophy className="w-5 h-5 text-yellow-400" />
+                        <Trophy className="w-5 h-5" style={{ color: 'var(--color-warning)' }} />
                         <h3 className="text-sm font-bold text-white uppercase tracking-widest">Elite Leaderboard</h3>
                     </div>
                     
@@ -210,9 +210,9 @@ export default function GamificationPage() {
                                 <div className="flex items-center gap-3">
                                     <div className={`
                                         w-8 h-8 rounded-lg flex items-center justify-center font-bold text-sm
-                                        ${user.rank === 1 ? 'bg-yellow-400 text-black shadow-[0_0_10px_#FACC15]' : 
+                                        ${user.rank === 1 ? 'bg-[var(--color-warning)] text-black shadow-[0_0_10px_var(--color-warning)]' : 
                                           user.rank === 2 ? 'bg-gray-300 text-black' : 
-                                          user.rank === 3 ? 'bg-amber-700 text-white' : 'bg-gray-800 text-gray-400'}
+                                          user.rank === 3 ? 'bg-[#B45309] text-white' : 'bg-gray-800 text-gray-400'}
                                     `}>
                                         {user.rank}
                                     </div>
@@ -293,9 +293,9 @@ export default function GamificationPage() {
                             {/* Badge de Raridade */}
                             <div className={`
                                 absolute top-4 right-4 px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider
-                                ${ach.rarity === 'legendary' ? 'text-yellow-400 border border-yellow-400/30' : 
-                                  ach.rarity === 'epic' ? 'text-purple-400 border border-purple-400/30' : 
-                                  'text-blue-400 border border-blue-400/30'}
+                                ${ach.rarity === 'legendary' ? 'text-[var(--color-warning)] border border-[var(--color-warning)]/30' : 
+                                  ach.rarity === 'epic' ? 'text-[var(--color-accent)] border border-[var(--color-accent)]/30' : 
+                                  'text-[var(--color-primary)] border border-[var(--color-primary)]/30'}
                             `}>
                                 {ach.rarity}
                             </div>

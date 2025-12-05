@@ -104,16 +104,21 @@ export default function ApiPage() {
                 let cls = 'text-gray-400';
                 if (/^"/.test(match)) {
                     if (/:$/.test(match)) {
-                        cls = 'text-purple-400 font-semibold'; // keys
+                        cls = 'font-semibold'; // keys (use accent via style)
+                        return `<span class="${cls}" style="color: var(--color-accent)">${match}</span>`;
                     } else {
-                        cls = 'text-emerald-400'; // string values
+                        cls = ''; // string values (use success via style)
+                        return `<span class="${cls}" style="color: var(--color-success)">${match}</span>`;
                     }
                 } else if (/true|false/.test(match)) {
-                    cls = 'text-yellow-400'; // booleans
+                    cls = ''; // booleans (use warning via style)
+                    return `<span class="${cls}" style="color: var(--color-warning)">${match}</span>`;
                 } else if (/null/.test(match)) {
-                    cls = 'text-red-400'; // null
+                    cls = ''; // null (use error via style)
+                    return `<span class="${cls}" style="color: var(--color-error)">${match}</span>`;
                 } else {
-                    cls = 'text-blue-400'; // numbers
+                    cls = ''; // numbers (use primary via style)
+                    return `<span class="${cls}" style="color: var(--color-primary)">${match}</span>`;
                 }
                 return `<span class="${cls}">${match}</span>`;
             }
@@ -138,8 +143,8 @@ export default function ApiPage() {
                             </h1>
                             <p className="text-xs text-gray-400 font-mono mt-1">Secure API Endpoint Tester v4.0</p>
                         </div>
-                        <div className="px-3 py-1 rounded-full bg-green-500/10 border border-green-500/20 text-green-400 text-xs font-bold font-mono flex items-center gap-2">
-                            <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
+                        <div className="px-3 py-1 rounded-full text-xs font-bold font-mono flex items-center gap-2" style={{ background: 'var(--color-success)/10', border: '1px solid var(--color-success)/20', color: 'var(--color-success)' }}>
+                            <div className="w-2 h-2 rounded-full animate-pulse" style={{ background: 'var(--color-success)' }} />
                             ONLINE
                         </div>
                     </div>
@@ -148,11 +153,14 @@ export default function ApiPage() {
                     <div className="flex items-center gap-0 bg-black/40 border border-white/10 rounded-xl p-1 focus-within:border-[var(--color-primary)]/50 transition-all shadow-lg">
                         {/* Method Selector */}
                         <div className="relative group/method">
-                            <div className={`px-4 py-3 font-bold font-mono text-sm cursor-pointer hover:text-white transition-colors ${
-                                method === 'GET' ? 'text-blue-400' : 
-                                method === 'POST' ? 'text-green-400' : 
-                                method === 'DELETE' ? 'text-red-400' : 'text-yellow-400'
-                            }`}>
+                            <div
+                                className="px-4 py-3 font-bold font-mono text-sm cursor-pointer hover:text-white transition-colors"
+                                style={{
+                                    color: method === 'GET' ? 'var(--color-primary)' :
+                                        method === 'POST' ? 'var(--color-success)' :
+                                        method === 'DELETE' ? 'var(--color-error)' : 'var(--color-warning)'
+                                }}
+                            >
                                 {method}
                             </div>
                             {/* Dropdown (Hover) */}
@@ -208,7 +216,7 @@ export default function ApiPage() {
                                     onClick={() => { setMethod(ep.method); setUrl(`https://api.alsham.quantum${ep.path}`); }}
                                     className="px-3 py-2 rounded-lg bg-white/5 hover:bg-white/10 border border-white/5 hover:border-[var(--color-primary)]/30 text-xs text-gray-300 transition-all flex items-center gap-2"
                                 >
-                                    <span className={`font-mono font-bold ${ep.method === 'GET' ? 'text-blue-400' : ep.method === 'POST' ? 'text-green-400' : 'text-red-400'}`}>
+                                    <span className="font-mono font-bold" style={{ color: ep.method === 'GET' ? 'var(--color-primary)' : ep.method === 'POST' ? 'var(--color-success)' : 'var(--color-error)' }}>
                                         {ep.method.charAt(0)}
                                     </span>
                                     {ep.label}
@@ -228,11 +236,11 @@ export default function ApiPage() {
                     
                     <div className="font-mono text-xs text-gray-500">
                         <div className="flex items-center gap-2 p-2 bg-black/20 rounded mb-2">
-                            <span className="text-yellow-400">Authorization:</span>
+                            <span style={{ color: 'var(--color-warning)' }}>Authorization:</span>
                             <span className="truncate">Bearer sk_test_51MxQ...</span>
                         </div>
                         <div className="flex items-center gap-2 p-2 bg-black/20 rounded">
-                            <span className="text-purple-400">Content-Type:</span>
+                            <span style={{ color: 'var(--color-accent)' }}>Content-Type:</span>
                             <span>application/json</span>
                         </div>
                     </div>
@@ -246,15 +254,15 @@ export default function ApiPage() {
                 <div className="h-12 bg-white/5 border-b border-white/5 flex items-center justify-between px-4">
                     <div className="flex items-center gap-3">
                         <div className="flex gap-1.5">
-                            <div className="w-3 h-3 rounded-full bg-red-500/20 border border-red-500/50" />
-                            <div className="w-3 h-3 rounded-full bg-yellow-500/20 border border-yellow-500/50" />
-                            <div className="w-3 h-3 rounded-full bg-green-500/20 border border-green-500/50" />
+                            <div className="w-3 h-3 rounded-full" style={{ background: 'var(--color-error)/20', border: '1px solid var(--color-error)/50' }} />
+                            <div className="w-3 h-3 rounded-full" style={{ background: 'var(--color-warning)/20', border: '1px solid var(--color-warning)/50' }} />
+                            <div className="w-3 h-3 rounded-full" style={{ background: 'var(--color-success)/20', border: '1px solid var(--color-success)/50' }} />
                         </div>
                         <span className="text-xs font-mono text-gray-500">RESPONSE_STREAM</span>
                     </div>
                     <div className="flex items-center gap-3">
                         {status && (
-                            <span className={`px-2 py-0.5 rounded text-xs font-bold ${status === 200 ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'}`}>
+                            <span className="px-2 py-0.5 rounded text-xs font-bold" style={{ background: status === 200 ? 'var(--color-success)/20' : 'var(--color-error)/20', color: status === 200 ? 'var(--color-success)' : 'var(--color-error)' }}>
                                 {status} {status === 200 ? 'OK' : 'ERR'}
                             </span>
                         )}
@@ -298,7 +306,7 @@ export default function ApiPage() {
                             onClick={handleCopy}
                             className="absolute top-4 right-4 p-2 bg-white/10 hover:bg-white/20 rounded-lg text-white transition-all z-10"
                         >
-                            {copied ? <Check className="w-4 h-4 text-green-400" /> : <Copy className="w-4 h-4" />}
+                            {copied ? <Check className="w-4 h-4" style={{ color: 'var(--color-success)' }} /> : <Copy className="w-4 h-4" />}
                         </button>
                     )}
                 </div>

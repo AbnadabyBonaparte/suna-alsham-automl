@@ -315,12 +315,12 @@ export default function ContainmentPage() {
                 {/* STATS */}
                 <div className="grid grid-cols-2 gap-3">
                     <div className="bg-black/60 backdrop-blur-xl border border-white/10 rounded-xl p-4 text-center">
-                        <CheckCircle className="w-5 h-5 text-green-400 mx-auto mb-2" />
+                        <CheckCircle className="w-5 h-5 mx-auto mb-2" style={{ color: 'var(--color-success)' }} />
                         <div className="text-xl font-black text-white">{stats.totalRequests}</div>
                         <div className="text-[9px] text-gray-500 uppercase">Total Requests</div>
                     </div>
                     <div className="bg-black/60 backdrop-blur-xl border border-white/10 rounded-xl p-4 text-center">
-                        <XOctagon className="w-5 h-5 text-red-400 mx-auto mb-2" />
+                        <XOctagon className="w-5 h-5 mx-auto mb-2" style={{ color: 'var(--color-error)' }} />
                         <div className="text-xl font-black text-white">{stats.failedRequests}</div>
                         <div className="text-[9px] text-gray-500 uppercase">Failed</div>
                     </div>
@@ -331,7 +331,7 @@ export default function ContainmentPage() {
                     onClick={() => setIsLockdown(!isLockdown)}
                     className={`group relative overflow-hidden rounded-2xl p-6 border transition-all duration-500 flex items-center justify-center gap-4 ${
                         isLockdown 
-                        ? 'bg-red-500 border-red-600 shadow-[0_0_50px_rgba(220,38,38,0.5)]' 
+                        ? 'bg-[var(--color-error)] border-[var(--color-error)] shadow-[0_0_50px_var(--color-error)/50]' 
                         : 'bg-black/40 border-white/10 hover:border-white/30'
                     }`}
                 >
@@ -370,7 +370,7 @@ export default function ContainmentPage() {
                     </div>
                     <div>
                         <div className="text-[10px] text-gray-500 font-mono uppercase mb-1">Threats Blocked</div>
-                        <div className="text-2xl font-mono text-green-400">{threatsBlocked.toLocaleString()}</div>
+                        <div className="text-2xl font-mono" style={{ color: 'var(--color-success)' }}>{threatsBlocked.toLocaleString()}</div>
                     </div>
                 </div>
 
@@ -380,9 +380,9 @@ export default function ContainmentPage() {
                         {events.map((event) => (
                             <div key={event.id} className="bg-black/60 backdrop-blur border border-white/10 p-2 rounded flex items-center gap-2 text-xs font-mono animate-fadeIn">
                                 {event.type === 'blocked' ? (
-                                    <XOctagon className="w-3 h-3 text-red-500" />
+                                    <XOctagon className="w-3 h-3" style={{ color: 'var(--color-error)' }} />
                                 ) : (
-                                    <AlertTriangle className="w-3 h-3 text-yellow-500" />
+                                    <AlertTriangle className="w-3 h-3" style={{ color: 'var(--color-warning)' }} />
                                 )}
                                 <span className="text-gray-300">[{event.type.toUpperCase()}] {event.message} from {event.source}</span>
                             </div>
@@ -397,8 +397,8 @@ export default function ContainmentPage() {
                 
                 {/* Warning Flash */}
                 <div 
-                    className="absolute inset-0 bg-red-500/20 pointer-events-none transition-opacity duration-100"
-                    style={{ opacity: (defcon <= 2 || isLockdown) ? (Math.sin(Date.now()/200) > 0 ? 0.2 : 0) : 0 }}
+                    className="absolute inset-0 pointer-events-none transition-opacity duration-100"
+                    style={{ background: 'var(--color-error)/20', opacity: (defcon <= 2 || isLockdown) ? (Math.sin(Date.now()/200) > 0 ? 0.2 : 0) : 0 }}
                 />
             </div>
 

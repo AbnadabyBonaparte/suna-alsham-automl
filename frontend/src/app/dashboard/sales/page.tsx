@@ -27,10 +27,10 @@ function DealModal({ deal, onClose }: DealModalProps) {
     if (!deal) return null;
 
     const statusColors = {
-        lead: { bg: 'bg-blue-500/10', border: 'border-blue-500/30', text: 'text-blue-400' },
-        negotiation: { bg: 'bg-yellow-500/10', border: 'border-yellow-500/30', text: 'text-yellow-400' },
-        closed_won: { bg: 'bg-emerald-500/10', border: 'border-emerald-500/30', text: 'text-emerald-400' },
-        closed_lost: { bg: 'bg-red-500/10', border: 'border-red-500/30', text: 'text-red-400' },
+        lead: { bg: 'var(--color-primary)/10', border: 'var(--color-primary)/30', text: 'var(--color-primary)' },
+        negotiation: { bg: 'var(--color-warning)/10', border: 'var(--color-warning)/30', text: 'var(--color-warning)' },
+        closed_won: { bg: 'var(--color-success)/10', border: 'var(--color-success)/30', text: 'var(--color-success)' },
+        closed_lost: { bg: 'var(--color-error)/10', border: 'var(--color-error)/30', text: 'var(--color-error)' },
     };
 
     const colors = statusColors[deal.status];
@@ -75,7 +75,7 @@ function DealModal({ deal, onClose }: DealModalProps) {
                         <div className="text-xs text-gray-400 uppercase mb-1">Probability</div>
                         <div className="flex items-baseline gap-2">
                             <span className="text-2xl font-bold text-white">{deal.probability}%</span>
-                            <TrendingUp className={`w-4 h-4 ${deal.probability > 70 ? 'text-emerald-400' : deal.probability > 40 ? 'text-yellow-400' : 'text-red-400'}`} />
+                            <TrendingUp className="w-4 h-4" style={{ color: deal.probability > 70 ? 'var(--color-success)' : deal.probability > 40 ? 'var(--color-warning)' : 'var(--color-error)' }} />
                         </div>
                         {/* Probability Bar */}
                         <div className="mt-2 h-2 w-full bg-black/50 rounded-full overflow-hidden">
@@ -263,14 +263,14 @@ export default function SalesPage() {
                 {/* KPI CARDS */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     {[
-                        { label: 'Total Revenue', val: `$${stats.total_value.toLocaleString()}`, icon: DollarSign, color: 'text-emerald-400' },
-                        { label: 'Conversion Rate', val: `${stats.conversion_rate.toFixed(1)}%`, icon: Zap, color: 'text-yellow-400' },
-                        { label: 'Active Deals', val: stats.total_deals.toString(), icon: Users, color: 'text-[var(--color-primary)]' },
+                        { label: 'Total Revenue', val: `$${stats.total_value.toLocaleString()}`, icon: DollarSign, colorVar: '--color-success' },
+                        { label: 'Conversion Rate', val: `${stats.conversion_rate.toFixed(1)}%`, icon: Zap, colorVar: '--color-warning' },
+                        { label: 'Active Deals', val: stats.total_deals.toString(), icon: Users, colorVar: '--color-primary' },
                     ].map((kpi, i) => (
                         <div key={i} className="bg-black/60 backdrop-blur-xl border border-white/10 rounded-2xl p-5 relative overflow-hidden group">
                             <div className="absolute inset-0 bg-gradient-to-r from-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
                             <div className="flex justify-between items-start mb-2">
-                                <div className={`p-2 rounded-lg bg-white/5 ${kpi.color}`}>
+                                <div className="p-2 rounded-lg bg-white/5" style={{ color: `var(${kpi.colorVar})` }}>
                                     <kpi.icon className="w-6 h-6" />
                                 </div>
                                 <ArrowUpRight className="w-4 h-4 text-gray-500" />
@@ -313,7 +313,7 @@ export default function SalesPage() {
                             Deal Flow
                         </h3>
                         {deals.length > 0 && (
-                            <span className="text-[10px] px-2 py-1 bg-green-500/20 text-green-400 rounded border border-green-500/30 animate-pulse">LIVE</span>
+                            <span className="text-[10px] px-2 py-1 rounded animate-pulse" style={{ background: 'var(--color-success)/20', color: 'var(--color-success)', border: '1px solid var(--color-success)/30' }}>LIVE</span>
                         )}
                     </div>
 
@@ -352,12 +352,19 @@ export default function SalesPage() {
                                     <span className="font-mono text-[var(--color-primary)] font-bold">${deal.value.toLocaleString()}</span>
                                 </div>
                                 <div className="flex justify-between items-center text-xs">
-                                    <span className={`px-1.5 py-0.5 rounded uppercase font-bold ${
-                                        deal.status === 'closed_won' ? 'bg-emerald-500/20 text-emerald-400' :
-                                        deal.status === 'closed_lost' ? 'bg-red-500/20 text-red-400' :
-                                        deal.status === 'negotiation' ? 'bg-yellow-500/20 text-yellow-400' :
-                                        'bg-blue-500/20 text-blue-400'
-                                    }`}>
+                                    <span
+                                        className="px-1.5 py-0.5 rounded uppercase font-bold"
+                                        style={{
+                                            background: deal.status === 'closed_won' ? 'var(--color-success)/20' :
+                                                deal.status === 'closed_lost' ? 'var(--color-error)/20' :
+                                                deal.status === 'negotiation' ? 'var(--color-warning)/20' :
+                                                'var(--color-primary)/20',
+                                            color: deal.status === 'closed_won' ? 'var(--color-success)' :
+                                                deal.status === 'closed_lost' ? 'var(--color-error)' :
+                                                deal.status === 'negotiation' ? 'var(--color-warning)' :
+                                                'var(--color-primary)'
+                                        }}
+                                    >
                                         {deal.status.replace('_', ' ')}
                                     </span>
                                     <span className="text-gray-500 font-mono">{new Date(deal.created_at).toLocaleDateString()}</span>
@@ -381,11 +388,11 @@ export default function SalesPage() {
                     <div className="space-y-2 text-xs">
                         <div className="flex justify-between items-center">
                             <span className="text-gray-400">Won Deals</span>
-                            <span className="font-mono text-emerald-400 font-bold">${stats.won_value.toLocaleString()}</span>
+                            <span className="font-mono font-bold" style={{ color: 'var(--color-success)' }}>${stats.won_value.toLocaleString()}</span>
                         </div>
                         <div className="flex justify-between items-center">
                             <span className="text-gray-400">In Progress</span>
-                            <span className="font-mono text-yellow-400 font-bold">${stats.in_progress_value.toLocaleString()}</span>
+                            <span className="font-mono font-bold" style={{ color: 'var(--color-warning)' }}>${stats.in_progress_value.toLocaleString()}</span>
                         </div>
                         <div className="flex justify-between items-center">
                             <span className="text-gray-400">Avg Deal Value</span>

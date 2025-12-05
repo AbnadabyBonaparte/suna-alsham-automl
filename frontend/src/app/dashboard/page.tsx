@@ -46,7 +46,7 @@ function ConfirmModal({ isOpen, onClose, onConfirm, title, message, confirmText,
         </button>
 
         <div className="mb-6">
-          <div className={`w-12 h-12 rounded-xl ${isDestructive ? 'bg-red-500/10 text-red-400' : 'bg-[var(--color-primary)]/10 text-[var(--color-primary)]'} flex items-center justify-center mb-4`}>
+          <div className="w-12 h-12 rounded-xl flex items-center justify-center mb-4" style={{ background: isDestructive ? 'var(--color-error)/10' : 'var(--color-primary)/10', color: isDestructive ? 'var(--color-error)' : 'var(--color-primary)' }}>
             {isDestructive ? <AlertCircle className="w-6 h-6" /> : <Globe className="w-6 h-6" />}
           </div>
           <h2 className="text-2xl font-bold text-white mb-2">{title}</h2>
@@ -65,7 +65,8 @@ function ConfirmModal({ isOpen, onClose, onConfirm, title, message, confirmText,
               onConfirm();
               onClose();
             }}
-            className={`flex-1 ${isDestructive ? 'bg-red-500 hover:bg-red-600' : 'bg-[var(--color-primary)] hover:bg-[var(--color-primary)]/80'} text-black font-bold py-3 px-6 rounded-xl transition-all`}
+            className="flex-1 text-black font-bold py-3 px-6 rounded-xl transition-all"
+            style={{ background: isDestructive ? 'var(--color-error)' : 'var(--color-primary)' }}
           >
             {confirmText}
           </button>
@@ -247,7 +248,7 @@ export default function CockpitPage() {
       </div>
 
       {error && (
-        <div className="p-4 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-sm">
+        <div className="p-4 rounded-xl text-sm" style={{ background: 'var(--color-error)/10', border: '1px solid var(--color-error)/20', color: 'var(--color-error)' }}>
           Erro ao carregar dados: {error}
         </div>
       )}

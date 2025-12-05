@@ -202,7 +202,7 @@ export default function AnalyticsPage() {
                     <div className="flex items-center gap-3 mb-1">
                         <BarChart3 className="w-7 h-7 text-[#00FFD0]" />
                         <h1 className="text-3xl font-black text-white tracking-tight">OMNISCIENCE</h1>
-                        <span className="text-[10px] font-mono bg-emerald-500/20 text-emerald-400 px-2 py-0.5 rounded border border-emerald-500/30">
+                        <span className="text-[10px] font-mono px-2 py-0.5 rounded" style={{ background: 'var(--color-success)/20', color: 'var(--color-success)', border: '1px solid var(--color-success)/30' }}>
                             REAL DATA
                         </span>
                     </div>
@@ -228,11 +228,14 @@ export default function AnalyticsPage() {
                     </div>
 
                     {/* STATUS */}
-                    <div className={`px-4 py-1.5 rounded-lg border backdrop-blur-md flex items-center gap-2 ${
-                        anomaly
-                            ? 'bg-red-500/20 border-red-500/50 text-red-400'
-                            : 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400'
-                    }`}>
+                    <div
+                        className="px-4 py-1.5 rounded-lg border backdrop-blur-md flex items-center gap-2"
+                        style={{
+                            background: anomaly ? 'var(--color-error)/20' : 'var(--color-success)/10',
+                            borderColor: anomaly ? 'var(--color-error)/50' : 'var(--color-success)/30',
+                            color: anomaly ? 'var(--color-error)' : 'var(--color-success)'
+                        }}
+                    >
                         {anomaly ? <AlertTriangle className="w-4 h-4" /> : <CheckCircleIcon className="w-4 h-4" />}
                         <span className="font-bold font-mono text-xs">
                             {anomaly ? 'ANOMALY' : 'NOMINAL'}
@@ -248,7 +251,7 @@ export default function AnalyticsPage() {
                 <div className="group bg-black/50 backdrop-blur-lg border border-white/10 rounded-xl p-4 hover:border-[#00FFD0]/50 transition-all">
                     <div className="flex justify-between items-start mb-2">
                         <TrendingUp className="w-5 h-5 text-[#00FFD0]" />
-                        <span className="text-[9px] font-bold bg-green-500/20 text-green-400 px-1.5 py-0.5 rounded">LIVE</span>
+                        <span className="text-[9px] font-bold px-1.5 py-0.5 rounded" style={{ background: 'var(--color-success)/20', color: 'var(--color-success)' }}>LIVE</span>
                     </div>
                     <div className="text-2xl font-bold text-white font-mono">{avgEfficiency}%</div>
                     <div className="text-[10px] text-gray-500 uppercase">Avg Efficiency</div>
@@ -260,38 +263,38 @@ export default function AnalyticsPage() {
                 </div>
 
                 {/* Agents */}
-                <div className="group bg-black/50 backdrop-blur-lg border border-white/10 rounded-xl p-4 hover:border-purple-500/50 transition-all">
+                <div className="group bg-black/50 backdrop-blur-lg border border-white/10 rounded-xl p-4 hover:border-[var(--color-accent)]/50 transition-all">
                     <div className="flex justify-between items-start mb-2">
-                        <Users className="w-5 h-5 text-purple-400" />
-                        <span className="text-[9px] font-bold bg-purple-500/20 text-purple-400 px-1.5 py-0.5 rounded">CONFIG</span>
+                        <Users className="w-5 h-5" style={{ color: 'var(--color-accent)' }} />
+                        <span className="text-[9px] font-bold px-1.5 py-0.5 rounded" style={{ background: 'var(--color-accent)/20', color: 'var(--color-accent)' }}>CONFIG</span>
                     </div>
                     <div className="text-2xl font-bold text-white font-mono">{totalAgents}</div>
                     <div className="text-[10px] text-gray-500 uppercase">Total Agents</div>
                     <div className="mt-2 flex items-center gap-1 text-[10px] text-gray-500">
-                        <Zap className="w-3 h-3 text-yellow-500" />
+                        <Zap className="w-3 h-3" style={{ color: 'var(--color-warning)' }} />
                         {activeAgents} operational
                     </div>
                 </div>
 
                 {/* Requests */}
-                <div className="group bg-black/50 backdrop-blur-lg border border-white/10 rounded-xl p-4 hover:border-cyan-500/50 transition-all">
+                <div className="group bg-black/50 backdrop-blur-lg border border-white/10 rounded-xl p-4 hover:border-[var(--color-primary)]/50 transition-all">
                     <div className="flex justify-between items-start mb-2">
-                        <Activity className="w-5 h-5 text-cyan-400" />
-                        <span className="text-[9px] font-bold bg-cyan-500/20 text-cyan-400 px-1.5 py-0.5 rounded">QUEUE</span>
+                        <Activity className="w-5 h-5" style={{ color: 'var(--color-primary)' }} />
+                        <span className="text-[9px] font-bold px-1.5 py-0.5 rounded" style={{ background: 'var(--color-primary)/20', color: 'var(--color-primary)' }}>QUEUE</span>
                     </div>
                     <div className="text-2xl font-bold text-white font-mono">{totalRequests}</div>
                     <div className="text-[10px] text-gray-500 uppercase">Requests</div>
                     <div className="mt-2 w-full bg-white/10 h-1 rounded-full overflow-hidden">
-                        <div className="h-full bg-cyan-400" style={{ width: `${Math.min(totalRequests * 10, 100)}%` }} />
+                        <div className="h-full" style={{ width: `${Math.min(totalRequests * 10, 100)}%`, background: 'var(--color-primary)' }} />
                     </div>
                 </div>
 
                 {/* AI Prediction */}
-                <div className="group bg-black/50 backdrop-blur-lg border border-white/10 rounded-xl p-4 hover:border-yellow-500/50 transition-all relative overflow-hidden">
-                    <div className="absolute -top-4 -right-4 w-16 h-16 bg-yellow-500/20 blur-2xl rounded-full" />
+                <div className="group bg-black/50 backdrop-blur-lg border border-white/10 rounded-xl p-4 hover:border-[var(--color-warning)]/50 transition-all relative overflow-hidden">
+                    <div className="absolute -top-4 -right-4 w-16 h-16 blur-2xl rounded-full" style={{ background: 'var(--color-warning)/20' }} />
                     <div className="flex justify-between items-start mb-2">
-                        <BrainCircuit className="w-5 h-5 text-yellow-400" />
-                        <span className="text-[9px] font-bold bg-yellow-500/20 text-yellow-400 px-1.5 py-0.5 rounded">AI</span>
+                        <BrainCircuit className="w-5 h-5" style={{ color: 'var(--color-warning)' }} />
+                        <span className="text-[9px] font-bold px-1.5 py-0.5 rounded" style={{ background: 'var(--color-warning)/20', color: 'var(--color-warning)' }}>AI</span>
                     </div>
                     <div className="text-lg font-bold text-white leading-tight">"{getPrediction()}"</div>
                     <div className="text-[10px] text-gray-500 uppercase mt-1">Based on {totalAgents} agents</div>
@@ -365,7 +368,7 @@ export default function AnalyticsPage() {
                 <div className="flex items-center gap-3">
                     <span>UPTIME: <span className="text-white">{data?.systemMetrics?.uptime?.toLocaleString()}h</span></span>
                     <span className="text-gray-700">|</span>
-                    <span>LATENCY: <span className={latency < 500 ? 'text-emerald-400' : latency < 1000 ? 'text-yellow-400' : 'text-red-400'}>{latency}ms</span></span>
+                    <span>LATENCY: <span style={{ color: latency < 500 ? 'var(--color-success)' : latency < 1000 ? 'var(--color-warning)' : 'var(--color-error)' }}>{latency}ms</span></span>
                 </div>
             </div>
         </div>

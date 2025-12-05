@@ -301,7 +301,7 @@ export default function NetworkPage() {
             <div className="w-full lg:w-80 flex flex-col gap-4 z-10 h-full pointer-events-none">
                 <div className="bg-black/60 backdrop-blur-xl border border-cyan-500/20 rounded-2xl p-6 pointer-events-auto shadow-2xl">
                     <div className="flex items-center gap-3 mb-6">
-                        <Globe className="w-6 h-6 text-cyan-400 animate-spin" style={{ animationDuration: '10s' }} />
+                        <Globe className="w-6 h-6 animate-spin" style={{ animationDuration: '10s', color: 'var(--color-primary)' }} />
                         <div>
                             <h1 className="text-xl font-black text-white tracking-tight font-display">GLOBAL NET</h1>
                             <p className="text-xs text-gray-400 font-mono">Active Nodes: {servers.length}</p>
@@ -317,21 +317,21 @@ export default function NetworkPage() {
                             >
                                 <div className="flex justify-between items-start mb-2">
                                     <div className="flex items-center gap-2">
-                                        {server.type === 'database' ? <Database className="w-3 h-3 text-green-400" /> :
-                                         server.type === 'api' ? <Cpu className="w-3 h-3 text-purple-400" /> :
-                                         server.type === 'agent' ? <Brain className="w-3 h-3 text-yellow-400" /> :
-                                         <MapPin className="w-3 h-3 text-cyan-400" />}
+                                        {server.type === 'database' ? <Database className="w-3 h-3" style={{ color: 'var(--color-success)' }} /> :
+                                         server.type === 'api' ? <Cpu className="w-3 h-3" style={{ color: 'var(--color-accent)' }} /> :
+                                         server.type === 'agent' ? <Brain className="w-3 h-3" style={{ color: 'var(--color-warning)' }} /> :
+                                         <MapPin className="w-3 h-3" style={{ color: 'var(--color-primary)' }} />}
                                         <span className="text-sm font-bold text-white">{server.id}</span>
                                     </div>
-                                    <span className={`text-xs font-mono ${server.load > 80 ? 'text-red-400' : 'text-emerald-400'}`}>
+                                    <span className="text-xs font-mono" style={{ color: server.load > 80 ? 'var(--color-error)' : 'var(--color-success)' }}>
                                         {server.load}% LOAD
                                     </span>
                                 </div>
                                 <div className="text-xs text-gray-400 font-mono pl-5">{server.name}</div>
                                 <div className="mt-3 h-1 w-full bg-black/50 rounded-full overflow-hidden">
                                     <div 
-                                        className={`h-full transition-all duration-1000 ${server.load > 80 ? 'bg-red-500' : 'bg-cyan-500'}`} 
-                                        style={{ width: `${server.load}%` }} 
+                                        className="h-full transition-all duration-1000" 
+                                        style={{ width: `${server.load}%`, background: server.load > 80 ? 'var(--color-error)' : 'var(--color-primary)' }} 
                                     />
                                 </div>
                             </div>
@@ -345,7 +345,7 @@ export default function NetworkPage() {
                 <div className="bg-black/60 backdrop-blur-xl border border-white/10 rounded-xl p-4">
                     <div className="flex justify-between items-center mb-2">
                         <span className="text-xs text-gray-400 uppercase font-mono">Supabase Latency</span>
-                        <Wifi className="w-4 h-4 text-emerald-400" />
+                        <Wifi className="w-4 h-4" style={{ color: 'var(--color-success)' }} />
                     </div>
                     <div className="text-3xl font-mono text-white">{supabaseLatency} <span className="text-sm text-gray-500">ms</span></div>
                 </div>
@@ -353,7 +353,7 @@ export default function NetworkPage() {
                 <div className="bg-black/60 backdrop-blur-xl border border-white/10 rounded-xl p-4">
                     <div className="flex justify-between items-center mb-2">
                         <span className="text-xs text-gray-400 uppercase font-mono">Total Requests</span>
-                        <Activity className="w-4 h-4 text-cyan-400" />
+                        <Activity className="w-4 h-4" style={{ color: 'var(--color-primary)' }} />
                     </div>
                     <div className="text-2xl font-mono text-white">{stats.totalRequests.toLocaleString()}</div>
                 </div>
@@ -361,7 +361,7 @@ export default function NetworkPage() {
                 <div className="bg-black/60 backdrop-blur-xl border border-white/10 rounded-xl p-4">
                     <div className="flex justify-between items-center mb-2">
                         <span className="text-xs text-gray-400 uppercase font-mono">Active Agents</span>
-                        <Brain className="w-4 h-4 text-yellow-400" />
+                        <Brain className="w-4 h-4" style={{ color: 'var(--color-warning)' }} />
                     </div>
                     <div className="text-2xl font-mono text-white">{stats.totalAgents}</div>
                 </div>
@@ -369,15 +369,15 @@ export default function NetworkPage() {
                 <div className="bg-black/60 backdrop-blur-xl border border-white/10 rounded-xl p-4">
                     <div className="flex justify-between items-center mb-2">
                         <span className="text-xs text-gray-400 uppercase font-mono">Network Status</span>
-                        <Radio className="w-4 h-4 text-green-400 animate-pulse" />
+                        <Radio className="w-4 h-4 animate-pulse" style={{ color: 'var(--color-success)' }} />
                     </div>
-                    <div className="text-sm font-bold text-green-400 tracking-widest">ENCRYPTED</div>
+                    <div className="text-sm font-bold tracking-widest" style={{ color: 'var(--color-success)' }}>ENCRYPTED</div>
                 </div>
             </div>
 
             {/* RODAPÉ */}
             <div className="absolute bottom-8 left-1/2 -translate-x-1/2 bg-black/40 backdrop-blur-md border border-white/10 px-6 py-2 rounded-full text-xs font-mono text-gray-400 flex items-center gap-3">
-                <div className="w-2 h-2 rounded-full bg-cyan-500 animate-ping" />
+                <div className="w-2 h-2 rounded-full animate-ping" style={{ background: 'var(--color-primary)' }} />
                 <span>SCANNING SECTOR {Math.floor(rotation * 100 % 360)}°</span>
             </div>
 
@@ -399,7 +399,7 @@ export default function NetworkPage() {
                         </button>
 
                         <div className="flex items-center gap-6 mb-8">
-                            <div className="p-6 rounded-2xl bg-black/80 border border-cyan-500/30 text-cyan-400 shadow-[0_0_20px_rgba(6,182,212,0.3)]">
+                            <div className="p-6 rounded-2xl bg-black/80 border border-[var(--color-primary)]/30 shadow-[0_0_20px_var(--color-primary)/30]" style={{ color: 'var(--color-primary)' }}>
                                 {selectedServer.type === 'database' ? <Database className="w-8 h-8" /> :
                                  selectedServer.type === 'api' ? <Cpu className="w-8 h-8" /> :
                                  selectedServer.type === 'agent' ? <Brain className="w-8 h-8" /> :
@@ -416,17 +416,17 @@ export default function NetworkPage() {
                         <div className="grid grid-cols-2 gap-6 mb-6">
                             <div className="bg-black/40 border border-white/10 rounded-xl p-6">
                                 <div className="flex items-center gap-3 mb-3">
-                                    <Activity className="w-5 h-5 text-cyan-400" />
+                                    <Activity className="w-5 h-5" style={{ color: 'var(--color-primary)' }} />
                                     <span className="text-sm text-gray-400 uppercase font-mono">Server Load</span>
                                 </div>
-                                <div className={`text-3xl font-bold ${selectedServer.load > 80 ? 'text-red-400' : 'text-emerald-400'}`}>
+                                <div className="text-3xl font-bold" style={{ color: selectedServer.load > 80 ? 'var(--color-error)' : 'var(--color-success)' }}>
                                     {selectedServer.load}%
                                 </div>
                             </div>
 
                             <div className="bg-black/40 border border-white/10 rounded-xl p-6">
                                 <div className="flex items-center gap-3 mb-3">
-                                    <TrendingUp className="w-5 h-5 text-green-400" />
+                                    <TrendingUp className="w-5 h-5" style={{ color: 'var(--color-success)' }} />
                                     <span className="text-sm text-gray-400 uppercase font-mono">Requests</span>
                                 </div>
                                 <div className="text-3xl font-bold text-white">
@@ -436,7 +436,7 @@ export default function NetworkPage() {
 
                             <div className="bg-black/40 border border-white/10 rounded-xl p-6">
                                 <div className="flex items-center gap-3 mb-3">
-                                    <MapPin className="w-5 h-5 text-yellow-400" />
+                                    <MapPin className="w-5 h-5" style={{ color: 'var(--color-warning)' }} />
                                     <span className="text-sm text-gray-400 uppercase font-mono">Location</span>
                                 </div>
                                 <div className="text-xl font-mono text-white">
@@ -446,10 +446,10 @@ export default function NetworkPage() {
 
                             <div className="bg-black/40 border border-white/10 rounded-xl p-6">
                                 <div className="flex items-center gap-3 mb-3">
-                                    <Zap className="w-5 h-5 text-emerald-400" />
+                                    <Zap className="w-5 h-5" style={{ color: 'var(--color-success)' }} />
                                     <span className="text-sm text-gray-400 uppercase font-mono">Status</span>
                                 </div>
-                                <div className={`text-xl font-bold ${selectedServer.status === 'online' ? 'text-emerald-400' : 'text-red-400'}`}>
+                                <div className="text-xl font-bold" style={{ color: selectedServer.status === 'online' ? 'var(--color-success)' : 'var(--color-error)' }}>
                                     {selectedServer.status.toUpperCase()}
                                 </div>
                             </div>
@@ -463,14 +463,17 @@ export default function NetworkPage() {
                                 <div>
                                     <div className="flex justify-between text-sm mb-2 font-mono">
                                         <span className="text-gray-400">CPU</span>
-                                        <span className={`font-bold ${selectedServer.load > 80 ? 'text-red-400' : 'text-cyan-400'}`}>
+                                        <span className="font-bold" style={{ color: selectedServer.load > 80 ? 'var(--color-error)' : 'var(--color-primary)' }}>
                                             {selectedServer.load}%
                                         </span>
                                     </div>
                                     <div className="w-full bg-white/5 h-3 rounded-full overflow-hidden">
                                         <div
-                                            className={`h-full transition-all duration-1000 ${selectedServer.load > 80 ? 'bg-red-500' : 'bg-gradient-to-r from-cyan-500 to-blue-500'}`}
-                                            style={{ width: `${selectedServer.load}%` }}
+                                            className="h-full transition-all duration-1000"
+                                            style={{
+                                                width: `${selectedServer.load}%`,
+                                                background: selectedServer.load > 80 ? 'var(--color-error)' : 'linear-gradient(to right, var(--color-primary), var(--color-accent))'
+                                            }}
                                         />
                                     </div>
                                 </div>

@@ -186,7 +186,7 @@ export default function ValuePage() {
                     <RollingNumber value={balance} prefix="$" />
                 </div>
                 
-                <div className="mt-4 flex items-center gap-2 text-emerald-400 bg-emerald-400/10 px-3 py-1 rounded-lg border border-emerald-400/20">
+                <div className="mt-4 flex items-center gap-2 px-3 py-1 rounded-lg" style={{ color: 'var(--color-success)', background: 'var(--color-success)/10', border: '1px solid var(--color-success)/20' }}>
                     <TrendingUp className="w-4 h-4" />
                     <span className="text-sm font-mono font-bold">+2.4% (24h)</span>
                 </div>
@@ -234,7 +234,7 @@ export default function ValuePage() {
                 {/* CARD 3: RECENT TRANSACTIONS */}
                 <div className="group bg-black/40 backdrop-blur-xl border border-white/10 rounded-2xl p-6 hover:border-emerald-500/30 transition-all duration-500 flex flex-col overflow-hidden">
                     <div className="flex items-center gap-3 mb-6">
-                        <CreditCard className="w-5 h-5 text-emerald-400" />
+                        <CreditCard className="w-5 h-5" style={{ color: 'var(--color-success)' }} />
                         <span className="text-sm font-bold text-white tracking-wider">LIVE TRANSACTIONS</span>
                     </div>
                     
@@ -250,7 +250,7 @@ export default function ValuePage() {
                                     <span className="text-gray-300 font-medium">{tx.name}</span>
                                     <span className="text-gray-600 font-mono">{tx.time}</span>
                                 </div>
-                                <span className={`font-mono font-bold ${tx.val.startsWith('+') ? 'text-emerald-400' : 'text-red-400'}`}>
+                                <span className="font-mono font-bold" style={{ color: tx.val.startsWith('+') ? 'var(--color-success)' : 'var(--color-error)' }}>
                                     {tx.val}
                                 </span>
                             </div>

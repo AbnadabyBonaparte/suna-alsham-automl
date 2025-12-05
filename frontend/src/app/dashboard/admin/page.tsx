@@ -229,7 +229,7 @@ export default function AdminPage() {
                     <div className="absolute top-0 right-0 w-32 h-full bg-[url('/stripes.png')] opacity-5 pointer-events-none" />
 
                     <div className="flex items-center gap-3 mb-4">
-                        <ShieldAlert className="w-6 h-6 text-red-500" />
+                        <ShieldAlert className="w-6 h-6" style={{ color: 'var(--color-error)' }} />
                         <h2 className="text-lg font-bold text-white tracking-tight">OVERRIDE PROTOCOLS</h2>
                     </div>
 
@@ -239,7 +239,8 @@ export default function AdminPage() {
                             <span className="text-sm font-bold text-gray-300">Global Freeze</span>
                             <button
                                 onClick={handleDbStatusToggle}
-                                className={`relative w-12 h-6 rounded-full transition-colors duration-300 ${dbStatus === 'FROZEN' ? 'bg-red-500' : 'bg-gray-700'}`}
+                                className="relative w-12 h-6 rounded-full transition-colors duration-300"
+                                style={{ background: dbStatus === 'FROZEN' ? 'var(--color-error)' : '#374151' }}
                             >
                                 <div className={`absolute top-1 left-1 w-4 h-4 bg-white rounded-full transition-transform duration-300 ${dbStatus === 'FROZEN' ? 'translate-x-6' : ''}`} />
                             </button>
@@ -263,8 +264,8 @@ export default function AdminPage() {
                                 onClick={handleNukeArm}
                                 className={`w-full py-4 rounded-xl font-black tracking-widest flex items-center justify-center gap-2 transition-all ${
                                     isNukeArmed
-                                    ? 'bg-red-600 text-white animate-pulse shadow-[0_0_30px_red]'
-                                    : 'bg-red-900/20 text-red-500 border border-red-900'
+                                    ? 'bg-[var(--color-error)] text-white animate-pulse shadow-[0_0_30px_var(--color-error)]'
+                                    : 'bg-[var(--color-error)]/20 text-[var(--color-error)] border border-[var(--color-error)]/40'
                                 }`}
                             >
                                 <Power className="w-5 h-5" />
@@ -282,10 +283,10 @@ export default function AdminPage() {
                 <div className="bg-[#02040a] border border-white/10 rounded-3xl p-6 flex flex-col shadow-xl">
                     <div className="flex justify-between items-center mb-4">
                         <div className="flex items-center gap-2">
-                            <Database className="w-5 h-5 text-blue-400" />
+                            <Database className="w-5 h-5" style={{ color: 'var(--color-primary)' }} />
                             <span className="font-bold text-white text-sm tracking-wider">REALITY EDITOR (SQL)</span>
                         </div>
-                        <span className={`text-[10px] px-2 py-1 rounded font-mono ${dbStatus === 'OPTIMAL' ? 'bg-green-500/20 text-green-400 border border-green-500/30' : 'bg-red-500/20 text-red-400 border border-red-500/30'}`}>
+                        <span className="text-[10px] px-2 py-1 rounded font-mono" style={{ background: dbStatus === 'OPTIMAL' ? 'var(--color-success)/20' : 'var(--color-error)/20', color: dbStatus === 'OPTIMAL' ? 'var(--color-success)' : 'var(--color-error)', border: `1px solid ${dbStatus === 'OPTIMAL' ? 'var(--color-success)/30' : 'var(--color-error)/30'}` }}>
                             DB_STATUS: {dbStatus}
                         </span>
                     </div>
@@ -302,12 +303,13 @@ export default function AdminPage() {
                                     value={query}
                                     onChange={(e) => setQuery(e.target.value)}
                                     placeholder="WHERE created_at > NOW() - INTERVAL '7 days';"
-                                    className="bg-transparent border-none outline-none text-blue-400 w-full placeholder-gray-700"
+                                    className="bg-transparent border-none outline-none w-full placeholder-gray-700"
+                                    style={{ color: 'var(--color-primary)' }}
                                 />
                             </div>
                             {query && (
                                 <div className="mt-4 pt-4 border-t border-white/5">
-                                    <div className="text-green-400 text-xs">
+                                    <div className="text-xs" style={{ color: 'var(--color-success)' }}>
                                         -- Query Result: {users.length} rows returned
                                     </div>
                                 </div>
@@ -322,7 +324,8 @@ export default function AdminPage() {
                                     message: `Found ${users.length} users matching query`,
                                 });
                             }}
-                            className="absolute bottom-4 right-4 p-2 bg-white/10 hover:bg-blue-500/20 rounded-lg text-blue-400 transition-all hover:scale-110"
+                            className="absolute bottom-4 right-4 p-2 bg-white/10 hover:bg-[var(--color-primary)]/20 rounded-lg transition-all hover:scale-110"
+                            style={{ color: 'var(--color-primary)' }}
                         >
                             <Terminal className="w-4 h-4" />
                         </button>
@@ -372,10 +375,10 @@ export default function AdminPage() {
                                     </div>
                                 </div>
                                 <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                    <button className="p-2 hover:bg-red-500/20 rounded-lg text-red-500 transition-colors">
+                                    <button className="p-2 hover:bg-[var(--color-error)]/20 rounded-lg transition-colors" style={{ color: 'var(--color-error)' }}>
                                         <Trash2 className="w-3 h-3" />
                                     </button>
-                                    <button className="p-2 hover:bg-blue-500/20 rounded-lg text-blue-500 transition-colors">
+                                    <button className="p-2 hover:bg-[var(--color-primary)]/20 rounded-lg transition-colors" style={{ color: 'var(--color-primary)' }}>
                                         <Activity className="w-3 h-3" />
                                     </button>
                                 </div>

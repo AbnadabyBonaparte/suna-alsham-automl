@@ -154,7 +154,7 @@ export default function SocialPage() {
                             <p className="text-xs text-gray-400 font-mono">Real-time emotional analysis</p>
                         </div>
                         <div className="text-right">
-                            <div className={`text-3xl font-mono font-bold ${sentimentScore > 60 ? 'text-emerald-400' : 'text-red-400'}`}>
+                            <div className="text-3xl font-mono font-bold" style={{ color: sentimentScore > 60 ? 'var(--color-success)' : 'var(--color-error)' }}>
                                 {sentimentScore.toFixed(0)}%
                             </div>
                             <div className="text-[10px] text-gray-500 uppercase tracking-widest">Positive Index</div>
@@ -184,8 +184,10 @@ export default function SocialPage() {
                         >
                             {/* Bubble Visual */}
                             <div 
-                                className={`absolute w-32 h-32 rounded-full blur-2xl opacity-20 transition-all duration-1000
-                                ${trend.sentiment === 'positive' ? 'bg-green-500' : trend.sentiment === 'negative' ? 'bg-red-500' : 'bg-blue-500'}`}
+                                className="absolute w-32 h-32 rounded-full blur-2xl opacity-20 transition-all duration-1000"
+                                style={{
+                                    background: trend.sentiment === 'positive' ? 'var(--color-success)' : trend.sentiment === 'negative' ? 'var(--color-error)' : 'var(--color-primary)'
+                                }}
                                 style={{ transform: activeTrend === trend.id ? 'scale(1.5)' : 'scale(1)' }}
                             />
                             
@@ -208,12 +210,12 @@ export default function SocialPage() {
                 <div className="p-6 border-b border-white/5 bg-black/20 backdrop-blur-xl z-10">
                     <div className="flex items-center justify-between mb-4">
                         <h3 className="text-sm font-bold text-white uppercase tracking-widest flex items-center gap-2">
-                            <Globe className="w-4 h-4 text-purple-400" />
+                            <Globe className="w-4 h-4" style={{ color: 'var(--color-accent)' }} />
                             Live Feed
                         </h3>
                         <div className="flex gap-2">
-                            <span className="w-2 h-2 rounded-full bg-red-500 animate-ping" />
-                            <span className="text-[10px] text-red-400 font-bold">LIVE</span>
+                            <span className="w-2 h-2 rounded-full animate-ping" style={{ background: 'var(--color-error)' }} />
+                            <span className="text-[10px] font-bold" style={{ color: 'var(--color-error)' }}>LIVE</span>
                         </div>
                     </div>
                     {/* Search */}
@@ -255,10 +257,10 @@ export default function SocialPage() {
                             </p>
 
                             <div className="flex gap-4 text-xs text-gray-500 font-mono">
-                                <div className="flex items-center gap-1 hover:text-red-400 transition-colors cursor-pointer">
+                                <div className="flex items-center gap-1 hover:text-[var(--color-error)] transition-colors cursor-pointer">
                                     <Heart className="w-3 h-3" /> {post.likes}
                                 </div>
-                                <div className="flex items-center gap-1 hover:text-blue-400 transition-colors cursor-pointer">
+                                <div className="flex items-center gap-1 hover:text-[var(--color-primary)] transition-colors cursor-pointer">
                                     <Share2 className="w-3 h-3" /> {post.shares}
                                 </div>
                                 <div className="flex items-center gap-1 hover:text-white transition-colors cursor-pointer">

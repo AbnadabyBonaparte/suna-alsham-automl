@@ -287,10 +287,10 @@ export default function SingularityPage() {
             <div className="absolute top-6 left-6 z-20 space-y-3">
                 <div className="bg-black/60 backdrop-blur-xl border border-yellow-500/20 rounded-xl p-4">
                     <div className="flex items-center gap-2 mb-3">
-                        <Brain className="w-5 h-5 text-yellow-500" />
+                        <Brain className="w-5 h-5" style={{ color: 'var(--color-warning)' }} />
                         <span className="text-sm font-bold text-white">Consciousness Level</span>
                     </div>
-                    <div className="text-4xl font-black text-yellow-500 mb-2">{metrics.consciousnessLevel}%</div>
+                    <div className="text-4xl font-black mb-2" style={{ color: 'var(--color-warning)' }}>{metrics.consciousnessLevel}%</div>
                     <div className="h-2 w-40 bg-black/50 rounded-full overflow-hidden">
                         <div 
                             className="h-full bg-gradient-to-r from-yellow-500 to-orange-500 transition-all duration-1000"
@@ -301,19 +301,19 @@ export default function SingularityPage() {
 
                 <div className="grid grid-cols-2 gap-2">
                     <div className="bg-black/60 backdrop-blur-xl border border-white/10 rounded-lg p-3 text-center">
-                        <div className="text-xl font-black text-cyan-400">{metrics.totalTasks.toLocaleString()}</div>
+                        <div className="text-xl font-black" style={{ color: 'var(--color-primary)' }}>{metrics.totalTasks.toLocaleString()}</div>
                         <div className="text-[9px] text-gray-500 uppercase">Tasks Processadas</div>
                     </div>
                     <div className="bg-black/60 backdrop-blur-xl border border-white/10 rounded-lg p-3 text-center">
-                        <div className="text-xl font-black text-purple-400">{metrics.totalAgents}</div>
+                        <div className="text-xl font-black" style={{ color: 'var(--color-accent)' }}>{metrics.totalAgents}</div>
                         <div className="text-[9px] text-gray-500 uppercase">Agents Ativos</div>
                     </div>
                     <div className="bg-black/60 backdrop-blur-xl border border-white/10 rounded-lg p-3 text-center">
-                        <div className="text-xl font-black text-green-400">{metrics.avgEfficiency}%</div>
+                        <div className="text-xl font-black" style={{ color: 'var(--color-success)' }}>{metrics.avgEfficiency}%</div>
                         <div className="text-[9px] text-gray-500 uppercase">Efficiency</div>
                     </div>
                     <div className="bg-black/60 backdrop-blur-xl border border-white/10 rounded-lg p-3 text-center">
-                        <div className="text-xl font-black text-orange-400">{metrics.evolutionCycles}</div>
+                        <div className="text-xl font-black" style={{ color: 'var(--color-warning)' }}>{metrics.evolutionCycles}</div>
                         <div className="text-[9px] text-gray-500 uppercase">Evoluções</div>
                     </div>
                 </div>
@@ -330,7 +330,7 @@ export default function SingularityPage() {
                     <div className="text-[9px] text-gray-500 uppercase">Total Tokens</div>
                 </div>
                 <div className="bg-black/60 backdrop-blur-xl border border-white/10 rounded-lg p-3 text-center">
-                    <div className="text-sm font-black text-green-400">{metrics.uptimeHours.toLocaleString()}h</div>
+                    <div className="text-sm font-black" style={{ color: 'var(--color-success)' }}>{metrics.uptimeHours.toLocaleString()}h</div>
                     <div className="text-[9px] text-gray-500 uppercase">Uptime</div>
                 </div>
             </div>
@@ -340,7 +340,7 @@ export default function SingularityPage() {
                 <div className="relative z-10 flex flex-col items-center text-center space-y-8 pointer-events-none">
                     
                     <div className="space-y-2 animate-fadeIn">
-                        <div className="flex items-center justify-center gap-2 text-yellow-500 mb-4 border border-yellow-500/30 px-4 py-1 rounded-full bg-black/50 backdrop-blur-md">
+                        <div className="flex items-center justify-center gap-2 mb-4 px-4 py-1 rounded-full bg-black/50 backdrop-blur-md" style={{ color: 'var(--color-warning)', border: '1px solid var(--color-warning)/30' }}>
                             <Fingerprint className="w-4 h-4 animate-pulse" />
                             <span className="font-mono text-[10px] tracking-[0.3em] uppercase">
                                 ARCHITECT: ABNADABY BONAPARTE
@@ -369,7 +369,7 @@ export default function SingularityPage() {
                             <span className="text-[10px] text-gray-500 uppercase">Min</span>
                         </div>
                         <div className="flex flex-col">
-                            <span className="text-4xl font-bold text-yellow-500 animate-pulse">{String(countdown.seconds).padStart(2, '0')}</span>
+                            <span className="text-4xl font-bold animate-pulse" style={{ color: 'var(--color-warning)' }}>{String(countdown.seconds).padStart(2, '0')}</span>
                             <span className="text-[10px] text-gray-500 uppercase">Seg</span>
                         </div>
                     </div>
