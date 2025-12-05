@@ -37,9 +37,28 @@ export function useSubscription(): SubscriptionState {
 
     useEffect(() => {
         async function loadSubscription() {
+            // MODO DESENVOLVIMENTO - Mock subscription
+            const isDevMode = process.env.NEXT_PUBLIC_DEV_MODE === 'true';
+            if (isDevMode) {
+                console.log('🛠️ DEV MODE: Usando mock subscription (enterprise)');
+                setState({
+                    isLoading: false,
+                    isSubscribed: true,
+                    plan: 'enterprise',
+                    planName: 'Enterprise',
+                    status: 'active',
+                    isEnterprise: true,
+                    isPro: false,
+                    canAccessFeature: () => true,
+                    billingCycle: 'monthly',
+                    subscriptionEnd: null,
+                });
+                return;
+            }
+
             try {
                 const { data: { user } } = await supabase.auth.getUser();
-                
+
                 if (!user) {
                     setState(prev => ({ ...prev, isLoading: false }));
                     return;

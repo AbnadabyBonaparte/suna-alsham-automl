@@ -37,7 +37,16 @@ const PAID_ROUTES = [
 
 export async function middleware(req: NextRequest) {
     const { pathname } = req.nextUrl;
-    
+
+    // ========================================
+    // MODO DESENVOLVIMENTO - BYPASS TOTAL
+    // ========================================
+    const isDevMode = process.env.NEXT_PUBLIC_DEV_MODE === 'true';
+    if (isDevMode) {
+        console.log('🛠️ DEV MODE: Bypass de autenticação ativado');
+        return NextResponse.next();
+    }
+
     // ========================================
     // 1. ROTAS PÚBLICAS - LIBERA
     // ========================================
@@ -46,11 +55,19 @@ export async function middleware(req: NextRequest) {
         if (pathname.startsWith('/api/')) {
             return NextResponse.next();
         }
-        
+
         // Rotas públicas específicas
         if (PUBLIC_ROUTES.includes(pathname)) {
             return NextResponse.next();
         }
+    }
+
+    // ========================================
+    // ROTAS DE DESENVOLVIMENTO - LIBERA
+    // ========================================
+    if (pathname.startsWith('/dev/')) {
+        console.log('🛠️ DEV ROUTE: Acesso liberado para rota de desenvolvimento');
+        return NextResponse.next();
     }
 
     // ========================================

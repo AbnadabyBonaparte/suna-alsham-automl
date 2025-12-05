@@ -142,27 +142,50 @@ oscillator.stop(context.currentTime + 0.1);
 
 ## 🚀 COMO TESTAR LOCALMENTE:
 
+### MODO DESENVOLVIMENTO (RECOMENDADO PARA DEV):
 ```bash
-# 1. Copiar todos os 11 arquivos
+# 1. Configurar modo dev (bypass de auth/pagamento)
+cp dev.env.example .env.local
+# Este arquivo já tem NEXT_PUBLIC_DEV_MODE=true
+
 # 2. Instalar dependências
 npm install
 
-# 3. Configurar variáveis de ambiente (OBRIGATÓRIO)
-cp .env.example .env.local
-# Editar .env.local com suas chaves reais
-
-# 4. Criar pasta de sons
+# 3. Criar pasta de sons
 mkdir public/sounds
 
-# 5. (Opcional) Adicionar arquivos de som
-# Ou comentar temporariamente no theme.ts
-
-# 6. Rodar dev
+# 4. Rodar dev
 npm run dev
 
-# 7. Abrir http://localhost:3000
-# 8. Clicar no botão de tema (canto inferior direito)
-# 9. Ver a MÁGICA! ✨
+# 5. Abrir http://localhost:3000
+# 6. ACESSAR DIRETAMENTE /dashboard (sem login!)
+#    OU acessar /dev/dashboard para rota específica de dev
+# 7. Ver a MÁGICA! ✨
+```
+
+#### ROTA ESPECIAL PARA DEV:
+- **`/dev/dashboard`** - Acesso direto ao dashboard (sempre funciona)
+- **`/dev/pricing`** - Testar página de pricing
+- **`/dev/nexus`** - Testar neural nexus
+
+### MODO PRODUÇÃO (COM AUTENTICAÇÃO REAL):
+```bash
+# 1. Configurar variáveis reais
+cp env.example .env.local
+# Editar .env.local com suas chaves reais do Stripe/Supabase
+
+# 2. Instalar dependências
+npm install
+
+# 3. Criar pasta de sons
+mkdir public/sounds
+
+# 4. Rodar dev
+npm run dev
+
+# 5. Abrir http://localhost:3000
+# 6. Fazer login normal
+# 7. Ver a MÁGICA! ✨
 ```
 
 ## 🔑 VARIÁVEIS DE AMBIENTE OBRIGATÓRIAS:

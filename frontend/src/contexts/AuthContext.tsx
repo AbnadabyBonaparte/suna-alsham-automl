@@ -5,6 +5,32 @@ import { User, Session, AuthError, SupabaseClient } from '@supabase/supabase-js'
 import { createClient } from '@supabase/supabase-js';
 import { useRouter } from 'next/navigation';
 
+// Mock user para desenvolvimento
+const DEV_USER: User = {
+    id: 'dev-user-123',
+    email: 'dev@alsham.com',
+    user_metadata: {
+        name: 'Dev User',
+        plan: 'enterprise',
+        paid: true,
+    },
+    app_metadata: {},
+    aud: 'authenticated',
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+    role: 'authenticated',
+    email_confirmed_at: new Date().toISOString(),
+} as User;
+
+// Mock session para desenvolvimento
+const DEV_SESSION: Session = {
+    access_token: 'dev-token',
+    refresh_token: 'dev-refresh-token',
+    expires_at: Date.now() / 1000 + 3600, // 1 hora
+    token_type: 'bearer',
+    user: DEV_USER,
+};
+
 interface AuthContextType {
     user: User | null;
     session: Session | null;
@@ -42,8 +68,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const router = useRouter();
 
     useEffect(() => {
+        // MODO DESENVOLVIMENTO - Mock user
+        const isDevMode = process.env.NEXT_PUBLIC_DEV_MODE === 'true';
+        if (isDevMode) {
+            console.log('🛠️ DEV MODE: Usando mock user para desenvolvimento');
+            setSession(DEV_SESSION);
+            setUser(DEV_USER);
+            setLoading(false);
+            return;
+        }
+
         const supabase = getSupabaseClient();
-        
+
         supabase.auth.getSession().then(({ data: { session } }) => {
             setSession(session);
             setUser(session?.user ?? null);
