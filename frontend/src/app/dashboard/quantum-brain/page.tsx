@@ -1,9 +1,10 @@
 /**
  * ═══════════════════════════════════════════════════════════════
- * ALSHAM QUANTUM - QUANTUM BRAIN GODMODE
+ * ALSHAM QUANTUM - QUANTUM BRAIN GODMODE (THEME-AWARE)
  * ═══════════════════════════════════════════════════════════════
  * 📁 PATH: frontend/src/app/dashboard/quantum-brain/page.tsx
  * 🧠 Central de Comando - O Trono do ALSHAM QUANTUM
+ * 🎨 100% SUBMISSO AOS TEMAS - USA VARIÁVEIS CSS
  * ═══════════════════════════════════════════════════════════════
  */
 
@@ -49,13 +50,13 @@ interface Agent {
   efficiency: number;
 }
 
-// Squads disponíveis
+// Squads disponíveis - USANDO VARIÁVEIS CSS
 const SQUADS = [
-  { id: 'COMMAND', name: 'COMMAND', color: '#FFD700', icon: Crown },
-  { id: 'VOID', name: 'VOID', color: '#8B5CF6', icon: Eye },
-  { id: 'NEXUS', name: 'NEXUS', color: '#06B6D4', icon: Network },
-  { id: 'SENTINEL', name: 'SENTINEL', color: '#10B981', icon: Shield },
-  { id: 'CHAOS', name: 'CHAOS', color: '#EF4444', icon: AlertOctagon },
+  { id: 'COMMAND', name: 'COMMAND', icon: Crown },
+  { id: 'VOID', name: 'VOID', icon: Eye },
+  { id: 'NEXUS', name: 'NEXUS', icon: Network },
+  { id: 'SENTINEL', name: 'SENTINEL', icon: Shield },
+  { id: 'CHAOS', name: 'CHAOS', icon: AlertOctagon },
 ];
 
 // Quick Actions
@@ -221,7 +222,6 @@ export default function QuantumBrainPage() {
         avgCost: (prev.avgCost + result.cost_usd) / 2,
       }));
       
-      // Scroll para o resultado
       setTimeout(() => {
         resultRef.current?.scrollIntoView({ behavior: 'smooth' });
       }, 100);
@@ -258,10 +258,8 @@ export default function QuantumBrainPage() {
 
   // Filtrar histórico
   const filteredHistory = taskHistory.filter(task => {
-    // Filtro de status
     if (statusFilter !== 'all' && task.status !== statusFilter) return false;
     
-    // Filtro de tempo
     if (historyFilter === 'today') {
       const today = new Date();
       today.setHours(0, 0, 0, 0);
@@ -286,74 +284,112 @@ export default function QuantumBrainPage() {
     <div className="min-h-screen relative overflow-hidden">
       {/* Background Neural Grid */}
       <div className="fixed inset-0 bg-[url('/grid.svg')] opacity-5 pointer-events-none" />
-      <div className="fixed inset-0 bg-gradient-to-br from-purple-900/10 via-transparent to-cyan-900/10 pointer-events-none" />
+      <div 
+        className="fixed inset-0 pointer-events-none"
+        style={{ background: 'linear-gradient(to bottom right, var(--color-primary)/10, transparent, var(--color-secondary)/10)' }}
+      />
       
       {/* TOP BAR - Métricas ao Vivo */}
-      <div className="sticky top-0 z-40 bg-black/80 backdrop-blur-xl border-b border-white/10 px-6 py-3">
+      <div 
+        className="sticky top-0 z-40 backdrop-blur-xl px-6 py-3"
+        style={{ 
+          background: 'var(--color-background)/80',
+          borderBottom: '1px solid var(--color-border)/10'
+        }}
+      >
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
             <div className="relative">
-              <div className="absolute -inset-2 bg-purple-500/20 rounded-full blur-xl animate-pulse" />
-              <Brain className="w-8 h-8 text-purple-400 relative" />
+              <div 
+                className="absolute -inset-2 rounded-full blur-xl animate-pulse"
+                style={{ background: 'var(--color-primary)/20' }}
+              />
+              <Brain className="w-8 h-8 relative" style={{ color: 'var(--color-primary)' }} />
             </div>
             <div>
-              <h1 className="text-xl font-black text-white tracking-tight flex items-center gap-2">
+              <h1 className="text-xl font-black tracking-tight flex items-center gap-2" style={{ color: 'var(--color-text)' }}>
                 QUANTUM BRAIN
-                <span className="px-2 py-0.5 text-[10px] font-bold bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-full animate-pulse">
+                <span 
+                  className="px-2 py-0.5 text-[10px] font-bold text-white rounded-full animate-pulse"
+                  style={{ background: 'linear-gradient(to right, var(--color-primary), var(--color-accent))' }}
+                >
                   GODMODE
                 </span>
               </h1>
-              <p className="text-[10px] text-gray-500 font-mono">O Trono do ALSHAM QUANTUM • 139 Agents Sincronizados</p>
+              <p className="text-[10px] font-mono" style={{ color: 'var(--color-text-secondary)' }}>
+                O Trono do ALSHAM QUANTUM • 139 Agents Sincronizados
+              </p>
             </div>
           </div>
           
           {/* Live Stats */}
           <div className="hidden lg:flex items-center gap-6">
-            <div className="flex items-center gap-2 px-3 py-1 bg-green-500/10 border border-green-500/30 rounded-lg">
-              <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-              <span className="text-xs font-bold text-green-400">{liveStats.agentsOnline} Agents Online</span>
+            <div 
+              className="flex items-center gap-2 px-3 py-1 rounded-lg"
+              style={{ 
+                background: 'var(--color-success)/10',
+                border: '1px solid var(--color-success)/30'
+              }}
+            >
+              <div className="w-2 h-2 rounded-full animate-pulse" style={{ background: 'var(--color-success)' }} />
+              <span className="text-xs font-bold" style={{ color: 'var(--color-success)' }}>
+                {liveStats.agentsOnline} Agents Online
+              </span>
             </div>
             
             <div className="text-center">
-              <div className="text-sm font-black text-cyan-400">{(liveStats.avgResponse / 1000).toFixed(1)}s</div>
-              <div className="text-[9px] text-gray-500 uppercase">Avg Response</div>
+              <div className="text-sm font-black" style={{ color: 'var(--color-accent)' }}>
+                {(liveStats.avgResponse / 1000).toFixed(1)}s
+              </div>
+              <div className="text-[9px] uppercase" style={{ color: 'var(--color-text-secondary)' }}>Avg Response</div>
             </div>
             
             <div className="text-center">
-              <div className="text-sm font-black text-green-400">R${(liveStats.avgCost * 5.5).toFixed(4)}</div>
-              <div className="text-[9px] text-gray-500 uppercase">Avg Cost</div>
+              <div className="text-sm font-black" style={{ color: 'var(--color-success)' }}>
+                R${(liveStats.avgCost * 5.5).toFixed(4)}
+              </div>
+              <div className="text-[9px] uppercase" style={{ color: 'var(--color-text-secondary)' }}>Avg Cost</div>
             </div>
             
             <div className="text-center">
-              <div className="text-sm font-black text-purple-400">{liveStats.tasksToday}</div>
-              <div className="text-[9px] text-gray-500 uppercase">Tasks Today</div>
+              <div className="text-sm font-black" style={{ color: 'var(--color-primary)' }}>
+                {liveStats.tasksToday}
+              </div>
+              <div className="text-[9px] uppercase" style={{ color: 'var(--color-text-secondary)' }}>Tasks Today</div>
             </div>
             
             <div className="text-center">
-              <div className="text-sm font-black text-yellow-400">{liveStats.syncRate.toFixed(1)}%</div>
-              <div className="text-[9px] text-gray-500 uppercase">Sync Rate</div>
+              <div className="text-sm font-black" style={{ color: 'var(--color-warning)' }}>
+                {liveStats.syncRate.toFixed(1)}%
+              </div>
+              <div className="text-[9px] uppercase" style={{ color: 'var(--color-text-secondary)' }}>Sync Rate</div>
             </div>
             
             <div className="flex items-center gap-2">
-              <Gauge className="w-4 h-4 text-orange-400" />
-              <div className="w-20 h-2 bg-gray-800 rounded-full overflow-hidden">
+              <Gauge className="w-4 h-4" style={{ color: 'var(--color-warning)' }} />
+              <div className="w-20 h-2 rounded-full overflow-hidden" style={{ background: 'var(--color-surface)' }}>
                 <div 
-                  className="h-full bg-gradient-to-r from-orange-500 to-red-500 transition-all duration-500"
-                  style={{ width: `${liveStats.neuralPower}%` }}
+                  className="h-full transition-all duration-500"
+                  style={{ 
+                    width: `${liveStats.neuralPower}%`,
+                    background: 'linear-gradient(to right, var(--color-warning), var(--color-error))'
+                  }}
                 />
               </div>
-              <span className="text-xs text-orange-400 font-mono">{liveStats.neuralPower}%</span>
+              <span className="text-xs font-mono" style={{ color: 'var(--color-warning)' }}>{liveStats.neuralPower}%</span>
             </div>
           </div>
           
           {/* God View Toggle */}
           <button
             onClick={() => setGodViewMode(!godViewMode)}
-            className={`px-4 py-2 rounded-lg font-bold text-xs uppercase tracking-wider transition-all flex items-center gap-2 ${
-              godViewMode 
-                ? 'bg-purple-500 text-white shadow-[0_0_20px_rgba(168,85,247,0.5)]' 
-                : 'bg-white/5 text-gray-400 hover:bg-white/10'
-            }`}
+            className="px-4 py-2 rounded-lg font-bold text-xs uppercase tracking-wider transition-all flex items-center gap-2"
+            style={{
+              background: godViewMode ? 'var(--color-primary)' : 'var(--color-surface)',
+              color: godViewMode ? 'var(--color-background)' : 'var(--color-text-secondary)',
+              boxShadow: godViewMode ? '0 0 20px var(--color-glow)/50' : 'none',
+              border: `1px solid ${godViewMode ? 'var(--color-primary)' : 'var(--color-border)/20'}`
+            }}
           >
             <Eye className="w-4 h-4" />
             God View
@@ -361,19 +397,20 @@ export default function QuantumBrainPage() {
         </div>
       </div>
 
-      {/* GOD VIEW MODE - Grid de todos os agents */}
+      {/* GOD VIEW MODE */}
       {godViewMode && (
-        <div className="fixed inset-0 z-50 bg-black/95 backdrop-blur-xl overflow-auto p-6">
+        <div className="fixed inset-0 z-50 backdrop-blur-xl overflow-auto p-6" style={{ background: 'var(--color-background)/95' }}>
           <div className="flex items-center justify-between mb-6">
-            <h2 className="text-2xl font-black text-white flex items-center gap-3">
-              <Eye className="w-6 h-6 text-purple-400" />
+            <h2 className="text-2xl font-black flex items-center gap-3" style={{ color: 'var(--color-text)' }}>
+              <Eye className="w-6 h-6" style={{ color: 'var(--color-primary)' }} />
               GOD VIEW - {agents?.length || 139} AGENTS
             </h2>
             <button
               onClick={() => setGodViewMode(false)}
-              className="p-2 bg-white/10 rounded-lg hover:bg-white/20 transition"
+              className="p-2 rounded-lg transition"
+              style={{ background: 'var(--color-surface)', color: 'var(--color-text)' }}
             >
-              <X className="w-6 h-6 text-white" />
+              <X className="w-6 h-6" />
             </button>
           </div>
           
@@ -387,17 +424,18 @@ export default function QuantumBrainPage() {
             }))).map((agent: any, i: number) => (
               <div
                 key={agent.id || i}
-                className={`p-3 rounded-xl border transition-all hover:scale-105 cursor-pointer ${
-                  agent.status === 'active' 
-                    ? 'bg-green-500/10 border-green-500/30' 
-                    : 'bg-white/5 border-white/10'
-                }`}
+                className="p-3 rounded-xl transition-all hover:scale-105 cursor-pointer"
+                style={{
+                  background: agent.status === 'active' ? 'var(--color-success)/10' : 'var(--color-surface)',
+                  border: `1px solid ${agent.status === 'active' ? 'var(--color-success)/30' : 'var(--color-border)/10'}`
+                }}
               >
-                <div className={`w-3 h-3 rounded-full mb-2 ${
-                  agent.status === 'active' ? 'bg-green-500 animate-pulse' : 'bg-gray-600'
-                }`} />
-                <div className="text-[10px] font-bold text-white truncate">{agent.name}</div>
-                <div className="text-[9px] text-gray-500">{agent.efficiency || 85}%</div>
+                <div 
+                  className={`w-3 h-3 rounded-full mb-2 ${agent.status === 'active' ? 'animate-pulse' : ''}`}
+                  style={{ background: agent.status === 'active' ? 'var(--color-success)' : 'var(--color-text-secondary)/30' }}
+                />
+                <div className="text-[10px] font-bold truncate" style={{ color: 'var(--color-text)' }}>{agent.name}</div>
+                <div className="text-[9px]" style={{ color: 'var(--color-text-secondary)' }}>{agent.efficiency || 85}%</div>
               </div>
             ))}
           </div>
@@ -407,17 +445,23 @@ export default function QuantumBrainPage() {
       {/* MAIN CONTENT - 3 Colunas */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 p-6">
         
-        {/* COLUNA ESQUERDA - Histórico de Tasks */}
+        {/* COLUNA ESQUERDA - Histórico */}
         <div className="lg:col-span-3 space-y-4">
-          <div className="bg-black/40 backdrop-blur-xl border border-white/10 rounded-2xl overflow-hidden">
+          <div 
+            className="backdrop-blur-xl rounded-2xl overflow-hidden"
+            style={{ 
+              background: 'var(--color-surface)/40',
+              border: '1px solid var(--color-border)/10'
+            }}
+          >
             {/* Header */}
-            <div className="p-4 border-b border-white/10 bg-white/5">
+            <div className="p-4" style={{ borderBottom: '1px solid var(--color-border)/10', background: 'var(--color-surface)/50' }}>
               <div className="flex items-center justify-between mb-3">
-                <h2 className="text-sm font-bold text-white uppercase tracking-wider flex items-center gap-2">
-                  <History className="w-4 h-4 text-purple-400" />
+                <h2 className="text-sm font-bold uppercase tracking-wider flex items-center gap-2" style={{ color: 'var(--color-text)' }}>
+                  <History className="w-4 h-4" style={{ color: 'var(--color-primary)' }} />
                   Histórico
                 </h2>
-                <span className="text-xs text-gray-500">{filteredHistory.length} tasks</span>
+                <span className="text-xs" style={{ color: 'var(--color-text-secondary)' }}>{filteredHistory.length} tasks</span>
               </div>
               
               {/* Filtros */}
@@ -425,7 +469,12 @@ export default function QuantumBrainPage() {
                 <select
                   value={historyFilter}
                   onChange={(e) => setHistoryFilter(e.target.value as any)}
-                  className="flex-1 px-2 py-1 text-xs bg-white/5 border border-white/10 rounded-lg text-white"
+                  className="flex-1 px-2 py-1 text-xs rounded-lg"
+                  style={{ 
+                    background: 'var(--color-surface)',
+                    border: '1px solid var(--color-border)/20',
+                    color: 'var(--color-text)'
+                  }}
                 >
                   <option value="all">Todos</option>
                   <option value="today">Hoje</option>
@@ -434,7 +483,12 @@ export default function QuantumBrainPage() {
                 <select
                   value={statusFilter}
                   onChange={(e) => setStatusFilter(e.target.value as any)}
-                  className="flex-1 px-2 py-1 text-xs bg-white/5 border border-white/10 rounded-lg text-white"
+                  className="flex-1 px-2 py-1 text-xs rounded-lg"
+                  style={{ 
+                    background: 'var(--color-surface)',
+                    border: '1px solid var(--color-border)/20',
+                    color: 'var(--color-text)'
+                  }}
                 >
                   <option value="all">Status</option>
                   <option value="completed">✓ Completed</option>
@@ -447,7 +501,7 @@ export default function QuantumBrainPage() {
             {/* Lista de Tasks */}
             <div className="max-h-[calc(100vh-400px)] overflow-y-auto">
               {filteredHistory.length === 0 ? (
-                <div className="p-8 text-center text-gray-500">
+                <div className="p-8 text-center" style={{ color: 'var(--color-text-secondary)' }}>
                   <History className="w-12 h-12 mx-auto mb-3 opacity-20" />
                   <p className="text-sm">Nenhuma task encontrada</p>
                 </div>
@@ -456,24 +510,33 @@ export default function QuantumBrainPage() {
                   <div
                     key={task.id || i}
                     onClick={() => setCurrentResult(task)}
-                    className={`p-4 border-b border-white/5 hover:bg-white/5 cursor-pointer transition-all ${
-                      currentResult?.id === task.id ? 'bg-purple-500/10 border-l-2 border-l-purple-500' : ''
-                    }`}
+                    className="p-4 cursor-pointer transition-all"
+                    style={{
+                      borderBottom: '1px solid var(--color-border)/5',
+                      background: currentResult?.id === task.id ? 'var(--color-primary)/10' : 'transparent',
+                      borderLeft: currentResult?.id === task.id ? '2px solid var(--color-primary)' : 'none'
+                    }}
                   >
                     <div className="flex items-start justify-between mb-2">
-                      <div className={`w-2 h-2 rounded-full mt-1.5 ${
-                        task.status === 'completed' ? 'bg-green-500' : 
-                        task.status === 'failed' ? 'bg-red-500' : 'bg-yellow-500 animate-pulse'
-                      }`} />
-                      <span className="text-[10px] text-gray-500 font-mono">
+                      <div 
+                        className={`w-2 h-2 rounded-full mt-1.5 ${task.status === 'processing' ? 'animate-pulse' : ''}`}
+                        style={{
+                          background: task.status === 'completed' ? 'var(--color-success)' : 
+                                     task.status === 'failed' ? 'var(--color-error)' : 'var(--color-warning)'
+                        }}
+                      />
+                      <span className="text-[10px] font-mono" style={{ color: 'var(--color-text-secondary)' }}>
                         {new Date(task.timestamp).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
                       </span>
                     </div>
-                    <p className="text-sm text-white font-medium truncate mb-1">
+                    <p className="text-sm font-medium truncate mb-1" style={{ color: 'var(--color-text)' }}>
                       {task.title || task.result?.slice(0, 50)}
                     </p>
-                    <div className="flex items-center gap-2 text-[10px] text-gray-500">
-                      <span className="px-1.5 py-0.5 bg-purple-500/20 text-purple-400 rounded">
+                    <div className="flex items-center gap-2 text-[10px]" style={{ color: 'var(--color-text-secondary)' }}>
+                      <span 
+                        className="px-1.5 py-0.5 rounded"
+                        style={{ background: 'var(--color-primary)/20', color: 'var(--color-primary)' }}
+                      >
                         {task.agent_name?.split(' ')[0] || 'ORION'}
                       </span>
                       <span>{task.execution_time_ms}ms</span>
@@ -488,58 +551,81 @@ export default function QuantumBrainPage() {
 
         {/* COLUNA CENTRAL - Command Terminal */}
         <div className="lg:col-span-5 space-y-4">
-          <div className="bg-black/40 backdrop-blur-xl border border-white/10 rounded-2xl p-6">
+          <div 
+            className="backdrop-blur-xl rounded-2xl p-6"
+            style={{ 
+              background: 'var(--color-surface)/40',
+              border: '1px solid var(--color-border)/10'
+            }}
+          >
             {/* Header */}
             <div className="flex items-center justify-between mb-6">
               <div className="flex items-center gap-3">
-                <Terminal className="w-5 h-5 text-purple-400" />
-                <h2 className="text-lg font-bold text-white">Command Terminal</h2>
+                <Terminal className="w-5 h-5" style={{ color: 'var(--color-primary)' }} />
+                <h2 className="text-lg font-bold" style={{ color: 'var(--color-text)' }}>Command Terminal</h2>
               </div>
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={() => setMultiAgentMode(!multiAgentMode)}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
-                    multiAgentMode 
-                      ? 'bg-purple-500 text-white' 
-                      : 'bg-white/5 text-gray-400 hover:bg-white/10'
-                  }`}
-                >
-                  <Users className="w-3 h-3 inline mr-1" />
-                  Multi-Agent
-                </button>
-              </div>
+              <button
+                onClick={() => setMultiAgentMode(!multiAgentMode)}
+                className="px-3 py-1.5 rounded-lg text-xs font-bold transition-all"
+                style={{
+                  background: multiAgentMode ? 'var(--color-primary)' : 'var(--color-surface)',
+                  color: multiAgentMode ? 'var(--color-background)' : 'var(--color-text-secondary)',
+                  border: `1px solid ${multiAgentMode ? 'var(--color-primary)' : 'var(--color-border)/20'}`
+                }}
+              >
+                <Users className="w-3 h-3 inline mr-1" />
+                Multi-Agent
+              </button>
             </div>
 
             {/* Agent Selector */}
             <div className="mb-4 relative">
-              <label className="text-[10px] text-gray-500 uppercase tracking-wider block mb-2">
+              <label className="text-[10px] uppercase tracking-wider block mb-2" style={{ color: 'var(--color-text-secondary)' }}>
                 Selecionar Agent
               </label>
               <button
                 onClick={() => setShowAgentDropdown(!showAgentDropdown)}
-                className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-left flex items-center justify-between hover:border-purple-500/50 transition-all"
+                className="w-full px-4 py-3 rounded-xl text-left flex items-center justify-between transition-all"
+                style={{
+                  background: 'var(--color-surface)',
+                  border: '1px solid var(--color-border)/20',
+                  color: 'var(--color-text)'
+                }}
               >
-                <span className="text-white">
+                <span>
                   {selectedAgent === 'auto' ? '🤖 Automático (ORION decide)' : 
                    agents?.find((a: Agent) => a.id === selectedAgent)?.name || selectedAgent}
                 </span>
-                <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform ${showAgentDropdown ? 'rotate-180' : ''}`} />
+                <ChevronDown className={`w-4 h-4 transition-transform ${showAgentDropdown ? 'rotate-180' : ''}`} style={{ color: 'var(--color-text-secondary)' }} />
               </button>
               
               {showAgentDropdown && (
-                <div className="absolute top-full left-0 right-0 mt-2 bg-black/95 border border-white/20 rounded-xl overflow-hidden z-50 max-h-64 overflow-y-auto">
+                <div 
+                  className="absolute top-full left-0 right-0 mt-2 rounded-xl overflow-hidden z-50 max-h-64 overflow-y-auto"
+                  style={{ 
+                    background: 'var(--color-background)/95',
+                    border: '1px solid var(--color-border)/20'
+                  }}
+                >
                   <input
                     type="text"
                     placeholder="Buscar agent..."
                     value={agentSearch}
                     onChange={(e) => setAgentSearch(e.target.value)}
-                    className="w-full px-4 py-3 bg-white/5 border-b border-white/10 text-white placeholder-gray-500"
+                    className="w-full px-4 py-3"
+                    style={{ 
+                      background: 'var(--color-surface)',
+                      borderBottom: '1px solid var(--color-border)/10',
+                      color: 'var(--color-text)'
+                    }}
                   />
                   <button
                     onClick={() => { setSelectedAgent('auto'); setShowAgentDropdown(false); }}
-                    className={`w-full px-4 py-3 text-left hover:bg-white/10 transition ${
-                      selectedAgent === 'auto' ? 'bg-purple-500/20 text-purple-400' : 'text-white'
-                    }`}
+                    className="w-full px-4 py-3 text-left transition"
+                    style={{
+                      background: selectedAgent === 'auto' ? 'var(--color-primary)/20' : 'transparent',
+                      color: selectedAgent === 'auto' ? 'var(--color-primary)' : 'var(--color-text)'
+                    }}
                   >
                     🤖 Automático (ORION decide)
                   </button>
@@ -547,12 +633,14 @@ export default function QuantumBrainPage() {
                     <button
                       key={agent.id}
                       onClick={() => { setSelectedAgent(agent.id); setShowAgentDropdown(false); }}
-                      className={`w-full px-4 py-3 text-left hover:bg-white/10 transition flex items-center justify-between ${
-                        selectedAgent === agent.id ? 'bg-purple-500/20 text-purple-400' : 'text-white'
-                      }`}
+                      className="w-full px-4 py-3 text-left transition flex items-center justify-between"
+                      style={{
+                        background: selectedAgent === agent.id ? 'var(--color-primary)/20' : 'transparent',
+                        color: selectedAgent === agent.id ? 'var(--color-primary)' : 'var(--color-text)'
+                      }}
                     >
                       <span>{agent.name}</span>
-                      <span className="text-xs text-gray-500">{agent.squad}</span>
+                      <span className="text-xs" style={{ color: 'var(--color-text-secondary)' }}>{agent.squad}</span>
                     </button>
                   ))}
                 </div>
@@ -561,7 +649,7 @@ export default function QuantumBrainPage() {
 
             {/* Priority Selector */}
             <div className="mb-4">
-              <label className="text-[10px] text-gray-500 uppercase tracking-wider block mb-2">
+              <label className="text-[10px] uppercase tracking-wider block mb-2" style={{ color: 'var(--color-text-secondary)' }}>
                 Prioridade
               </label>
               <div className="flex gap-2">
@@ -569,14 +657,17 @@ export default function QuantumBrainPage() {
                   <button
                     key={p}
                     onClick={() => setPriority(p)}
-                    className={`flex-1 px-3 py-2 rounded-lg text-xs font-bold uppercase transition-all ${
-                      priority === p 
-                        ? p === 'critical' ? 'bg-red-500 text-white' :
-                          p === 'high' ? 'bg-orange-500 text-white' :
-                          p === 'normal' ? 'bg-blue-500 text-white' :
-                          'bg-gray-500 text-white'
-                        : 'bg-white/5 text-gray-400 hover:bg-white/10'
-                    }`}
+                    className="flex-1 px-3 py-2 rounded-lg text-xs font-bold uppercase transition-all"
+                    style={{
+                      background: priority === p 
+                        ? p === 'critical' ? 'var(--color-error)' :
+                          p === 'high' ? 'var(--color-warning)' :
+                          p === 'normal' ? 'var(--color-primary)' :
+                          'var(--color-text-secondary)'
+                        : 'var(--color-surface)',
+                      color: priority === p ? 'white' : 'var(--color-text-secondary)',
+                      border: `1px solid ${priority === p ? 'transparent' : 'var(--color-border)/20'}`
+                    }}
                   >
                     {p}
                   </button>
@@ -591,14 +682,19 @@ export default function QuantumBrainPage() {
                 value={prompt}
                 onChange={(e) => setPrompt(e.target.value)}
                 placeholder="Digite sua task para o ALSHAM QUANTUM processar...&#10;&#10;Exemplo: Analise as tendências de mercado para ecommerce em 2025 e sugira estratégias de growth."
-                className="w-full h-40 bg-black/60 border border-white/10 rounded-xl p-4 text-white placeholder-gray-600 font-mono text-sm resize-none focus:border-purple-500/50 focus:outline-none transition-colors"
+                className="w-full h-40 rounded-xl p-4 font-mono text-sm resize-none focus:outline-none transition-colors"
+                style={{
+                  background: 'var(--color-background)/60',
+                  border: '1px solid var(--color-border)/10',
+                  color: 'var(--color-text)'
+                }}
                 disabled={isProcessing}
               />
             </div>
 
             {/* Quick Actions */}
             <div className="mb-6">
-              <label className="text-[10px] text-gray-500 uppercase tracking-wider block mb-2">
+              <label className="text-[10px] uppercase tracking-wider block mb-2" style={{ color: 'var(--color-text-secondary)' }}>
                 Ações Rápidas
               </label>
               <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
@@ -606,7 +702,12 @@ export default function QuantumBrainPage() {
                   <button
                     key={i}
                     onClick={() => setPrompt(action.prompt)}
-                    className="px-3 py-2 text-xs bg-white/5 hover:bg-white/10 border border-white/10 hover:border-purple-500/30 rounded-lg text-gray-300 hover:text-white transition-all flex items-center gap-2"
+                    className="px-3 py-2 text-xs rounded-lg transition-all flex items-center gap-2"
+                    style={{
+                      background: 'var(--color-surface)',
+                      border: '1px solid var(--color-border)/10',
+                      color: 'var(--color-text-secondary)'
+                    }}
                   >
                     <span>{action.icon}</span>
                     <span className="truncate">{action.label}</span>
@@ -619,11 +720,14 @@ export default function QuantumBrainPage() {
             <button
               onClick={executeTask}
               disabled={isProcessing || !prompt.trim()}
-              className={`w-full py-4 rounded-xl font-bold text-sm tracking-wider uppercase flex items-center justify-center gap-3 transition-all ${
-                isProcessing 
-                  ? 'bg-purple-500/20 text-purple-400 cursor-wait'
-                  : 'bg-gradient-to-r from-purple-600 to-pink-600 text-white hover:from-purple-500 hover:to-pink-500 hover:shadow-[0_0_30px_rgba(168,85,247,0.5)] hover:scale-[1.02]'
-              }`}
+              className="w-full py-4 rounded-xl font-bold text-sm tracking-wider uppercase flex items-center justify-center gap-3 transition-all disabled:opacity-50"
+              style={{
+                background: isProcessing 
+                  ? 'var(--color-primary)/20'
+                  : 'linear-gradient(to right, var(--color-primary), var(--color-accent))',
+                color: isProcessing ? 'var(--color-primary)' : 'white',
+                boxShadow: isProcessing ? 'none' : '0 0 30px var(--color-glow)/50'
+              }}
             >
               {isProcessing ? (
                 <>
@@ -642,17 +746,34 @@ export default function QuantumBrainPage() {
 
         {/* COLUNA DIREITA - Response Output */}
         <div className="lg:col-span-4 space-y-4">
-          <div ref={resultRef} className="bg-black/40 backdrop-blur-xl border border-white/10 rounded-2xl overflow-hidden">
+          <div 
+            ref={resultRef} 
+            className="backdrop-blur-xl rounded-2xl overflow-hidden"
+            style={{ 
+              background: 'var(--color-surface)/40',
+              border: '1px solid var(--color-border)/10'
+            }}
+          >
             {/* Header */}
-            <div className="p-4 border-b border-white/10 bg-white/5 flex items-center justify-between">
+            <div 
+              className="p-4 flex items-center justify-between"
+              style={{ 
+                borderBottom: '1px solid var(--color-border)/10',
+                background: 'var(--color-surface)/50'
+              }}
+            >
               <div className="flex items-center gap-3">
-                <Sparkles className="w-5 h-5 text-cyan-400" />
-                <h2 className="text-sm font-bold text-white uppercase tracking-wider">Response Output</h2>
+                <Sparkles className="w-5 h-5" style={{ color: 'var(--color-accent)' }} />
+                <h2 className="text-sm font-bold uppercase tracking-wider" style={{ color: 'var(--color-text)' }}>Response Output</h2>
               </div>
               {currentResult && (
-                <span className={`px-2 py-1 rounded text-[10px] font-bold uppercase ${
-                  currentResult.success ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'
-                }`}>
+                <span 
+                  className="px-2 py-1 rounded text-[10px] font-bold uppercase"
+                  style={{
+                    background: currentResult.success ? 'var(--color-success)/20' : 'var(--color-error)/20',
+                    color: currentResult.success ? 'var(--color-success)' : 'var(--color-error)'
+                  }}
+                >
                   {currentResult.success ? '✓ SUCCESS' : '✗ FAILED'}
                 </span>
               )}
@@ -662,72 +783,87 @@ export default function QuantumBrainPage() {
             <div className="p-4 min-h-[300px] max-h-[500px] overflow-y-auto">
               {currentResult ? (
                 <div className="space-y-4">
-                  {/* Métricas do resultado */}
+                  {/* Métricas */}
                   <div className="grid grid-cols-4 gap-2 mb-4">
-                    <div className="bg-white/5 rounded-lg p-2 text-center">
-                      <div className="text-lg font-black text-cyan-400">{currentResult.execution_time_ms}ms</div>
-                      <div className="text-[9px] text-gray-500 uppercase">Tempo</div>
+                    <div className="rounded-lg p-2 text-center" style={{ background: 'var(--color-surface)' }}>
+                      <div className="text-lg font-black" style={{ color: 'var(--color-accent)' }}>{currentResult.execution_time_ms}ms</div>
+                      <div className="text-[9px] uppercase" style={{ color: 'var(--color-text-secondary)' }}>Tempo</div>
                     </div>
-                    <div className="bg-white/5 rounded-lg p-2 text-center">
-                      <div className="text-lg font-black text-purple-400">{currentResult.tokens_used}</div>
-                      <div className="text-[9px] text-gray-500 uppercase">Tokens</div>
+                    <div className="rounded-lg p-2 text-center" style={{ background: 'var(--color-surface)' }}>
+                      <div className="text-lg font-black" style={{ color: 'var(--color-primary)' }}>{currentResult.tokens_used}</div>
+                      <div className="text-[9px] uppercase" style={{ color: 'var(--color-text-secondary)' }}>Tokens</div>
                     </div>
-                    <div className="bg-white/5 rounded-lg p-2 text-center">
-                      <div className="text-lg font-black text-green-400">${currentResult.cost_usd?.toFixed(5)}</div>
-                      <div className="text-[9px] text-gray-500 uppercase">Custo</div>
+                    <div className="rounded-lg p-2 text-center" style={{ background: 'var(--color-surface)' }}>
+                      <div className="text-lg font-black" style={{ color: 'var(--color-success)' }}>${currentResult.cost_usd?.toFixed(5)}</div>
+                      <div className="text-[9px] uppercase" style={{ color: 'var(--color-text-secondary)' }}>Custo</div>
                     </div>
-                    <div className="bg-white/5 rounded-lg p-2 text-center">
-                      <div className="text-sm font-black text-yellow-400 truncate">{currentResult.agent_name?.split(' ')[0]}</div>
-                      <div className="text-[9px] text-gray-500 uppercase">Agent</div>
+                    <div className="rounded-lg p-2 text-center" style={{ background: 'var(--color-surface)' }}>
+                      <div className="text-sm font-black truncate" style={{ color: 'var(--color-warning)' }}>{currentResult.agent_name?.split(' ')[0]}</div>
+                      <div className="text-[9px] uppercase" style={{ color: 'var(--color-text-secondary)' }}>Agent</div>
                     </div>
                   </div>
 
                   {/* Agent Info */}
-                  <div className="flex items-center gap-2 text-xs text-gray-500 mb-3">
-                    <span className="px-2 py-0.5 bg-purple-500/20 text-purple-400 rounded">{currentResult.agent_name}</span>
+                  <div className="flex items-center gap-2 text-xs mb-3" style={{ color: 'var(--color-text-secondary)' }}>
+                    <span className="px-2 py-0.5 rounded" style={{ background: 'var(--color-primary)/20', color: 'var(--color-primary)' }}>
+                      {currentResult.agent_name}
+                    </span>
                     <span>•</span>
-                    <span className="px-2 py-0.5 bg-cyan-500/20 text-cyan-400 rounded">{currentResult.squad}</span>
+                    <span className="px-2 py-0.5 rounded" style={{ background: 'var(--color-accent)/20', color: 'var(--color-accent)' }}>
+                      {currentResult.squad}
+                    </span>
                   </div>
                   
                   {/* Resultado */}
-                  <div className="bg-black/40 border border-white/10 rounded-xl p-4">
-                    <p className="text-white font-mono text-sm leading-relaxed whitespace-pre-wrap">
+                  <div 
+                    className="rounded-xl p-4"
+                    style={{
+                      background: 'var(--color-background)/40',
+                      border: '1px solid var(--color-border)/10'
+                    }}
+                  >
+                    <p className="font-mono text-sm leading-relaxed whitespace-pre-wrap" style={{ color: 'var(--color-text)' }}>
                       {currentResult.result}
                     </p>
                   </div>
 
                   {/* Action Buttons */}
                   <div className="flex flex-wrap gap-2">
-                    <button 
-                      onClick={copyResult}
-                      className="flex items-center gap-2 px-3 py-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg text-xs text-gray-300 transition-all"
-                    >
-                      <Copy className="w-3 h-3" /> Copiar
-                    </button>
-                    <button className="flex items-center gap-2 px-3 py-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg text-xs text-gray-300 transition-all">
-                      <FileDown className="w-3 h-3" /> Salvar PDF
-                    </button>
-                    <button className="flex items-center gap-2 px-3 py-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg text-xs text-gray-300 transition-all">
-                      <MessageSquare className="w-3 h-3" /> WhatsApp
-                    </button>
-                    <button className="flex items-center gap-2 px-3 py-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg text-xs text-gray-300 transition-all">
-                      <Mail className="w-3 h-3" /> Email
-                    </button>
+                    {[
+                      { icon: Copy, label: 'Copiar', onClick: copyResult },
+                      { icon: FileDown, label: 'Salvar PDF' },
+                      { icon: MessageSquare, label: 'WhatsApp' },
+                      { icon: Mail, label: 'Email' },
+                    ].map((btn, i) => (
+                      <button 
+                        key={i}
+                        onClick={btn.onClick}
+                        className="flex items-center gap-2 px-3 py-2 rounded-lg text-xs transition-all"
+                        style={{
+                          background: 'var(--color-surface)',
+                          border: '1px solid var(--color-border)/10',
+                          color: 'var(--color-text-secondary)'
+                        }}
+                      >
+                        <btn.icon className="w-3 h-3" /> {btn.label}
+                      </button>
+                    ))}
                   </div>
 
-                  {/* Neural Load Graph (Fake animation) */}
+                  {/* Neural Load Graph */}
                   <div className="mt-4">
-                    <div className="text-[10px] text-gray-500 uppercase tracking-wider mb-2 flex items-center gap-2">
+                    <div className="text-[10px] uppercase tracking-wider mb-2 flex items-center gap-2" style={{ color: 'var(--color-text-secondary)' }}>
                       <Activity className="w-3 h-3" />
                       Neural Load durante execução
                     </div>
-                    <div className="h-12 bg-white/5 rounded-lg overflow-hidden flex items-end gap-px p-2">
+                    <div className="h-12 rounded-lg overflow-hidden flex items-end gap-px p-2" style={{ background: 'var(--color-surface)' }}>
                       {Array.from({ length: 30 }).map((_, i) => (
                         <div
                           key={i}
-                          className="flex-1 bg-gradient-to-t from-purple-500 to-cyan-500 rounded-t transition-all"
+                          className="flex-1 rounded-t transition-all"
                           style={{ 
                             height: `${Math.random() * 60 + 40}%`,
+                            background: 'linear-gradient(to top, var(--color-primary), var(--color-accent))',
                             animationDelay: `${i * 50}ms`
                           }}
                         />
@@ -736,23 +872,36 @@ export default function QuantumBrainPage() {
                   </div>
                 </div>
               ) : (
-                <div className="h-full flex flex-col items-center justify-center text-gray-600 py-16">
+                <div className="h-full flex flex-col items-center justify-center py-16" style={{ color: 'var(--color-text-secondary)' }}>
                   <Brain className="w-20 h-20 mb-4 opacity-20" />
                   <p className="text-sm font-medium">Aguardando comando...</p>
-                  <p className="text-xs mt-1 text-gray-700">O Quantum Brain está pronto para processar</p>
+                  <p className="text-xs mt-1" style={{ color: 'var(--color-text-secondary)/70' }}>O Quantum Brain está pronto para processar</p>
                 </div>
               )}
             </div>
           </div>
 
           {/* Emergency Controls */}
-          <div className="bg-black/40 backdrop-blur-xl border border-red-500/20 rounded-2xl p-4">
+          <div 
+            className="backdrop-blur-xl rounded-2xl p-4"
+            style={{ 
+              background: 'var(--color-surface)/40',
+              border: '1px solid var(--color-error)/20'
+            }}
+          >
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <AlertOctagon className="w-5 h-5 text-red-500" />
-                <span className="text-sm font-bold text-red-400">Emergency Controls</span>
+                <AlertOctagon className="w-5 h-5" style={{ color: 'var(--color-error)' }} />
+                <span className="text-sm font-bold" style={{ color: 'var(--color-error)' }}>Emergency Controls</span>
               </div>
-              <button className="px-4 py-2 bg-red-500/20 hover:bg-red-500 border border-red-500 rounded-lg text-red-400 hover:text-white text-xs font-bold uppercase tracking-wider transition-all">
+              <button 
+                className="px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-wider transition-all"
+                style={{
+                  background: 'var(--color-error)/20',
+                  border: '1px solid var(--color-error)',
+                  color: 'var(--color-error)'
+                }}
+              >
                 EMERGENCY STOP
               </button>
             </div>

@@ -1,9 +1,10 @@
 /**
  * ═══════════════════════════════════════════════════════════════
- * ALSHAM QUANTUM - THE VOID (OBSERVAÇÃO SILENCIOSA)
+ * ALSHAM QUANTUM - THE VOID (THEME-AWARE)
  * ═══════════════════════════════════════════════════════════════
  * 📁 PATH: frontend/src/app/dashboard/void/page.tsx
  * 👁️ Logs reais do sistema + métricas VOID squad
+ * 🎨 100% SUBMISSO AOS TEMAS - USA VARIÁVEIS CSS
  * ═══════════════════════════════════════════════════════════════
  */
 
@@ -11,6 +12,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { supabase } from '@/lib/supabase';
+import { useTheme } from '@/contexts/ThemeContext';
 import { Eye, AlertTriangle, ShieldAlert, Database, XCircle, Trash2, Activity, RefreshCw, Filter, Clock, Zap } from 'lucide-react';
 
 interface VoidLog {
@@ -32,6 +34,9 @@ interface VoidMetrics {
 }
 
 export default function VoidPage() {
+    const { themeConfig } = useTheme();
+    const colors = themeConfig.colors;
+    
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const [logs, setLogs] = useState<VoidLog[]>([]);
     const [metrics, setMetrics] = useState<VoidMetrics>({
@@ -45,12 +50,10 @@ export default function VoidPage() {
     const [filter, setFilter] = useState<'all' | 'warning' | 'error' | 'info'>('all');
     const [isLoading, setIsLoading] = useState(true);
 
-    // Carregar logs reais do Supabase
     useEffect(() => {
         async function loadLogs() {
             setIsLoading(true);
             try {
-                // Buscar requests com status de erro ou warning
                 const { data: requestsData, error } = await supabase
                     .from('requests')
                     .select('*')
@@ -59,7 +62,6 @@ export default function VoidPage() {
 
                 if (error) throw error;
 
-                // Transformar em logs do VOID
                 const voidLogs: VoidLog[] = (requestsData || []).map(req => {
                     let type: VoidLog['type'] = 'info';
                     let integrity = 100;
@@ -88,18 +90,12 @@ export default function VoidPage() {
 
                 setLogs(voidLogs);
 
-                // Calcular métricas
-                const today = new Date();
-                today.setHours(0, 0, 0, 0);
-                
-                const todayLogs = voidLogs.filter(l => new Date(l.timestamp) >= today);
                 const warnings = voidLogs.filter(l => l.type === 'warning').length;
                 const errors = voidLogs.filter(l => l.type === 'error').length;
                 const avgIntegrity = voidLogs.length > 0 
                     ? Math.round(voidLogs.reduce((sum, l) => sum + l.integrity, 0) / voidLogs.length)
                     : 100;
 
-                // Contar agents do squad VOID
                 const { count: voidAgents } = await supabase
                     .from('agents')
                     .select('*', { count: 'exact', head: true })
@@ -121,13 +117,11 @@ export default function VoidPage() {
         }
 
         loadLogs();
-
-        // Refresh a cada 30s
         const interval = setInterval(loadLogs, 30000);
         return () => clearInterval(interval);
     }, []);
 
-    // ENGINE DO BURACO NEGRO
+    // ENGINE DO BURACO NEGRO - USA CORES DO TEMA
     useEffect(() => {
         const canvas = canvasRef.current;
         if (!canvas) return;
@@ -168,7 +162,7 @@ export default function VoidPage() {
 
             time += 0.01;
 
-            const themeColor = '#8B5CF6'; // Roxo VOID
+            const themeColor = colors.primary;
 
             particles.forEach(p => {
                 p.angle += p.speed * (500 / p.radius); 
@@ -213,20 +207,20 @@ export default function VoidPage() {
             ctx.fill();
             
             // Anel de Fótons
-            ctx.strokeStyle = 'rgba(139, 92, 246, 0.3)';
+            ctx.strokeStyle = themeColor + '4D';
             ctx.lineWidth = 2;
             ctx.beginPath();
             ctx.arc(cx, cy, 50, 0, Math.PI * 2);
             ctx.stroke();
 
             // Olho do VOID
-            ctx.fillStyle = '#8B5CF6';
+            ctx.fillStyle = themeColor;
             ctx.globalAlpha = 0.8 + Math.sin(time * 2) * 0.2;
             ctx.beginPath();
             ctx.ellipse(cx, cy, 15, 8, 0, 0, Math.PI * 2);
             ctx.fill();
             
-            ctx.fillStyle = '#FFFFFF';
+            ctx.fillStyle = colors.text;
             ctx.globalAlpha = 1;
             ctx.beginPath();
             ctx.arc(cx, cy, 3, 0, Math.PI * 2);
@@ -241,7 +235,7 @@ export default function VoidPage() {
             window.removeEventListener('resize', resize);
             cancelAnimationFrame(animationId);
         };
-    }, []);
+    }, [colors]);
 
     const filteredLogs = logs.filter(log => {
         if (filter === 'all') return true;
@@ -249,43 +243,76 @@ export default function VoidPage() {
     });
 
     return (
-        <div className="relative h-[calc(100vh-6rem)] w-full overflow-hidden rounded-3xl border border-purple-500/20 bg-black group">
-
+        <div 
+            className="relative h-[calc(100vh-6rem)] w-full overflow-hidden rounded-3xl group"
+            style={{
+                background: colors.background,
+                border: `1px solid ${colors.primary}/20`
+            }}
+        >
             <canvas ref={canvasRef} className="w-full h-full absolute inset-0" />
 
             {/* HEADER */}
             <div className="absolute top-10 left-1/2 -translate-x-1/2 text-center pointer-events-none z-10">
-                <h1 className="text-4xl font-black text-white tracking-[0.5em] mb-2 font-display opacity-80">THE VOID</h1>
-                <p className="text-xs font-mono text-purple-400 uppercase tracking-widest">
+                <h1 className="text-4xl font-black tracking-[0.5em] mb-2 font-display opacity-80" style={{ color: colors.text }}>THE VOID</h1>
+                <p className="text-xs font-mono uppercase tracking-widest" style={{ color: colors.primary }}>
                     Observação Silenciosa • {metrics.activeObservers} Observadores Ativos
                 </p>
             </div>
 
             {/* MÉTRICAS */}
             <div className="absolute top-6 left-6 z-20 space-y-3">
-                <div className="bg-black/60 backdrop-blur-xl border border-purple-500/20 rounded-xl p-4 w-64">
+                <div 
+                    className="backdrop-blur-xl rounded-xl p-4 w-64"
+                    style={{
+                        background: `${colors.surface}/60`,
+                        border: `1px solid ${colors.primary}/20`
+                    }}
+                >
                     <div className="flex items-center justify-between mb-3">
-                        <span className="text-xs text-gray-500 uppercase">System Integrity</span>
-                        <span className={`text-xl font-black ${metrics.avgIntegrity > 70 ? 'text-green-400' : metrics.avgIntegrity > 40 ? 'text-yellow-400' : 'text-red-400'}`}>
+                        <span className="text-xs uppercase" style={{ color: colors.textSecondary }}>System Integrity</span>
+                        <span 
+                            className="text-xl font-black"
+                            style={{
+                                color: metrics.avgIntegrity > 70 ? colors.success : 
+                                       metrics.avgIntegrity > 40 ? colors.warning : colors.error
+                            }}
+                        >
                             {metrics.avgIntegrity}%
                         </span>
                     </div>
-                    <div className="h-2 w-full bg-black/50 rounded-full overflow-hidden">
+                    <div className="h-2 w-full rounded-full overflow-hidden" style={{ background: `${colors.background}/50` }}>
                         <div 
-                            className={`h-full transition-all duration-1000 ${metrics.avgIntegrity > 70 ? 'bg-green-500' : metrics.avgIntegrity > 40 ? 'bg-yellow-500' : 'bg-red-500'}`}
-                            style={{ width: `${metrics.avgIntegrity}%` }}
+                            className="h-full transition-all duration-1000"
+                            style={{ 
+                                width: `${metrics.avgIntegrity}%`,
+                                background: metrics.avgIntegrity > 70 ? colors.success : 
+                                           metrics.avgIntegrity > 40 ? colors.warning : colors.error
+                            }}
                         />
                     </div>
                 </div>
                 
                 <div className="grid grid-cols-2 gap-2">
-                    <div className="bg-black/60 backdrop-blur-xl border border-white/10 rounded-lg p-3 text-center">
-                        <div className="text-xl font-black text-purple-400">{metrics.totalLogs}</div>
-                        <div className="text-[9px] text-gray-500 uppercase">Total Logs</div>
+                    <div 
+                        className="backdrop-blur-xl rounded-lg p-3 text-center"
+                        style={{
+                            background: `${colors.surface}/60`,
+                            border: `1px solid ${colors.border}/10`
+                        }}
+                    >
+                        <div className="text-xl font-black" style={{ color: colors.primary }}>{metrics.totalLogs}</div>
+                        <div className="text-[9px] uppercase" style={{ color: colors.textSecondary }}>Total Logs</div>
                     </div>
-                    <div className="bg-black/60 backdrop-blur-xl border border-white/10 rounded-lg p-3 text-center">
-                        <div className="text-xl font-black text-red-400">{metrics.errorsToday}</div>
-                        <div className="text-[9px] text-gray-500 uppercase">Errors</div>
+                    <div 
+                        className="backdrop-blur-xl rounded-lg p-3 text-center"
+                        style={{
+                            background: `${colors.surface}/60`,
+                            border: `1px solid ${colors.border}/10`
+                        }}
+                    >
+                        <div className="text-xl font-black" style={{ color: colors.error }}>{metrics.errorsToday}</div>
+                        <div className="text-[9px] uppercase" style={{ color: colors.textSecondary }}>Errors</div>
                     </div>
                 </div>
             </div>
@@ -296,11 +323,12 @@ export default function VoidPage() {
                     <button
                         key={f}
                         onClick={() => setFilter(f)}
-                        className={`px-4 py-2 rounded-lg text-xs font-bold uppercase transition-all ${
-                            filter === f 
-                                ? 'bg-purple-500 text-white' 
-                                : 'bg-black/40 text-gray-400 hover:bg-white/10'
-                        }`}
+                        className="px-4 py-2 rounded-lg text-xs font-bold uppercase transition-all"
+                        style={{
+                            background: filter === f ? colors.primary : `${colors.surface}/40`,
+                            color: filter === f ? colors.background : colors.textSecondary,
+                            border: `1px solid ${filter === f ? colors.primary : colors.border}/20`
+                        }}
                     >
                         {f === 'all' ? 'Todos' : f}
                     </button>
@@ -309,13 +337,13 @@ export default function VoidPage() {
 
             {/* LOGS FLUTUANTES */}
             <div className="absolute right-0 top-20 bottom-20 w-full md:w-96 p-6 flex flex-col justify-center pointer-events-none overflow-hidden">
-                <div className="space-y-4 pointer-events-auto max-h-full overflow-y-auto scrollbar-thin scrollbar-thumb-purple-500/20">
+                <div className="space-y-4 pointer-events-auto max-h-full overflow-y-auto">
                     {isLoading ? (
                         <div className="flex items-center justify-center py-8">
-                            <RefreshCw className="w-8 h-8 text-purple-500 animate-spin" />
+                            <RefreshCw className="w-8 h-8 animate-spin" style={{ color: colors.primary }} />
                         </div>
                     ) : filteredLogs.length === 0 ? (
-                        <div className="text-center py-8 text-gray-500">
+                        <div className="text-center py-8" style={{ color: colors.textSecondary }}>
                             <Eye className="w-12 h-12 mx-auto mb-3 opacity-20" />
                             <p>O VOID está observando...</p>
                             <p className="text-xs">Nenhum log encontrado</p>
@@ -326,42 +354,39 @@ export default function VoidPage() {
                                 key={log.id}
                                 onMouseEnter={() => setHoveredLog(log.id)}
                                 onMouseLeave={() => setHoveredLog(null)}
-                                className={`
-                                    relative p-4 rounded-xl border backdrop-blur-md transition-all duration-500 ease-out
-                                    ${hoveredLog === log.id 
-                                        ? 'bg-purple-500/10 border-purple-500 translate-x-[-10px]' 
-                                        : 'bg-black/40 border-white/5 translate-x-0 hover:bg-white/5'
-                                    }
-                                `}
+                                className="relative p-4 rounded-xl backdrop-blur-md transition-all duration-500 ease-out"
                                 style={{
+                                    background: hoveredLog === log.id ? `${colors.primary}/10` : `${colors.surface}/40`,
+                                    border: `1px solid ${hoveredLog === log.id ? colors.primary : colors.border}/10`,
                                     opacity: 1 - (index * 0.1),
-                                    transform: `scale(${1 - index * 0.02})`
+                                    transform: `scale(${1 - index * 0.02}) translateX(${hoveredLog === log.id ? '-10px' : '0'})`
                                 }}
                             >
                                 <div className="flex justify-between items-start mb-1">
                                     <div className="flex items-center gap-2">
                                         {log.type === 'error' ? (
-                                            <XCircle className="w-4 h-4 text-red-500" />
+                                            <XCircle className="w-4 h-4" style={{ color: colors.error }} />
                                         ) : log.type === 'warning' ? (
-                                            <AlertTriangle className="w-4 h-4 text-yellow-500" />
+                                            <AlertTriangle className="w-4 h-4" style={{ color: colors.warning }} />
                                         ) : log.type === 'success' ? (
-                                            <Zap className="w-4 h-4 text-green-500" />
+                                            <Zap className="w-4 h-4" style={{ color: colors.success }} />
                                         ) : (
-                                            <Database className="w-4 h-4 text-purple-500" />
+                                            <Database className="w-4 h-4" style={{ color: colors.primary }} />
                                         )}
-                                        <span className="text-[10px] font-mono text-gray-400 uppercase tracking-wider">{log.source}</span>
+                                        <span className="text-[10px] font-mono uppercase tracking-wider" style={{ color: colors.textSecondary }}>{log.source}</span>
                                     </div>
-                                    <span className="text-[10px] text-gray-600 font-mono">{log.timestamp}</span>
+                                    <span className="text-[10px] font-mono" style={{ color: colors.textSecondary }}>{log.timestamp}</span>
                                 </div>
-                                <p className="text-sm text-gray-200 font-light leading-snug truncate">{log.message}</p>
+                                <p className="text-sm font-light leading-snug truncate" style={{ color: colors.text }}>{log.message}</p>
                                 
-                                <div className="mt-3 h-1 w-full bg-black/50 rounded-full overflow-hidden">
+                                <div className="mt-3 h-1 w-full rounded-full overflow-hidden" style={{ background: `${colors.background}/50` }}>
                                     <div 
-                                        className={`h-full transition-all duration-500 ${
-                                            log.integrity < 30 ? 'bg-red-500' : 
-                                            log.integrity < 70 ? 'bg-yellow-500' : 'bg-purple-500'
-                                        }`} 
-                                        style={{ width: `${log.integrity}%` }} 
+                                        className="h-full transition-all duration-500"
+                                        style={{
+                                            width: `${log.integrity}%`,
+                                            background: log.integrity < 30 ? colors.error : 
+                                                       log.integrity < 70 ? colors.warning : colors.primary
+                                        }}
                                     />
                                 </div>
                             </div>
@@ -372,13 +397,25 @@ export default function VoidPage() {
 
             {/* CONTROLES INFERIORES */}
             <div className="absolute bottom-10 left-1/2 -translate-x-1/2 flex gap-4 z-10">
-                <button className="flex items-center gap-2 px-6 py-3 bg-red-900/20 border border-red-500/30 text-red-400 rounded-full hover:bg-red-500 hover:text-white transition-all uppercase text-xs font-bold tracking-widest backdrop-blur-md group">
+                <button 
+                    className="flex items-center gap-2 px-6 py-3 rounded-full uppercase text-xs font-bold tracking-widest backdrop-blur-md transition-all"
+                    style={{
+                        background: `${colors.error}/20`,
+                        border: `1px solid ${colors.error}/30`,
+                        color: colors.error
+                    }}
+                >
                     <Trash2 className="w-4 h-4" />
                     <span>Purge Memory</span>
                 </button>
                 <button 
                     onClick={() => window.location.reload()}
-                    className="flex items-center gap-2 px-6 py-3 bg-white/5 border border-white/10 text-white rounded-full hover:bg-white/10 transition-all uppercase text-xs font-bold tracking-widest backdrop-blur-md"
+                    className="flex items-center gap-2 px-6 py-3 rounded-full uppercase text-xs font-bold tracking-widest backdrop-blur-md transition-all"
+                    style={{
+                        background: `${colors.surface}`,
+                        border: `1px solid ${colors.border}/10`,
+                        color: colors.text
+                    }}
                 >
                     <Eye className="w-4 h-4" />
                     <span>Deep Scan</span>

@@ -1,9 +1,10 @@
 /**
  * ═══════════════════════════════════════════════════════════════
- * ALSHAM QUANTUM - ORION COMMAND CENTER
+ * ALSHAM QUANTUM - ORION COMMAND CENTER (THEME-AWARE)
  * ═══════════════════════════════════════════════════════════════
  * 📁 PATH: frontend/src/app/dashboard/orion/page.tsx
  * 👑 Interface direta com ORION - O Comandante Supremo
+ * 🎨 100% SUBMISSO AOS TEMAS - USA VARIÁVEIS CSS
  * ═══════════════════════════════════════════════════════════════
  */
 
@@ -11,6 +12,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { supabase } from '@/lib/supabase';
+import { useTheme } from '@/contexts/ThemeContext';
 import { 
     Crown, Mic, MicOff, Send, Bot, User, Sparkles, 
     ChevronDown, Cpu, Volume2, BrainCircuit, Activity,
@@ -36,6 +38,9 @@ interface CommandHistory {
 }
 
 export default function OrionPage() {
+    const { themeConfig } = useTheme();
+    const colors = themeConfig.colors;
+    
     const [input, setInput] = useState('');
     const [messages, setMessages] = useState<Message[]>([]);
     const [isRecording, setIsRecording] = useState(false);
@@ -50,7 +55,7 @@ export default function OrionPage() {
     const recognitionRef = useRef<any>(null);
     const mouseRef = useRef({ x: 0, y: 0 });
 
-    // Carregar histórico de comandos do Supabase
+    // Carregar histórico
     useEffect(() => {
         async function loadHistory() {
             try {
@@ -72,7 +77,6 @@ export default function OrionPage() {
                     execution_time_ms: d.processing_time_ms || 0,
                 })) || []);
                 
-                // Calcular métricas
                 const { count } = await supabase
                     .from('requests')
                     .select('*', { count: 'exact', head: true });
@@ -91,7 +95,6 @@ export default function OrionPage() {
         
         loadHistory();
         
-        // Mensagem inicial
         setMessages([{
             id: 1,
             role: 'ai',
@@ -100,12 +103,11 @@ export default function OrionPage() {
         }]);
     }, []);
 
-    // Auto-scroll
     useEffect(() => {
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     }, [messages]);
 
-    // ENGINE VISUAL LIDAR
+    // ENGINE VISUAL - USA CORES DO TEMA
     useEffect(() => {
         const canvas = canvasRef.current;
         if (!canvas) return;
@@ -166,7 +168,8 @@ export default function OrionPage() {
 
             time += 0.01;
 
-            const colorHex = '#FFD700'; // Dourado para ORION
+            // USA COR PRIMÁRIA DO TEMA
+            const colorHex = colors.primary;
 
             const targetRotX = (mouseRef.current.y - cy) * 0.001;
             const targetRotY = (mouseRef.current.x - cx) * 0.001;
@@ -205,7 +208,7 @@ export default function OrionPage() {
                 const size = Math.max(0.5, scale * 2);
                 const alpha = scale * 0.8;
 
-                ctx.fillStyle = isSpeaking ? '#FFFFFF' : isThinking ? '#FCD34D' : colorHex;
+                ctx.fillStyle = isSpeaking ? colors.text : isThinking ? colors.warning : colorHex;
                 ctx.globalAlpha = alpha;
 
                 ctx.beginPath();
@@ -225,7 +228,7 @@ export default function OrionPage() {
             ctx.ellipse(cx, cy, 40, 140, -time * 0.3, 0, Math.PI * 2);
             ctx.stroke();
 
-            // Coroa acima da cabeça
+            // Coroa/Ícone de autoridade
             ctx.globalAlpha = 0.8;
             ctx.fillStyle = colorHex;
             const crownY = cy - 130;
@@ -251,7 +254,7 @@ export default function OrionPage() {
             window.removeEventListener('resize', resize);
             cancelAnimationFrame(animationId);
         };
-    }, [isSpeaking, isThinking]);
+    }, [isSpeaking, isThinking, colors]);
 
     const handleMouseMove = (e: React.MouseEvent) => {
         mouseRef.current = { x: e.clientX, y: e.clientY };
@@ -344,29 +347,40 @@ export default function OrionPage() {
     };
 
     return (
-        <div className="h-[calc(100vh-6rem)] flex flex-col md:flex-row gap-6 overflow-hidden relative p-2" onMouseMove={handleMouseMove}>
-
+        <div 
+            className="h-[calc(100vh-6rem)] flex flex-col md:flex-row gap-6 overflow-hidden relative p-2" 
+            onMouseMove={handleMouseMove}
+        >
             {/* ESQUERDA: HOLOGRAMA ORION */}
             <div className="w-full md:w-[400px] flex flex-col gap-4 relative z-10 h-full">
-                <div className="flex-1 bg-black/60 backdrop-blur-xl border border-yellow-500/20 rounded-3xl relative overflow-hidden shadow-[0_0_50px_rgba(255,215,0,0.1)] group">
-                    
+                <div 
+                    className="flex-1 backdrop-blur-xl rounded-3xl relative overflow-hidden group"
+                    style={{
+                        background: `${colors.background}/60`,
+                        border: `1px solid ${colors.primary}/20`,
+                        boxShadow: `0 0 50px ${colors.glow}/10`
+                    }}
+                >
                     {/* Status Overlay */}
                     <div className="absolute top-6 left-6 z-20 flex flex-col gap-1">
                         <div className="flex items-center gap-2">
-                            <div className={`w-2 h-2 rounded-full ${isSpeaking ? 'bg-white animate-ping' : 'bg-yellow-500'}`} />
-                            <span className="text-xs font-mono text-yellow-500 tracking-[0.2em]">
+                            <div 
+                                className={`w-2 h-2 rounded-full ${isSpeaking ? 'animate-ping' : ''}`}
+                                style={{ background: isSpeaking ? colors.text : colors.primary }}
+                            />
+                            <span className="text-xs font-mono tracking-[0.2em]" style={{ color: colors.primary }}>
                                 {isSpeaking ? 'VOCALIZING' : isThinking ? 'COMPUTING' : 'ONLINE'}
                             </span>
                         </div>
-                        <div className="text-[10px] text-white/30 font-mono pl-4">
+                        <div className="text-[10px] font-mono pl-4" style={{ color: `${colors.text}/30` }}>
                             ORION SUPREME • COMMAND LAYER
                         </div>
                     </div>
 
                     {/* Stats */}
                     <div className="absolute top-6 right-6 z-20 text-right">
-                        <div className="text-2xl font-black text-yellow-500">{totalCommands}</div>
-                        <div className="text-[9px] text-gray-500 uppercase">Total Commands</div>
+                        <div className="text-2xl font-black" style={{ color: colors.primary }}>{totalCommands}</div>
+                        <div className="text-[9px] uppercase" style={{ color: colors.textSecondary }}>Total Commands</div>
                     </div>
 
                     <canvas ref={canvasRef} className="w-full h-full absolute inset-0" />
@@ -379,8 +393,9 @@ export default function OrionPage() {
                         {Array.from({length: 20}).map((_, i) => (
                             <div 
                                 key={i} 
-                                className="w-1 bg-yellow-500 transition-all duration-100 ease-in-out"
+                                className="w-1 transition-all duration-100 ease-in-out"
                                 style={{ 
+                                    background: colors.primary,
                                     height: isSpeaking ? `${Math.random() * 100}%` : '10%',
                                 }} 
                             />
@@ -390,49 +405,81 @@ export default function OrionPage() {
 
                 {/* Status Cards */}
                 <div className="grid grid-cols-2 gap-3">
-                    <div className="bg-black/40 border border-yellow-500/20 rounded-xl p-4 text-center">
-                        <Crown className="w-5 h-5 text-yellow-500 mx-auto mb-2" />
-                        <div className="text-lg font-black text-white">SUPREME</div>
-                        <div className="text-[9px] text-gray-500 uppercase">Authority</div>
+                    <div 
+                        className="rounded-xl p-4 text-center"
+                        style={{
+                            background: `${colors.surface}/40`,
+                            border: `1px solid ${colors.primary}/20`
+                        }}
+                    >
+                        <Crown className="w-5 h-5 mx-auto mb-2" style={{ color: colors.primary }} />
+                        <div className="text-lg font-black" style={{ color: colors.text }}>SUPREME</div>
+                        <div className="text-[9px] uppercase" style={{ color: colors.textSecondary }}>Authority</div>
                     </div>
-                    <div className="bg-black/40 border border-white/10 rounded-xl p-4 text-center">
-                        <Activity className="w-5 h-5 text-cyan-400 mx-auto mb-2" />
-                        <div className="text-lg font-black text-white">{avgResponseTime}ms</div>
-                        <div className="text-[9px] text-gray-500 uppercase">Avg Response</div>
+                    <div 
+                        className="rounded-xl p-4 text-center"
+                        style={{
+                            background: `${colors.surface}/40`,
+                            border: `1px solid ${colors.border}/10`
+                        }}
+                    >
+                        <Activity className="w-5 h-5 mx-auto mb-2" style={{ color: colors.accent }} />
+                        <div className="text-lg font-black" style={{ color: colors.text }}>{avgResponseTime}ms</div>
+                        <div className="text-[9px] uppercase" style={{ color: colors.textSecondary }}>Avg Response</div>
                     </div>
                 </div>
             </div>
 
             {/* DIREITA: CHAT INTERFACE */}
-            <div className="flex-1 flex flex-col bg-[#050505]/80 backdrop-blur-md border border-white/5 rounded-3xl overflow-hidden relative">
-                
+            <div 
+                className="flex-1 flex flex-col backdrop-blur-md rounded-3xl overflow-hidden relative"
+                style={{
+                    background: `${colors.surface}/80`,
+                    border: `1px solid ${colors.border}/10`
+                }}
+            >
                 {/* Header */}
-                <div className="p-4 border-b border-white/10 bg-gradient-to-r from-yellow-500/10 to-transparent">
+                <div 
+                    className="p-4"
+                    style={{
+                        borderBottom: `1px solid ${colors.border}/10`,
+                        background: `linear-gradient(to right, ${colors.primary}/10, transparent)`
+                    }}
+                >
                     <div className="flex items-center gap-3">
-                        <Crown className="w-6 h-6 text-yellow-500" />
+                        <Crown className="w-6 h-6" style={{ color: colors.primary }} />
                         <div>
-                            <h2 className="text-lg font-black text-white">ORION COMMAND</h2>
-                            <p className="text-[10px] text-gray-500 font-mono">Direct Communication Channel</p>
+                            <h2 className="text-lg font-black" style={{ color: colors.text }}>ORION COMMAND</h2>
+                            <p className="text-[10px] font-mono" style={{ color: colors.textSecondary }}>Direct Communication Channel</p>
                         </div>
                     </div>
                 </div>
                 
                 {/* Messages */}
-                <div className="flex-1 overflow-y-auto p-6 space-y-6 scrollbar-thin scrollbar-thumb-yellow-500/20 scrollbar-track-transparent">
+                <div className="flex-1 overflow-y-auto p-6 space-y-6">
                     {messages.map((msg) => (
                         <div key={msg.id} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'} animate-fadeIn`}>
-                            <div className={`max-w-[85%] p-5 rounded-2xl relative shadow-lg ${
-                                msg.role === 'user' 
-                                ? 'bg-yellow-500/10 border border-yellow-500/20 text-white rounded-tr-none' 
-                                : 'bg-white/5 border border-white/10 text-gray-200 rounded-tl-none'
-                            }`}>
+                            <div 
+                                className="max-w-[85%] p-5 rounded-2xl relative shadow-lg"
+                                style={{
+                                    background: msg.role === 'user' 
+                                        ? `${colors.primary}/10` 
+                                        : `${colors.surface}`,
+                                    border: `1px solid ${msg.role === 'user' ? `${colors.primary}/20` : `${colors.border}/10`}`,
+                                    borderRadius: msg.role === 'user' ? '20px 20px 4px 20px' : '20px 20px 20px 4px',
+                                    color: colors.text
+                                }}
+                            >
                                 <div className="flex items-center gap-2 mb-2 opacity-40 text-[10px] font-mono uppercase tracking-wider">
                                     {msg.role === 'ai' ? <Crown className="w-3 h-3" /> : <User className="w-3 h-3" />}
                                     {msg.role === 'ai' ? 'ORION SUPREME' : 'OPERATOR'} • {msg.timestamp}
                                 </div>
                                 <p className="leading-relaxed text-sm md:text-base font-light">{msg.text}</p>
                                 {msg.tokens && (
-                                    <div className="mt-2 pt-2 border-t border-white/10 flex gap-4 text-[10px] text-gray-500">
+                                    <div 
+                                        className="mt-2 pt-2 flex gap-4 text-[10px]"
+                                        style={{ borderTop: `1px solid ${colors.border}/10`, color: colors.textSecondary }}
+                                    >
                                         <span>{msg.tokens} tokens</span>
                                         <span>{msg.executionTime}ms</span>
                                     </div>
@@ -442,12 +489,26 @@ export default function OrionPage() {
                     ))}
                     {isThinking && (
                         <div className="flex justify-start animate-fadeIn">
-                            <div className="bg-white/5 border border-white/10 p-5 rounded-2xl rounded-tl-none">
+                            <div 
+                                className="p-5 rounded-2xl"
+                                style={{
+                                    background: colors.surface,
+                                    border: `1px solid ${colors.border}/10`,
+                                    borderRadius: '20px 20px 20px 4px'
+                                }}
+                            >
                                 <div className="flex items-center gap-2">
-                                    <div className="w-2 h-2 bg-yellow-500 rounded-full animate-bounce" />
-                                    <div className="w-2 h-2 bg-yellow-500 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }} />
-                                    <div className="w-2 h-2 bg-yellow-500 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }} />
-                                    <span className="ml-2 text-xs text-gray-500">ORION processando...</span>
+                                    {[0, 1, 2].map(i => (
+                                        <div 
+                                            key={i}
+                                            className="w-2 h-2 rounded-full animate-bounce"
+                                            style={{ 
+                                                background: colors.primary,
+                                                animationDelay: `${i * 0.1}s`
+                                            }}
+                                        />
+                                    ))}
+                                    <span className="ml-2 text-xs" style={{ color: colors.textSecondary }}>ORION processando...</span>
                                 </div>
                             </div>
                         </div>
@@ -456,11 +517,28 @@ export default function OrionPage() {
                 </div>
 
                 {/* Input Bar */}
-                <div className="p-4 bg-black/20 border-t border-white/5">
-                    <div className="relative flex items-center gap-2 bg-[#0a0a0a] border border-white/10 rounded-2xl p-2 focus-within:border-yellow-500/50 transition-all shadow-lg">
+                <div 
+                    className="p-4"
+                    style={{
+                        background: `${colors.background}/20`,
+                        borderTop: `1px solid ${colors.border}/10`
+                    }}
+                >
+                    <div 
+                        className="relative flex items-center gap-2 rounded-2xl p-2 transition-all shadow-lg"
+                        style={{
+                            background: colors.background,
+                            border: `1px solid ${colors.border}/10`
+                        }}
+                    >
                         <button
                             onClick={toggleRecording}
-                            className={`p-3 rounded-xl transition-all ${isRecording ? 'bg-red-500/20 text-red-500 animate-pulse border border-red-500/50' : 'bg-white/5 text-gray-400 hover:text-white'}`}
+                            className="p-3 rounded-xl transition-all"
+                            style={{
+                                background: isRecording ? `${colors.error}/20` : `${colors.surface}`,
+                                color: isRecording ? colors.error : colors.textSecondary,
+                                border: isRecording ? `1px solid ${colors.error}/50` : 'none'
+                            }}
                         >
                             {isRecording ? <MicOff className="w-5 h-5" /> : <Mic className="w-5 h-5" />}
                         </button>
@@ -470,12 +548,17 @@ export default function OrionPage() {
                             onChange={(e) => setInput(e.target.value)}
                             onKeyDown={(e) => e.key === 'Enter' && handleSend()}
                             placeholder="Comando para ORION..."
-                            className="flex-1 bg-transparent border-none outline-none text-white placeholder-gray-600 font-mono text-sm h-full"
+                            className="flex-1 bg-transparent border-none outline-none font-mono text-sm h-full"
+                            style={{ color: colors.text }}
                         />
                         <button 
                             onClick={handleSend} 
                             disabled={!input.trim() || isThinking} 
-                            className="p-3 bg-yellow-500 hover:bg-yellow-400 rounded-xl text-black transition-all disabled:opacity-50"
+                            className="p-3 rounded-xl transition-all disabled:opacity-50"
+                            style={{
+                                background: colors.primary,
+                                color: colors.background
+                            }}
                         >
                             <Send className="w-5 h-5" />
                         </button>

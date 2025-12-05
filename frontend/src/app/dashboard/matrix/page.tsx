@@ -1,9 +1,10 @@
 /**
  * ═══════════════════════════════════════════════════════════════
- * ALSHAM QUANTUM - THE MATRIX (NEURAL NETWORK 3D)
+ * ALSHAM QUANTUM - THE MATRIX (THEME-AWARE)
  * ═══════════════════════════════════════════════════════════════
  * 📁 PATH: frontend/src/app/dashboard/matrix/page.tsx
  * 🧬 Visualização 3D da rede neural com 139 nodes conectados
+ * 🎨 100% SUBMISSO AOS TEMAS - USA VARIÁVEIS CSS
  * ═══════════════════════════════════════════════════════════════
  */
 
@@ -11,6 +12,7 @@
 
 import { useState, useEffect, useRef, FormEvent } from 'react';
 import { supabase } from '@/lib/supabase';
+import { useTheme } from '@/contexts/ThemeContext';
 import { Terminal, Shield, Wifi, Cpu, AlertOctagon, Command, Network, Users, Activity, Zap } from 'lucide-react';
 
 interface LogEntry {
@@ -30,6 +32,9 @@ interface NetworkNode {
 }
 
 export default function MatrixPage() {
+  const { themeConfig } = useTheme();
+  const colors = themeConfig.colors;
+  
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -46,7 +51,6 @@ export default function MatrixPage() {
     dataFlow: 0,
   });
 
-  // Carregar agents como nodes da rede
   useEffect(() => {
     async function loadNodes() {
       try {
@@ -66,7 +70,6 @@ export default function MatrixPage() {
           connections: Math.floor(Math.random() * 10 + 2),
         }));
 
-        // Se menos de 139 agents, preencher com mock
         while (networkNodes.length < 139) {
           networkNodes.push({
             id: `mock_${networkNodes.length}`,
@@ -98,7 +101,7 @@ export default function MatrixPage() {
     loadNodes();
   }, []);
 
-  // MATRIX RAIN + NEURAL NETWORK VISUALIZATION
+  // MATRIX RAIN + NEURAL NETWORK - USA CORES DO TEMA
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -112,12 +115,10 @@ export default function MatrixPage() {
     window.addEventListener('resize', resize);
     resize();
 
-    // Matrix Rain
     const columns = Math.floor(canvas.width / 20);
     const drops: number[] = Array(columns).fill(1);
     const chars = 'アァカサタナハマヤャラワガザダバパイィキシチニヒミリヰギジヂビピウゥクスツヌフムユュルグズブヅプエェケセテネヘメレヱゲゼデベペオォコソトノホモヨョロヲゴゾドボポヴッン0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ';
 
-    // Neural Network Nodes
     const nodePositions: { x: number; y: number; vx: number; vy: number; node: NetworkNode }[] = [];
     
     const initNodes = () => {
@@ -144,13 +145,12 @@ export default function MatrixPage() {
       const w = canvas.width;
       const h = canvas.height;
 
-      // Fundo com fade
       ctx.fillStyle = 'rgba(0, 0, 0, 0.05)';
       ctx.fillRect(0, 0, w, h);
 
       time += 0.01;
 
-      const primaryColor = getComputedStyle(document.documentElement).getPropertyValue('--color-primary').trim() || '#00FFD0';
+      const primaryColor = colors.primary;
       
       // Matrix Rain
       ctx.font = '15px monospace';
@@ -158,7 +158,7 @@ export default function MatrixPage() {
         const text = chars.charAt(Math.floor(Math.random() * chars.length));
         
         if (Math.random() > 0.95) {
-          ctx.fillStyle = '#FFF';
+          ctx.fillStyle = colors.text;
         } else {
           ctx.fillStyle = primaryColor;
           ctx.globalAlpha = 0.3;
@@ -173,9 +173,8 @@ export default function MatrixPage() {
         drops[i]++;
       }
 
-      // Neural Network Visualization
+      // Neural Network
       if (nodePositions.length > 0) {
-        // Atualizar posições
         nodePositions.forEach(np => {
           np.x += np.vx;
           np.y += np.vy;
@@ -184,7 +183,6 @@ export default function MatrixPage() {
           if (np.y < 0 || np.y > h) np.vy *= -1;
         });
 
-        // Desenhar conexões
         ctx.strokeStyle = primaryColor;
         ctx.lineWidth = 0.5;
         ctx.globalAlpha = 0.2;
@@ -205,7 +203,6 @@ export default function MatrixPage() {
         }
         ctx.globalAlpha = 1;
 
-        // Desenhar nodes
         nodePositions.forEach(np => {
           const isActive = np.node.status === 'active';
           const pulse = Math.sin(time * 5 + np.x) * 0.3 + 1;
@@ -214,15 +211,15 @@ export default function MatrixPage() {
           const size = (isActive ? 4 : 2) * pulse;
           ctx.arc(np.x, np.y, size, 0, Math.PI * 2);
           
-          if (np.node.squad === 'VOID') ctx.fillStyle = '#8B5CF6';
-          else if (np.node.squad === 'COMMAND') ctx.fillStyle = '#FFD700';
-          else if (np.node.squad === 'SENTINEL') ctx.fillStyle = '#10B981';
-          else if (np.node.squad === 'CHAOS') ctx.fillStyle = '#EF4444';
+          // Squad-based colors using theme
+          if (np.node.squad === 'VOID') ctx.fillStyle = colors.accent;
+          else if (np.node.squad === 'COMMAND') ctx.fillStyle = colors.warning;
+          else if (np.node.squad === 'SENTINEL') ctx.fillStyle = colors.success;
+          else if (np.node.squad === 'CHAOS') ctx.fillStyle = colors.error;
           else ctx.fillStyle = primaryColor;
           
           ctx.fill();
           
-          // Glow
           ctx.shadowColor = ctx.fillStyle as string;
           ctx.shadowBlur = isActive ? 10 : 0;
           ctx.fill();
@@ -236,9 +233,8 @@ export default function MatrixPage() {
         clearInterval(interval);
         window.removeEventListener('resize', resize);
     };
-  }, [nodes]);
+  }, [nodes, colors]);
 
-  // Logs do sistema
   useEffect(() => {
     const systemMessages = [
         "Quantum Core: Syncing neural weights...",
@@ -332,18 +328,22 @@ export default function MatrixPage() {
 
   const getLogColor = (type: LogEntry['type']) => {
     switch(type) {
-        case 'error': return 'text-red-500';
-        case 'warning': return 'text-yellow-400';
-        case 'success': return 'text-emerald-400';
-        case 'system': return 'text-[var(--color-primary)] font-bold';
-        default: return 'text-[var(--color-text-secondary)]';
+        case 'error': return colors.error;
+        case 'warning': return colors.warning;
+        case 'success': return colors.success;
+        case 'system': return colors.primary;
+        default: return colors.textSecondary;
     }
   };
 
   return (
-    <div className={`relative h-[calc(100vh-6rem)] rounded-2xl overflow-hidden border border-[var(--color-border)]/30 bg-black group ${isGlitching ? 'animate-pulse' : ''}`}>
-
-      {/* CANVAS */}
+    <div 
+      className={`relative h-[calc(100vh-6rem)] rounded-2xl overflow-hidden group ${isGlitching ? 'animate-pulse' : ''}`}
+      style={{
+        background: colors.background,
+        border: `1px solid ${colors.border}/30`
+      }}
+    >
       <canvas 
         ref={canvasRef} 
         className="absolute inset-0 w-full h-full"
@@ -351,27 +351,33 @@ export default function MatrixPage() {
 
       {/* STATS OVERLAY */}
       <div className="absolute top-6 right-6 z-30 space-y-3">
-        <div className="bg-black/60 backdrop-blur-xl border border-[var(--color-primary)]/30 rounded-xl p-4">
+        <div 
+          className="backdrop-blur-xl rounded-xl p-4"
+          style={{
+            background: `${colors.surface}/60`,
+            border: `1px solid ${colors.primary}/30`
+          }}
+        >
           <div className="flex items-center gap-2 mb-3">
-            <Network className="w-5 h-5 text-[var(--color-primary)]" />
-            <span className="text-sm font-bold text-white">Neural Network</span>
+            <Network className="w-5 h-5" style={{ color: colors.primary }} />
+            <span className="text-sm font-bold" style={{ color: colors.text }}>Neural Network</span>
           </div>
           <div className="grid grid-cols-2 gap-3 text-center">
             <div>
-              <div className="text-2xl font-black text-[var(--color-primary)]">{networkStats.totalNodes}</div>
-              <div className="text-[9px] text-gray-500 uppercase">Nodes</div>
+              <div className="text-2xl font-black" style={{ color: colors.primary }}>{networkStats.totalNodes}</div>
+              <div className="text-[9px] uppercase" style={{ color: colors.textSecondary }}>Nodes</div>
             </div>
             <div>
-              <div className="text-2xl font-black text-green-400">{networkStats.activeNodes}</div>
-              <div className="text-[9px] text-gray-500 uppercase">Active</div>
+              <div className="text-2xl font-black" style={{ color: colors.success }}>{networkStats.activeNodes}</div>
+              <div className="text-[9px] uppercase" style={{ color: colors.textSecondary }}>Active</div>
             </div>
             <div>
-              <div className="text-xl font-black text-purple-400">{networkStats.connections}</div>
-              <div className="text-[9px] text-gray-500 uppercase">Links</div>
+              <div className="text-xl font-black" style={{ color: colors.accent }}>{networkStats.connections}</div>
+              <div className="text-[9px] uppercase" style={{ color: colors.textSecondary }}>Links</div>
             </div>
             <div>
-              <div className="text-xl font-black text-cyan-400">{networkStats.dataFlow}</div>
-              <div className="text-[9px] text-gray-500 uppercase">MB/s</div>
+              <div className="text-xl font-black" style={{ color: colors.secondary }}>{networkStats.dataFlow}</div>
+              <div className="text-[9px] uppercase" style={{ color: colors.textSecondary }}>MB/s</div>
             </div>
           </div>
         </div>
@@ -386,12 +392,12 @@ export default function MatrixPage() {
       <div className="relative z-30 h-full flex flex-col p-6 font-mono text-sm md:text-base">
         
         {/* Header */}
-        <div className="flex justify-between items-center border-b border-white/10 pb-4 mb-4 select-none">
+        <div className="flex justify-between items-center pb-4 mb-4 select-none" style={{ borderBottom: `1px solid ${colors.border}/10` }}>
             <div className="flex items-center gap-3">
-                <Terminal className="w-5 h-5 text-[var(--color-primary)]" />
-                <span className="text-white font-bold tracking-widest">MATRIX_SHELL_V13.3</span>
+                <Terminal className="w-5 h-5" style={{ color: colors.primary }} />
+                <span className="font-bold tracking-widest" style={{ color: colors.text }}>MATRIX_SHELL_V13.3</span>
             </div>
-            <div className="flex gap-4 text-xs text-gray-500">
+            <div className="flex gap-4 text-xs" style={{ color: colors.textSecondary }}>
                 <span className="flex items-center gap-1"><Wifi className="w-3 h-3" /> {networkStats.activeNodes} NODES</span>
                 <span className="flex items-center gap-1"><Cpu className="w-3 h-3" /> CPU: 12%</span>
                 <span className="flex items-center gap-1"><Shield className="w-3 h-3" /> FW: ON</span>
@@ -401,14 +407,18 @@ export default function MatrixPage() {
         {/* Log Output */}
         <div 
             ref={scrollRef}
-            className="flex-1 overflow-y-auto overflow-x-hidden space-y-1 scrollbar-thin scrollbar-thumb-[var(--color-primary)]/20 scrollbar-track-transparent pr-4"
+            className="flex-1 overflow-y-auto overflow-x-hidden space-y-1 pr-4"
         >
             {logs.map((log) => (
-                <div key={log.id} className="break-words font-mono leading-relaxed hover:bg-white/5 px-2 rounded transition-colors">
+                <div 
+                  key={log.id} 
+                  className="break-words font-mono leading-relaxed px-2 rounded transition-colors"
+                  style={{ color: colors.text }}
+                >
                     {log.timestamp && (
-                        <span className="text-gray-600 mr-3">[{log.timestamp}]</span>
+                        <span className="mr-3" style={{ color: colors.textSecondary }}>[{log.timestamp}]</span>
                     )}
-                    <span className={getLogColor(log.type)}>
+                    <span style={{ color: getLogColor(log.type), fontWeight: log.type === 'system' ? 'bold' : 'normal' }}>
                         {log.message}
                     </span>
                 </div>
@@ -417,8 +427,14 @@ export default function MatrixPage() {
         </div>
 
         {/* Command Input */}
-        <div className="mt-4 pt-4 border-t border-white/10 bg-black/40 backdrop-blur rounded-lg p-2 flex items-center gap-2 focus-within:ring-1 focus-within:ring-[var(--color-primary)] transition-all">
-            <span className="text-[var(--color-primary)] font-bold select-none">{`root@matrix:~$`}</span>
+        <div 
+          className="mt-4 pt-4 backdrop-blur rounded-lg p-2 flex items-center gap-2 transition-all"
+          style={{
+            borderTop: `1px solid ${colors.border}/10`,
+            background: `${colors.surface}/40`
+          }}
+        >
+            <span className="font-bold select-none" style={{ color: colors.primary }}>{`root@matrix:~$`}</span>
             <form onSubmit={handleCommand} className="flex-1">
                 <input 
                     ref={inputRef}
@@ -426,12 +442,19 @@ export default function MatrixPage() {
                     value={command}
                     onChange={(e) => setCommand(e.target.value)}
                     autoFocus
-                    className="w-full bg-transparent border-none outline-none text-white font-mono placeholder-gray-700"
+                    className="w-full bg-transparent border-none outline-none font-mono"
+                    style={{ color: colors.text }}
                     placeholder="Type 'help' for commands..."
                     autoComplete="off"
                 />
             </form>
-            <div className="hidden md:flex items-center gap-1 text-[10px] text-gray-600 border border-gray-800 rounded px-2 py-1 select-none">
+            <div 
+              className="hidden md:flex items-center gap-1 text-[10px] rounded px-2 py-1 select-none"
+              style={{
+                color: colors.textSecondary,
+                border: `1px solid ${colors.border}/20`
+              }}
+            >
                 <Command className="w-3 h-3" /> <span>EXEC</span>
             </div>
         </div>
