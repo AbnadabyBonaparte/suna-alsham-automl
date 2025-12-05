@@ -1,4 +1,5 @@
-FROM node:20-alpine
+# Build stage
+FROM node:20-alpine AS builder
 
 WORKDIR /app
 
@@ -6,7 +7,7 @@ WORKDIR /app
 COPY package*.json ./
 
 # Instala TODAS as dependências (incluindo dev) para o build
-RUN npm ci
+RUN npm ci --only=production=false
 
 # Copia o restante do código do frontend
 COPY . .
@@ -14,10 +15,29 @@ COPY . .
 # Build de produção
 RUN npm run build
 
-# Remove dependências de desenvolvimento após build
-RUN npm prune --production
+# Production stage
+FROM node:20-alpine AS runner
+
+WORKDIR /app
+
+ENV NODE_ENV=production
+
+# Create app user
+RUN addgroup --system --gid 1001 nodejs
+RUN adduser --system --uid 1001 nextjs
+
+# Copy built application
+COPY --from=builder /app/public ./public
+COPY --from=builder /app/package*.json ./
+COPY --from=builder /app/.next/standalone ./
+COPY --from=builder /app/.next/static ./.next/static
+
+# Install only production dependencies
+RUN npm ci --only=production && npm cache clean --force
+
+USER nextjs
 
 ENV PORT=3000
 EXPOSE 3000
 
-CMD ["npm", "run", "start"]
+CMD ["node", "server.js"]
