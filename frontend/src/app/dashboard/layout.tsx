@@ -30,7 +30,6 @@ function DashboardLayoutContent({
   const { isLoading: subLoading, isSubscribed, plan } = useSubscription();
   const router = useRouter();
   const searchParams = useSearchParams();
-  children,
 }: {
   children: React.ReactNode;
 }) {
