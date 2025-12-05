@@ -14,10 +14,6 @@ import { useState, useRef, useCallback, useEffect } from 'react';
 // TYPES
 // ═══════════════════════════════════════════════════════════════════════════════
 
-// Define o tipo para a API de Reconhecimento de Voz, que pode ter prefixos
-type SpeechRecognitionType = typeof window.SpeechRecognition | typeof window.webkitSpeechRecognition | undefined;
-const SpeechRecognition = (window.SpeechRecognition || window.webkitSpeechRecognition) as SpeechRecognitionType;
-
 export interface VoiceState {
   isListening: boolean;
   isSpeaking: boolean;
@@ -47,6 +43,58 @@ export interface UseOrionVoiceReturn {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
+// WEB SPEECH API TYPES
+// ═══════════════════════════════════════════════════════════════════════════════
+
+interface SpeechRecognitionEvent extends Event {
+  resultIndex: number;
+  results: SpeechRecognitionResultList;
+}
+
+interface SpeechRecognitionErrorEvent extends Event {
+  error: string;
+  message?: string;
+}
+
+interface SpeechRecognitionResult {
+  isFinal: boolean;
+  [index: number]: SpeechRecognitionAlternative;
+}
+
+interface SpeechRecognitionAlternative {
+  transcript: string;
+  confidence: number;
+}
+
+interface SpeechRecognitionResultList {
+  length: number;
+  item(index: number): SpeechRecognitionResult;
+  [index: number]: SpeechRecognitionResult;
+}
+
+interface SpeechRecognition extends EventTarget {
+  continuous: boolean;
+  interimResults: boolean;
+  lang: string;
+  maxAlternatives: number;
+  onstart: ((this: SpeechRecognition, ev: Event) => void) | null;
+  onend: ((this: SpeechRecognition, ev: Event) => void) | null;
+  onerror: ((this: SpeechRecognition, ev: SpeechRecognitionErrorEvent) => void) | null;
+  onresult: ((this: SpeechRecognition, ev: SpeechRecognitionEvent) => void) | null;
+  start(): void;
+  stop(): void;
+  abort(): void;
+}
+
+declare global {
+  interface Window {
+    SpeechRecognition: new () => SpeechRecognition;
+    webkitSpeechRecognition: new () => SpeechRecognition;
+    webkitAudioContext: typeof AudioContext;
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
 // HOOK PRINCIPAL
 // ═══════════════════════════════════════════════════════════════════════════════
 
@@ -66,8 +114,7 @@ export function useOrionVoice(
   });
 
   // ═══ REFS ═══
-  // Usamos o tipo global SpeechRecognition que foi definido acima
-  const recognitionRef = useRef<globalThis.SpeechRecognition | null>(null);
+  const recognitionRef = useRef<SpeechRecognition | null>(null);
   const synthRef = useRef<SpeechSynthesis | null>(null);
   const mediaStreamRef = useRef<MediaStream | null>(null);
   const onTranscriptCompleteRef = useRef(onTranscriptComplete);
@@ -85,7 +132,8 @@ export function useOrionVoice(
     if (typeof window === 'undefined') return;
 
     // Verificar suporte do navegador
-    const browserSupported = !!SpeechRecognition && !!window.speechSynthesis;
+    const SpeechRecognitionAPI = window.SpeechRecognition || window.webkitSpeechRecognition;
+    const browserSupported = !!SpeechRecognitionAPI && !!window.speechSynthesis;
 
     setState(prev => ({ ...prev, browserSupported }));
 
@@ -126,10 +174,8 @@ export function useOrionVoice(
       if (synthRef.current) {
         synthRef.current.cancel();
       }
-      // Garante que o stream do microfone seja parado
       if (mediaStreamRef.current) {
         mediaStreamRef.current.getTracks().forEach(track => track.stop());
-        mediaStreamRef.current = null;
       }
     };
   }, []);
@@ -139,7 +185,7 @@ export function useOrionVoice(
   // ═══════════════════════════════════════════════════════════════════════════════
 
   const clearError = useCallback(() => {
-    setState(prev => ({ ...prev, error: null, micPermissionDenied: false }));
+    setState(prev => ({ ...prev, error: null }));
   }, []);
 
   // ═══════════════════════════════════════════════════════════════════════════════
@@ -148,7 +194,7 @@ export function useOrionVoice(
 
   const speak = useCallback((text: string) => {
     if (!synthRef.current || !state.voiceEnabled) {
-      // Fallback silencioso
+      console.log('[ORION Voice] TTS desabilitado ou indisponível');
       return;
     }
 
@@ -199,15 +245,20 @@ export function useOrionVoice(
         setState(prev => ({ ...prev, isSpeaking: false }));
       };
 
-      utterance.onerror = () => {
-        // Fallback silencioso - não mostrar erro para TTS
-        setState(prev => ({ ...prev, isSpeaking: false }));
+      utterance.onerror = (event) => {
+        console.error('[ORION Voice] TTS error:', event);
+        setState(prev => ({
+          ...prev,
+          isSpeaking: false,
+          // Fallback silencioso - não mostrar erro para TTS
+        }));
       };
 
       synthRef.current.speak(utterance);
     } catch (error) {
-      // Fallback silencioso
+      console.error('[ORION Voice] TTS exception:', error);
       setState(prev => ({ ...prev, isSpeaking: false }));
+      // Fallback silencioso
     }
   }, [state.voiceEnabled]);
 
@@ -240,21 +291,31 @@ export function useOrionVoice(
   // ═══════════════════════════════════════════════════════════════════════════════
 
   const startListening = useCallback(async () => {
+    console.log('[ORION Voice] Iniciando reconhecimento...');
+
+    // Verificar suporte
     if (!state.browserSupported) {
-      // O erro já foi setado na inicialização
+      setState(prev => ({
+        ...prev,
+        error: {
+          type: 'browser-unsupported',
+          message: 'Seu navegador não suporta reconhecimento de voz. Use Chrome, Edge ou Safari.',
+          recoverable: false,
+        },
+      }));
       return;
     }
+
+    const SpeechRecognitionAPI = window.SpeechRecognition || window.webkitSpeechRecognition;
 
     // Parar TTS se estiver falando
     if (synthRef.current) {
       synthRef.current.cancel();
     }
 
-    // Limpar transcrição anterior
-    setState(prev => ({ ...prev, currentTranscript: '', error: null, micPermissionDenied: false }));
-
     try {
-      // 1. Pedir permissão de microfone e obter stream
+      // Pedir permissão de microfone
+      console.log('[ORION Voice] Solicitando permissão de microfone...');
       const stream = await navigator.mediaDevices.getUserMedia({
         audio: {
           echoCancellation: true,
@@ -262,165 +323,187 @@ export function useOrionVoice(
           autoGainControl: true,
         },
       });
+
+      console.log('[ORION Voice] Permissão concedida!');
       mediaStreamRef.current = stream;
 
-      // 2. Inicializar Speech Recognition
-      if (!SpeechRecognition) {
-        // Não deveria acontecer se browserSupported for true, mas é um bom fallback
-        throw new Error('Speech Recognition API not available.');
-      }
-
-      const recognition = new SpeechRecognition();
-      recognition.continuous = false; // Não contínuo, para uma única frase
-      recognition.interimResults = true; // Resultados parciais para feedback visual
+      // Criar instância do reconhecimento
+      const recognition = new SpeechRecognitionAPI();
       recognition.lang = 'pt-BR';
-      recognitionRef.current = recognition;
+      recognition.continuous = false;
+      recognition.interimResults = true;
+      recognition.maxAlternatives = 3;
 
-      // 3. Configurar Eventos
       recognition.onstart = () => {
-        setState(prev => ({ ...prev, isListening: true }));
+        console.log('[ORION Voice] Reconhecimento iniciado');
+        setState(prev => ({
+          ...prev,
+          isListening: true,
+          micPermissionDenied: false,
+          error: null,
+          currentTranscript: '',
+        }));
       };
 
-      recognition.onresult = (event) => {
-        let interimTranscript = '';
+      recognition.onresult = (event: SpeechRecognitionEvent) => {
         let finalTranscript = '';
+        let interimTranscript = '';
 
         for (let i = event.resultIndex; i < event.results.length; i++) {
-          const transcript = event.results[i][0].transcript;
-          if (event.results[i].isFinal) {
+          const result = event.results[i];
+          const transcript = result[0].transcript;
+
+          if (result.isFinal) {
             finalTranscript += transcript;
+            console.log('[ORION Voice] Final:', transcript, 'Confiança:', result[0].confidence);
           } else {
             interimTranscript += transcript;
           }
         }
 
-        setState(prev => ({
-          ...prev,
-          currentTranscript: finalTranscript || interimTranscript,
-        }));
+        const currentText = finalTranscript || interimTranscript;
+        setState(prev => ({ ...prev, currentTranscript: currentText }));
 
-        if (finalTranscript) {
-          recognition.stop(); // Parar após resultado final
-        }
-      };
-
-      recognition.onerror = (event) => {
-        console.error('[ORION Voice] Recognition Error:', event.error);
-        setState(prev => ({ ...prev, isListening: false }));
-
-        if (event.error === 'no-speech' || event.error === 'audio-capture') {
-          // Erros recuperáveis
-          setState(prev => ({
-            ...prev,
-            error: {
-              type: 'mic-not-found',
-              message: 'Não detectei sua voz. Tente novamente.',
-              recoverable: true,
-            },
-          }));
-        } else if (event.error === 'network') {
-          setState(prev => ({
-            ...prev,
-            error: {
-              type: 'network',
-              message: 'Problema de conexão. Verifique sua internet.',
-              recoverable: true,
-            },
-          }));
-        } else {
-          setState(prev => ({
-            ...prev,
-            error: {
-              type: 'unknown',
-              message: `Erro desconhecido: ${event.error}`,
-              recoverable: true,
-            },
-          }));
+        if (finalTranscript && onTranscriptCompleteRef.current) {
+          setTimeout(() => {
+            onTranscriptCompleteRef.current?.(finalTranscript.trim());
+            setState(prev => ({ ...prev, currentTranscript: '' }));
+          }, 300);
         }
       };
 
       recognition.onend = () => {
+        console.log('[ORION Voice] Reconhecimento finalizado');
         setState(prev => ({ ...prev, isListening: false }));
-        const finalTranscript = recognitionRef.current?.currentTranscript || state.currentTranscript;
 
-        // Se houver transcrição final, chamar o callback
-        if (finalTranscript && onTranscriptCompleteRef.current) {
-          onTranscriptCompleteRef.current(finalTranscript);
-        }
-        
-        // Limpar o stream do microfone após o uso
+        // Limpar stream
         if (mediaStreamRef.current) {
-            mediaStreamRef.current.getTracks().forEach(track => track.stop());
-            mediaStreamRef.current = null;
+          mediaStreamRef.current.getTracks().forEach(track => track.stop());
+          mediaStreamRef.current = null;
         }
       };
 
-      // 4. Iniciar
-      recognition.start();
-      setState(prev => ({ ...prev, isListening: true }));
+      recognition.onerror = (event: SpeechRecognitionErrorEvent) => {
+        console.error('[ORION Voice] Erro:', event.error);
 
-    } catch (error) {
-      console.error('[ORION Voice] Microfone Error:', error);
-      setState(prev => ({ ...prev, isListening: false }));
+        let error: VoiceError | null = null;
 
-      if (error instanceof DOMException && error.name === 'NotAllowedError') {
-        // Permissão negada pelo usuário
+        switch (event.error) {
+          case 'not-allowed':
+          case 'permission-denied':
+            error = {
+              type: 'mic-denied',
+              message: 'Permissão de microfone negada. Clique no cadeado na barra de endereços para permitir.',
+              recoverable: true,
+            };
+            setState(prev => ({ ...prev, micPermissionDenied: true }));
+            break;
+          case 'no-speech':
+            // Não é um erro real, usuário só não falou
+            console.log('[ORION Voice] Nenhuma fala detectada');
+            break;
+          case 'network':
+            error = {
+              type: 'network',
+              message: 'Erro de rede. Verifique sua conexão com a internet.',
+              recoverable: true,
+            };
+            break;
+          case 'aborted':
+            // Usuário cancelou, não mostrar erro
+            break;
+          default:
+            error = {
+              type: 'unknown',
+              message: `Erro no reconhecimento: ${event.error}`,
+              recoverable: true,
+            };
+        }
+
         setState(prev => ({
           ...prev,
-          micPermissionDenied: true,
-          error: {
-            type: 'mic-denied',
-            message: 'Permissão de microfone negada. Por favor, habilite-a nas configurações do seu navegador.',
-            recoverable: false,
-          },
+          isListening: false,
+          error: error,
         }));
-      } else {
-        // Outros erros de microfone
-        setState(prev => ({
-          ...prev,
-          error: {
-            type: 'mic-not-found',
-            message: 'Não foi possível acessar o microfone. Verifique se ele está conectado.',
-            recoverable: true,
-          },
-        }));
-      }
-      
-      // Limpar o stream em caso de erro
-      if (mediaStreamRef.current) {
+
+        // Limpar stream
+        if (mediaStreamRef.current) {
           mediaStreamRef.current.getTracks().forEach(track => track.stop());
           mediaStreamRef.current = null;
+        }
+      };
+
+      recognitionRef.current = recognition;
+      recognition.start();
+
+    } catch (error: unknown) {
+      console.error('[ORION Voice] Erro ao acessar microfone:', error);
+
+      const err = error as Error & { name?: string };
+      let voiceError: VoiceError;
+
+      if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
+        voiceError = {
+          type: 'mic-denied',
+          message: 'Acesso ao microfone bloqueado. Clique no cadeado na barra de endereços para permitir.',
+          recoverable: true,
+        };
+        setState(prev => ({ ...prev, micPermissionDenied: true }));
+      } else if (err.name === 'NotFoundError') {
+        voiceError = {
+          type: 'mic-not-found',
+          message: 'Nenhum microfone encontrado. Conecte um microfone e tente novamente.',
+          recoverable: true,
+        };
+      } else {
+        voiceError = {
+          type: 'unknown',
+          message: err.message || 'Erro desconhecido ao acessar microfone.',
+          recoverable: true,
+        };
+      }
+
+      setState(prev => ({
+        ...prev,
+        isListening: false,
+        error: voiceError,
+      }));
+
+      // Limpar stream se existir
+      if (mediaStreamRef.current) {
+        mediaStreamRef.current.getTracks().forEach(track => track.stop());
+        mediaStreamRef.current = null;
       }
     }
-  }, [state.browserSupported, state.currentTranscript]);
+  }, [state.browserSupported]);
 
   // ═══════════════════════════════════════════════════════════════════════════════
-  // PARAR RECONHECIMENTO DE VOZ
+  // PARAR RECONHECIMENTO
   // ═══════════════════════════════════════════════════════════════════════════════
 
   const stopListening = useCallback(() => {
+    console.log('[ORION Voice] Parando reconhecimento...');
+
     if (recognitionRef.current) {
       recognitionRef.current.stop();
-      setState(prev => ({ ...prev, isListening: false }));
+      recognitionRef.current = null;
     }
-    // Garante que o stream do microfone seja parado
+
     if (mediaStreamRef.current) {
-        mediaStreamRef.current.getTracks().forEach(track => track.stop());
-        mediaStreamRef.current = null;
+      mediaStreamRef.current.getTracks().forEach(track => track.stop());
+      mediaStreamRef.current = null;
     }
+
+    setState(prev => ({ ...prev, isListening: false }));
   }, []);
 
   // ═══════════════════════════════════════════════════════════════════════════════
-  // GET MEDIA STREAM (Para o Visualizador de Áudio)
+  // GET MEDIA STREAM (para visualização de áudio)
   // ═══════════════════════════════════════════════════════════════════════════════
 
   const getMediaStream = useCallback(() => {
     return mediaStreamRef.current;
   }, []);
-
-  // ═══════════════════════════════════════════════════════════════════════════════
-  // RETURN
-  // ═══════════════════════════════════════════════════════════════════════════════
 
   return {
     state,

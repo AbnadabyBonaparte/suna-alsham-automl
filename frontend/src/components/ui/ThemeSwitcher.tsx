@@ -74,20 +74,20 @@ export function ThemeSwitcher() {
 
   return (
     <>
-     {/* Floating Button - ORBE DE ENERGIA */}
+     {/* Floating Button - ORBE DE ENERGIA - Reposicionado para não conflitar com ORION */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="fixed bottom-6 right-6 w-16 h-16 rounded-full flex items-center justify-center transition-all duration-500 hover:scale-110 z-[100] group"
+        className="fixed bottom-6 left-6 w-14 h-14 rounded-full flex items-center justify-center transition-all duration-500 hover:scale-110 z-[100] group"
         style={{
-          background: `rgba(0,0,0,0.6)`,
-          backdropFilter: 'blur(12px)',
+          background: `rgba(0,0,0,0.8)`,
+          backdropFilter: 'blur(16px)',
           border: '1px solid var(--color-primary)',
-          boxShadow: `0 0 20px var(--color-glow)`,
+          boxShadow: `0 0 15px var(--color-glow), inset 0 0 20px rgba(0,0,0,0.5)`,
         }}
         title="Alterar Realidade (Alt+Shift+T)"
       >
-        <div className="absolute inset-0 rounded-full opacity-30 group-hover:opacity-50 transition-opacity bg-[var(--color-primary)] blur-md" />
-        <Palette className="w-7 h-7 text-[var(--color-primary)] relative z-10" />
+        <div className="absolute inset-0 rounded-full opacity-20 group-hover:opacity-40 transition-opacity bg-[var(--color-primary)] blur-md" />
+        <Palette className="w-6 h-6 text-[var(--color-primary)] relative z-10" />
       </button>
 
       {/* Modal Overlay - CINEMATOGRÁFICO */}

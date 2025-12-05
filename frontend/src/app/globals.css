@@ -299,3 +299,49 @@ body {
   background-size: 100% 2px, 3px 100%;
   pointer-events: none;
 }
+
+/* ═══════════════════════════════════════════════════════════════
+   FONTE ORBITRON (Usado em títulos)
+   ═══════════════════════════════════════════════════════════════ */
+.orbitron {
+  font-family: var(--font-orbitron), 'Orbitron', monospace;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   ANIMAÇÕES FADE IN
+   ═══════════════════════════════════════════════════════════════ */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fadeIn {
+  animation: fadeIn 0.4s ease-out forwards;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   ORION J.A.R.V.I.S. GLOBAL ANIMATIONS
+   ═══════════════════════════════════════════════════════════════ */
+@keyframes orion-breathe {
+  0%, 100% { 
+    transform: scale(1);
+    box-shadow: 0 0 20px rgba(255, 215, 0, 0.3);
+  }
+  50% { 
+    transform: scale(1.02);
+    box-shadow: 0 0 40px rgba(255, 215, 0, 0.5);
+  }
+}
+
+.animate-orion-breathe {
+  animation: orion-breathe 4s ease-in-out infinite;
+}
+
+@keyframes orion-ring-spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.animate-orion-ring-spin {
+  animation: orion-ring-spin 12s linear infinite;
+}
