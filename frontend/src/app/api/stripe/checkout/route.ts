@@ -11,12 +11,19 @@
 import { NextResponse } from 'next/server';
 import Stripe from 'stripe';
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: '2023-10-16',
-});
-
 export async function POST(req: Request) {
   const { priceId, userId } = await req.json();
+
+  // Verificar se as chaves estão configuradas
+  const stripeSecretKey = process.env.STRIPE_SECRET_KEY;
+  if (!stripeSecretKey) {
+    console.error('❌ STRIPE_SECRET_KEY não configurada');
+    return new NextResponse('Sistema não configurado', { status: 500 });
+  }
+
+  const stripe = new Stripe(stripeSecretKey, {
+    apiVersion: '2023-10-16',
+  });
 
   try {
     const session = await stripe.checkout.sessions.create({

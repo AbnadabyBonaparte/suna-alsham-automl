@@ -147,19 +147,59 @@ oscillator.stop(context.currentTime + 0.1);
 # 2. Instalar dependências
 npm install
 
-# 3. Criar pasta de sons
+# 3. Configurar variáveis de ambiente (OBRIGATÓRIO)
+cp .env.example .env.local
+# Editar .env.local com suas chaves reais
+
+# 4. Criar pasta de sons
 mkdir public/sounds
 
-# 4. (Opcional) Adicionar arquivos de som
+# 5. (Opcional) Adicionar arquivos de som
 # Ou comentar temporariamente no theme.ts
 
-# 5. Rodar dev
+# 6. Rodar dev
 npm run dev
 
-# 6. Abrir http://localhost:3000
-# 7. Clicar no botão de tema (canto inferior direito)
-# 8. Ver a MÁGICA! ✨
+# 7. Abrir http://localhost:3000
+# 8. Clicar no botão de tema (canto inferior direito)
+# 9. Ver a MÁGICA! ✨
 ```
+
+## 🔑 VARIÁVEIS DE AMBIENTE OBRIGATÓRIAS:
+
+### Para Stripe (Pagamentos):
+```bash
+STRIPE_SECRET_KEY=sk_test_...          # Chave secreta do Stripe
+STRIPE_WEBHOOK_SECRET=whsec_...       # Secret do webhook do Stripe
+```
+
+### Para Supabase (Banco de Dados):
+```bash
+NEXT_PUBLIC_SUPABASE_URL=https://seu-projeto.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=sua-chave-anonima
+SUPABASE_SERVICE_ROLE_KEY=sua-chave-service-role
+```
+
+### Para IA (Opcional):
+```bash
+OPENAI_API_KEY=sk-...                 # OpenAI API Key
+ANTHROPIC_API_KEY=sk-ant-...          # Anthropic API Key
+```
+
+### Para GitHub (Integrações):
+```bash
+GITHUB_TOKEN=ghp_...                  # GitHub Personal Access Token
+```
+
+## ⚠️ ERRO NO DEPLOY VERCEL?
+
+Se o build falhar com "Neither apiKey nor config.authenticator provided":
+
+1. **No Vercel Dashboard** → Project Settings → Environment Variables
+2. **Adicionar TODAS as variáveis acima**
+3. **Redeploy** o projeto
+
+Sem essas variáveis, o Stripe/Supabase não funcionam!
 
 ---
 
