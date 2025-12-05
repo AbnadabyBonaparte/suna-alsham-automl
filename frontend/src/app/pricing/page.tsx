@@ -71,7 +71,7 @@ const PLANS = [
         price: 9900,
         priceId: 'price_enterprise', // Substituir pelo ID real do Stripe
         description: 'Para operações de escala global',
-        badge: 'RECOMENDADO',
+        badge: 'MAIS VENDIDO',
         color: 'from-yellow-400 to-orange-500',
         borderColor: 'border-yellow-500/50',
         glowColor: 'rgba(250, 204, 21, 0.5)',

@@ -1,52 +1,64 @@
 /**
  * ═══════════════════════════════════════════════════════════════
- * ALSHAM QUANTUM - STRIPE CHECKOUT API
+ * ALSHAM QUANTUM - STRIPE CHECKOUT API (SEGURO)
  * ═══════════════════════════════════════════════════════════════
  * 📁 PATH: frontend/src/app/api/stripe/checkout/route.ts
- * 💳 Cria sessão de checkout Stripe
+ * 💳 Cria sessão de checkout Stripe COM SESSION_ID no redirect
+ * ✅ Segurança: Acesso só liberado após webhook confirmar
  * ═══════════════════════════════════════════════════════════════
  */
 
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import Stripe from 'stripe';
 
-// Preços dos planos (em centavos - BRL)
-const PRICE_CONFIG = {
-    starter: {
-        monthly: 99000,  // R$990
-        yearly: 990000,  // R$9.900 (10x)
-        name: 'ALSHAM QUANTUM - Starter',
-    },
-    pro: {
-        monthly: 490000,  // R$4.900
-        yearly: 4900000,  // R$49.000 (10x)
-        name: 'ALSHAM QUANTUM - Pro',
-    },
-    enterprise: {
-        monthly: 990000,   // R$9.900
-        yearly: 9900000,   // R$99.000 (10x)
-        name: 'ALSHAM QUANTUM - Enterprise',
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
+  apiVersion: '2023-10-16',
+});
+
+export async function POST(req: Request) {
+  const { priceId, userId } = await req.json();
+
+  try {
+    const session = await stripe.checkout.sessions.create({
+      payment_method_types: ['card'],
+      line_items: [
+        {
+          price: priceId, // Stripe Price ID for the Enterprise plan
+          quantity: 1,
+        },
+      ],
+      mode: 'subscription',
+      success_url: `${req.headers.get('origin')}/dashboard?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${req.headers.get('origin')}/pricing`,
+      client_reference_id: userId, // Pass user ID to webhook
+      metadata: { plan: 'enterprise' }, // Pass plan info to webhook
+    });
+
+    return NextResponse.json({ url: session.url });
+  } catch (error: any) {
+    console.error('Error creating checkout session:', error);
+    return new NextResponse(`Error creating checkout session: ${error.message}`, { status: 500 });
+  }
+}
+
+// ========================================
+// GET: Verificar status da sessão
+// ========================================
+export async function GET(request: Request) {
+    const sessionId = request.nextUrl.searchParams.get('session_id');
+
+    if (!sessionId) {
+        return NextResponse.json(
+            { error: 'session_id é obrigatório' },
+            { status: 400 }
+        );
     }
-};
 
-export async function POST(request: NextRequest) {
     try {
-        const { planId, billingCycle = 'monthly' } = await request.json();
-
-        // Validar plano
-        if (!planId || !['starter', 'pro', 'enterprise'].includes(planId)) {
-            return NextResponse.json(
-                { error: 'Plano inválido' },
-                { status: 400 }
-            );
-        }
-
-        // Verificar chave do Stripe
         const stripeSecretKey = process.env.STRIPE_SECRET_KEY;
         if (!stripeSecretKey) {
-            console.error('STRIPE_SECRET_KEY não configurada');
             return NextResponse.json(
-                { error: 'Configuração de pagamento não disponível. Entre em contato com o suporte.' },
+                { error: 'Sistema não configurado' },
                 { status: 500 }
             );
         }
@@ -55,50 +67,20 @@ export async function POST(request: NextRequest) {
             apiVersion: '2025-04-30.basil',
         });
 
-        const plan = PRICE_CONFIG[planId as keyof typeof PRICE_CONFIG];
-        const price = billingCycle === 'yearly' ? plan.yearly : plan.monthly;
+        const session = await stripe.checkout.sessions.retrieve(sessionId);
 
-        // Criar sessão de checkout
-        const session = await stripe.checkout.sessions.create({
-            payment_method_types: ['card'],
-            line_items: [
-                {
-                    price_data: {
-                        currency: 'brl',
-                        product_data: {
-                            name: plan.name,
-                            description: `Plano ${planId.toUpperCase()} - ${billingCycle === 'monthly' ? 'Mensal' : 'Anual'}`,
-                            images: ['https://quantum.alshamglobal.com.br/og-image.png'],
-                        },
-                        unit_amount: price,
-                        recurring: {
-                            interval: billingCycle === 'monthly' ? 'month' : 'year',
-                        },
-                    },
-                    quantity: 1,
-                },
-            ],
-            mode: 'subscription',
-            success_url: `${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/dashboard?success=true&plan=${planId}`,
-            cancel_url: `${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/pricing?canceled=true`,
-            metadata: {
-                planId,
-                billingCycle,
-            },
-            allow_promotion_codes: true,
-            billing_address_collection: 'required',
-            customer_creation: 'always',
-            locale: 'pt-BR',
+        return NextResponse.json({
+            status: session.payment_status,
+            customer_email: session.customer_details?.email,
+            plan: session.metadata?.planId,
+            paid: session.payment_status === 'paid',
         });
 
-        return NextResponse.json({ url: session.url });
-
     } catch (error: any) {
-        console.error('Stripe checkout error:', error);
+        console.error('❌ Error retrieving session:', error);
         return NextResponse.json(
-            { error: error.message || 'Erro ao criar sessão de pagamento' },
-            { status: 500 }
+            { error: 'Sessão não encontrada' },
+            { status: 404 }
         );
     }
 }
-
