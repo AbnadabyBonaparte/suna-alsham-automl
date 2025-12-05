@@ -8,7 +8,7 @@
  */
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { useSubscription } from '@/hooks/useSubscription';
@@ -18,7 +18,18 @@ import { ToastContainer } from '@/components/ui/ToastContainer';
 import { PlanBadge, PlanBadgeLarge } from '@/components/ui/PlanBadge';
 import { Menu, Sparkles, Loader2, CheckCircle } from 'lucide-react';
 
-export default function DashboardLayout({
+function DashboardLayoutContent({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+
+  const { user, loading: authLoading } = useAuth();
+  const { isLoading: subLoading, isSubscribed, plan } = useSubscription();
+  const router = useRouter();
+  const searchParams = useSearchParams();
   children,
 }: {
   children: React.ReactNode;
@@ -217,5 +228,25 @@ export default function DashboardLayout({
       {/* ORION J.A.R.V.I.S. */}
       <OrionAssistant />
     </div>
+  );
+}
+
+// Wrapper com Suspense para useSearchParams
+export default function DashboardLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center bg-black">
+        <div className="text-center">
+          <Loader2 className="w-12 h-12 animate-spin text-[var(--color-primary)] mx-auto mb-4" />
+          <p className="text-gray-500 font-mono text-sm">Carregando dashboard...</p>
+        </div>
+      </div>
+    }>
+      <DashboardLayoutContent>{children}</DashboardLayoutContent>
+    </Suspense>
   );
 }
