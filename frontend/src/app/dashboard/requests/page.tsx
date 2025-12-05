@@ -257,7 +257,7 @@ export default function RequestsPage() {
                 <div className="bg-[#02040a] border border-white/10 rounded-3xl p-0 overflow-hidden flex flex-col h-full shadow-2xl">
                     <div className="p-6 border-b border-white/5 bg-white/5">
                         <h2 className="text-sm font-bold text-white uppercase tracking-widest flex items-center gap-2">
-                            <Cpu className="w-4 h-4 text-purple-400" />
+                            <Cpu className="w-4 h-4" style={{ color: 'var(--color-accent)' }} />
                             Active Queue
                         </h2>
                     </div>
@@ -277,11 +277,20 @@ export default function RequestsPage() {
                                     <div className="p-2 rounded-lg bg-white/5 text-gray-300 group-hover:text-[var(--color-primary)] transition-colors">
                                         <Box className="w-4 h-4" />
                                     </div>
-                                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded uppercase border ${
-                                        job.status === 'processing' ? 'text-yellow-400 border-yellow-400/30 bg-yellow-400/10' :
-                                        job.status === 'completed' ? 'text-green-400 border-green-400/30 bg-green-400/10' :
-                                        'text-blue-400 border-blue-400/30 bg-blue-400/10'
-                                    }`}>
+                                    <span 
+                                        className="text-[10px] font-bold px-2 py-0.5 rounded uppercase border"
+                                        style={{
+                                            color: job.status === 'processing' ? 'var(--color-warning)' :
+                                                   job.status === 'completed' ? 'var(--color-success)' :
+                                                   'var(--color-accent)',
+                                            borderColor: job.status === 'processing' ? 'var(--color-warning)/30' :
+                                                        job.status === 'completed' ? 'var(--color-success)/30' :
+                                                        'var(--color-accent)/30',
+                                            background: job.status === 'processing' ? 'var(--color-warning)/10' :
+                                                       job.status === 'completed' ? 'var(--color-success)/10' :
+                                                       'var(--color-accent)/10'
+                                        }}
+                                    >
                                         {job.status}
                                     </span>
                                 </div>
@@ -293,7 +302,7 @@ export default function RequestsPage() {
                                 {/* Progress Bar (Fake) */}
                                 {job.status === 'processing' && (
                                     <div className="mt-3 h-1 w-full bg-white/10 rounded-full overflow-hidden">
-                                        <div className="h-full bg-yellow-400 w-2/3 animate-pulse" />
+                                        <div className="h-full w-2/3 animate-pulse" style={{ background: 'var(--color-warning)' }} />
                                     </div>
                                 )}
                             </div>

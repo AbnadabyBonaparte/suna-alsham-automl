@@ -228,20 +228,20 @@ export default function OrionPage() {
             ctx.ellipse(cx, cy, 40, 140, -time * 0.3, 0, Math.PI * 2);
             ctx.stroke();
 
-            // Coroa/Ícone de autoridade
-            ctx.globalAlpha = 0.8;
-            ctx.fillStyle = colorHex;
-            const crownY = cy - 130;
+            // Anel de luz premium no topo (substitui a coroa)
+            ctx.globalAlpha = 0.6;
+            ctx.strokeStyle = colorHex;
+            ctx.lineWidth = 2;
+            const ringY = cy - 120;
             ctx.beginPath();
-            ctx.moveTo(cx - 30, crownY);
-            ctx.lineTo(cx - 25, crownY - 20);
-            ctx.lineTo(cx - 15, crownY - 5);
-            ctx.lineTo(cx, crownY - 25);
-            ctx.lineTo(cx + 15, crownY - 5);
-            ctx.lineTo(cx + 25, crownY - 20);
-            ctx.lineTo(cx + 30, crownY);
-            ctx.closePath();
-            ctx.fill();
+            ctx.ellipse(cx, ringY, 25, 8, 0, 0, Math.PI * 2);
+            ctx.stroke();
+            
+            // Glow interno do anel
+            ctx.globalAlpha = 0.3;
+            ctx.beginPath();
+            ctx.ellipse(cx, ringY, 20, 6, 0, 0, Math.PI * 2);
+            ctx.stroke();
 
             ctx.globalAlpha = 1;
 

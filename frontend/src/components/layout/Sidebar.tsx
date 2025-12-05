@@ -1,9 +1,9 @@
 /**
  * ═══════════════════════════════════════════════════════════════
- * ALSHAM QUANTUM - SIDEBAR GOD TIER (HOLOGRAPHIC GLASS)
+ * ALSHAM QUANTUM - SIDEBAR GOD TIER (THEME-AWARE)
  * ═══════════════════════════════════════════════════════════════
  * 📁 PATH: frontend/src/components/layout/Sidebar.tsx
- * 📋 Design de vidro fosco, indicadores laser e tipografia premium
+ * 📋 Design de vidro fosco com cores 100% submissas aos temas
  * ═══════════════════════════════════════════════════════════════
  */
 
@@ -24,7 +24,7 @@ interface SidebarProps {
   onClose?: () => void;
 }
 
-// Configuração dos Grupos de Menu - ORDEM FINAL
+// Configuração dos Grupos de Menu - SEM CORES FIXAS
 const MENU_GROUPS = [
   {
     title: "COMMAND CENTER",
@@ -32,24 +32,24 @@ const MENU_GROUPS = [
       { name: 'Cockpit', href: '/dashboard', icon: LayoutDashboard },
       { name: 'Requests', href: '/dashboard/requests', icon: Inbox, badge: 'NEW' },
       { name: 'Quantum Brain', href: '/dashboard/quantum-brain', icon: Brain, badge: 'LIVE', special: true },
-      { name: 'ORION Command', href: '/dashboard/orion', icon: Crown, color: 'text-yellow-500' },
+      { name: 'ORION Command', href: '/dashboard/orion', icon: Crown },
     ]
   },
   {
     title: "NEURAL LAYER",
     items: [
-      { name: 'Neural Nexus', href: '/dashboard/nexus', icon: Network, color: 'text-cyan-500' },
-      { name: 'The Matrix', href: '/dashboard/matrix', icon: Terminal, color: 'text-green-500' },
-      { name: 'Evolution Lab', href: '/dashboard/evolution', icon: Dna, badge: 'AI', color: 'text-purple-500' },
-      { name: 'The VOID', href: '/dashboard/void', icon: Eye, color: 'text-purple-400' },
+      { name: 'Neural Nexus', href: '/dashboard/nexus', icon: Network },
+      { name: 'The Matrix', href: '/dashboard/matrix', icon: Terminal },
+      { name: 'Evolution Lab', href: '/dashboard/evolution', icon: Dna, badge: 'AI' },
+      { name: 'The VOID', href: '/dashboard/void', icon: Eye },
     ]
   },
   {
     title: "SECURITY",
     items: [
-      { name: 'Containment', href: '/dashboard/containment', icon: Shield, color: 'text-red-500' },
-      { name: 'Network', href: '/dashboard/network', icon: Globe, color: 'text-blue-500' },
-      { name: 'Singularity', href: '/dashboard/singularity', icon: Star, special: true, color: 'text-yellow-400' },
+      { name: 'Containment', href: '/dashboard/containment', icon: Shield },
+      { name: 'Network', href: '/dashboard/network', icon: Globe },
+      { name: 'Singularity', href: '/dashboard/singularity', icon: Star, special: true },
     ]
   },
   {
@@ -93,49 +93,86 @@ export default function Sidebar({ isOpen = true, onClose }: SidebarProps) {
       />
 
       {/* Sidebar Container - GLASSMORPHISM PURO */}
-      <aside className={`
-        fixed top-0 left-0 z-50 h-screen w-72 
-        bg-[#050505]/85 backdrop-blur-2xl border-r border-white/5
-        transition-transform duration-500 cubic-bezier(0.4, 0, 0.2, 1)
-        shadow-[20px_0_50px_rgba(0,0,0,0.5)]
-        ${isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
-      `}>
+      <aside 
+        className={`
+          fixed top-0 left-0 z-50 h-screen w-72 
+          backdrop-blur-2xl border-r
+          transition-transform duration-500 cubic-bezier(0.4, 0, 0.2, 1)
+          ${isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
+        `}
+        style={{
+          background: 'var(--color-background)/85',
+          borderColor: 'var(--color-border)/10',
+          boxShadow: '20px 0 50px rgba(0,0,0,0.5)'
+        }}
+      >
         
         {/* 1. HEADER: LOGO HOLOGRÁFICO */}
-        <div className="h-24 flex items-center px-6 border-b border-white/5 relative overflow-hidden group">
+        <div 
+          className="h-24 flex items-center px-6 relative overflow-hidden group"
+          style={{ borderBottom: '1px solid var(--color-border)/10' }}
+        >
           {/* Efeito de Brilho no Header */}
-          <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-[var(--color-primary)] to-transparent opacity-50" />
+          <div 
+            className="absolute top-0 left-0 w-full h-1 opacity-50"
+            style={{ background: 'linear-gradient(to right, transparent, var(--color-primary), transparent)' }}
+          />
           
           <Link href="/dashboard" className="flex items-center gap-4 w-full">
             <div className="relative">
-              <div className="absolute -inset-2 bg-[var(--color-primary)] rounded-full blur-lg opacity-20 group-hover:opacity-40 transition-opacity duration-500" />
-              <div className="relative w-10 h-10 bg-gradient-to-br from-[var(--color-primary)]/20 to-transparent border border-[var(--color-primary)]/50 rounded-xl flex items-center justify-center">
-                <Sparkles className="w-5 h-5 text-[var(--color-primary)]" />
+              <div 
+                className="absolute -inset-2 rounded-full blur-lg opacity-20 group-hover:opacity-40 transition-opacity duration-500"
+                style={{ background: 'var(--color-primary)' }}
+              />
+              <div 
+                className="relative w-10 h-10 rounded-xl flex items-center justify-center"
+                style={{
+                  background: 'linear-gradient(to bottom right, var(--color-primary)/20, transparent)',
+                  border: '1px solid var(--color-primary)/50'
+                }}
+              >
+                <Sparkles className="w-5 h-5" style={{ color: 'var(--color-primary)' }} />
               </div>
             </div>
             
             <div className="flex flex-col">
-              <h1 className="text-lg font-bold text-white tracking-[0.15em] leading-none group-hover:text-[var(--color-primary)] transition-colors">
+              <h1 
+                className="text-lg font-bold tracking-[0.15em] leading-none transition-colors"
+                style={{ color: 'var(--color-text)' }}
+              >
                 ALSHAM
               </h1>
-              <span className="text-[10px] text-[var(--color-text-secondary)] font-mono mt-1 tracking-widest">
+              <span 
+                className="text-[10px] font-mono mt-1 tracking-widest"
+                style={{ color: 'var(--color-text-secondary)' }}
+              >
                 QUANTUM v13.3
               </span>
             </div>
           </Link>
 
-          <button onClick={onClose} className="lg:hidden text-gray-500 hover:text-white ml-auto">
+          <button 
+            onClick={onClose} 
+            className="lg:hidden ml-auto transition-colors"
+            style={{ color: 'var(--color-text-secondary)' }}
+          >
             <X className="w-6 h-6" />
           </button>
         </div>
 
         {/* 2. NAVIGATION: SCROLL AREA */}
-        <nav className="h-[calc(100vh-160px)] overflow-y-auto py-6 px-4 space-y-6 scrollbar-thin scrollbar-thumb-white/5 scrollbar-track-transparent hover:scrollbar-thumb-[var(--color-primary)]/20">
+        <nav className="h-[calc(100vh-160px)] overflow-y-auto py-6 px-4 space-y-6 scrollbar-thin scrollbar-thumb-white/5 scrollbar-track-transparent">
           {MENU_GROUPS.map((group, groupIdx) => (
             <div key={groupIdx}>
-              <h3 className="px-4 text-[10px] font-bold text-gray-500/70 uppercase tracking-[0.2em] mb-3 font-mono flex items-center gap-2">
+              <h3 
+                className="px-4 text-[10px] font-bold uppercase tracking-[0.2em] mb-3 font-mono flex items-center gap-2"
+                style={{ color: 'var(--color-text-secondary)/70' }}
+              >
                 {group.title}
-                <div className="h-[1px] flex-1 bg-gradient-to-r from-white/5 to-transparent" />
+                <div 
+                  className="h-[1px] flex-1"
+                  style={{ background: 'linear-gradient(to right, var(--color-border)/10, transparent)' }}
+                />
               </h3>
               
               <div className="space-y-1">
@@ -143,40 +180,53 @@ export default function Sidebar({ isOpen = true, onClose }: SidebarProps) {
                   const Icon = item.icon;
                   const isActive = pathname === item.href;
                   const isSpecial = item.special;
-                  const itemColor = item.color;
                   
                   return (
                     <Link
                       key={item.href}
                       href={item.href}
                       onClick={() => onClose && onClose()}
-                      className={`group relative flex items-center justify-between px-4 py-3 rounded-lg transition-all duration-300 overflow-hidden
-                        ${isActive 
-                          ? 'text-white' 
-                          : 'text-gray-400 hover:text-white hover:bg-white/[0.02]'
-                        }
-                      `}
+                      className="group relative flex items-center justify-between px-4 py-3 rounded-lg transition-all duration-300 overflow-hidden"
+                      style={{
+                        color: isActive ? 'var(--color-text)' : 'var(--color-text-secondary)',
+                      }}
                     >
                       {/* Active State: Laser Line Background */}
                       {isActive && (
-                        <div className="absolute inset-0 bg-gradient-to-r from-[var(--color-primary)]/10 to-transparent border-l-2 border-[var(--color-primary)]" />
+                        <div 
+                          className="absolute inset-0"
+                          style={{
+                            background: 'linear-gradient(to right, var(--color-primary)/15, transparent)',
+                            borderLeft: '2px solid var(--color-primary)'
+                          }}
+                        />
                       )}
 
                       {/* Active State: Glow Effect */}
                       {isActive && (
-                        <div className="absolute inset-0 shadow-[inset_10px_0_20px_-10px_rgba(var(--color-primary-rgb),0.3)]" />
+                        <div 
+                          className="absolute inset-0"
+                          style={{ boxShadow: 'inset 10px 0 20px -10px var(--color-glow)/30' }}
+                        />
                       )}
 
                       <div className="flex items-center gap-3 relative z-10">
-                        <Icon className={`w-5 h-5 transition-all duration-300 ${
-                          isActive 
-                            ? 'text-[var(--color-primary)] drop-shadow-[0_0_8px_rgba(var(--color-primary-rgb),0.5)]' 
-                            : isSpecial 
-                              ? 'text-[var(--color-accent)]'
-                              : itemColor || 'text-gray-500 group-hover:text-gray-300'
-                        }`} />
+                        <Icon 
+                          className="w-5 h-5 transition-all duration-300"
+                          style={{
+                            color: isActive 
+                              ? 'var(--color-primary)' 
+                              : isSpecial 
+                                ? 'var(--color-accent)'
+                                : 'var(--color-text-secondary)',
+                            filter: isActive ? 'drop-shadow(0 0 8px var(--color-glow)/50)' : 'none'
+                          }}
+                        />
                         
-                        <span className={`text-sm font-medium tracking-wide ${isSpecial ? 'text-[var(--color-accent)] font-bold' : ''}`}>
+                        <span 
+                          className={`text-sm font-medium tracking-wide ${isSpecial ? 'font-bold' : ''}`}
+                          style={{ color: isSpecial && !isActive ? 'var(--color-accent)' : 'inherit' }}
+                        >
                           {item.name}
                         </span>
                       </div>
@@ -184,19 +234,41 @@ export default function Sidebar({ isOpen = true, onClose }: SidebarProps) {
                       {/* Badges & Arrows */}
                       <div className="relative z-10 flex items-center">
                         {item.badge ? (
-                          <span className={`px-1.5 py-0.5 rounded text-[9px] font-bold border tracking-wider ${
-                            isActive 
-                              ? 'bg-[var(--color-primary)] text-black border-[var(--color-primary)]'
-                              : item.badge === 'LIVE' 
-                                ? 'bg-green-500/20 text-green-400 border-green-500/30 animate-pulse'
-                                : item.badge === 'AI'
-                                  ? 'bg-purple-500/20 text-purple-400 border-purple-500/30'
-                                  : 'bg-white/5 text-gray-400 border-white/10 group-hover:border-white/30'
-                          }`}>
+                          <span 
+                            className="px-1.5 py-0.5 rounded text-[9px] font-bold tracking-wider"
+                            style={{
+                              background: isActive 
+                                ? 'var(--color-primary)'
+                                : item.badge === 'LIVE' 
+                                  ? 'var(--color-success)/20'
+                                  : item.badge === 'AI'
+                                    ? 'var(--color-accent)/20'
+                                    : 'var(--color-surface)',
+                              color: isActive 
+                                ? 'var(--color-background)'
+                                : item.badge === 'LIVE'
+                                  ? 'var(--color-success)'
+                                  : item.badge === 'AI'
+                                    ? 'var(--color-accent)'
+                                    : 'var(--color-text-secondary)',
+                              border: `1px solid ${isActive 
+                                ? 'var(--color-primary)'
+                                : item.badge === 'LIVE'
+                                  ? 'var(--color-success)/30'
+                                  : item.badge === 'AI'
+                                    ? 'var(--color-accent)/30'
+                                    : 'var(--color-border)/20'}`
+                            }}
+                          >
                             {item.badge}
                           </span>
                         ) : (
-                          isActive && <ChevronRight className="w-4 h-4 text-[var(--color-primary)] animate-pulse" />
+                          isActive && (
+                            <ChevronRight 
+                              className="w-4 h-4 animate-pulse"
+                              style={{ color: 'var(--color-primary)' }}
+                            />
+                          )
                         )}
                       </div>
                     </Link>
@@ -208,15 +280,35 @@ export default function Sidebar({ isOpen = true, onClose }: SidebarProps) {
         </nav>
 
         {/* 3. FOOTER: SYSTEM STATUS WIDGET */}
-        <div className="absolute bottom-0 left-0 right-0 h-20 border-t border-white/5 bg-black/40 backdrop-blur-xl px-6 flex items-center justify-between group cursor-default">
+        <div 
+          className="absolute bottom-0 left-0 right-0 h-20 backdrop-blur-xl px-6 flex items-center justify-between group cursor-default"
+          style={{
+            borderTop: '1px solid var(--color-border)/10',
+            background: 'var(--color-background)/40'
+          }}
+        >
             <div className="flex items-center gap-3">
                 <div className="relative">
-                    <div className="w-2 h-2 rounded-full bg-[var(--color-success)] animate-pulse" />
-                    <div className="absolute inset-0 w-2 h-2 rounded-full bg-[var(--color-success)] blur-sm" />
+                    <div 
+                      className="w-2 h-2 rounded-full animate-pulse"
+                      style={{ background: 'var(--color-success)' }}
+                    />
+                    <div 
+                      className="absolute inset-0 w-2 h-2 rounded-full blur-sm"
+                      style={{ background: 'var(--color-success)' }}
+                    />
                 </div>
                 <div className="flex flex-col">
-                    <span className="text-[10px] text-gray-500 font-mono uppercase tracking-wider">System Status</span>
-                    <span className="text-xs font-bold text-[var(--color-primary)] tracking-wide flex items-center gap-1">
+                    <span 
+                      className="text-[10px] font-mono uppercase tracking-wider"
+                      style={{ color: 'var(--color-text-secondary)' }}
+                    >
+                      System Status
+                    </span>
+                    <span 
+                      className="text-xs font-bold tracking-wide flex items-center gap-1"
+                      style={{ color: 'var(--color-primary)' }}
+                    >
                         OPERATIONAL <Zap className="w-3 h-3" />
                     </span>
                 </div>
@@ -227,8 +319,11 @@ export default function Sidebar({ isOpen = true, onClose }: SidebarProps) {
                 {[40, 70, 45, 90, 60, 80, 50].map((h, i) => (
                     <div 
                         key={i} 
-                        className="w-1 bg-[var(--color-primary)] rounded-t-sm"
-                        style={{ height: `${h}%` }} 
+                        className="w-1 rounded-t-sm"
+                        style={{ 
+                          height: `${h}%`,
+                          background: 'var(--color-primary)'
+                        }} 
                     />
                 ))}
             </div>
