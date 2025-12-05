@@ -30,16 +30,6 @@ function DashboardLayoutContent({
   const { isLoading: subLoading, isSubscribed, plan } = useSubscription();
   const router = useRouter();
   const searchParams = useSearchParams();
-}: {
-  children: React.ReactNode;
-}) {
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [showSuccessModal, setShowSuccessModal] = useState(false);
-  
-  const { user, loading: authLoading } = useAuth();
-  const { isLoading: subLoading, isSubscribed, plan } = useSubscription();
-  const router = useRouter();
-  const searchParams = useSearchParams();
 
   // ========================================
   // VERIFICAR PARÂMETROS DE SUCESSO DO STRIPE
