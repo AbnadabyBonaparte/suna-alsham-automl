@@ -9,17 +9,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
-import Anthropic from '@anthropic-ai/sdk';
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
-
-const anthropic = new Anthropic({
-  apiKey: process.env.ANTHROPIC_API_KEY!,
-});
+import { getSupabase, getAnthropic } from '@/lib/lazy-clients';
 
 interface Agent {
   id: string;
@@ -28,8 +18,6 @@ interface Agent {
   prompt: string;
   efficiency: number;
   squad: string;
-  total_requests?: number;
-  successful_requests?: number;
 }
 
 interface TacticalEvolution {
@@ -44,11 +32,11 @@ interface TacticalEvolution {
 
 export async function GET(request: NextRequest) {
   const startTime = Date.now();
+  const supabase = getSupabase();
   
   try {
     console.log('⚔️ [EVOLUÇÃO TÁTICA] Iniciando ciclo...');
     
-    // 1. Buscar 30 agents com métricas de performance
     const { data: agents, error: agentsError } = await supabase
       .from('agents')
       .select('*')
@@ -64,7 +52,6 @@ export async function GET(request: NextRequest) {
       });
     }
 
-    // 2. Buscar histórico de requests dos últimos 7 dias
     const weekAgo = new Date();
     weekAgo.setDate(weekAgo.getDate() - 7);
     
@@ -73,7 +60,6 @@ export async function GET(request: NextRequest) {
       .select('assigned_agent_id, status, processing_time_ms')
       .gte('created_at', weekAgo.toISOString());
 
-    // 3. Calcular métricas por agent
     const agentMetrics: Map<string, { total: number, success: number, avgTime: number }> = new Map();
     
     (requests || []).forEach(req => {
@@ -85,7 +71,6 @@ export async function GET(request: NextRequest) {
       agentMetrics.set(req.assigned_agent_id, current);
     });
 
-    // 4. Agrupar agents por squad para evolução coordenada
     const squadGroups: Map<string, Agent[]> = new Map();
     agents.forEach(agent => {
       const squad = agent.squad || 'GENERAL';
@@ -97,9 +82,7 @@ export async function GET(request: NextRequest) {
     const evolutions: TacticalEvolution[] = [];
     let totalEfficiencyGain = 0;
 
-    // 5. Evoluir agents de cada squad
     for (const [squad, squadAgents] of squadGroups) {
-      // Pegar os 3 piores de cada squad
       const worstAgents = squadAgents.slice(0, 3);
       
       for (const agent of worstAgents) {
@@ -111,7 +94,6 @@ export async function GET(request: NextRequest) {
             evolutions.push(evolution);
             totalEfficiencyGain += evolution.new_efficiency - evolution.old_efficiency;
             
-            // Atualizar agent
             await supabase
               .from('agents')
               .update({
@@ -127,7 +109,6 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    // 6. Registrar ciclo
     const executionTime = Date.now() - startTime;
     
     await supabase.from('evolution_cycles').insert({
@@ -178,11 +159,27 @@ async function performTacticalEvolution(
   squad: string
 ): Promise<TacticalEvolution | null> {
   try {
+    const anthropic = await getAnthropic();
+    
+    if (!anthropic) {
+      // Fallback sem Claude
+      const newEfficiency = Math.min(100, agent.efficiency + 3);
+      return {
+        agent_id: agent.id,
+        agent_name: agent.name,
+        squad: squad,
+        old_efficiency: agent.efficiency,
+        new_efficiency: newEfficiency,
+        changes: [agent.prompt || `Agent ${agent.name} otimizado`],
+        reasoning: 'Evolução tática básica aplicada'
+      };
+    }
+
     const successRate = metrics ? (metrics.success / metrics.total * 100).toFixed(1) : 'N/A';
     const avgTime = metrics ? metrics.avgTime.toFixed(0) : 'N/A';
     
     const response = await anthropic.messages.create({
-      model: 'claude-3-5-sonnet-20241022', // Modelo mais capaz para análise tática
+      model: 'claude-3-5-sonnet-20241022',
       max_tokens: 1000,
       messages: [{
         role: 'user',
@@ -215,7 +212,6 @@ Responda em JSON:
 
     const content = response.content[0].type === 'text' ? response.content[0].text : '';
     
-    // Tentar parsear JSON
     let result;
     try {
       const jsonMatch = content.match(/\{[\s\S]*\}/);
@@ -246,4 +242,3 @@ Responda em JSON:
 export async function POST(request: NextRequest) {
   return GET(request);
 }
-

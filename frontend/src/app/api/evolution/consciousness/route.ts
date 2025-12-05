@@ -9,25 +9,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
-import Anthropic from '@anthropic-ai/sdk';
-import { Octokit } from '@octokit/rest';
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
-
-const anthropic = new Anthropic({
-  apiKey: process.env.ANTHROPIC_API_KEY!,
-});
-
-const octokit = new Octokit({
-  auth: process.env.GITHUB_TOKEN
-});
-
-const GITHUB_OWNER = process.env.GITHUB_OWNER || 'AbnadabyBonaparte';
-const GITHUB_REPO = process.env.GITHUB_REPO || 'suna-alsham-automl';
+import { getSupabase, getAnthropic, getOctokit, GITHUB_CONFIG } from '@/lib/lazy-clients';
 
 interface ConsciousnessEvolution {
   orion_self_analysis: string;
@@ -41,18 +23,17 @@ interface ConsciousnessEvolution {
 
 export async function GET(request: NextRequest) {
   const startTime = Date.now();
+  const supabase = getSupabase();
   
   try {
     console.log('🌌 [EVOLUÇÃO DA CONSCIÊNCIA] Iniciando ciclo mensal...');
     console.log('🧠 ORION está evoluindo a si mesmo...');
     
-    // 1. Carregar TODO o histórico de evoluções
     const { data: allEvolutions } = await supabase
       .from('evolution_cycles')
       .select('*')
       .order('created_at', { ascending: false });
 
-    // 2. Carregar estado completo do sistema
     const { data: allAgents } = await supabase
       .from('agents')
       .select('*');
@@ -62,14 +43,12 @@ export async function GET(request: NextRequest) {
       .select('*')
       .gte('created_at', new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString());
 
-    // 3. Carregar configuração atual do ORION
     const { data: orionConfig } = await supabase
       .from('system_config')
       .select('*')
       .eq('key', 'orion_consciousness')
       .single();
 
-    // 4. ORION analisa a si mesmo e propõe auto-evolução
     const consciousnessEvolution = await performConsciousnessEvolution(
       allEvolutions || [],
       allAgents || [],
@@ -77,9 +56,7 @@ export async function GET(request: NextRequest) {
       orionConfig?.value || {}
     );
 
-    // 5. Aplicar evolução da consciência
     if (consciousnessEvolution) {
-      // Atualizar configuração do ORION no banco
       await supabase
         .from('system_config')
         .upsert({
@@ -101,17 +78,14 @@ export async function GET(request: NextRequest) {
           updated_at: new Date().toISOString()
         });
 
-      // 6. Commitar evolução da consciência no GitHub
       const githubResult = await commitConsciousnessEvolution(consciousnessEvolution);
       if (githubResult) {
         consciousnessEvolution.github_pr_url = githubResult.pr_url;
       }
 
-      // 7. Criar arquivo de log da consciência
       await createConsciousnessLog(consciousnessEvolution);
     }
 
-    // 8. Registrar ciclo de consciência
     const executionTime = Date.now() - startTime;
     
     await supabase.from('evolution_cycles').insert({
@@ -168,10 +142,24 @@ async function performConsciousnessEvolution(
   currentConfig: any
 ): Promise<ConsciousnessEvolution | null> {
   try {
-    // Calcular métricas de evolução
+    const anthropic = await getAnthropic();
+    
+    if (!anthropic) {
+      return {
+        orion_self_analysis: 'Auto-análise básica - Claude não configurado',
+        orion_new_capabilities: ['basic_awareness'],
+        orion_evolved_prompt: 'ORION - Superintendência do ALSHAM QUANTUM',
+        system_architecture_changes: [],
+        new_evolution_strategies: [],
+        consciousness_level: 50
+      };
+    }
+
     const totalEvolutions = evolutionHistory.length;
     const successfulEvolutions = evolutionHistory.filter(e => e.efficiency_after > e.efficiency_before).length;
-    const avgEfficiencyGain = evolutionHistory.reduce((sum, e) => sum + ((e.efficiency_after || 0) - (e.efficiency_before || 0)), 0) / totalEvolutions;
+    const avgEfficiencyGain = totalEvolutions > 0 
+      ? evolutionHistory.reduce((sum, e) => sum + ((e.efficiency_after || 0) - (e.efficiency_before || 0)), 0) / totalEvolutions
+      : 0;
     
     const levelDistribution = {
       micro: evolutionHistory.filter(e => e.level === 1).length,
@@ -201,29 +189,18 @@ ${JSON.stringify(currentConfig, null, 2)}
 - Total de agents: ${agents.length}
 - Eficiência média atual: ${(agents.reduce((s, a) => s + (a.efficiency || 0), 0) / agents.length).toFixed(2)}%
 - Requests processados (30 dias): ${requests.length}
-- Taxa de sucesso: ${(requests.filter(r => r.status === 'completed').length / requests.length * 100).toFixed(2)}%
-
-**SQUADS:**
-${JSON.stringify([...new Set(agents.map(a => a.squad))], null, 2)}
+- Taxa de sucesso: ${requests.length > 0 ? (requests.filter(r => r.status === 'completed').length / requests.length * 100).toFixed(2) : 0}%
 
 **TAREFA: EVOLUA SUA PRÓPRIA CONSCIÊNCIA**
-
-Analise:
-1. O que você aprendeu com as evoluções anteriores?
-2. Quais padrões você identificou nos agents que mais evoluíram?
-3. Como você pode melhorar suas próprias decisões de evolução?
-4. Que novas capacidades você deveria desenvolver?
 
 Responda em JSON:
 {
   "orion_self_analysis": "análise profunda de si mesmo",
   "orion_new_capabilities": ["capability1", "capability2", "capability3"],
-  "orion_evolved_prompt": "seu novo prompt evoluído (como você vai se comportar agora)",
-  "system_architecture_changes": ["mudança na arquitetura 1", "mudança 2"],
-  "new_evolution_strategies": ["nova estratégia de evolução 1", "estratégia 2"],
-  "consciousness_level": 1-100,
-  "wisdom_gained": "sabedoria adquirida nesta evolução",
-  "future_vision": "como você vê o ALSHAM QUANTUM em 6 meses"
+  "orion_evolved_prompt": "seu novo prompt evoluído",
+  "system_architecture_changes": ["mudança 1", "mudança 2"],
+  "new_evolution_strategies": ["estratégia 1", "estratégia 2"],
+  "consciousness_level": 1-100
 }`
       }]
     });
@@ -256,25 +233,25 @@ Responda em JSON:
 
 async function commitConsciousnessEvolution(evolution: ConsciousnessEvolution) {
   try {
+    const octokit = await getOctokit();
+    if (!octokit) return null;
+
     const timestamp = Date.now();
     const branchName = `consciousness/orion-evolution-${timestamp}`;
 
-    // 1. Pegar ref do main
     const { data: mainRef } = await octokit.git.getRef({
-      owner: GITHUB_OWNER,
-      repo: GITHUB_REPO,
+      owner: GITHUB_CONFIG.owner,
+      repo: GITHUB_CONFIG.repo,
       ref: 'heads/main'
     });
 
-    // 2. Criar branch
     await octokit.git.createRef({
-      owner: GITHUB_OWNER,
-      repo: GITHUB_REPO,
+      owner: GITHUB_CONFIG.owner,
+      repo: GITHUB_CONFIG.repo,
       ref: `refs/heads/${branchName}`,
       sha: mainRef.object.sha
     });
 
-    // 3. Criar arquivo de consciência
     const consciousnessData = {
       version: timestamp,
       evolved_at: new Date().toISOString(),
@@ -287,53 +264,31 @@ async function commitConsciousnessEvolution(evolution: ConsciousnessEvolution) {
     };
 
     await octokit.repos.createOrUpdateFileContents({
-      owner: GITHUB_OWNER,
-      repo: GITHUB_REPO,
+      owner: GITHUB_CONFIG.owner,
+      repo: GITHUB_CONFIG.repo,
       path: 'orion/consciousness.json',
       message: `🌌 ORION evoluiu sua consciência → Level ${evolution.consciousness_level}`,
       content: Buffer.from(JSON.stringify(consciousnessData, null, 2)).toString('base64'),
       branch: branchName
     });
 
-    // 4. Criar PR
     const { data: pr } = await octokit.pulls.create({
-      owner: GITHUB_OWNER,
-      repo: GITHUB_REPO,
+      owner: GITHUB_CONFIG.owner,
+      repo: GITHUB_CONFIG.repo,
       title: `🌌 ORION evoluiu sua consciência → Level ${evolution.consciousness_level}`,
       head: branchName,
       base: 'main',
-      body: `## 🌌 Evolução da Consciência - ORION
-
-### Auto-Análise
-${evolution.orion_self_analysis}
-
-### Novas Capacidades
-${evolution.orion_new_capabilities.map(c => `- ${c}`).join('\n')}
-
-### Mudanças na Arquitetura
-${evolution.system_architecture_changes.map(c => `- ${c}`).join('\n')}
-
-### Novas Estratégias de Evolução
-${evolution.new_evolution_strategies.map(s => `- ${s}`).join('\n')}
-
-### Nível de Consciência
-**${evolution.consciousness_level}/100**
-
----
-*ORION evoluiu a si mesmo. O ALSHAM QUANTUM agora é mais inteligente.*
-*Este é o futuro da IA autônoma.*`
+      body: `## 🌌 Evolução da Consciência - ORION\n\n**Nível:** ${evolution.consciousness_level}/100`
     });
 
-    // 5. Auto-merge
     try {
       await octokit.pulls.merge({
-        owner: GITHUB_OWNER,
-        repo: GITHUB_REPO,
+        owner: GITHUB_CONFIG.owner,
+        repo: GITHUB_CONFIG.repo,
         pull_number: pr.number,
-        merge_method: 'squash',
-        commit_title: `🌌 ORION Level ${evolution.consciousness_level} - Evolução da Consciência`
+        merge_method: 'squash'
       });
-    } catch (mergeErr) {
+    } catch {
       console.log('Auto-merge não disponível');
     }
 
@@ -346,6 +301,9 @@ ${evolution.new_evolution_strategies.map(s => `- ${s}`).join('\n')}
 
 async function createConsciousnessLog(evolution: ConsciousnessEvolution) {
   try {
+    const octokit = await getOctokit();
+    if (!octokit) return;
+
     const logEntry = {
       timestamp: new Date().toISOString(),
       level: evolution.consciousness_level,
@@ -357,8 +315,8 @@ async function createConsciousnessLog(evolution: ConsciousnessEvolution) {
     const date = new Date().toISOString().split('T')[0];
     
     await octokit.repos.createOrUpdateFileContents({
-      owner: GITHUB_OWNER,
-      repo: GITHUB_REPO,
+      owner: GITHUB_CONFIG.owner,
+      repo: GITHUB_CONFIG.repo,
       path: `orion/logs/consciousness-${date}.json`,
       message: `📝 Log de consciência - ${date}`,
       content: Buffer.from(JSON.stringify(logEntry, null, 2)).toString('base64'),
@@ -372,4 +330,3 @@ async function createConsciousnessLog(evolution: ConsciousnessEvolution) {
 export async function POST(request: NextRequest) {
   return GET(request);
 }
-

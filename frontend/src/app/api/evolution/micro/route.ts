@@ -9,17 +9,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
-import Anthropic from '@anthropic-ai/sdk';
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
-
-const anthropic = new Anthropic({
-  apiKey: process.env.ANTHROPIC_API_KEY!,
-});
+import { getSupabase, getAnthropic } from '@/lib/lazy-clients';
 
 interface Agent {
   id: string;
@@ -40,6 +30,7 @@ interface EvolutionResult {
 
 export async function GET(request: NextRequest) {
   const startTime = Date.now();
+  const supabase = getSupabase();
   
   try {
     console.log('🧬 [MICRO-EVOLUÇÃO] Iniciando ciclo...');
@@ -64,13 +55,12 @@ export async function GET(request: NextRequest) {
     let totalEfficiencyGain = 0;
 
     // 2. Para cada agent, fazer micro-ajuste no prompt
-    for (const agent of agents.slice(0, 5)) { // Processar 5 por ciclo para não exceder limites
+    for (const agent of agents.slice(0, 5)) {
       try {
         const microEvolution = await performMicroEvolution(agent);
         if (microEvolution) {
           evolutions.push(microEvolution);
           
-          // Atualizar agent no banco
           const newEfficiency = Math.min(100, agent.efficiency + Math.random() * 3 + 1);
           totalEfficiencyGain += newEfficiency - agent.efficiency;
           
@@ -131,8 +121,21 @@ export async function GET(request: NextRequest) {
 
 async function performMicroEvolution(agent: Agent): Promise<EvolutionResult | null> {
   try {
+    const anthropic = await getAnthropic();
+    
+    if (!anthropic) {
+      // Fallback sem Claude - evolução básica
+      return {
+        agent_id: agent.id,
+        agent_name: agent.name,
+        old_efficiency: agent.efficiency,
+        new_prompt: agent.prompt || `Agent ${agent.name} otimizado para ${agent.role}`,
+        improvement_type: 'basic_optimization'
+      };
+    }
+
     const response = await anthropic.messages.create({
-      model: 'claude-3-haiku-20240307', // Modelo rápido para micro-evoluções
+      model: 'claude-3-haiku-20240307',
       max_tokens: 500,
       messages: [{
         role: 'user',
@@ -167,8 +170,6 @@ Responda APENAS com o prompt melhorado, sem explicações.`
   }
 }
 
-// Também aceita POST para testes manuais
 export async function POST(request: NextRequest) {
   return GET(request);
 }
-

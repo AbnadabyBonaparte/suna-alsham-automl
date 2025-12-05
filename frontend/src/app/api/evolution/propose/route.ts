@@ -9,16 +9,12 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { getSupabaseAdmin } from '@/lib/supabase-admin';
-import Anthropic from '@anthropic-ai/sdk';
+import { getAnthropic } from '@/lib/lazy-clients';
 
 // FORÇA O NEXT.JS A NÃO PRÉ-RENDERIZAR ESTA ROTA
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
 export const maxDuration = 60;
-
-const anthropic = new Anthropic({
-  apiKey: process.env.ANTHROPIC_API_KEY || '',
-});
 
 interface ProposalRequest {
   agent_id: string;
@@ -74,14 +70,14 @@ export async function POST(request: NextRequest) {
     const sevenDaysAgo = new Date();
     sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
 
-    const { data: metrics, error: metricsError } = await supabaseAdmin
+    const { data: metrics } = await supabaseAdmin
       .from('agent_metrics')
       .select('*')
       .eq('agent_id', agent_id)
       .gte('metric_date', sevenDaysAgo.toISOString().split('T')[0]);
 
     // 4. Buscar requests com falhas recentes
-    const { data: failedRequests, error: failedError } = await supabaseAdmin
+    const { data: failedRequests } = await supabaseAdmin
       .from('requests')
       .select('title, description, error_message, created_at')
       .eq('agent_id', agent_id)
@@ -101,13 +97,13 @@ export async function POST(request: NextRequest) {
     console.log(`[EVOLUTION:PROPOSE] Métricas - Total: ${totalRequests}, Sucesso: ${totalSuccess}, Falha: ${totalFailed}, Taxa: ${successRate.toFixed(1)}%`);
 
     // 6. Montar contexto para o Claude
-    const currentPrompt = agent.system_prompt || 'You are an AI agent assistant designed to help with CRM tasks. Be helpful, accurate, and professional.';
+    const currentPrompt = agent.system_prompt || 'You are an AI agent assistant designed to help with CRM tasks.';
 
     const failedRequestsSummary = (failedRequests || [])
       .map(r => `- "${r.title}": ${r.error_message || 'Sem detalhes do erro'}`)
       .join('\n') || 'Nenhuma falha recente';
 
-    const claudePrompt = `You are an AI expert specializing in optimizing AI agent system prompts for CRM (Customer Relationship Management) systems.
+    const claudePrompt = `You are an AI expert specializing in optimizing AI agent system prompts for CRM systems.
 
 **AGENT INFORMATION:**
 - Name: ${agent.name}
@@ -130,32 +126,30 @@ ${currentPrompt}
 ${failedRequestsSummary}
 
 **YOUR TASK:**
-Analyze the current system prompt and the agent's performance metrics. Propose an improved system prompt that:
-1. Addresses the weaknesses identified in the failures
-2. Improves success rate and processing speed
-3. Is specific to CRM tasks related to the agent's role (${agent.role})
-4. Maintains clarity and professionalism
-5. Adds guardrails to prevent common failure patterns
+Analyze the current system prompt and propose an improved version.
 
 **RESPONSE FORMAT (JSON):**
 {
-  "weaknesses": ["list of 2-4 specific weaknesses in the current prompt"],
-  "improvements": ["list of 2-4 specific improvements made"],
-  "proposed_prompt": "the complete new system prompt (as a string)",
+  "weaknesses": ["list of 2-4 specific weaknesses"],
+  "improvements": ["list of 2-4 specific improvements"],
+  "proposed_prompt": "the complete new system prompt",
   "expected_gain": "estimated improvement percentage (e.g., '10-15%')",
   "confidence": "high|medium|low",
-  "reasoning": "brief explanation of the main changes and why they help"
-}
-
-**IMPORTANT:**
-- The proposed_prompt should be a complete, ready-to-use system prompt
-- Be specific about CRM tasks (sales, support, analytics, etc.)
-- Consider the agent's role: ${agent.role}
-- Focus on practical improvements, not theoretical ones`;
+  "reasoning": "brief explanation of the main changes"
+}`;
 
     console.log('[EVOLUTION:PROPOSE] Chamando Claude API...');
 
-    // 7. Chamar Claude API
+    // 7. Chamar Claude API (lazy initialization)
+    const anthropic = await getAnthropic();
+    
+    if (!anthropic) {
+      return NextResponse.json(
+        { error: 'Claude API não configurada' },
+        { status: 500 }
+      );
+    }
+
     const message = await anthropic.messages.create({
       model: 'claude-3-5-sonnet-20241022',
       max_tokens: 2048,
@@ -174,7 +168,6 @@ Analyze the current system prompt and the agent's performance metrics. Propose a
     // 8. Parse resposta do Claude
     let analysis;
     try {
-      // Tentar extrair JSON da resposta
       const jsonMatch = responseText.match(/\{[\s\S]*\}/);
       if (jsonMatch) {
         analysis = JSON.parse(jsonMatch[0]);
