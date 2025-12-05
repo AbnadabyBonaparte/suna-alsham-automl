@@ -62,13 +62,35 @@ export async function middleware(req: NextRequest) {
         }
     }
 
-    // ========================================
-    // ROTAS DE DESENVOLVIMENTO - LIBERA
-    // ========================================
-    if (pathname.startsWith('/dev/')) {
-        console.log('🛠️ DEV ROUTE: Acesso liberado para rota de desenvolvimento');
-        return NextResponse.next();
+// ========================================
+// ROTAS DE DESENVOLVIMENTO - LIBERA
+// ========================================
+if (pathname.startsWith('/dev/')) {
+    console.log('🛠️ DEV ROUTE: Acesso liberado para rota de desenvolvimento');
+    return NextResponse.next();
+}
+
+// ========================================
+// APRESENTAÇÃO: FORÇAR REDIRECIONAMENTO PARA PRICING
+// ========================================
+if (pathname !== '/pricing' && !pathname.startsWith('/api/') && !PUBLIC_ROUTES.includes(pathname)) {
+    console.log('🎯 APRESENTAÇÃO: Redirecionando para pricing');
+
+    // Verificar se tem token de autenticação
+    const authToken = req.cookies.get('sb-access-token')?.value ||
+                     req.cookies.get('supabase-auth-token')?.value;
+
+    // Se não tem token, força redirecionamento para pricing
+    if (!authToken) {
+        console.log('🚫 APRESENTAÇÃO: Visitante sem login - redirecionando para pricing');
+        const url = req.nextUrl.clone();
+        url.pathname = '/pricing';
+        return NextResponse.redirect(url);
     }
+
+    // Se tem token, deixa passar (usuário logado pode acessar)
+    console.log('✅ APRESENTAÇÃO: Usuário logado - liberando acesso');
+}
 
     // ========================================
     // 2. VERIFICAR AUTENTICAÇÃO VIA COOKIE

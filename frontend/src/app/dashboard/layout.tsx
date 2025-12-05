@@ -77,26 +77,16 @@ function DashboardLayoutContent({
   }, [user, authLoading, router]);
 
   // ========================================
-  // PROTEÇÃO 2: PAGAMENTO OBRIGATÓRIO
+  // APRESENTAÇÃO: PAGAMENTO OPCIONAL (SÓ PARA LOGADOS)
   // ========================================
   useEffect(() => {
-    // Só verifica após carregar auth e subscription
-    if (!authLoading && !subLoading && user) {
-      // Se não tem subscription ativa, redireciona para pricing
-      if (!isSubscribed) {
-        console.log('🔒 Usuário sem assinatura ativa - redirecionando para pricing');
-        
-        // Delay para dar tempo do webhook processar (caso acabou de pagar)
-        const timer = setTimeout(() => {
-          if (!isSubscribed) {
-            router.push('/pricing?reason=no_subscription');
-          }
-        }, 2000);
-        
-        return () => clearTimeout(timer);
-      }
+    // Durante apresentação, só verifica se está logado
+    // Verificação de pagamento fica opcional
+    if (!authLoading && !user) {
+      console.log('🔒 APRESENTAÇÃO: Redirecionando visitante para pricing');
+      router.push('/pricing');
     }
-  }, [user, authLoading, subLoading, isSubscribed, router]);
+  }, [user, authLoading, router]);
 
   // ========================================
   // LOADING STATE
@@ -130,24 +120,8 @@ function DashboardLayoutContent({
   }
 
   // ========================================
-  // SEM ASSINATURA - MOSTRA LOADING (vai redirecionar)
+  // APRESENTAÇÃO: LIBERAR PARA LOGADOS (mesmo sem assinatura)
   // ========================================
-  if (!isSubscribed) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-black">
-        <div className="text-center max-w-md mx-auto px-6">
-          <Loader2 className="w-8 h-8 animate-spin text-[var(--color-primary)] mx-auto mb-4" />
-          <h2 className="text-xl font-bold text-white mb-2">Verificando pagamento...</h2>
-          <p className="text-gray-500 font-mono text-sm mb-4">
-            Se você acabou de pagar, aguarde alguns segundos.
-          </p>
-          <p className="text-gray-600 text-xs">
-            Caso o pagamento não seja detectado, você será redirecionado.
-          </p>
-        </div>
-      </div>
-    );
-  }
 
   // ========================================
   // RENDER PRINCIPAL (USUÁRIO AUTENTICADO E PAGO)

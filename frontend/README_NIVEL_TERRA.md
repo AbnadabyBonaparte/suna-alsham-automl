@@ -142,11 +142,14 @@ oscillator.stop(context.currentTime + 0.1);
 
 ## 🚀 COMO TESTAR LOCALMENTE:
 
-### MODO DESENVOLVIMENTO (RECOMENDADO PARA DEV):
+### MODO APRESENTAÇÃO (FLUXO ATUAL):
 ```bash
-# 1. Configurar modo dev (bypass de auth/pagamento)
+# 1. Todos os visitantes vão para /pricing
+# 2. Só quem já tem login pode acessar /dashboard
+
+# Para testar como usuário logado:
+# 1. Configurar modo dev
 cp dev.env.example .env.local
-# Este arquivo já tem NEXT_PUBLIC_DEV_MODE=true
 
 # 2. Instalar dependências
 npm install
@@ -158,9 +161,14 @@ mkdir public/sounds
 npm run dev
 
 # 5. Abrir http://localhost:3000
-# 6. ACESSAR DIRETAMENTE /dashboard (sem login!)
-#    OU acessar /dev/dashboard para rota específica de dev
-# 7. Ver a MÁGICA! ✨
+# 6. Vai direto para /pricing (como visitante)
+# 7. Para acessar dashboard: /dev/dashboard ou configurar login real
+```
+
+### MODO DESENVOLVIMENTO (BYPASS TOTAL):
+```bash
+# Mesmo processo acima, mas com NEXT_PUBLIC_DEV_MODE=true
+# Permite acesso direto a todas as rotas
 ```
 
 #### ROTA ESPECIAL PARA DEV:
