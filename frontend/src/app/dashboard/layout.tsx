@@ -14,6 +14,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import Sidebar from '@/components/layout/Sidebar';
 import OrionAssistant from '@/components/orion/OrionAssistant';
 import { ToastContainer } from '@/components/ui/ToastContainer';
+import { PlanBadge, PlanBadgeLarge } from '@/components/ui/PlanBadge';
 import { Menu, Sparkles, Loader2 } from 'lucide-react';
 
 export default function DashboardLayout({
@@ -75,6 +76,7 @@ export default function DashboardLayout({
                 ALSHAM
             </span>
           </div>
+          <PlanBadge />
         </header>
 
         {/* Main Content Scrollable */}
@@ -89,6 +91,9 @@ export default function DashboardLayout({
 
       {/* Global Toast Notifications */}
       <ToastContainer />
+      
+      {/* Badge Enterprise (God Mode) - Aparece fixo no topo */}
+      <PlanBadgeLarge />
       
       {/* ORION J.A.R.V.I.S. - Assistente Global */}
       <OrionAssistant />
