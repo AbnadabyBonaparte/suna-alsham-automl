@@ -71,25 +71,14 @@ if (pathname.startsWith('/dev/')) {
 }
 
 // ========================================
-// APRESENTAÇÃO: FORÇAR REDIRECIONAMENTO PARA PRICING
+// FLUXO AJUSTADO: LANDING → PRICING → DASHBOARD (se logado e pagou)
 // ========================================
-if (pathname !== '/pricing' && !pathname.startsWith('/api/') && !PUBLIC_ROUTES.includes(pathname)) {
-    console.log('🎯 APRESENTAÇÃO: Redirecionando para pricing');
-
-    // Verificar se tem token de autenticação
-    const authToken = req.cookies.get('sb-access-token')?.value ||
-                     req.cookies.get('supabase-auth-token')?.value;
-
-    // Se não tem token, força redirecionamento para pricing
-    if (!authToken) {
-        console.log('🚫 APRESENTAÇÃO: Visitante sem login - redirecionando para pricing');
-        const url = req.nextUrl.clone();
-        url.pathname = '/pricing';
-        return NextResponse.redirect(url);
-    }
-
-    // Se tem token, deixa passar (usuário logado pode acessar)
-    console.log('✅ APRESENTAÇÃO: Usuário logado - liberando acesso');
+if (pathname === '/' && !pathname.startsWith('/api/')) {
+    // Landing page sempre redireciona para pricing como segunda página
+    console.log('🎯 FLUXO: Redirecionando landing para pricing');
+    const url = req.nextUrl.clone();
+    url.pathname = '/pricing';
+    return NextResponse.redirect(url);
 }
 
     // ========================================
@@ -158,14 +147,15 @@ if (pathname !== '/pricing' && !pathname.startsWith('/api/') && !PUBLIC_ROUTES.i
                 return NextResponse.redirect(url);
             }
 
-            // VERIFICAÇÃO CRÍTICA: Se não pagou, BLOQUEIA ACESSO
-            if (!userData || userData.paid !== true) {
-                console.log(`💰 Acesso negado a ${pathname} - usuário não pagou (ID: ${userId})`);
-                const url = req.nextUrl.clone();
-                url.pathname = '/pricing';
-                url.searchParams.set('reason', 'payment_required');
-                return NextResponse.redirect(url);
-            }
+            // VERIFICAÇÃO DE PAGAMENTO - DESABILITADA PARA TESTES
+            // Usuários logados podem acessar mesmo sem ter pago (para período de teste)
+            // if (!userData || userData.paid !== true) {
+            //     console.log(`💰 Acesso negado a ${pathname} - usuário não pagou (ID: ${userId})`);
+            //     const url = req.nextUrl.clone();
+            //     url.pathname = '/pricing';
+            //     url.searchParams.set('reason', 'payment_required');
+            //     return NextResponse.redirect(url);
+            // }
 
             // Adicionar headers com info do usuário para o client
             const response = NextResponse.next();

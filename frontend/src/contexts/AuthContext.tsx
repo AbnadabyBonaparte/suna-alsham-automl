@@ -70,6 +70,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     useEffect(() => {
         // MODO DESENVOLVIMENTO - Mock user
         const isDevMode = process.env.NEXT_PUBLIC_DEV_MODE === 'true';
+        console.log('🔍 DEV MODE check:', isDevMode, 'NEXT_PUBLIC_DEV_MODE:', process.env.NEXT_PUBLIC_DEV_MODE);
+
         if (isDevMode) {
             console.log('🛠️ DEV MODE: Usando mock user para desenvolvimento');
             setSession(DEV_SESSION);
@@ -117,7 +119,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         });
 
         if (!error) {
-            router.push('/dashboard');
+            router.push('/pricing');
         }
 
         return { error };

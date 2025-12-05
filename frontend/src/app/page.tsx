@@ -142,7 +142,7 @@ export default function LandingPage() {
     const handleEnter = () => {
         setIsEntering(true);
         setTimeout(() => {
-            router.push('/login');
+            router.push('/pricing');
         }, 1500); // Tempo da transição
     };
 

@@ -212,8 +212,8 @@ export default function PricingPage() {
                         <Link href="/login" className="text-sm text-gray-400 hover:text-white transition-colors">
                             Login
                         </Link>
-                        <Link 
-                            href="/signup" 
+                        <Link
+                            href="/signup"
                             className="px-4 py-2 bg-white/10 hover:bg-white/20 border border-white/20 rounded-lg text-sm font-medium transition-all"
                         >
                             Criar Conta
