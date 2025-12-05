@@ -12,6 +12,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { useAuth } from '@/contexts/AuthContext';
 import { 
     Check, Zap, Crown, Rocket, Shield, Brain, 
     Users, Database, ArrowRight, Sparkles, Star,
@@ -95,6 +96,7 @@ const PLANS = [
 
 export default function PricingPage() {
     const router = useRouter();
+    const { user, hasAccess, loading: authLoading } = useAuth();
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const [selectedPlan, setSelectedPlan] = useState<string | null>(null);
     const [isLoading, setIsLoading] = useState<string | null>(null);
@@ -233,15 +235,20 @@ export default function PricingPage() {
                     </div>
                     
                     <h1 className="text-5xl md:text-7xl font-black tracking-tight mb-6 leading-tight">
-                        Transforme sua empresa com{' '}
+                        {user && !hasAccess
+                            ? 'Upgrade seu plano para acessar o ALSHAM QUANTUM'
+                            : 'Transforme sua empresa com'
+                        }{' '}
                         <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 via-pink-500 to-yellow-400">
-                            Inteligência Artificial
+                            {user && !hasAccess ? 'Premium' : 'Inteligência Artificial'}
                         </span>
                     </h1>
-                    
+
                     <p className="text-xl text-gray-400 max-w-2xl mx-auto mb-8 leading-relaxed">
-                        139 agentes de IA trabalhando 24/7 para automatizar suas operações. 
-                        Sem código. Sem complexidade. Resultados em 24 horas.
+                        {user && !hasAccess
+                            ? 'Desbloqueie todo o potencial dos 139 agentes de IA trabalhando 24/7 para automatizar suas operações.'
+                            : '139 agentes de IA trabalhando 24/7 para automatizar suas operações. Sem código. Sem complexidade. Resultados em 24 horas.'
+                        }
                     </p>
 
                     {/* Billing Toggle */}
@@ -387,7 +394,10 @@ export default function PricingPage() {
                                         </span>
                                     ) : (
                                         <span className="flex items-center justify-center gap-2">
-                                            {plan.id === 'enterprise' ? 'Começar Agora' : 'Assinar Plano'}
+                                            {user && !hasAccess
+                                                ? (plan.id === 'enterprise' ? 'Upgrade para Enterprise' : `Upgrade para ${plan.name}`)
+                                                : (plan.id === 'enterprise' ? 'Começar Agora' : 'Assinar Plano')
+                                            }
                                             <ArrowRight className="w-4 h-4 group-hover/btn:translate-x-1 transition-transform" />
                                         </span>
                                     )}
@@ -458,17 +468,26 @@ export default function PricingPage() {
                         <div className="absolute inset-0 bg-[url('/grid.svg')] opacity-10 pointer-events-none" />
                         
                         <h2 className="text-4xl font-black mb-4 relative z-10">
-                            Pronto para transformar seu negócio?
+                            {user && !hasAccess
+                                ? 'Pronto para desbloquear todo o potencial?'
+                                : 'Pronto para transformar seu negócio?'
+                            }
                         </h2>
                         <p className="text-xl text-gray-400 mb-8 relative z-10">
-                            Comece hoje e veja resultados em 24 horas.
+                            {user && !hasAccess
+                                ? 'Faça upgrade hoje e tenha acesso completo ao ALSHAM QUANTUM.'
+                                : 'Comece hoje e veja resultados em 24 horas.'
+                            }
                         </p>
-                        
+
                         <button
                             onClick={() => handleCheckout(PLANS[2])}
                             className="px-12 py-5 bg-gradient-to-r from-yellow-400 to-orange-500 text-black font-black text-lg rounded-xl hover:shadow-[0_0_60px_rgba(250,204,21,0.5)] transition-all relative z-10"
                         >
-                            Começar com Enterprise • R$9.900/mês
+                            {user && !hasAccess
+                                ? 'Upgrade para Enterprise • R$9.900/mês'
+                                : 'Começar com Enterprise • R$9.900/mês'
+                            }
                         </button>
                         
                         <p className="text-xs text-gray-500 mt-4 relative z-10">

@@ -70,23 +70,12 @@ if (pathname.startsWith('/dev/')) {
     return NextResponse.next();
 }
 
-// ========================================
-// FLUXO AJUSTADO: LANDING → PRICING → DASHBOARD (se logado e pagou)
-// ========================================
-if (pathname === '/' && !pathname.startsWith('/api/')) {
-    // Landing page sempre redireciona para pricing como segunda página
-    console.log('🎯 FLUXO: Redirecionando landing para pricing');
-    const url = req.nextUrl.clone();
-    url.pathname = '/pricing';
-    return NextResponse.redirect(url);
-}
-
     // ========================================
     // 2. VERIFICAR AUTENTICAÇÃO VIA COOKIE
     // ========================================
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
     const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-    
+
     if (!supabaseUrl || !supabaseAnonKey) {
         // Se não tem Supabase configurado, deixa passar (dev mode)
         console.warn('⚠️ Supabase não configurado no middleware');
@@ -94,24 +83,24 @@ if (pathname === '/' && !pathname.startsWith('/api/')) {
     }
 
     // Pegar token do cookie de autenticação do Supabase
-    const authToken = req.cookies.get('sb-access-token')?.value || 
+    const authToken = req.cookies.get('sb-access-token')?.value ||
                       req.cookies.get('supabase-auth-token')?.value;
 
     // ========================================
-    // 3. ROTAS DE DASHBOARD - PRECISA LOGIN
+    // 3. ROTAS DE DASHBOARD - VERIFICAÇÃO COMPLETA
     // ========================================
     if (pathname.startsWith('/dashboard')) {
-        // Se não tem token, redireciona para pricing
+        // Se não tem token, redireciona para login
         if (!authToken) {
             console.log(`🔒 Acesso negado a ${pathname} - não autenticado`);
             const url = req.nextUrl.clone();
-            url.pathname = '/pricing';
+            url.pathname = '/login';
             url.searchParams.set('redirect', pathname);
             return NextResponse.redirect(url);
         }
 
         // ========================================
-        // 4. VERIFICAR PAGAMENTO - SEGURANÇA TOTAL
+        // 4. VERIFICAR AUTENTICAÇÃO E PERMISSÕES
         // ========================================
         const supabase = createClient(supabaseUrl, supabaseAnonKey, {
             auth: {
@@ -126,16 +115,29 @@ if (pathname === '/' && !pathname.startsWith('/api/')) {
             if (sessionError || !session) {
                 console.log(`🔒 Acesso negado a ${pathname} - sessão inválida`);
                 const url = req.nextUrl.clone();
-                url.pathname = '/pricing';
+                url.pathname = '/login';
                 return NextResponse.redirect(url);
             }
 
             const userId = session.user.id;
+            const userEmail = session.user.email;
 
-            // Buscar dados do usuário no Supabase
+            // ========================================
+            // 5. VERIFICAÇÃO ESPECIAL - DONO SEMPRE TEM ACESSO
+            // ========================================
+            if (userEmail === 'casamondestore@gmail.com') {
+                console.log('👑 DONO DETECTADO - ACESSO TOTAL LIBERADO');
+                const response = NextResponse.next();
+                response.headers.set('x-user-authenticated', 'true');
+                response.headers.set('x-user-founder', 'true');
+                response.headers.set('x-user-email', userEmail);
+                return response;
+            }
+
+            // Buscar dados do usuário no Supabase (profiles table)
             const { data: userData, error: userError } = await supabase
-                .from('users') // Ajuste para o nome correto da tabela
-                .select('plan, paid, stripe_customer_id')
+                .from('profiles')
+                .select('subscription_plan, subscription_status, founder_access')
                 .eq('id', userId)
                 .single();
 
@@ -147,22 +149,46 @@ if (pathname === '/' && !pathname.startsWith('/api/')) {
                 return NextResponse.redirect(url);
             }
 
-            // VERIFICAÇÃO DE PAGAMENTO - DESABILITADA PARA TESTES
-            // Usuários logados podem acessar mesmo sem ter pago (para período de teste)
-            // if (!userData || userData.paid !== true) {
-            //     console.log(`💰 Acesso negado a ${pathname} - usuário não pagou (ID: ${userId})`);
-            //     const url = req.nextUrl.clone();
-            //     url.pathname = '/pricing';
-            //     url.searchParams.set('reason', 'payment_required');
-            //     return NextResponse.redirect(url);
-            // }
+            // ========================================
+            // 6. VERIFICAÇÃO DE PERMISSÕES
+            // ========================================
+            const hasFounderAccess = userData?.founder_access === true;
+            const hasEnterprisePlan = userData?.subscription_plan === 'enterprise';
+            const isSubscriptionActive = userData?.subscription_status === 'active';
 
-            // Adicionar headers com info do usuário para o client
-            const response = NextResponse.next();
-            response.headers.set('x-user-authenticated', 'true');
-            response.headers.set('x-user-plan', userData.plan || 'free');
-            response.headers.set('x-user-paid', userData.paid ? 'true' : 'false');
-            return response;
+            if (hasFounderAccess) {
+                console.log('🏆 FOUNDER ACCESS - ACESSO TOTAL LIBERADO');
+                const response = NextResponse.next();
+                response.headers.set('x-user-authenticated', 'true');
+                response.headers.set('x-user-founder', 'true');
+                response.headers.set('x-user-plan', userData?.subscription_plan || 'free');
+                return response;
+            }
+
+            if (hasEnterprisePlan && isSubscriptionActive) {
+                console.log('💎 ENTERPRISE PLAN ATIVO - ACESSO LIBERADO');
+                const response = NextResponse.next();
+                response.headers.set('x-user-authenticated', 'true');
+                response.headers.set('x-user-plan', 'enterprise');
+                response.headers.set('x-user-paid', 'true');
+                return response;
+            }
+
+            if (isSubscriptionActive) {
+                console.log('✅ SUBSCRIPTION ATIVA - ACESSO LIBERADO');
+                const response = NextResponse.next();
+                response.headers.set('x-user-authenticated', 'true');
+                response.headers.set('x-user-plan', userData?.subscription_plan || 'free');
+                response.headers.set('x-user-paid', 'true');
+                return response;
+            }
+
+            // Usuário logado mas sem permissões - redireciona para pricing
+            console.log(`💰 Acesso negado a ${pathname} - usuário não pagou (ID: ${userId})`);
+            const url = req.nextUrl.clone();
+            url.pathname = '/pricing';
+            url.searchParams.set('reason', 'payment_required');
+            return NextResponse.redirect(url);
 
         } catch (error) {
             console.error('Erro no middleware:', error);

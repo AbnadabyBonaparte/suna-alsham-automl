@@ -31,13 +31,23 @@ const DEV_SESSION: Session = {
     user: DEV_USER,
 };
 
+interface UserMetadata {
+    founder_access?: boolean;
+    subscription_plan?: string;
+    subscription_status?: string;
+}
+
 interface AuthContextType {
     user: User | null;
     session: Session | null;
+    metadata: UserMetadata | null;
     loading: boolean;
+    hasFounderAccess: boolean;
+    hasAccess: boolean;
     signIn: (email: string, password: string) => Promise<{ error: AuthError | null }>;
     signUp: (email: string, password: string) => Promise<{ error: AuthError | null }>;
     signOut: () => Promise<void>;
+    refreshMetadata: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -64,8 +74,31 @@ function getSupabaseClient(): SupabaseClient {
 export function AuthProvider({ children }: { children: React.ReactNode }) {
     const [user, setUser] = useState<User | null>(null);
     const [session, setSession] = useState<Session | null>(null);
+    const [metadata, setMetadata] = useState<UserMetadata | null>(null);
     const [loading, setLoading] = useState(true);
     const router = useRouter();
+
+    // Função para carregar metadata do usuário
+    const loadUserMetadata = async (userId: string) => {
+        try {
+            const supabase = getSupabaseClient();
+            const { data: profile, error } = await supabase
+                .from('profiles')
+                .select('subscription_plan, subscription_status, founder_access')
+                .eq('id', userId)
+                .single();
+
+            if (error) {
+                console.error('Erro ao carregar metadata:', error);
+                return null;
+            }
+
+            return profile;
+        } catch (error) {
+            console.error('Erro ao carregar metadata:', error);
+            return null;
+        }
+    };
 
     useEffect(() => {
         // MODO DESENVOLVIMENTO - Mock user
@@ -76,23 +109,36 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             console.log('🛠️ DEV MODE: Usando mock user para desenvolvimento');
             setSession(DEV_SESSION);
             setUser(DEV_USER);
+            setMetadata({
+                founder_access: true,
+                subscription_plan: 'enterprise',
+                subscription_status: 'active'
+            });
             setLoading(false);
             return;
         }
 
         const supabase = getSupabaseClient();
 
-        supabase.auth.getSession().then(({ data: { session } }) => {
+        const handleAuthChange = async (_event: any, session: Session | null) => {
             setSession(session);
             setUser(session?.user ?? null);
+
+            if (session?.user) {
+                const metadata = await loadUserMetadata(session.user.id);
+                setMetadata(metadata);
+            } else {
+                setMetadata(null);
+            }
+
             setLoading(false);
+        };
+
+        supabase.auth.getSession().then(async ({ data: { session } }) => {
+            await handleAuthChange(null, session);
         });
 
-        const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-            setSession(session);
-            setUser(session?.user ?? null);
-            setLoading(false);
-        });
+        const { data: { subscription } } = supabase.auth.onAuthStateChange(handleAuthChange);
 
         return () => subscription.unsubscribe();
     }, []);
@@ -105,7 +151,38 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         });
 
         if (!error) {
-            router.push('/dashboard');
+            // Carregar metadata imediatamente após login
+            const { data: { user } } = await supabase.auth.getUser();
+            if (user) {
+                const metadata = await loadUserMetadata(user.id);
+
+                // Verificar se é o dono
+                if (email === 'casamondestore@gmail.com') {
+                    router.push('/dashboard');
+                    return { error: null };
+                }
+
+                // Verificar founder access
+                if (metadata?.founder_access) {
+                    router.push('/dashboard');
+                    return { error: null };
+                }
+
+                // Verificar plano enterprise
+                if (metadata?.subscription_plan === 'enterprise' && metadata?.subscription_status === 'active') {
+                    router.push('/dashboard');
+                    return { error: null };
+                }
+
+                // Verificar se tem qualquer subscription ativa
+                if (metadata?.subscription_status === 'active') {
+                    router.push('/dashboard');
+                    return { error: null };
+                }
+
+                // Não pagou - vai para pricing
+                router.push('/pricing');
+            }
         }
 
         return { error };
@@ -128,11 +205,36 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const signOut = async () => {
         const supabase = getSupabaseClient();
         await supabase.auth.signOut();
+        setMetadata(null);
         router.push('/login');
     };
 
+    const refreshMetadata = async () => {
+        if (user) {
+            const metadata = await loadUserMetadata(user.id);
+            setMetadata(metadata);
+        }
+    };
+
+    // Computed values
+    const hasFounderAccess = user?.email === 'casamondestore@gmail.com' || metadata?.founder_access === true;
+    const hasAccess = hasFounderAccess ||
+                     (metadata?.subscription_plan === 'enterprise' && metadata?.subscription_status === 'active') ||
+                     metadata?.subscription_status === 'active';
+
     return (
-        <AuthContext.Provider value={{ user, session, loading, signIn, signUp, signOut }}>
+        <AuthContext.Provider value={{
+            user,
+            session,
+            metadata,
+            loading,
+            hasFounderAccess,
+            hasAccess,
+            signIn,
+            signUp,
+            signOut,
+            refreshMetadata
+        }}>
             {children}
         </AuthContext.Provider>
     );
