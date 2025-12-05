@@ -1,43 +1,40 @@
-# Build stage
-FROM node:20-alpine AS builder
-
-WORKDIR /app
-
-# Copia arquivos de dependências
-COPY package*.json ./
-
-# Instala TODAS as dependências (incluindo dev) para o build
-RUN npm ci --only=production=false
-
-# Copia o restante do código do frontend
-COPY . .
-
-# Build de produção
-RUN npm run build
-
-# Production stage
-FROM node:20-alpine AS runner
+# Ultra-minimal production image
+FROM node:20-alpine
 
 WORKDIR /app
 
 ENV NODE_ENV=production
 
+# Install dumb-init for proper signal handling
+RUN apk add --no-cache dumb-init
+
 # Create app user
-RUN addgroup --system --gid 1001 nodejs
-RUN adduser --system --uid 1001 nextjs
+RUN addgroup -g 1001 -S nodejs && \
+    adduser -S nextjs -u 1001
 
-# Copy built application
-COPY --from=builder /app/public ./public
-COPY --from=builder /app/package*.json ./
-COPY --from=builder /app/.next/standalone ./
-COPY --from=builder /app/.next/static ./.next/static
+# Copy package files first for better caching
+COPY --chown=nextjs:nodejs package*.json ./
 
-# Install only production dependencies
-RUN npm ci --only=production && npm cache clean --force
+# Install only production dependencies with minimal footprint
+RUN npm ci --only=production --no-audit --no-fund --prefer-offline && \
+    npm cache clean --force
+
+# Copy Next.js build output
+COPY --chown=nextjs:nodejs .next/standalone ./
+COPY --chown=nextjs:nodejs .next/static ./.next/static
+COPY --chown=nextjs:nodejs public ./public
+
+# Clean up any remaining cache and temp files
+RUN rm -rf /tmp/* /var/cache/apk/* && \
+    find /usr/local -name "*.md" -delete 2>/dev/null || true
 
 USER nextjs
 
-ENV PORT=3000
 EXPOSE 3000
 
+ENV PORT=3000
+ENV NEXT_TELEMETRY_DISABLED=1
+
+# Use dumb-init to handle signals properly
+ENTRYPOINT ["dumb-init", "--"]
 CMD ["node", "server.js"]

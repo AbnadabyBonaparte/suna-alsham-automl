@@ -4,101 +4,73 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
-# Next.js
+# Next.js build outputs
 .next/
 out/
+.next
 
-# Production build
+# Build artifacts
 build
 dist
+.cache
+.parcel-cache
 
-# Environment variables
-.env
-.env.local
-.env.development.local
-.env.test.local
-.env.production.local
+# Environment files
+.env*
+!.env.example
 
-# IDE
+# IDE and editor files
 .vscode
 .idea
 *.swp
 *.swo
+*~
 
-# OS
+# OS generated files
 .DS_Store
 Thumbs.db
+Desktop.ini
+*.tmp
 
-# Logs
+# Logs and runtime data
 logs
 *.log
-
-# Runtime data
 pids
 *.pid
 *.seed
 *.pid.lock
 
-# Coverage directory used by tools like istanbul
+# Coverage and testing
 coverage
+.nyc_output
+__tests__
+*.test.js
+*.test.ts
+*.spec.js
+*.spec.ts
 
-# Dependency directories
-jspm_packages/
-
-# Optional npm cache directory
+# Package manager caches
 .npm
-
-# Optional REPL history
-.node_repl_history
-
-# Output of 'npm pack'
-*.tgz
-
-# Yarn Integrity file
 .yarn-integrity
-
-# dotenv environment variables file
-.env.test
-
-# parcel-bundler cache (https://parceljs.org/)
-.cache
-.parcel-cache
-
-# next.js build output
-.next
-
-# nuxt.js build output
-.nuxt
-
-# vuepress build output
-.vuepress/dist
-
-# Serverless directories
-.serverless
-
-# FuseBox cache
-.fusebox/
-
-# DynamoDB Local files
-.dynamodb/
-
-# TernJS port file
-.tern-port
+jspm_packages
 
 # TypeScript
 *.tsbuildinfo
+.tscache
 
-# Optional REPL history
-.node_repl_history
+# Python files (not needed for frontend)
+*.py
+__pycache__
+*.pyc
 
-# Output of 'npm pack'
-*.tgz
-
-# Yarn Integrity file
-.yarn-integrity
-
-# dotenv environment variables file
-.env
+# Documentation and non-essential files
+README*
+*.md
+docs/
+scripts/
+*.sh
+*.bak
+*.backup
 
 # Supabase
 .supabase/
@@ -110,29 +82,26 @@ railway.toml
 .git
 .gitignore
 
-# Documentation
-README.md
-*.md
-
-# Test files
-__tests__
-*.test.js
-*.test.ts
-*.spec.js
-*.spec.ts
-
-# Backup files
-*.bak
-*.backup
-
-# Temporary files
+# Temporary and cache directories
 tmp/
 temp/
+.cache/
 
-# Python files (not needed for frontend)
-*.py
-__pycache__/
+# Large media files (keep only essentials in public/)
+*.mp4
+*.avi
+*.mov
+*.wmv
+*.flv
+*.webm
 
-# Scripts that are not needed in production
-scripts/
-*.sh
+# Archive files
+*.zip
+*.tar.gz
+*.rar
+*.7z
+
+# Other large/unnecessary files
+*.tgz
+*.deb
+*.rpm

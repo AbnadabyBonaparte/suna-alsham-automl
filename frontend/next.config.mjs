@@ -2,12 +2,18 @@
 const nextConfig = {
   output: 'standalone',
   reactStrictMode: false,
+  poweredByHeader: false,
+  compress: true,
   typescript: {
     // Ignora erros de TS no build para garantir o deploy
     ignoreBuildErrors: true,
   },
-  // A chave 'eslint' foi removida pois estava causando o erro "Unrecognized key"
-  // O build vai passar agora.
+  experimental: {
+    // Minimize bundle size
+    optimizePackageImports: ['@supabase/supabase-js', 'lucide-react', 'framer-motion'],
+  },
+  // Disable telemetry
+  telemetry: false,
   async headers() {
     return [
       {
