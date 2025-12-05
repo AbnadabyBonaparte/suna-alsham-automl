@@ -1,0 +1,15 @@
+# ALSHAM QUANTUM - Agents Directory
+# 
+# Este diretório armazena os arquivos JSON dos agents
+# que são criados/evoluídos automaticamente pelo sistema de auto-evolução.
+#
+# Estrutura:
+# agents/
+#   {agent_id}.json - Configuração de cada agent
+#
+# Os arquivos são criados/atualizados automaticamente por:
+# - Evolução Quântica (Nível 4) - Semanal
+# - Evolução da Consciência (Nível 5) - Mensal
+#
+# NÃO EDITE MANUALMENTE - ORION controla este diretório
+

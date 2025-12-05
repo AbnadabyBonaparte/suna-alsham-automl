@@ -1,13 +1,11 @@
 /**
  * ═══════════════════════════════════════════════════════════════════════════════
- * ALSHAM QUANTUM - ORION J.A.R.V.I.S. (10/10 PERFECT EDITION)
+ * ALSHAM QUANTUM - ORION J.A.R.V.I.S. (10/10 THEME-AWARE EDITION)
  * ═══════════════════════════════════════════════════════════════════════════════
  * 📁 PATH: frontend/src/components/orion/OrionAssistant.tsx
  * 🎤 O primeiro assistente de voz consciente do planeta
- * 💎 Design: Apple + Tesla + Cyberpunk + $100M Aesthetic
- * 🔊 Voice: J.A.R.V.I.S. Real - Grave, Confiante, Elegante
- * 🎙️ Mic: Web Speech API com fallback completo
- * 📦 100% Modular - Usa custom hooks para toda lógica
+ * 💎 Design: Apple + Tesla + Cyberpunk + 100% SUBMISSO AOS TEMAS
+ * 🎨 USA VARIÁVEIS CSS DO TEMA ATIVO - OS TEMAS SÃO LEI
  * ═══════════════════════════════════════════════════════════════════════════════
  */
 
@@ -29,6 +27,7 @@ import { useOrionVoice } from '@/hooks/useOrionVoice';
 import { useAudioVisualizer, useOrionPulse } from '@/hooks/useAudioVisualizer';
 import { useOrionChat, type Message } from '@/hooks/useOrionChat';
 import { useOrionSounds } from '@/hooks/useOrionSounds';
+import { useTheme } from '@/contexts/ThemeContext';
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // COMPONENTE PRINCIPAL
@@ -36,6 +35,9 @@ import { useOrionSounds } from '@/hooks/useOrionSounds';
 
 export default function OrionAssistant() {
   const pathname = usePathname();
+  
+  // ═══ THEME CONTEXT - OS TEMAS SÃO LEI ═══
+  const { currentTheme, themeConfig, playClick } = useTheme();
   
   // ═══ STATE LOCAL (UI ONLY) ═══
   const [isOpen, setIsOpen] = useState(false);
@@ -126,24 +128,25 @@ export default function OrionAssistant() {
   // ═══════════════════════════════════════════════════════════════════════════════
 
   const handleToggleOpen = useCallback(() => {
+    playClick();
     playSound(isOpen ? 'click' : 'activate');
     setIsOpen(prev => !prev);
-  }, [isOpen, playSound]);
+  }, [isOpen, playSound, playClick]);
 
   const handleToggleMinimize = useCallback(() => {
-    playSound('click');
+    playClick();
     setIsMinimized(prev => !prev);
-  }, [playSound]);
+  }, [playClick]);
 
   const handleToggleVoice = useCallback(() => {
-    playSound('click');
+    playClick();
     toggleVoice();
-  }, [playSound, toggleVoice]);
+  }, [playClick, toggleVoice]);
 
   const handleToggleGodMode = useCallback(() => {
-    playSound('click');
+    playClick();
     toggleGodMode();
-  }, [playSound, toggleGodMode]);
+  }, [playClick, toggleGodMode]);
 
   const handleMicClick = useCallback(async () => {
     if (voiceState.isListening) {
@@ -159,21 +162,21 @@ export default function OrionAssistant() {
     if (!text || chatState.isThinking) return;
     
     setInputText('');
-    playSound('click');
+    playClick();
     
     const response = await sendMessage(text, false);
     if (response && voiceState.voiceEnabled) {
       speak(response);
     }
-  }, [inputText, chatState.isThinking, sendMessage, speak, voiceState.voiceEnabled, playSound]);
+  }, [inputText, chatState.isThinking, sendMessage, speak, voiceState.voiceEnabled, playClick]);
 
   const handleQuickCommand = useCallback(async (cmd: string) => {
-    playSound('click');
+    playClick();
     const response = await sendMessage(`ORION, ${cmd.toLowerCase()}`, false);
     if (response && voiceState.voiceEnabled) {
       speak(response);
     }
-  }, [sendMessage, speak, voiceState.voiceEnabled, playSound]);
+  }, [sendMessage, speak, voiceState.voiceEnabled, playClick]);
 
   // ═══════════════════════════════════════════════════════════════════════════════
   // VARIÁVEIS DE ESTILO CALCULADAS
@@ -190,10 +193,26 @@ export default function OrionAssistant() {
   const isThinking = chatState.isThinking;
   const hasError = !!voiceState.error;
 
+  // ═══════════════════════════════════════════════════════════════════════════════
+  // CORES DO TEMA ATUAL - OS TEMAS SÃO LEI
+  // ═══════════════════════════════════════════════════════════════════════════════
+  
+  const colors = themeConfig.colors;
+  const primaryColor = colors.primary;
+  const secondaryColor = colors.secondary;
+  const accentColor = colors.accent;
+  const glowColor = colors.glow;
+  const bgColor = colors.background;
+  const surfaceColor = colors.surface;
+  const textColor = colors.text;
+  const textSecondaryColor = colors.textSecondary;
+  const errorColor = colors.error;
+  const successColor = colors.success;
+
   return (
     <>
       {/* ════════════════════════════════════════════════════════════════════════ */}
-      {/* ORB FLUTUANTE - DESIGN BILIONÁRIO ($100M AESTHETIC)                      */}
+      {/* ORB FLUTUANTE - SEGUE O TEMA ATIVO                                       */}
       {/* ════════════════════════════════════════════════════════════════════════ */}
       <div 
         className="fixed"
@@ -215,21 +234,17 @@ export default function OrionAssistant() {
         >
           {/* ═══ CAMADA 1: GLOW EXTERNO DIFUSO ═══ */}
           <div 
-            className={`absolute rounded-full transition-all duration-500 ${
-              isListening ? 'bg-red-500' :
-              isSpeaking ? 'bg-amber-400' :
-              isThinking ? 'bg-violet-500' :
-              'bg-amber-500'
-            }`}
+            className="absolute rounded-full transition-all duration-500"
             style={{
               inset: '-20px',
+              background: isListening ? errorColor : isSpeaking ? accentColor : isThinking ? secondaryColor : primaryColor,
               opacity: isListening ? 0.4 : orbGlow * 0.3,
               filter: 'blur(20px)',
               animation: isListening ? 'pulse 1s infinite' : undefined,
             }}
           />
           
-          {/* ═══ CAMADA 2: ANEL DE LUZ DOURADO ROTATIVO ═══ */}
+          {/* ═══ CAMADA 2: ANEL DE LUZ ROTATIVO (COR DO TEMA) ═══ */}
           <div 
             className="absolute rounded-full"
             style={{
@@ -240,14 +255,14 @@ export default function OrionAssistant() {
           >
             <svg className="w-full h-full" viewBox="0 0 100 100">
               <defs>
-                <linearGradient id="orion-gold-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                  <stop offset="0%" stopColor="#FFD700" stopOpacity="1" />
-                  <stop offset="25%" stopColor="#FFA500" stopOpacity="0.3" />
-                  <stop offset="50%" stopColor="#FFD700" stopOpacity="1" />
-                  <stop offset="75%" stopColor="#FFA500" stopOpacity="0.3" />
-                  <stop offset="100%" stopColor="#FFD700" stopOpacity="1" />
+                <linearGradient id={`orion-gradient-${currentTheme}`} x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stopColor={primaryColor} stopOpacity="1" />
+                  <stop offset="25%" stopColor={secondaryColor} stopOpacity="0.3" />
+                  <stop offset="50%" stopColor={primaryColor} stopOpacity="1" />
+                  <stop offset="75%" stopColor={secondaryColor} stopOpacity="0.3" />
+                  <stop offset="100%" stopColor={primaryColor} stopOpacity="1" />
                 </linearGradient>
-                <filter id="orion-glow">
+                <filter id="orion-glow-filter">
                   <feGaussianBlur stdDeviation="2" result="coloredBlur"/>
                   <feMerge>
                     <feMergeNode in="coloredBlur"/>
@@ -258,16 +273,16 @@ export default function OrionAssistant() {
               <circle 
                 cx="50" cy="50" r="46" 
                 fill="none" 
-                stroke="url(#orion-gold-gradient)" 
+                stroke={`url(#orion-gradient-${currentTheme})`}
                 strokeWidth="2.5"
                 strokeDasharray="15 8 30 8"
-                filter="url(#orion-glow)"
+                filter="url(#orion-glow-filter)"
                 style={{ opacity: isListening ? 0 : 0.9 }}
               />
               <circle 
                 cx="50" cy="50" r="40" 
                 fill="none" 
-                stroke="#FFD700" 
+                stroke={primaryColor}
                 strokeWidth="0.5"
                 strokeDasharray="4 12"
                 opacity="0.4"
@@ -277,20 +292,16 @@ export default function OrionAssistant() {
 
           {/* ═══ CAMADA 3: CRISTAL NEGRO CENTRAL ═══ */}
           <div 
-            className={`relative w-full h-full rounded-full overflow-hidden transition-all duration-300 ${
-              isListening ? 'shadow-[0_0_40px_rgba(239,68,68,0.8),inset_0_0_30px_rgba(239,68,68,0.3)]' :
-              isSpeaking ? 'shadow-[0_0_40px_rgba(251,191,36,0.8),inset_0_0_30px_rgba(251,191,36,0.3)]' :
-              isThinking ? 'shadow-[0_0_40px_rgba(139,92,246,0.8),inset_0_0_30px_rgba(139,92,246,0.3)]' :
-              'shadow-[0_0_30px_rgba(251,191,36,0.4),inset_0_0_20px_rgba(0,0,0,0.8)]'
-            }`}
+            className="relative w-full h-full rounded-full overflow-hidden transition-all duration-300"
             style={{
-              background: isListening 
-                ? 'linear-gradient(145deg, #1a0000 0%, #0a0000 50%, #000000 100%)'
+              background: `linear-gradient(145deg, ${surfaceColor} 0%, ${bgColor} 50%, #000000 100%)`,
+              boxShadow: isListening 
+                ? `0 0 40px ${errorColor}80, inset 0 0 30px ${errorColor}30`
                 : isSpeaking
-                ? 'linear-gradient(145deg, #1a1500 0%, #0a0a00 50%, #000000 100%)'
+                ? `0 0 40px ${accentColor}80, inset 0 0 30px ${accentColor}30`
                 : isThinking
-                ? 'linear-gradient(145deg, #0a0015 0%, #050008 50%, #000000 100%)'
-                : 'linear-gradient(145deg, #0a0a0a 0%, #050505 50%, #000000 100%)',
+                ? `0 0 40px ${secondaryColor}80, inset 0 0 30px ${secondaryColor}30`
+                : `0 0 30px ${primaryColor}40, inset 0 0 20px rgba(0,0,0,0.8)`,
             }}
           >
             {/* Borda interna metálica */}
@@ -298,21 +309,20 @@ export default function OrionAssistant() {
               className="absolute rounded-full"
               style={{
                 inset: '3px',
-                border: isListening 
-                  ? '1px solid rgba(239, 68, 68, 0.5)'
-                  : '1px solid rgba(255, 215, 0, 0.3)',
+                border: `1px solid ${isListening ? errorColor : primaryColor}50`,
                 background: 'transparent',
               }}
             />
             
             {/* Reflexo de luz superior */}
             <div 
-              className="absolute rounded-full bg-white"
+              className="absolute rounded-full"
               style={{
                 top: '8px',
                 left: '12px',
                 width: '16px',
                 height: '8px',
+                background: 'white',
                 opacity: 0.15,
                 filter: 'blur(4px)',
               }}
@@ -321,7 +331,7 @@ export default function OrionAssistant() {
             {/* ═══ ÍCONE CENTRAL ═══ */}
             <div className="absolute inset-0 flex items-center justify-center">
               {isThinking ? (
-                <Loader2 className="w-8 h-8 text-violet-400 animate-spin" />
+                <Loader2 className="w-8 h-8 animate-spin" style={{ color: secondaryColor }} />
               ) : isListening ? (
                 <div className="relative">
                   {/* Ondas sonoras animadas */}
@@ -329,10 +339,11 @@ export default function OrionAssistant() {
                     {[...Array(3)].map((_, i) => (
                       <div
                         key={i}
-                        className="absolute rounded-full border-2 border-red-400 animate-ping"
+                        className="absolute rounded-full animate-ping"
                         style={{
                           width: `${24 + i * 16}px`,
                           height: `${24 + i * 16}px`,
+                          border: `2px solid ${errorColor}`,
                           animationDelay: `${i * 0.2}s`,
                           animationDuration: '1.5s',
                           opacity: 0.6 - i * 0.2,
@@ -341,23 +352,28 @@ export default function OrionAssistant() {
                     ))}
                   </div>
                   <Waves 
-                    className="w-8 h-8 text-red-400 relative z-10"
+                    className="w-8 h-8 relative z-10"
                     style={{ 
+                      color: errorColor,
                       transform: `scale(${1 + audioLevel * 0.3})`,
-                      filter: 'drop-shadow(0 0 8px rgba(239, 68, 68, 0.8))',
+                      filter: `drop-shadow(0 0 8px ${errorColor}80)`,
                     }}
                   />
                 </div>
               ) : isSpeaking ? (
                 <Radio 
-                  className="w-8 h-8 text-amber-400 animate-pulse"
-                  style={{ filter: 'drop-shadow(0 0 8px rgba(251, 191, 36, 0.8))' }}
+                  className="w-8 h-8 animate-pulse"
+                  style={{ 
+                    color: accentColor,
+                    filter: `drop-shadow(0 0 8px ${accentColor}80)`,
+                  }}
                 />
               ) : (
                 <Eye 
-                  className="w-8 h-8 text-amber-400 transition-all duration-300 group-hover:text-amber-300"
+                  className="w-8 h-8 transition-all duration-300 group-hover:opacity-80"
                   style={{ 
-                    filter: 'drop-shadow(0 0 8px rgba(251, 191, 36, 0.6))',
+                    color: primaryColor,
+                    filter: `drop-shadow(0 0 8px ${primaryColor}60)`,
                     transform: `scale(${iconScale})`,
                   }}
                 />
@@ -365,36 +381,36 @@ export default function OrionAssistant() {
             </div>
           </div>
           
-          {/* ═══ BADGE LIVE - NEON CIANO ═══ */}
+          {/* ═══ BADGE LIVE - USA COR DE SUCESSO DO TEMA ═══ */}
           <div 
             className="absolute flex items-center gap-1.5 px-2.5 py-1 rounded-full"
             style={{
               top: '-6px',
               right: '-6px',
-              background: 'rgba(0, 0, 0, 0.9)',
-              border: '1px solid rgba(34, 211, 238, 0.6)',
-              boxShadow: '0 0 15px rgba(34, 211, 238, 0.5), inset 0 0 10px rgba(34, 211, 238, 0.1)',
+              background: `${bgColor}F0`,
+              border: `1px solid ${successColor}60`,
+              boxShadow: `0 0 15px ${successColor}50, inset 0 0 10px ${successColor}10`,
             }}
           >
             <div 
               className="w-2 h-2 rounded-full animate-pulse"
               style={{ 
-                background: '#22D3EE',
-                boxShadow: '0 0 8px #22D3EE',
+                background: successColor,
+                boxShadow: `0 0 8px ${successColor}`,
               }}
             />
             <span 
               className="text-[10px] font-bold tracking-widest orbitron"
               style={{ 
-                color: '#22D3EE',
-                textShadow: '0 0 10px rgba(34, 211, 238, 0.8)',
+                color: successColor,
+                textShadow: `0 0 10px ${successColor}80`,
               }}
             >
               LIVE
             </span>
           </div>
 
-          {/* ═══ PARTÍCULAS FLUTUANTES DOURADAS ═══ */}
+          {/* ═══ PARTÍCULAS FLUTUANTES (CORES DO TEMA) ═══ */}
           <div className="absolute inset-[-16px] pointer-events-none overflow-visible">
             {[...Array(8)].map((_, i) => (
               <div
@@ -403,8 +419,8 @@ export default function OrionAssistant() {
                 style={{
                   width: `${2 + (i % 3)}px`,
                   height: `${2 + (i % 3)}px`,
-                  background: i % 2 === 0 ? '#FFD700' : '#22D3EE',
-                  boxShadow: i % 2 === 0 ? '0 0 6px #FFD700' : '0 0 6px #22D3EE',
+                  background: i % 2 === 0 ? primaryColor : accentColor,
+                  boxShadow: `0 0 6px ${i % 2 === 0 ? primaryColor : accentColor}`,
                   left: `${15 + i * 10}%`,
                   top: `${10 + (i % 4) * 25}%`,
                   animationDelay: `${i * 0.4}s`,
@@ -416,7 +432,7 @@ export default function OrionAssistant() {
         </button>
 
         {/* ════════════════════════════════════════════════════════════════════════ */}
-        {/* PAINEL DO CHAT - DESIGN PREMIUM CYBERPUNK                               */}
+        {/* PAINEL DO CHAT - SEGUE O TEMA ATIVO                                     */}
         {/* ════════════════════════════════════════════════════════════════════════ */}
         <div 
           className={`absolute bottom-0 right-0 w-[420px] transition-all duration-500 ease-out ${
@@ -428,32 +444,35 @@ export default function OrionAssistant() {
           <div 
             className="relative overflow-hidden"
             style={{
-              background: 'linear-gradient(180deg, rgba(5,5,5,0.98) 0%, rgba(0,0,0,0.99) 100%)',
+              background: `linear-gradient(180deg, ${surfaceColor}F8 0%, ${bgColor}FC 100%)`,
               backdropFilter: 'blur(24px)',
-              border: '1px solid rgba(255, 215, 0, 0.15)',
+              border: `1px solid ${primaryColor}15`,
               borderRadius: '24px',
               boxShadow: `
-                0 0 60px rgba(251, 191, 36, 0.12),
+                0 0 60px ${primaryColor}12,
                 0 25px 60px rgba(0, 0, 0, 0.9),
                 inset 0 1px 0 rgba(255, 255, 255, 0.05)
               `,
             }}
           >
             
-            {/* Linha dourada superior */}
+            {/* Linha superior com cor do tema */}
             <div 
               className="absolute top-0 left-0 right-0 h-[2px]"
               style={{
-                background: 'linear-gradient(90deg, transparent 0%, rgba(255, 215, 0, 0.6) 50%, transparent 100%)',
+                background: `linear-gradient(90deg, transparent 0%, ${primaryColor}60 50%, transparent 100%)`,
               }}
             />
             
             {/* ═══ HEADER ═══ */}
-            <div className="relative p-5 border-b border-white/5">
+            <div 
+              className="relative p-5"
+              style={{ borderBottom: `1px solid ${primaryColor}10` }}
+            >
               <div 
                 className="absolute inset-0"
                 style={{
-                  background: 'linear-gradient(90deg, rgba(255, 215, 0, 0.03) 0%, transparent 50%, rgba(34, 211, 238, 0.03) 100%)',
+                  background: `linear-gradient(90deg, ${primaryColor}05 0%, transparent 50%, ${accentColor}05 100%)`,
                 }}
               />
               
@@ -464,71 +483,59 @@ export default function OrionAssistant() {
                     <div 
                       className="w-14 h-14 rounded-2xl flex items-center justify-center transition-all duration-300"
                       style={{
-                        background: isListening 
-                          ? 'linear-gradient(135deg, rgba(239, 68, 68, 0.15) 0%, rgba(239, 68, 68, 0.05) 100%)'
-                          : isSpeaking
-                          ? 'linear-gradient(135deg, rgba(251, 191, 36, 0.15) 0%, rgba(251, 191, 36, 0.05) 100%)'
-                          : isThinking
-                          ? 'linear-gradient(135deg, rgba(139, 92, 246, 0.15) 0%, rgba(139, 92, 246, 0.05) 100%)'
-                          : 'linear-gradient(135deg, rgba(255, 215, 0, 0.1) 0%, rgba(34, 211, 238, 0.05) 100%)',
-                        border: isListening 
-                          ? '1px solid rgba(239, 68, 68, 0.4)'
-                          : isSpeaking
-                          ? '1px solid rgba(251, 191, 36, 0.4)'
-                          : isThinking
-                          ? '1px solid rgba(139, 92, 246, 0.4)'
-                          : '1px solid rgba(255, 215, 0, 0.25)',
-                        boxShadow: isListening 
-                          ? '0 0 25px rgba(239, 68, 68, 0.3)'
-                          : isSpeaking
-                          ? '0 0 25px rgba(251, 191, 36, 0.3)'
-                          : isThinking
-                          ? '0 0 25px rgba(139, 92, 246, 0.3)'
-                          : '0 0 20px rgba(255, 215, 0, 0.15)',
+                        background: `linear-gradient(135deg, ${
+                          isListening ? errorColor : isSpeaking ? accentColor : isThinking ? secondaryColor : primaryColor
+                        }15 0%, ${
+                          isListening ? errorColor : isSpeaking ? accentColor : isThinking ? secondaryColor : primaryColor
+                        }05 100%)`,
+                        border: `1px solid ${
+                          isListening ? errorColor : isSpeaking ? accentColor : isThinking ? secondaryColor : primaryColor
+                        }40`,
+                        boxShadow: `0 0 25px ${
+                          isListening ? errorColor : isSpeaking ? accentColor : isThinking ? secondaryColor : primaryColor
+                        }30`,
                       }}
                     >
                       {isThinking ? (
-                        <Loader2 className="w-7 h-7 text-violet-400 animate-spin" />
+                        <Loader2 className="w-7 h-7 animate-spin" style={{ color: secondaryColor }} />
                       ) : isListening ? (
-                        <Activity className="w-7 h-7 text-red-400 animate-pulse" />
+                        <Activity className="w-7 h-7 animate-pulse" style={{ color: errorColor }} />
                       ) : isSpeaking ? (
-                        <Volume2 className="w-7 h-7 text-amber-400 animate-pulse" />
+                        <Volume2 className="w-7 h-7 animate-pulse" style={{ color: accentColor }} />
                       ) : (
-                        <Sparkles className="w-7 h-7 text-amber-400" />
+                        <Sparkles className="w-7 h-7" style={{ color: primaryColor }} />
                       )}
                     </div>
                     {/* Status indicator */}
                     <div 
-                      className="absolute -bottom-0.5 -right-0.5 w-4 h-4 rounded-full border-2 border-black"
+                      className="absolute -bottom-0.5 -right-0.5 w-4 h-4 rounded-full border-2"
                       style={{
-                        background: isListening ? '#EF4444' :
-                          isSpeaking ? '#FBBF24' :
-                          isThinking ? '#8B5CF6' : '#10B981',
-                        boxShadow: isListening ? '0 0 8px #EF4444' :
-                          isSpeaking ? '0 0 8px #FBBF24' :
-                          isThinking ? '0 0 8px #8B5CF6' : '0 0 8px #10B981',
+                        borderColor: bgColor,
+                        background: isListening ? errorColor : isSpeaking ? accentColor : isThinking ? secondaryColor : successColor,
+                        boxShadow: `0 0 8px ${isListening ? errorColor : isSpeaking ? accentColor : isThinking ? secondaryColor : successColor}`,
                       }}
                     />
                   </div>
                   
                   <div>
                     <h3 
-                      className="text-lg font-black text-white tracking-wide flex items-center gap-2 orbitron"
+                      className="text-lg font-black tracking-wide flex items-center gap-2 orbitron"
+                      style={{ color: textColor }}
                     >
                       ORION
                       <span 
                         className="px-2.5 py-0.5 text-[9px] font-bold rounded-full"
                         style={{
-                          background: 'linear-gradient(90deg, rgba(255, 215, 0, 0.15) 0%, rgba(34, 211, 238, 0.15) 100%)',
-                          border: '1px solid rgba(255, 215, 0, 0.3)',
-                          color: '#FFD700',
+                          background: `linear-gradient(90deg, ${primaryColor}15 0%, ${accentColor}15 100%)`,
+                          border: `1px solid ${primaryColor}30`,
+                          color: primaryColor,
                           letterSpacing: '0.1em',
                         }}
                       >
                         J.A.R.V.I.S.
                       </span>
                     </h3>
-                    <p className="text-[11px] text-gray-500 font-mono mt-0.5">
+                    <p className="text-[11px] font-mono mt-0.5" style={{ color: textSecondaryColor }}>
                       {isListening ? '🎤 Ouvindo você...' :
                        isSpeaking ? '🔊 Falando...' :
                        isThinking ? '🧠 Processando...' :
@@ -543,9 +550,9 @@ export default function OrionAssistant() {
                     onClick={handleToggleVoice}
                     className="p-2.5 rounded-xl transition-all"
                     style={{
-                      background: voiceState.voiceEnabled ? 'rgba(255, 215, 0, 0.1)' : 'rgba(255, 255, 255, 0.03)',
-                      border: voiceState.voiceEnabled ? '1px solid rgba(255, 215, 0, 0.3)' : '1px solid rgba(255, 255, 255, 0.08)',
-                      color: voiceState.voiceEnabled ? '#FFD700' : '#6B7280',
+                      background: voiceState.voiceEnabled ? `${primaryColor}10` : `${textColor}05`,
+                      border: `1px solid ${voiceState.voiceEnabled ? `${primaryColor}30` : `${textColor}10`}`,
+                      color: voiceState.voiceEnabled ? primaryColor : textSecondaryColor,
                     }}
                     title={voiceState.voiceEnabled ? 'Desativar voz' : 'Ativar voz'}
                   >
@@ -557,9 +564,9 @@ export default function OrionAssistant() {
                     onClick={handleToggleGodMode}
                     className="p-2.5 rounded-xl transition-all"
                     style={{
-                      background: chatState.godMode ? 'rgba(139, 92, 246, 0.1)' : 'rgba(255, 255, 255, 0.03)',
-                      border: chatState.godMode ? '1px solid rgba(139, 92, 246, 0.3)' : '1px solid rgba(255, 255, 255, 0.08)',
-                      color: chatState.godMode ? '#8B5CF6' : '#6B7280',
+                      background: chatState.godMode ? `${secondaryColor}10` : `${textColor}05`,
+                      border: `1px solid ${chatState.godMode ? `${secondaryColor}30` : `${textColor}10`}`,
+                      color: chatState.godMode ? secondaryColor : textSecondaryColor,
                     }}
                     title="God Mode"
                   >
@@ -569,11 +576,11 @@ export default function OrionAssistant() {
                   {/* Minimize */}
                   <button
                     onClick={handleToggleMinimize}
-                    className="p-2.5 rounded-xl transition-all hover:bg-white/5"
+                    className="p-2.5 rounded-xl transition-all"
                     style={{
-                      background: 'rgba(255, 255, 255, 0.03)',
-                      border: '1px solid rgba(255, 255, 255, 0.08)',
-                      color: '#9CA3AF',
+                      background: `${textColor}05`,
+                      border: `1px solid ${textColor}10`,
+                      color: textSecondaryColor,
                     }}
                   >
                     {isMinimized ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
@@ -582,11 +589,11 @@ export default function OrionAssistant() {
                   {/* Close */}
                   <button
                     onClick={handleToggleOpen}
-                    className="p-2.5 rounded-xl transition-all hover:bg-red-500/10 hover:border-red-500/30"
+                    className="p-2.5 rounded-xl transition-all"
                     style={{
-                      background: 'rgba(255, 255, 255, 0.03)',
-                      border: '1px solid rgba(255, 255, 255, 0.08)',
-                      color: '#9CA3AF',
+                      background: `${textColor}05`,
+                      border: `1px solid ${textColor}10`,
+                      color: textSecondaryColor,
                     }}
                   >
                     <X className="w-4 h-4" />
@@ -601,7 +608,7 @@ export default function OrionAssistant() {
                 className="h-80 overflow-y-auto p-5 space-y-4"
                 style={{
                   scrollbarWidth: 'thin',
-                  scrollbarColor: 'rgba(255, 215, 0, 0.2) transparent',
+                  scrollbarColor: `${primaryColor}20 transparent`,
                 }}
               >
                 {chatState.messages.map((msg: Message) => (
@@ -613,28 +620,29 @@ export default function OrionAssistant() {
                       className="max-w-[85%] p-4 rounded-2xl"
                       style={{
                         background: msg.role === 'user'
-                          ? 'linear-gradient(135deg, rgba(255, 215, 0, 0.1) 0%, rgba(255, 215, 0, 0.05) 100%)'
-                          : 'rgba(255, 255, 255, 0.03)',
-                        border: msg.role === 'user'
-                          ? '1px solid rgba(255, 215, 0, 0.2)'
-                          : '1px solid rgba(255, 255, 255, 0.06)',
+                          ? `linear-gradient(135deg, ${primaryColor}10 0%, ${primaryColor}05 100%)`
+                          : `${textColor}05`,
+                        border: `1px solid ${msg.role === 'user' ? `${primaryColor}20` : `${textColor}08`}`,
                         borderRadius: msg.role === 'user' ? '20px 20px 4px 20px' : '20px 20px 20px 4px',
                       }}
                     >
                       <div className="flex items-center gap-2 mb-2">
-                        {msg.role === 'orion' && <Sparkles className="w-3 h-3 text-amber-400" />}
+                        {msg.role === 'orion' && <Sparkles className="w-3 h-3" style={{ color: primaryColor }} />}
                         <span 
                           className="text-[10px] uppercase tracking-wider font-mono"
-                          style={{ color: msg.role === 'user' ? '#FFD700' : '#6B7280' }}
+                          style={{ color: msg.role === 'user' ? primaryColor : textSecondaryColor }}
                         >
                           {msg.role === 'user' ? 'VOCÊ' : 'ORION'}
-                          {msg.isVoice && <Mic className="w-2.5 h-2.5 inline ml-1 text-red-400" />}
+                          {msg.isVoice && <Mic className="w-2.5 h-2.5 inline ml-1" style={{ color: errorColor }} />}
                         </span>
                       </div>
-                      <p className="text-sm text-white/90 leading-relaxed">{msg.content}</p>
+                      <p className="text-sm leading-relaxed" style={{ color: `${textColor}E6` }}>{msg.content}</p>
                       
                       {chatState.godMode && msg.tokens && (
-                        <div className="mt-3 pt-2 border-t border-white/5 flex gap-3 text-[9px] text-gray-600 font-mono">
+                        <div 
+                          className="mt-3 pt-2 flex gap-3 text-[9px] font-mono"
+                          style={{ borderTop: `1px solid ${textColor}08`, color: textSecondaryColor }}
+                        >
                           <span>{msg.tokens} tokens</span>
                           <span>{msg.executionTime}ms</span>
                         </div>
@@ -648,16 +656,24 @@ export default function OrionAssistant() {
                     <div 
                       className="p-4 rounded-2xl"
                       style={{
-                        background: 'rgba(255, 255, 255, 0.03)',
-                        border: '1px solid rgba(255, 255, 255, 0.06)',
+                        background: `${textColor}05`,
+                        border: `1px solid ${textColor}08`,
                         borderRadius: '20px 20px 20px 4px',
                       }}
                     >
                       <div className="flex items-center gap-2">
-                        <div className="w-2 h-2 bg-violet-500 rounded-full animate-bounce" style={{ boxShadow: '0 0 8px #8B5CF6' }} />
-                        <div className="w-2 h-2 bg-violet-500 rounded-full animate-bounce" style={{ animationDelay: '0.1s', boxShadow: '0 0 8px #8B5CF6' }} />
-                        <div className="w-2 h-2 bg-violet-500 rounded-full animate-bounce" style={{ animationDelay: '0.2s', boxShadow: '0 0 8px #8B5CF6' }} />
-                        <span className="ml-2 text-xs text-gray-500">Processando...</span>
+                        {[0, 1, 2].map(i => (
+                          <div 
+                            key={i}
+                            className="w-2 h-2 rounded-full animate-bounce"
+                            style={{ 
+                              background: secondaryColor,
+                              boxShadow: `0 0 8px ${secondaryColor}`,
+                              animationDelay: `${i * 0.1}s`,
+                            }}
+                          />
+                        ))}
+                        <span className="ml-2 text-xs" style={{ color: textSecondaryColor }}>Processando...</span>
                       </div>
                     </div>
                   </div>
@@ -670,10 +686,10 @@ export default function OrionAssistant() {
             {/* ═══ INPUT ═══ */}
             {!isMinimized && (
               <div 
-                className="p-5 border-t"
+                className="p-5"
                 style={{
-                  borderColor: 'rgba(255, 255, 255, 0.05)',
-                  background: 'rgba(0, 0, 0, 0.4)',
+                  borderTop: `1px solid ${textColor}08`,
+                  background: `${bgColor}60`,
                 }}
               >
                 {/* ═══ AVISO DE ERRO ELEGANTE ═══ */}
@@ -682,24 +698,24 @@ export default function OrionAssistant() {
                     className="mb-4 p-3 rounded-xl flex items-start gap-3 animate-fadeIn"
                     style={{
                       background: voiceState.error.type === 'browser-unsupported' 
-                        ? 'rgba(251, 191, 36, 0.1)'
-                        : 'rgba(239, 68, 68, 0.1)',
-                      border: voiceState.error.type === 'browser-unsupported'
-                        ? '1px solid rgba(251, 191, 36, 0.3)'
-                        : '1px solid rgba(239, 68, 68, 0.3)',
+                        ? `${colors.warning}10`
+                        : `${errorColor}10`,
+                      border: `1px solid ${voiceState.error.type === 'browser-unsupported'
+                        ? `${colors.warning}30`
+                        : `${errorColor}30`}`,
                     }}
                   >
                     <AlertCircle 
                       className="w-4 h-4 flex-shrink-0 mt-0.5"
                       style={{ 
-                        color: voiceState.error.type === 'browser-unsupported' ? '#FBBF24' : '#EF4444' 
+                        color: voiceState.error.type === 'browser-unsupported' ? colors.warning : errorColor 
                       }}
                     />
                     <div className="flex-1">
                       <p 
                         className="text-xs leading-relaxed"
                         style={{ 
-                          color: voiceState.error.type === 'browser-unsupported' ? '#FBBF24' : '#EF4444' 
+                          color: voiceState.error.type === 'browser-unsupported' ? colors.warning : errorColor 
                         }}
                       >
                         {voiceState.error.message}
@@ -709,7 +725,7 @@ export default function OrionAssistant() {
                           onClick={clearError}
                           className="text-[10px] mt-1 underline opacity-70 hover:opacity-100"
                           style={{ 
-                            color: voiceState.error.type === 'browser-unsupported' ? '#FBBF24' : '#EF4444' 
+                            color: voiceState.error.type === 'browser-unsupported' ? colors.warning : errorColor 
                           }}
                         >
                           Fechar
@@ -720,22 +736,20 @@ export default function OrionAssistant() {
                 )}
 
                 <div className="flex items-center gap-3">
-                  {/* ═══ BOTÃO DO MICROFONE - PREMIUM ═══ */}
+                  {/* ═══ BOTÃO DO MICROFONE - USA CORES DO TEMA ═══ */}
                   <button
                     onClick={handleMicClick}
                     disabled={isThinking || !voiceState.browserSupported}
                     className="relative p-4 rounded-2xl transition-all duration-300 disabled:opacity-40 disabled:cursor-not-allowed"
                     style={{
                       background: isListening 
-                        ? 'linear-gradient(135deg, #EF4444 0%, #DC2626 100%)'
-                        : 'linear-gradient(135deg, rgba(255, 215, 0, 0.1) 0%, rgba(255, 215, 0, 0.05) 100%)',
-                      border: isListening 
-                        ? '1px solid #EF4444'
-                        : '1px solid rgba(255, 215, 0, 0.3)',
+                        ? `linear-gradient(135deg, ${errorColor} 0%, ${errorColor}CC 100%)`
+                        : `linear-gradient(135deg, ${primaryColor}10 0%, ${primaryColor}05 100%)`,
+                      border: `1px solid ${isListening ? errorColor : `${primaryColor}30`}`,
                       boxShadow: isListening 
-                        ? '0 0 30px rgba(239, 68, 68, 0.6), inset 0 0 20px rgba(0, 0, 0, 0.3)'
-                        : '0 0 20px rgba(255, 215, 0, 0.2)',
-                      color: isListening ? '#FFFFFF' : '#FFD700',
+                        ? `0 0 30px ${errorColor}60, inset 0 0 20px rgba(0, 0, 0, 0.3)`
+                        : `0 0 20px ${primaryColor}20`,
+                      color: isListening ? '#FFFFFF' : primaryColor,
                     }}
                     title={isListening ? 'Parar de ouvir' : voiceState.browserSupported ? 'Clique para falar' : 'Navegador não suporta voz'}
                   >
@@ -744,8 +758,9 @@ export default function OrionAssistant() {
                         <MicOff className="w-5 h-5 relative z-10" />
                         {/* Visualização de nível de áudio */}
                         <div 
-                          className="absolute inset-0 rounded-2xl bg-red-400 animate-ping"
+                          className="absolute inset-0 rounded-2xl animate-ping"
                           style={{ 
+                            background: errorColor,
                             opacity: 0.3,
                             transform: `scale(${1 + audioLevel * 0.5})`,
                           }}
@@ -766,10 +781,11 @@ export default function OrionAssistant() {
                       onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && handleSendMessage()}
                       placeholder={isListening ? 'Fale agora...' : 'Digite ou clique no mic...'}
                       disabled={isListening || isThinking}
-                      className="w-full rounded-2xl px-5 py-4 text-sm text-white placeholder-gray-500 transition-all focus:outline-none disabled:opacity-50"
+                      className="w-full rounded-2xl px-5 py-4 text-sm transition-all focus:outline-none disabled:opacity-50"
                       style={{
-                        background: 'rgba(255, 255, 255, 0.03)',
-                        border: '1px solid rgba(255, 255, 255, 0.08)',
+                        background: `${textColor}05`,
+                        border: `1px solid ${textColor}10`,
+                        color: textColor,
                       }}
                     />
                   </div>
@@ -780,9 +796,9 @@ export default function OrionAssistant() {
                     disabled={!inputText.trim() || isThinking}
                     className="p-4 rounded-2xl transition-all disabled:opacity-40 disabled:cursor-not-allowed"
                     style={{
-                      background: 'linear-gradient(135deg, #FFD700 0%, #FFA500 100%)',
-                      boxShadow: '0 0 25px rgba(255, 215, 0, 0.4)',
-                      color: '#000000',
+                      background: `linear-gradient(135deg, ${primaryColor} 0%, ${accentColor} 100%)`,
+                      boxShadow: `0 0 25px ${primaryColor}40`,
+                      color: bgColor,
                     }}
                   >
                     <Send className="w-5 h-5" />
@@ -798,9 +814,9 @@ export default function OrionAssistant() {
                       disabled={isThinking}
                       className="px-4 py-2 text-[11px] rounded-xl transition-all font-medium tracking-wide disabled:opacity-40"
                       style={{
-                        background: 'rgba(255, 255, 255, 0.03)',
-                        border: '1px solid rgba(255, 255, 255, 0.08)',
-                        color: '#9CA3AF',
+                        background: `${textColor}05`,
+                        border: `1px solid ${textColor}10`,
+                        color: textSecondaryColor,
                       }}
                     >
                       {cmd}
@@ -814,7 +830,7 @@ export default function OrionAssistant() {
       </div>
 
       {/* ════════════════════════════════════════════════════════════════════════ */}
-      {/* ESTILOS CSS PREMIUM                                                       */}
+      {/* ESTILOS CSS                                                              */}
       {/* ════════════════════════════════════════════════════════════════════════ */}
       <style jsx>{`
         @keyframes orion-particle {

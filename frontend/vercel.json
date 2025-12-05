@@ -25,6 +25,26 @@
     {
       "path": "/api/agents/heartbeat",
       "schedule": "*/5 * * * *"
+    },
+    {
+      "path": "/api/evolution/micro",
+      "schedule": "*/10 * * * *"
+    },
+    {
+      "path": "/api/evolution/tactical",
+      "schedule": "0 */2 * * *"
+    },
+    {
+      "path": "/api/evolution/daily",
+      "schedule": "33 6 * * *"
+    },
+    {
+      "path": "/api/evolution/quantum",
+      "schedule": "44 7 * * 0"
+    },
+    {
+      "path": "/api/evolution/consciousness",
+      "schedule": "13 16 13 * *"
     }
   ]
 }
