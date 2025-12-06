@@ -42,9 +42,10 @@ interface AuthContextType {
     session: Session | null;
     metadata: UserMetadata | null;
     loading: boolean;
+    error: string | null;
     hasFounderAccess: boolean;
     hasAccess: boolean;
-    signIn: (email: string, password: string) => Promise<{ error: AuthError | null }>;
+    signIn: (email: string, password: string) => Promise<{ ok: boolean; error: AuthError | Error | null }>;
     signUp: (email: string, password: string) => Promise<{ error: AuthError | null }>;
     signOut: () => Promise<void>;
     refreshMetadata: () => Promise<void>;
@@ -76,6 +77,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const [session, setSession] = useState<Session | null>(null);
     const [metadata, setMetadata] = useState<UserMetadata | null>(null);
     const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
     const router = useRouter();
 
     // Função para carregar metadata do usuário
@@ -132,6 +134,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             }
 
             setLoading(false);
+            setError(null);
         };
 
         supabase.auth.getSession().then(async ({ data: { session } }) => {
@@ -144,48 +147,68 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }, []);
 
     const signIn = async (email: string, password: string) => {
-        const supabase = getSupabaseClient();
-        const { error } = await supabase.auth.signInWithPassword({
-            email,
-            password,
-        });
+        setLoading(true);
+        setError(null);
 
-        if (!error) {
-            // Carregar metadata imediatamente após login
-            const { data: { user } } = await supabase.auth.getUser();
-            if (user) {
-                const metadata = await loadUserMetadata(user.id);
+        try {
+            const supabase = getSupabaseClient();
+            const { data, error: authError } = await supabase.auth.signInWithPassword({
+                email,
+                password,
+            });
 
-                // Verificar se é o dono
+            if (authError || !data?.session || !data?.user) {
+                console.error('Supabase signIn error:', authError);
+                setLoading(false);
+                setError(authError?.message ?? 'Falha ao autenticar. Verifique suas credenciais.');
+                return { ok: false, error: authError };
+            }
+
+            try {
+                const metadata = await loadUserMetadata(data.user.id);
+                setMetadata(metadata);
+                setUser(data.user);
+                setSession(data.session);
+
                 if (email === 'casamondestore@gmail.com') {
                     router.push('/dashboard');
-                    return { error: null };
+                    setLoading(false);
+                    return { ok: true, error: null };
                 }
 
-                // Verificar founder access
                 if (metadata?.founder_access) {
                     router.push('/dashboard');
-                    return { error: null };
+                    setLoading(false);
+                    return { ok: true, error: null };
                 }
 
-                // Verificar plano enterprise
                 if (metadata?.subscription_plan === 'enterprise' && metadata?.subscription_status === 'active') {
                     router.push('/dashboard');
-                    return { error: null };
+                    setLoading(false);
+                    return { ok: true, error: null };
                 }
 
-                // Verificar se tem qualquer subscription ativa
                 if (metadata?.subscription_status === 'active') {
                     router.push('/dashboard');
-                    return { error: null };
+                    setLoading(false);
+                    return { ok: true, error: null };
                 }
 
-                // Não pagou - vai para pricing
                 router.push('/pricing');
+                setLoading(false);
+                return { ok: true, error: null };
+            } catch (metadataError) {
+                console.error('Erro ao processar pós-login:', metadataError);
+                setLoading(false);
+                setError('Erro ao carregar dados do usuário. Tente novamente.');
+                return { ok: false, error: metadataError as Error };
             }
+        } catch (err) {
+            console.error('Unexpected signIn error:', err);
+            setLoading(false);
+            setError('Erro inesperado ao autenticar. Tente novamente em instantes.');
+            return { ok: false, error: err as Error };
         }
-
-        return { error };
     };
 
     const signUp = async (email: string, password: string) => {
@@ -228,6 +251,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             session,
             metadata,
             loading,
+            error,
             hasFounderAccess,
             hasAccess,
             signIn,
