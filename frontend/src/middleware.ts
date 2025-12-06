@@ -7,13 +7,10 @@
  * ═══════════════════════════════════════════════════════════════
  */
 
-import { NextResponse } from 'next/server';
-import type { NextRequest } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
+import { NextRequest, NextResponse } from 'next/server';
+import { createServerClient } from '@supabase/ssr';
+import type { SupabaseClient } from '@supabase/supabase-js';
 
-// ========================================
-// ROTAS PÚBLICAS (sem autenticação)
-// ========================================
 const PUBLIC_ROUTES = [
     '/',
     '/pricing',
@@ -24,196 +21,121 @@ const PUBLIC_ROUTES = [
     '/terms',
     '/privacy',
     '/contact',
-    '/api/stripe/webhook', // Webhook precisa ser público
-    '/api/stripe/checkout',
 ];
 
-// ========================================
-// ROTAS QUE PRECISAM DE PAGAMENTO
-// ========================================
-const PAID_ROUTES = [
-    '/dashboard',
-];
+const isPublicPath = (pathname: string) => {
+    return (
+        PUBLIC_ROUTES.includes(pathname) ||
+        pathname.startsWith('/api') ||
+        pathname.startsWith('/_next') ||
+        pathname.startsWith('/static') ||
+        pathname.startsWith('/favicon') ||
+        pathname.startsWith('/images') ||
+        pathname.startsWith('/sounds')
+    );
+};
 
-export async function middleware(req: NextRequest) {
-    const { pathname } = req.nextUrl;
-
-    // ========================================
-    // MODO DESENVOLVIMENTO - BYPASS TOTAL
-    // ========================================
-    const isDevMode = process.env.NEXT_PUBLIC_DEV_MODE === 'true';
-    if (isDevMode) {
-        console.log('🛠️ DEV MODE: Bypass de autenticação ativado');
-        return NextResponse.next();
-    }
-
-    // ========================================
-    // 1. ROTAS PÚBLICAS - LIBERA
-    // ========================================
-    if (PUBLIC_ROUTES.some(route => pathname === route || pathname.startsWith('/api/'))) {
-        // Permitir todas as rotas de API e rotas públicas
-        if (pathname.startsWith('/api/')) {
-            return NextResponse.next();
-        }
-
-        // Rotas públicas específicas
-        if (PUBLIC_ROUTES.includes(pathname)) {
-            return NextResponse.next();
-        }
-    }
-
-// ========================================
-// ROTAS DE DESENVOLVIMENTO - LIBERA
-// ========================================
-if (pathname.startsWith('/dev/')) {
-    console.log('🛠️ DEV ROUTE: Acesso liberado para rota de desenvolvimento');
-    return NextResponse.next();
-}
-
-    // ========================================
-    // 2. VERIFICAR AUTENTICAÇÃO VIA COOKIE
-    // ========================================
+async function getSupabaseClient(req: NextRequest, res: NextResponse): Promise<SupabaseClient | null> {
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
     const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
     if (!supabaseUrl || !supabaseAnonKey) {
-        // Se não tem Supabase configurado, deixa passar (dev mode)
-        console.warn('⚠️ Supabase não configurado no middleware');
-        return NextResponse.next();
+        console.warn('⚠️ Supabase environment variables missing in middleware');
+        return null;
     }
 
-    // Pegar token do cookie de autenticação do Supabase
-    const authToken = req.cookies.get('sb-access-token')?.value ||
-                      req.cookies.get('supabase-auth-token')?.value;
+    return createServerClient(supabaseUrl, supabaseAnonKey, {
+        cookies: {
+            get(name: string) {
+                return req.cookies.get(name)?.value;
+            },
+            set(name: string, value: string, options: any) {
+                res.cookies.set({ name, value, ...options });
+            },
+            remove(name: string, options: any) {
+                res.cookies.set({ name, value: '', ...options });
+            }
+        }
+    });
+}
 
-    // ========================================
-    // 3. ROTAS DE DASHBOARD - VERIFICAÇÃO COMPLETA
-    // ========================================
+async function handleDashboardAccess(req: NextRequest, supabase: SupabaseClient, res: NextResponse) {
+    const { data, error } = await supabase.auth.getUser();
+
+    if (error || !data?.user) {
+        const loginUrl = new URL('/login', req.url);
+        return NextResponse.redirect(loginUrl);
+    }
+
+    const userEmail = data.user.email;
+
+    if (userEmail === 'casamondestore@gmail.com') {
+        const response = NextResponse.next({ request: { headers: req.headers } });
+        response.headers.set('x-user-authenticated', 'true');
+        response.headers.set('x-user-founder', 'true');
+        response.headers.set('x-user-email', userEmail || '');
+        return response;
+    }
+
+    const { data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .select('subscription_plan, subscription_status, founder_access')
+        .eq('id', data.user.id)
+        .single();
+
+    if (profileError) {
+        console.error('Erro ao buscar dados do usuário:', profileError);
+        const pricingUrl = new URL('/pricing', req.url);
+        pricingUrl.searchParams.set('reason', 'profile_error');
+        return NextResponse.redirect(pricingUrl);
+    }
+
+    const hasFounderAccess = profile?.founder_access === true;
+    const hasEnterprisePlan = profile?.subscription_plan === 'enterprise' && profile?.subscription_status === 'active';
+    const hasActiveSubscription = profile?.subscription_status === 'active';
+
+    if (hasFounderAccess || hasEnterprisePlan || hasActiveSubscription) {
+        const response = NextResponse.next({ request: { headers: req.headers } });
+        response.headers.set('x-user-authenticated', 'true');
+        response.headers.set('x-user-plan', profile?.subscription_plan || 'free');
+        if (hasFounderAccess) response.headers.set('x-user-founder', 'true');
+        if (hasEnterprisePlan || hasActiveSubscription) response.headers.set('x-user-paid', 'true');
+        return response;
+    }
+
+    const pricingUrl = new URL('/pricing', req.url);
+    pricingUrl.searchParams.set('reason', 'payment_required');
+    return NextResponse.redirect(pricingUrl);
+}
+
+export async function middleware(req: NextRequest) {
+    const res = NextResponse.next();
+
+    const devMode = process.env.NEXT_PUBLIC_DEV_MODE === 'true';
+    if (devMode) {
+        return res;
+    }
+
+    const pathname = req.nextUrl.pathname;
+    if (isPublicPath(pathname)) {
+        return res;
+    }
+
+    const supabase = await getSupabaseClient(req, res);
+    if (!supabase) {
+        return res;
+    }
+
     if (pathname.startsWith('/dashboard')) {
-        // Se não tem token, redireciona para login
-        if (!authToken) {
-            console.log(`🔒 Acesso negado a ${pathname} - não autenticado`);
-            const url = req.nextUrl.clone();
-            url.pathname = '/login';
-            url.searchParams.set('redirect', pathname);
-            return NextResponse.redirect(url);
-        }
-
-        // ========================================
-        // 4. VERIFICAR AUTENTICAÇÃO E PERMISSÕES
-        // ========================================
-        const supabase = createClient(supabaseUrl, supabaseAnonKey, {
-            auth: {
-                persistSession: false
-            }
-        });
-
-        try {
-            // Pegar sessão do usuário
-            const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-
-            if (sessionError || !session) {
-                console.log(`🔒 Acesso negado a ${pathname} - sessão inválida`);
-                const url = req.nextUrl.clone();
-                url.pathname = '/login';
-                return NextResponse.redirect(url);
-            }
-
-            const userId = session.user.id;
-            const userEmail = session.user.email;
-
-            // ========================================
-            // 5. VERIFICAÇÃO ESPECIAL - DONO SEMPRE TEM ACESSO
-            // ========================================
-            if (userEmail === 'casamondestore@gmail.com') {
-                console.log('👑 DONO DETECTADO - ACESSO TOTAL LIBERADO');
-                const response = NextResponse.next();
-                response.headers.set('x-user-authenticated', 'true');
-                response.headers.set('x-user-founder', 'true');
-                response.headers.set('x-user-email', userEmail);
-                return response;
-            }
-
-            // Buscar dados do usuário no Supabase (profiles table)
-            const { data: userData, error: userError } = await supabase
-                .from('profiles')
-                .select('subscription_plan, subscription_status, founder_access')
-                .eq('id', userId)
-                .single();
-
-            if (userError) {
-                console.error('Erro ao buscar dados do usuário:', userError);
-                // Se erro ao buscar, redireciona para pricing por segurança
-                const url = req.nextUrl.clone();
-                url.pathname = '/pricing';
-                return NextResponse.redirect(url);
-            }
-
-            // ========================================
-            // 6. VERIFICAÇÃO DE PERMISSÕES
-            // ========================================
-            const hasFounderAccess = userData?.founder_access === true;
-            const hasEnterprisePlan = userData?.subscription_plan === 'enterprise';
-            const isSubscriptionActive = userData?.subscription_status === 'active';
-
-            if (hasFounderAccess) {
-                console.log('🏆 FOUNDER ACCESS - ACESSO TOTAL LIBERADO');
-                const response = NextResponse.next();
-                response.headers.set('x-user-authenticated', 'true');
-                response.headers.set('x-user-founder', 'true');
-                response.headers.set('x-user-plan', userData?.subscription_plan || 'free');
-                return response;
-            }
-
-            if (hasEnterprisePlan && isSubscriptionActive) {
-                console.log('💎 ENTERPRISE PLAN ATIVO - ACESSO LIBERADO');
-                const response = NextResponse.next();
-                response.headers.set('x-user-authenticated', 'true');
-                response.headers.set('x-user-plan', 'enterprise');
-                response.headers.set('x-user-paid', 'true');
-                return response;
-            }
-
-            if (isSubscriptionActive) {
-                console.log('✅ SUBSCRIPTION ATIVA - ACESSO LIBERADO');
-                const response = NextResponse.next();
-                response.headers.set('x-user-authenticated', 'true');
-                response.headers.set('x-user-plan', userData?.subscription_plan || 'free');
-                response.headers.set('x-user-paid', 'true');
-                return response;
-            }
-
-            // Usuário logado mas sem permissões - redireciona para pricing
-            console.log(`💰 Acesso negado a ${pathname} - usuário não pagou (ID: ${userId})`);
-            const url = req.nextUrl.clone();
-            url.pathname = '/pricing';
-            url.searchParams.set('reason', 'payment_required');
-            return NextResponse.redirect(url);
-
-        } catch (error) {
-            console.error('Erro no middleware:', error);
-            // Em caso de erro, redireciona para pricing por segurança
-            const url = req.nextUrl.clone();
-            url.pathname = '/pricing';
-            return NextResponse.redirect(url);
-        }
+        return handleDashboardAccess(req, supabase, res);
     }
 
-    // ========================================
-    // 5. OUTRAS ROTAS - DEIXA PASSAR
-    // ========================================
-    return NextResponse.next();
+    return res;
 }
 
 export const config = {
     matcher: [
-        /*
-         * Match all request paths except:
-         * - _next/static (static files)
-         * - _next/image (image optimization files)
-         * - favicon.ico (favicon file)
-         * - public folder
-         */
         '/((?!_next/static|_next/image|favicon.ico|public|.*\\..*|sounds|images).*)',
+        '/dashboard/:path*'
     ],
 };

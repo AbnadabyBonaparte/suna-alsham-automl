@@ -19,7 +19,7 @@ import {
 } from 'lucide-react';
 
 export default function LoginPage() {
-    const { signIn } = useAuth();
+    const { signIn, loading, error: authError } = useAuth();
     const canvasRef = useRef<HTMLCanvasElement>(null);
     
     // Estados
@@ -111,11 +111,11 @@ export default function LoginPage() {
     // AUTENTICAÇÃO EMAIL/PASSWORD (REAL)
     const handleEmailLogin = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!email || !password) return;
-        
+        if (!email || !password || loading) return;
+
         setStatus('scanning');
         setErrorMessage('');
-        
+
         // Animação de progresso
         let p = 0;
         const interval = setInterval(() => {
@@ -126,14 +126,14 @@ export default function LoginPage() {
 
         try {
             // AUTENTICAÇÃO REAL COM SUPABASE
-            const { error } = await signIn(email, password);
-            
+            const { ok, error: signInError } = await signIn(email, password);
+
             clearInterval(interval);
             setScanProgress(100);
 
-            if (error) {
+            if (!ok || signInError) {
                 setStatus('denied');
-                setErrorMessage(error.message || 'Authentication failed');
+                setErrorMessage(signInError?.message || 'Authentication failed');
                 setTimeout(() => {
                     setStatus('idle');
                     setScanProgress(0);
@@ -288,19 +288,19 @@ export default function LoginPage() {
                             />
                         </div>
 
-                        <button 
+                        <button
                             type="submit"
-                            disabled={status !== 'idle'}
+                            disabled={status !== 'idle' || loading}
                             className={`
                                 w-full py-3 rounded-xl font-bold text-xs tracking-widest uppercase transition-all relative overflow-hidden group
-                                ${status === 'success' ? 'bg-green-500 text-black' : 
-                                  status === 'denied' ? 'bg-red-500 text-white' : 
+                                ${status === 'success' ? 'bg-green-500 text-black' :
+                                  status === 'denied' ? 'bg-red-500 text-white' :
                                   'bg-[var(--color-primary)] text-black hover:bg-[var(--color-accent)]'}
                             `}
                         >
                             <div className="relative z-10 flex items-center justify-center gap-2">
                                 {status === 'idle' && <><Fingerprint className="w-4 h-4" /> AUTHENTICATE</>}
-                                {status === 'scanning' && 'SCANNING...'}
+                                {(status === 'scanning' || loading) && 'SCANNING...'}
                                 {status === 'success' && <><ShieldCheck className="w-4 h-4" /> GRANTED</>}
                                 {status === 'denied' && <><Lock className="w-4 h-4" /> LOCKED</>}
                             </div>
@@ -326,7 +326,7 @@ export default function LoginPage() {
                     <div className="grid grid-cols-2 gap-4">
                         <button
                             onClick={handleGoogleLogin}
-                            disabled={status !== 'idle'}
+                            disabled={status !== 'idle' || loading}
                             className="flex items-center justify-center gap-2 py-3 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/30 transition-all group"
                         >
                             <Chrome className="w-4 h-4 text-white group-hover:text-blue-400 transition-colors" />
@@ -335,13 +335,19 @@ export default function LoginPage() {
 
                         <button
                             onClick={handleGithubLogin}
-                            disabled={status !== 'idle'}
+                            disabled={status !== 'idle' || loading}
                             className="flex items-center justify-center gap-2 py-3 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/30 transition-all group"
                         >
                             <Github className="w-4 h-4 text-white group-hover:text-purple-400 transition-colors" />
                             <span className="text-xs font-bold text-gray-400 group-hover:text-white">GITHUB</span>
                         </button>
                     </div>
+
+                    {(authError || errorMessage) && (
+                        <p className="mt-4 text-sm text-red-400 text-center">
+                            {errorMessage || authError}
+                        </p>
+                    )}
 
                     {/* Signup Link */}
                     <div className="mt-6 text-center">
