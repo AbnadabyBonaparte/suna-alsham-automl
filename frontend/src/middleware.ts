@@ -9,7 +9,7 @@
 
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
+import { createServerClient } from '@supabase/ssr';
 
 // ========================================
 // ROTAS PÚBLICAS (sem autenticação)
@@ -71,7 +71,7 @@ if (pathname.startsWith('/dev/')) {
 }
 
     // ========================================
-    // 2. VERIFICAR AUTENTICAÇÃO VIA COOKIE
+    // 2. VERIFICAR AUTENTICAÇÃO VIA SUPABASE SSR
     // ========================================
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
     const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
@@ -82,52 +82,54 @@ if (pathname.startsWith('/dev/')) {
         return NextResponse.next();
     }
 
-    // Pegar token do cookie de autenticação do Supabase
-    const authToken = req.cookies.get('sb-access-token')?.value ||
-                      req.cookies.get('supabase-auth-token')?.value;
-
     // ========================================
     // 3. ROTAS DE DASHBOARD - VERIFICAÇÃO COMPLETA
     // ========================================
     if (pathname.startsWith('/dashboard')) {
-        // Se não tem token, redireciona para login
-        if (!authToken) {
-            console.log(`🔒 Acesso negado a ${pathname} - não autenticado`);
-            const url = req.nextUrl.clone();
-            url.pathname = '/login';
-            url.searchParams.set('redirect', pathname);
-            return NextResponse.redirect(url);
-        }
+        // Criar response mutável para cookies
+        let response = NextResponse.next({
+            request: {
+                headers: req.headers,
+            },
+        });
 
         // ========================================
-        // 4. VERIFICAR AUTENTICAÇÃO E PERMISSÕES
+        // 4. CRIAR SUPABASE CLIENT COM SSR (cookies corretos)
         // ========================================
-        const supabase = createClient(supabaseUrl, supabaseAnonKey, {
-            auth: {
-                persistSession: false
-            }
+        const supabase = createServerClient(supabaseUrl, supabaseAnonKey, {
+            cookies: {
+                getAll() {
+                    return req.cookies.getAll();
+                },
+                setAll(cookiesToSet) {
+                    cookiesToSet.forEach(({ name, value, options }) => {
+                        req.cookies.set(name, value);
+                        response.cookies.set(name, value, options);
+                    });
+                },
+            },
         });
 
         try {
-            // Pegar sessão do usuário
-            const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+            // Pegar usuário autenticado (getUser é mais seguro que getSession)
+            const { data: { user }, error: userError } = await supabase.auth.getUser();
 
-            if (sessionError || !session) {
-                console.log(`🔒 Acesso negado a ${pathname} - sessão inválida`);
+            if (userError || !user) {
+                console.log(`🔒 Acesso negado a ${pathname} - não autenticado`);
                 const url = req.nextUrl.clone();
                 url.pathname = '/login';
+                url.searchParams.set('redirect', pathname);
                 return NextResponse.redirect(url);
             }
 
-            const userId = session.user.id;
-            const userEmail = session.user.email;
+            const userId = user.id;
+            const userEmail = user.email;
 
             // ========================================
             // 5. VERIFICAÇÃO ESPECIAL - DONO SEMPRE TEM ACESSO
             // ========================================
             if (userEmail === 'casamondestore@gmail.com') {
                 console.log('👑 DONO DETECTADO - ACESSO TOTAL LIBERADO');
-                const response = NextResponse.next();
                 response.headers.set('x-user-authenticated', 'true');
                 response.headers.set('x-user-founder', 'true');
                 response.headers.set('x-user-email', userEmail);
@@ -135,14 +137,14 @@ if (pathname.startsWith('/dev/')) {
             }
 
             // Buscar dados do usuário no Supabase (profiles table)
-            const { data: userData, error: userError } = await supabase
+            const { data: userData, error: profileError } = await supabase
                 .from('profiles')
                 .select('subscription_plan, subscription_status, founder_access')
                 .eq('id', userId)
                 .single();
 
-            if (userError) {
-                console.error('Erro ao buscar dados do usuário:', userError);
+            if (profileError) {
+                console.error('Erro ao buscar dados do usuário:', profileError);
                 // Se erro ao buscar, redireciona para pricing por segurança
                 const url = req.nextUrl.clone();
                 url.pathname = '/pricing';
@@ -158,7 +160,6 @@ if (pathname.startsWith('/dev/')) {
 
             if (hasFounderAccess) {
                 console.log('🏆 FOUNDER ACCESS - ACESSO TOTAL LIBERADO');
-                const response = NextResponse.next();
                 response.headers.set('x-user-authenticated', 'true');
                 response.headers.set('x-user-founder', 'true');
                 response.headers.set('x-user-plan', userData?.subscription_plan || 'free');
@@ -167,7 +168,6 @@ if (pathname.startsWith('/dev/')) {
 
             if (hasEnterprisePlan && isSubscriptionActive) {
                 console.log('💎 ENTERPRISE PLAN ATIVO - ACESSO LIBERADO');
-                const response = NextResponse.next();
                 response.headers.set('x-user-authenticated', 'true');
                 response.headers.set('x-user-plan', 'enterprise');
                 response.headers.set('x-user-paid', 'true');
@@ -176,7 +176,6 @@ if (pathname.startsWith('/dev/')) {
 
             if (isSubscriptionActive) {
                 console.log('✅ SUBSCRIPTION ATIVA - ACESSO LIBERADO');
-                const response = NextResponse.next();
                 response.headers.set('x-user-authenticated', 'true');
                 response.headers.set('x-user-plan', userData?.subscription_plan || 'free');
                 response.headers.set('x-user-paid', 'true');
