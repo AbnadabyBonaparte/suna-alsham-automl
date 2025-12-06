@@ -4,3 +4,6 @@ dockerfilePath = "frontend/Dockerfile"
 
 [root]
 directory = "."
+
+[deploy]
+startCommand = "npm start"
