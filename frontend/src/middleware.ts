@@ -1,9 +1,10 @@
 /**
  * ═══════════════════════════════════════════════════════════════
- * ALSHAM QUANTUM - MIDDLEWARE DE PROTEÇÃO
+ * ALSHAM QUANTUM - MIDDLEWARE DE PROTEÇÃO (VERSÃO SIMPLIFICADA)
  * ═══════════════════════════════════════════════════════════════
  * 📁 PATH: frontend/src/middleware.ts
- * 🔐 Proteção de rotas com verificação de pagamento
+ * 🔐 Proteção básica de rotas baseada em cookie de sessão Supabase
+ *    (sem chamar Supabase no edge, para evitar loop de login)
  * ═══════════════════════════════════════════════════════════════
  */
 
@@ -15,60 +16,63 @@ import { createServerClient } from '@supabase/ssr';
 // ROTAS PÚBLICAS (sem autenticação)
 // ========================================
 const PUBLIC_ROUTES = [
-    '/',
-    '/pricing',
-    '/login',
-    '/signup',
-    '/forgot-password',
-    '/reset-password',
-    '/terms',
-    '/privacy',
-    '/contact',
-    '/api/stripe/webhook', // Webhook precisa ser público
-    '/api/stripe/checkout',
+  '/',
+  '/pricing',
+  '/login',
+  '/signup',
+  '/forgot-password',
+  '/reset-password',
+  '/terms',
+  '/privacy',
+  '/contact',
 ];
 
 // ========================================
-// ROTAS QUE PRECISAM DE PAGAMENTO
+// ROTAS PROTEGIDAS (precisam estar logado)
 // ========================================
-const PAID_ROUTES = [
-    '/dashboard',
-];
+const PROTECTED_PREFIXES = ['/dashboard'];
 
 export async function middleware(req: NextRequest) {
-    const { pathname } = req.nextUrl;
+  const { pathname } = req.nextUrl;
 
-    // ========================================
-    // MODO DESENVOLVIMENTO - BYPASS TOTAL
-    // ========================================
-    const isDevMode = process.env.NEXT_PUBLIC_DEV_MODE === 'true';
-    if (isDevMode) {
-        console.log('🛠️ DEV MODE: Bypass de autenticação ativado');
-        return NextResponse.next();
-    }
-
-    // ========================================
-    // 1. ROTAS PÚBLICAS - LIBERA
-    // ========================================
-    if (PUBLIC_ROUTES.some(route => pathname === route || pathname.startsWith('/api/'))) {
-        // Permitir todas as rotas de API e rotas públicas
-        if (pathname.startsWith('/api/')) {
-            return NextResponse.next();
-        }
-
-        // Rotas públicas específicas
-        if (PUBLIC_ROUTES.includes(pathname)) {
-            return NextResponse.next();
-        }
-    }
-
-// ========================================
-// ROTAS DE DESENVOLVIMENTO - LIBERA
-// ========================================
-if (pathname.startsWith('/dev/')) {
-    console.log('🛠️ DEV ROUTE: Acesso liberado para rota de desenvolvimento');
+  // ========================================
+  // 0. BYPASS EM DEV / ROTAS DE SISTEMA
+  // ========================================
+  const isDevMode = process.env.NEXT_PUBLIC_DEV_MODE === 'true';
+  if (isDevMode) {
+    console.log('🛠️ DEV MODE: middleware bypass');
     return NextResponse.next();
-}
+  }
+
+  // Rotas internas do Next, arquivos estáticos, etc.
+  if (
+    pathname.startsWith('/_next') ||
+    pathname.startsWith('/api/stripe/webhook') || // webhook precisa ser público
+    pathname.startsWith('/api/stripe/checkout') || // checkout público
+    pathname.match(/\.(?:svg|png|jpg|jpeg|gif|webp|ico|css|js|mp3)$/)
+  ) {
+    return NextResponse.next();
+  }
+
+  // Rotas de desenvolvimento liberadas
+  if (pathname.startsWith('/dev/')) {
+    console.log('🛠️ DEV ROUTE: acesso liberado');
+    return NextResponse.next();
+  }
+
+  // ========================================
+  // 1. ROTAS PÚBLICAS - LIBERA
+  // ========================================
+  if (PUBLIC_ROUTES.includes(pathname) || pathname.startsWith('/api/')) {
+    return NextResponse.next();
+  }
+
+  // ========================================
+  // 2. VERIFICAR SE É ROTA PROTEGIDA
+  // ========================================
+  const isProtected = PROTECTED_PREFIXES.some((prefix) =>
+    pathname.startsWith(prefix),
+  );
 
     // ========================================
     // 2. VERIFICAR AUTENTICAÇÃO VIA SUPABASE SSR
@@ -202,17 +206,42 @@ if (pathname.startsWith('/dev/')) {
     // 5. OUTRAS ROTAS - DEIXA PASSAR
     // ========================================
     return NextResponse.next();
+  }
+
+  // ========================================
+  // 3. CHECAR SE EXISTE COOKIE DE AUTENTICAÇÃO SUPABASE
+  // ========================================
+  const cookies = req.cookies.getAll();
+
+  // Cookies do Supabase seguem o padrão: sb-<project-ref>-auth-token
+  const hasSupabaseAuthCookie = cookies.some((cookie) =>
+    cookie.name.startsWith('sb-') && cookie.name.endsWith('-auth-token'),
+  );
+
+  if (!hasSupabaseAuthCookie) {
+    console.log(`🔒 Acesso negado a ${pathname} - sem cookie Supabase`);
+
+    const url = req.nextUrl.clone();
+    url.pathname = '/login';
+    url.searchParams.set('redirect', pathname);
+    return NextResponse.redirect(url);
+  }
+
+  // Usuário tem cookie supabase: consideramos autenticado
+  const res = NextResponse.next();
+  res.headers.set('x-user-authenticated', 'true');
+  return res;
 }
 
 export const config = {
-    matcher: [
-        /*
-         * Match all request paths except:
-         * - _next/static (static files)
-         * - _next/image (image optimization files)
-         * - favicon.ico (favicon file)
-         * - public folder
-         */
-        '/((?!_next/static|_next/image|favicon.ico|public|.*\\..*|sounds|images).*)',
-    ],
+  matcher: [
+    /*
+     * Match all request paths exceto:
+     * - _next/static (arquivos estáticos)
+     * - _next/image (otimização de imagem)
+     * - favicon.ico (favicon)
+     * - qualquer arquivo com extensão (.*\..*)
+     */
+    '/((?!_next/static|_next/image|favicon.ico|public|.*\\..*|sounds|images).*)',
+  ],
 };

@@ -3,14 +3,14 @@ FROM node:20-alpine AS builder
 
 WORKDIR /app
 
-# Copy package files
-COPY package*.json ./
+# Copy package files FROM FRONTEND
+COPY frontend/package*.json ./
 
 # Install all dependencies for build
-RUN npm ci --only=production=false --no-audit --no-fund
+RUN npm install --no-audit --no-fund
 
-# Copy source code
-COPY . .
+# Copy source code FROM FRONTEND
+COPY frontend ./
 
 # Build the application
 RUN npm run build
@@ -30,15 +30,14 @@ RUN addgroup -g 1001 -S nodejs && \
     adduser -S nextjs -u 1001
 
 # Copy package files
-COPY --chown=nextjs:nodejs package*.json ./
+COPY frontend/package*.json ./
 
 # Install only production dependencies
-RUN npm ci --only=production --no-audit --no-fund --prefer-offline && \
+RUN npm install --only=production --no-audit --no-fund --prefer-offline && \
     npm cache clean --force
 
 # Copy Next.js build output from builder stage
-COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
-COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
+COPY --from=builder --chown=nextjs:nodejs /app/.next ./.next
 COPY --from=builder --chown=nextjs:nodejs /app/public ./public
 
 # Clean up any remaining cache and temp files
@@ -54,4 +53,4 @@ ENV NEXT_TELEMETRY_DISABLED=1
 
 # Use dumb-init to handle signals properly
 ENTRYPOINT ["dumb-init", "--"]
-CMD ["node", "server.js"]
+CMD ["node", ".next/standalone/server.js"]
