@@ -10,6 +10,7 @@
 
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
+import { createServerClient } from '@supabase/ssr';
 
 // ========================================
 // ROTAS PÚBLICAS (sem autenticação)
@@ -73,8 +74,137 @@ export async function middleware(req: NextRequest) {
     pathname.startsWith(prefix),
   );
 
-  if (!isProtected) {
-    // Qualquer rota que não seja das protegidas passa direto
+    // ========================================
+    // 2. VERIFICAR AUTENTICAÇÃO VIA SUPABASE SSR
+    // ========================================
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+    if (!supabaseUrl || !supabaseAnonKey) {
+        // Se não tem Supabase configurado, deixa passar (dev mode)
+        console.warn('⚠️ Supabase não configurado no middleware');
+        return NextResponse.next();
+    }
+
+    // ========================================
+    // 3. ROTAS DE DASHBOARD - VERIFICAÇÃO COMPLETA
+    // ========================================
+    if (pathname.startsWith('/dashboard')) {
+        // Criar response mutável para cookies
+        let response = NextResponse.next({
+            request: {
+                headers: req.headers,
+            },
+        });
+
+        // ========================================
+        // 4. CRIAR SUPABASE CLIENT COM SSR (cookies corretos)
+        // ========================================
+        const supabase = createServerClient(supabaseUrl, supabaseAnonKey, {
+            cookies: {
+                getAll() {
+                    return req.cookies.getAll();
+                },
+                setAll(cookiesToSet) {
+                    cookiesToSet.forEach(({ name, value, options }) => {
+                        req.cookies.set(name, value);
+                        response.cookies.set(name, value, options);
+                    });
+                },
+            },
+        });
+
+        try {
+            // Pegar usuário autenticado (getUser é mais seguro que getSession)
+            const { data: { user }, error: userError } = await supabase.auth.getUser();
+
+            if (userError || !user) {
+                console.log(`🔒 Acesso negado a ${pathname} - não autenticado`);
+                const url = req.nextUrl.clone();
+                url.pathname = '/login';
+                url.searchParams.set('redirect', pathname);
+                return NextResponse.redirect(url);
+            }
+
+            const userId = user.id;
+            const userEmail = user.email;
+
+            // ========================================
+            // 5. VERIFICAÇÃO ESPECIAL - DONO SEMPRE TEM ACESSO
+            // ========================================
+            if (userEmail === 'casamondestore@gmail.com') {
+                console.log('👑 DONO DETECTADO - ACESSO TOTAL LIBERADO');
+                response.headers.set('x-user-authenticated', 'true');
+                response.headers.set('x-user-founder', 'true');
+                response.headers.set('x-user-email', userEmail);
+                return response;
+            }
+
+            // Buscar dados do usuário no Supabase (profiles table)
+            const { data: userData, error: profileError } = await supabase
+                .from('profiles')
+                .select('subscription_plan, subscription_status, founder_access')
+                .eq('id', userId)
+                .single();
+
+            if (profileError) {
+                console.error('Erro ao buscar dados do usuário:', profileError);
+                // Se erro ao buscar, redireciona para pricing por segurança
+                const url = req.nextUrl.clone();
+                url.pathname = '/pricing';
+                return NextResponse.redirect(url);
+            }
+
+            // ========================================
+            // 6. VERIFICAÇÃO DE PERMISSÕES
+            // ========================================
+            const hasFounderAccess = userData?.founder_access === true;
+            const hasEnterprisePlan = userData?.subscription_plan === 'enterprise';
+            const isSubscriptionActive = userData?.subscription_status === 'active';
+
+            if (hasFounderAccess) {
+                console.log('🏆 FOUNDER ACCESS - ACESSO TOTAL LIBERADO');
+                response.headers.set('x-user-authenticated', 'true');
+                response.headers.set('x-user-founder', 'true');
+                response.headers.set('x-user-plan', userData?.subscription_plan || 'free');
+                return response;
+            }
+
+            if (hasEnterprisePlan && isSubscriptionActive) {
+                console.log('💎 ENTERPRISE PLAN ATIVO - ACESSO LIBERADO');
+                response.headers.set('x-user-authenticated', 'true');
+                response.headers.set('x-user-plan', 'enterprise');
+                response.headers.set('x-user-paid', 'true');
+                return response;
+            }
+
+            if (isSubscriptionActive) {
+                console.log('✅ SUBSCRIPTION ATIVA - ACESSO LIBERADO');
+                response.headers.set('x-user-authenticated', 'true');
+                response.headers.set('x-user-plan', userData?.subscription_plan || 'free');
+                response.headers.set('x-user-paid', 'true');
+                return response;
+            }
+
+            // Usuário logado mas sem permissões - redireciona para pricing
+            console.log(`💰 Acesso negado a ${pathname} - usuário não pagou (ID: ${userId})`);
+            const url = req.nextUrl.clone();
+            url.pathname = '/pricing';
+            url.searchParams.set('reason', 'payment_required');
+            return NextResponse.redirect(url);
+
+        } catch (error) {
+            console.error('Erro no middleware:', error);
+            // Em caso de erro, redireciona para pricing por segurança
+            const url = req.nextUrl.clone();
+            url.pathname = '/pricing';
+            return NextResponse.redirect(url);
+        }
+    }
+
+    // ========================================
+    // 5. OUTRAS ROTAS - DEIXA PASSAR
+    // ========================================
     return NextResponse.next();
   }
 

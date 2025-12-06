@@ -12,8 +12,7 @@ const nextConfig = {
     // Minimize bundle size
     optimizePackageImports: ['@supabase/supabase-js', 'lucide-react', 'framer-motion'],
   },
-  // Disable telemetry
-  telemetry: false,
+  // Note: telemetry is disabled via NEXT_TELEMETRY_DISABLED=1 env var
   async headers() {
     return [
       {
