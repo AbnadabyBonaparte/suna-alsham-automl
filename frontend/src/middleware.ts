@@ -1,15 +1,15 @@
 /**
  * ═══════════════════════════════════════════════════════════════
- * ALSHAM QUANTUM - MIDDLEWARE DE PROTEÇÃO
+ * ALSHAM QUANTUM - MIDDLEWARE DE PROTEÇÃO (VERSÃO SIMPLIFICADA)
  * ═══════════════════════════════════════════════════════════════
  * 📁 PATH: frontend/src/middleware.ts
- * 🔐 Proteção de rotas com verificação de pagamento
+ * 🔐 Proteção básica de rotas baseada em cookie de sessão Supabase
+ *    (sem chamar Supabase no edge, para evitar loop de login)
  * ═══════════════════════════════════════════════════════════════
  */
 
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
 
 // ========================================
 // ROTAS PÚBLICAS (sem autenticação)
@@ -24,196 +24,93 @@ const PUBLIC_ROUTES = [
   '/terms',
   '/privacy',
   '/contact',
-  '/api/stripe/webhook', // Webhook precisa ser público
-  '/api/stripe/checkout',
 ];
 
 // ========================================
-// ROTAS QUE PRECISAM DE PAGAMENTO
+// ROTAS PROTEGIDAS (precisam estar logado)
 // ========================================
-const PAID_ROUTES = ['/dashboard'];
+const PROTECTED_PREFIXES = ['/dashboard'];
 
 export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
   // ========================================
-  // MODO DESENVOLVIMENTO - BYPASS TOTAL
+  // 0. BYPASS EM DEV / ROTAS DE SISTEMA
   // ========================================
   const isDevMode = process.env.NEXT_PUBLIC_DEV_MODE === 'true';
   if (isDevMode) {
-    console.log('🛠️ DEV MODE: Bypass de autenticação ativado');
+    console.log('🛠️ DEV MODE: middleware bypass');
+    return NextResponse.next();
+  }
+
+  // Rotas internas do Next, arquivos estáticos, etc.
+  if (
+    pathname.startsWith('/_next') ||
+    pathname.startsWith('/api/stripe/webhook') || // webhook precisa ser público
+    pathname.startsWith('/api/stripe/checkout') || // checkout público
+    pathname.match(/\.(?:svg|png|jpg|jpeg|gif|webp|ico|css|js|mp3)$/)
+  ) {
+    return NextResponse.next();
+  }
+
+  // Rotas de desenvolvimento liberadas
+  if (pathname.startsWith('/dev/')) {
+    console.log('🛠️ DEV ROUTE: acesso liberado');
     return NextResponse.next();
   }
 
   // ========================================
   // 1. ROTAS PÚBLICAS - LIBERA
   // ========================================
-  if (PUBLIC_ROUTES.some((route) => pathname === route || pathname.startsWith('/api/'))) {
-    // Permitir todas as rotas de API e rotas públicas
-    if (pathname.startsWith('/api/')) {
-      return NextResponse.next();
-    }
-
-    // Rotas públicas específicas
-    if (PUBLIC_ROUTES.includes(pathname)) {
-      return NextResponse.next();
-    }
-  }
-
-  // ========================================
-  // ROTAS DE DESENVOLVIMENTO - LIBERA
-  // ========================================
-  if (pathname.startsWith('/dev/')) {
-    console.log('🛠️ DEV ROUTE: Acesso liberado para rota de desenvolvimento');
+  if (PUBLIC_ROUTES.includes(pathname) || pathname.startsWith('/api/')) {
     return NextResponse.next();
   }
 
   // ========================================
-  // 2. VERIFICAR AUTENTICAÇÃO VIA COOKIE
+  // 2. VERIFICAR SE É ROTA PROTEGIDA
   // ========================================
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  const isProtected = PROTECTED_PREFIXES.some((prefix) =>
+    pathname.startsWith(prefix),
+  );
 
-  if (!supabaseUrl || !supabaseAnonKey) {
-    // Se não tem Supabase configurado, deixa passar (dev mode / fallback)
-    console.warn('⚠️ Supabase não configurado no middleware');
+  if (!isProtected) {
+    // Qualquer rota que não seja das protegidas passa direto
     return NextResponse.next();
   }
 
-  // Pegar token do cookie de autenticação do Supabase
-  const authToken =
-    req.cookies.get('sb-access-token')?.value ||
-    req.cookies.get('supabase-auth-token')?.value;
-
   // ========================================
-  // 3. ROTAS DE DASHBOARD - VERIFICAÇÃO COMPLETA
+  // 3. CHECAR SE EXISTE COOKIE DE AUTENTICAÇÃO SUPABASE
   // ========================================
-  if (pathname.startsWith('/dashboard')) {
-    // Se não tem token, redireciona para login
-    if (!authToken) {
-      console.log(`🔒 Acesso negado a ${pathname} - não autenticado`);
-      const url = req.nextUrl.clone();
-      url.pathname = '/login';
-      url.searchParams.set('redirect', pathname);
-      return NextResponse.redirect(url);
-    }
+  const cookies = req.cookies.getAll();
 
-    // ========================================
-    // 4. VERIFICAR AUTENTICAÇÃO E PERMISSÕES
-    // ========================================
-    const supabase = createClient(supabaseUrl, supabaseAnonKey, {
-      auth: {
-        persistSession: false,
-      },
-    });
+  // Cookies do Supabase seguem o padrão: sb-<project-ref>-auth-token
+  const hasSupabaseAuthCookie = cookies.some((cookie) =>
+    cookie.name.startsWith('sb-') && cookie.name.endsWith('-auth-token'),
+  );
 
-    try {
-      // Pegar sessão do usuário
-      const {
-        data: { session },
-        error: sessionError,
-      } = await supabase.auth.getSession();
+  if (!hasSupabaseAuthCookie) {
+    console.log(`🔒 Acesso negado a ${pathname} - sem cookie Supabase`);
 
-      if (sessionError || !session) {
-        console.log(`🔒 Acesso negado a ${pathname} - sessão inválida`);
-        const url = req.nextUrl.clone();
-        url.pathname = '/login';
-        return NextResponse.redirect(url);
-      }
-
-      const userId = session.user.id;
-      const userEmail = session.user.email;
-
-      // ========================================
-      // 5. VERIFICAÇÃO ESPECIAL - DONO SEMPRE TEM ACESSO
-      // ========================================
-      if (userEmail === 'casamondestore@gmail.com') {
-        console.log('👑 DONO DETECTADO - ACESSO TOTAL LIBERADO');
-        const response = NextResponse.next();
-        response.headers.set('x-user-authenticated', 'true');
-        response.headers.set('x-user-founder', 'true');
-        response.headers.set('x-user-email', userEmail || '');
-        return response;
-      }
-
-      // Buscar dados do usuário no Supabase (profiles table)
-      const { data: userData, error: userError } = await supabase
-        .from('profiles')
-        .select('subscription_plan, subscription_status, founder_access')
-        .eq('id', userId)
-        .single();
-
-      if (userError) {
-        console.error('Erro ao buscar dados do usuário:', userError);
-        // Se erro ao buscar, redireciona para pricing por segurança
-        const url = req.nextUrl.clone();
-        url.pathname = '/pricing';
-        return NextResponse.redirect(url);
-      }
-
-      // ========================================
-      // 6. VERIFICAÇÃO DE PERMISSÕES
-      // ========================================
-      const hasFounderAccess = userData?.founder_access === true;
-      const hasEnterprisePlan = userData?.subscription_plan === 'enterprise';
-      const isSubscriptionActive = userData?.subscription_status === 'active';
-
-      if (hasFounderAccess) {
-        console.log('🏆 FOUNDER ACCESS - ACESSO TOTAL LIBERADO');
-        const response = NextResponse.next();
-        response.headers.set('x-user-authenticated', 'true');
-        response.headers.set('x-user-founder', 'true');
-        response.headers.set('x-user-plan', userData?.subscription_plan || 'free');
-        return response;
-      }
-
-      if (hasEnterprisePlan && isSubscriptionActive) {
-        console.log('💎 ENTERPRISE PLAN ATIVO - ACESSO LIBERADO');
-        const response = NextResponse.next();
-        response.headers.set('x-user-authenticated', 'true');
-        response.headers.set('x-user-plan', 'enterprise');
-        response.headers.set('x-user-paid', 'true');
-        return response;
-      }
-
-      if (isSubscriptionActive) {
-        console.log('✅ SUBSCRIPTION ATIVA - ACESSO LIBERADO');
-        const response = NextResponse.next();
-        response.headers.set('x-user-authenticated', 'true');
-        response.headers.set('x-user-plan', userData?.subscription_plan || 'free');
-        response.headers.set('x-user-paid', 'true');
-        return response;
-      }
-
-      // Usuário logado mas sem permissões - redireciona para pricing
-      console.log(`💰 Acesso negado a ${pathname} - usuário não pagou (ID: ${userId})`);
-      const url = req.nextUrl.clone();
-      url.pathname = '/pricing';
-      url.searchParams.set('reason', 'payment_required');
-      return NextResponse.redirect(url);
-    } catch (error) {
-      console.error('Erro no middleware:', error);
-      // Em caso de erro, redireciona para pricing por segurança
-      const url = req.nextUrl.clone();
-      url.pathname = '/pricing';
-      return NextResponse.redirect(url);
-    }
+    const url = req.nextUrl.clone();
+    url.pathname = '/login';
+    url.searchParams.set('redirect', pathname);
+    return NextResponse.redirect(url);
   }
 
-  // ========================================
-  // 5. OUTRAS ROTAS - DEIXA PASSAR
-  // ========================================
-  return NextResponse.next();
+  // Usuário tem cookie supabase: consideramos autenticado
+  const res = NextResponse.next();
+  res.headers.set('x-user-authenticated', 'true');
+  return res;
 }
 
 export const config = {
   matcher: [
     /*
-     * Match all request paths except:
-     * - _next/static (static files)
-     * - _next/image (image optimization files)
-     * - favicon.ico (favicon file)
-     * - public folder
+     * Match all request paths exceto:
+     * - _next/static (arquivos estáticos)
+     * - _next/image (otimização de imagem)
+     * - favicon.ico (favicon)
+     * - qualquer arquivo com extensão (.*\..*)
      */
     '/((?!_next/static|_next/image|favicon.ico|public|.*\\..*|sounds|images).*)',
   ],
