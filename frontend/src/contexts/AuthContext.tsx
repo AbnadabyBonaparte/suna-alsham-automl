@@ -26,6 +26,7 @@ const DEV_USER: User = {
 const DEV_SESSION: Session = {
     access_token: 'dev-token',
     refresh_token: 'dev-refresh-token',
+    expires_in: 3600,
     expires_at: Date.now() / 1000 + 3600, // 1 hora
     token_type: 'bearer',
     user: DEV_USER,
