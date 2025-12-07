@@ -19,11 +19,18 @@ const PUBLIC_ROUTES = [
   '/pricing',
   '/login',
   '/signup',
+  '/onboarding',
+  '/auth/callback',
   '/forgot-password',
   '/reset-password',
   '/terms',
   '/privacy',
   '/contact',
+];
+
+const PUBLIC_PREFIXES = [
+  '/dev/',
+  '/api/',
 ];
 
 // ========================================
@@ -46,23 +53,17 @@ export async function middleware(req: NextRequest) {
   // Rotas internas do Next, arquivos estáticos, etc.
   if (
     pathname.startsWith('/_next') ||
-    pathname.startsWith('/api/stripe/webhook') || // webhook precisa ser público
-    pathname.startsWith('/api/stripe/checkout') || // checkout público
     pathname.match(/\.(?:svg|png|jpg|jpeg|gif|webp|ico|css|js|mp3)$/)
   ) {
-    return NextResponse.next();
-  }
-
-  // Rotas de desenvolvimento liberadas
-  if (pathname.startsWith('/dev/')) {
-    console.log('🛠️ DEV ROUTE: acesso liberado');
     return NextResponse.next();
   }
 
   // ========================================
   // 1. ROTAS PÚBLICAS - LIBERA
   // ========================================
-  if (PUBLIC_ROUTES.includes(pathname) || pathname.startsWith('/api/')) {
+  const isExplicitPublicRoute = PUBLIC_ROUTES.includes(pathname);
+  const isPublicPrefix = PUBLIC_PREFIXES.some((prefix) => pathname.startsWith(prefix));
+  if (isExplicitPublicRoute || isPublicPrefix) {
     return NextResponse.next();
   }
 
@@ -81,6 +82,9 @@ export async function middleware(req: NextRequest) {
   // ========================================
   // 3. CHECAR SE EXISTE COOKIE DE AUTENTICAÇÃO SUPABASE
   // ========================================
+  // Obs.: checagem fina de permissão (plano/status) ocorre no server
+  // via `requireDashboardAccess`; aqui validamos apenas presença do cookie
+  // para evitar loops de login no edge.
   const cookies = req.cookies.getAll();
 
   // Cookies do Supabase seguem o padrão: sb-<project-ref>-auth-token
