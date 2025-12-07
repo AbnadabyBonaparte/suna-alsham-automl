@@ -50,6 +50,8 @@ function createServerSupabaseClient() {
 export async function requireDashboardAccess(): Promise<DashboardAccess> {
   const supabase = createServerSupabaseClient();
 
+  const isDevMode = process.env.NEXT_PUBLIC_DEV_MODE === 'true';
+
   const {
     data: { session },
   } = await supabase.auth.getSession();
@@ -59,6 +61,11 @@ export async function requireDashboardAccess(): Promise<DashboardAccess> {
   }
 
   const user = session.user;
+
+  if (isDevMode) {
+    console.log('[AUTH][DEV] session', session);
+    console.log('[AUTH][DEV] user.id', user.id);
+  }
 
   const { data: profile, error } = await supabase
     .from('profiles')
@@ -72,12 +79,20 @@ export async function requireDashboardAccess(): Promise<DashboardAccess> {
     redirect('/onboarding');
   }
 
+  if (isDevMode) {
+    console.log('[AUTH][DEV] profile', profile);
+  }
+
   const hasFounderAccess = profile.founder_access === true;
   const isEnterprise = profile.subscription_plan === 'enterprise';
   const hasActiveSubscription = profile.subscription_status === 'active';
 
   const hasAccess =
     hasFounderAccess || (isEnterprise && hasActiveSubscription) || hasActiveSubscription;
+
+  if (isDevMode) {
+    console.log('[AUTH][DEV] hasAccess', hasAccess);
+  }
 
   if (!hasAccess) {
     redirect('/pricing?reason=payment_required');
