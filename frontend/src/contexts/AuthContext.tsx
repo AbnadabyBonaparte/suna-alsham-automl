@@ -156,33 +156,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             if (user) {
                 const metadata = await loadUserMetadata(user.id);
 
-                // Verificar se é o dono
-                if (email === 'casamondestore@gmail.com') {
-                    router.push('/dashboard');
-                    return { error: null };
-                }
-
-                // Verificar founder access
-                if (metadata?.founder_access) {
-                    router.push('/dashboard');
-                    return { error: null };
-                }
-
-                // Verificar plano enterprise
-                if (metadata?.subscription_plan === 'enterprise' && metadata?.subscription_status === 'active') {
-                    router.push('/dashboard');
-                    return { error: null };
-                }
-
-                // Verificar se tem qualquer subscription ativa
-                if (metadata?.subscription_status === 'active') {
-                    router.push('/dashboard');
-                    return { error: null };
-                }
-
-                // Não pagou - vai para pricing
-                router.push('/pricing');
+                setMetadata(metadata);
             }
+
+            router.push('/dashboard');
         }
 
         return { error };
@@ -196,7 +173,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         });
 
         if (!error) {
-            router.push('/pricing');
+            router.push('/dashboard');
         }
 
         return { error };
