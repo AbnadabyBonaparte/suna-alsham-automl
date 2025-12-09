@@ -1,4 +1,5 @@
-import { createClient, SupabaseClient } from '@supabase/supabase-js';
+import { SupabaseClient } from '@supabase/supabase-js';
+import { createClient as createBrowserClient } from './supabase/client';
 
 // Lazy initialization - só cria o cliente quando for realmente usado
 let _supabase: SupabaseClient | null = null;
@@ -37,7 +38,7 @@ export function getSupabase(): SupabaseClient {
     } as unknown as SupabaseClient;
   }
 
-  _supabase = createClient(supabaseUrl, supabaseAnonKey);
+  _supabase = createBrowserClient();
   return _supabase;
 }
 

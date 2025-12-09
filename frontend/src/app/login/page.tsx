@@ -9,9 +9,9 @@
 
 "use client";
 
-import { useState, useEffect, useRef } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
-import { supabase } from '@/lib/supabase';
+import { createClient } from '@/lib/supabase/client';
 import Link from 'next/link';
 import {
     Fingerprint, Scan, ShieldCheck, AlertOctagon, Lock, Key,
@@ -21,6 +21,7 @@ import {
 export default function LoginPage() {
     const { signIn } = useAuth();
     const canvasRef = useRef<HTMLCanvasElement>(null);
+    const supabase = useMemo(() => createClient(), []);
     
     // Estados
     const [email, setEmail] = useState('');
