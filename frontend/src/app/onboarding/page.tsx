@@ -12,6 +12,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { Cpu, Eye, Zap, Check, ChevronRight, Terminal } from 'lucide-react';
+import { createClient } from '@/lib/supabase/client';
 
 // Classes de Operador
 const CLASSES = [
@@ -168,13 +169,57 @@ export default function OnboardingPage() {
         };
     }, [step]);
 
-    const handleLaunch = () => {
+    const handleLaunch = async () => {
         if (!selectedClass) return;
+
         setStep('warp');
-        
+
+        try {
+            const supabase = createClient();
+            const { data: { user } } = await supabase.auth.getUser();
+
+            if (!user) {
+                console.error('[ONBOARDING] Usuário não autenticado');
+                router.push('/login');
+                return;
+            }
+
+            // Mapear ID da classe para o role correspondente
+            const roleMap: Record<string, string> = {
+                'architect': 'architect',
+                'observer': 'observer',
+                'strategist': 'strategist'
+            };
+
+            const role = roleMap[selectedClass] || 'user';
+
+            console.log('[ONBOARDING] Salvando perfil:', { userId: user.id, role, selectedClass });
+
+            // CRÍTICO: Salvar que completou onboarding E o role selecionado
+            const { error } = await supabase
+                .from('profiles')
+                .update({
+                    onboarding_completed: true,
+                    role: role,
+                    updated_at: new Date().toISOString()
+                })
+                .eq('id', user.id);
+
+            if (error) {
+                console.error('[ONBOARDING] Erro ao salvar perfil:', error);
+                // Continua mesmo com erro para não bloquear o usuário
+            } else {
+                console.log('[ONBOARDING] Perfil salvo com sucesso!');
+            }
+        } catch (error) {
+            console.error('[ONBOARDING] Erro inesperado:', error);
+        }
+
         // Tempo do salto no hiperespaço antes de ir pro dashboard
         setTimeout(() => {
+            console.log('[ONBOARDING] Redirecionando para dashboard...');
             router.push('/dashboard');
+            router.refresh(); // Force refresh para recarregar dados
         }, 2500);
     };
 

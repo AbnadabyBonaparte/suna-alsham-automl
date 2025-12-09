@@ -38,6 +38,7 @@ export async function middleware(request: NextRequest) {
     request.nextUrl.pathname.startsWith(path),
   );
 
+  // Se não autenticado e tentando acessar rota protegida → login
   if (!user && isProtectedPath) {
     const url = request.nextUrl.clone();
     url.pathname = '/login';
@@ -45,10 +46,56 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
+  // Se autenticado, verificar onboarding antes de acessar dashboard
+  if (user && isProtectedPath) {
+    // Buscar profile para verificar se completou onboarding
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('onboarding_completed')
+      .eq('id', user.id)
+      .single();
+
+    // Se não completou onboarding, redirecionar para onboarding
+    if (profile && !profile.onboarding_completed && request.nextUrl.pathname !== '/onboarding') {
+      const url = request.nextUrl.clone();
+      url.pathname = '/onboarding';
+      return NextResponse.redirect(url);
+    }
+  }
+
+  // Se autenticado e completou onboarding, mas está em /onboarding → dashboard
+  if (user && request.nextUrl.pathname === '/onboarding') {
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('onboarding_completed')
+      .eq('id', user.id)
+      .single();
+
+    if (profile?.onboarding_completed) {
+      const url = request.nextUrl.clone();
+      url.pathname = '/dashboard';
+      return NextResponse.redirect(url);
+    }
+  }
+
+  // Se autenticado e está em /login, redirecionar baseado no onboarding
   if (user && request.nextUrl.pathname === '/login') {
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('onboarding_completed')
+      .eq('id', user.id)
+      .single();
+
     const redirectTo = request.nextUrl.searchParams.get('redirect') || '/dashboard';
     const url = request.nextUrl.clone();
-    url.pathname = redirectTo;
+
+    // Se não completou onboarding, ir para onboarding
+    if (profile && !profile.onboarding_completed) {
+      url.pathname = '/onboarding';
+    } else {
+      url.pathname = redirectTo;
+    }
+
     url.searchParams.delete('redirect');
     return NextResponse.redirect(url);
   }
