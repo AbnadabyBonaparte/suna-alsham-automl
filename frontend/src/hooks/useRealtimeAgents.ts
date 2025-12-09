@@ -3,8 +3,8 @@
  * Real-time subscription for agents table
  */
 
-import { useState, useEffect } from 'react';
-import { supabase } from '@/lib/supabase';
+import { useState, useEffect, useMemo } from 'react';
+import { createClient } from '@/lib/supabase/client';
 import type { RealtimeChannel } from '@supabase/supabase-js';
 
 export interface Agent {
@@ -23,6 +23,7 @@ export function useRealtimeAgents() {
   const [agents, setAgents] = useState<Agent[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const supabase = useMemo(() => createClient(), []);
 
   useEffect(() => {
     let channel: RealtimeChannel;
@@ -89,7 +90,7 @@ export function useRealtimeAgents() {
         supabase.removeChannel(channel);
       }
     };
-  }, []);
+  }, [supabase]);
 
   return { agents, loading, error };
 }

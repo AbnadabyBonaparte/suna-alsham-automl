@@ -1,16 +1,12 @@
 'use server'
 
-import { createClient } from '@supabase/supabase-js';
-
-// Inicializa cliente server-side (seguro)
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-const supabase = createClient(supabaseUrl, supabaseKey);
+import { createClient } from '@/lib/supabase/server';
 
 export async function toggleSystemMode(mode: 'TURBO' | 'SAFE' | 'STOP') {
   console.log(`[COMMAND] Switching system to: ${mode}`);
 
   try {
+    const supabase = await createClient();
     // Tenta logar na tabela system_logs (se existir)
     const { error } = await supabase
       .from('system_logs')

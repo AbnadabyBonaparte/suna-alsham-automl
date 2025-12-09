@@ -25,8 +25,8 @@ export interface DashboardAccess {
   hasAccess: boolean;
 }
 
-function createServerSupabaseClient() {
-  const cookieStore = cookies();
+async function createServerSupabaseClient() {
+  const cookieStore = await cookies();
 
   return createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -48,7 +48,7 @@ function createServerSupabaseClient() {
 }
 
 export async function requireDashboardAccess(): Promise<DashboardAccess> {
-  const supabase = createServerSupabaseClient();
+  const supabase = await createServerSupabaseClient();
 
   const isDevMode = process.env.NEXT_PUBLIC_DEV_MODE === 'true';
 
