@@ -35,6 +35,7 @@ interface UserMetadata {
     founder_access?: boolean;
     subscription_plan?: string;
     subscription_status?: string;
+    onboarding_completed?: boolean;
 }
 
 interface AuthContextType {
@@ -65,7 +66,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         try {
             const { data: profile, error } = await supabase
                 .from('profiles')
-                .select('subscription_plan, subscription_status, founder_access')
+                .select('subscription_plan, subscription_status, founder_access, onboarding_completed')
                 .eq('id', userId)
                 .single();
 
@@ -93,7 +94,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             setMetadata({
                 founder_access: true,
                 subscription_plan: 'enterprise',
-                subscription_status: 'active'
+                subscription_status: 'active',
+                onboarding_completed: true
             });
             setLoading(false);
             return;
@@ -133,11 +135,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             const { data: { user } } = await supabase.auth.getUser();
             if (user) {
                 const metadata = await loadUserMetadata(user.id);
-
                 setMetadata(metadata);
+
+                // Redirecionar baseado no estado do onboarding
+                if (metadata?.onboarding_completed) {
+                    router.push('/dashboard');
+                } else {
+                    router.push('/onboarding');
+                }
             }
 
-            router.push('/dashboard');
             router.refresh();
         }
 
@@ -151,7 +158,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         });
 
         if (!error) {
-            router.push('/dashboard');
+            // Novos usuários sempre vão para onboarding
+            router.push('/onboarding');
         }
 
         return { error };
