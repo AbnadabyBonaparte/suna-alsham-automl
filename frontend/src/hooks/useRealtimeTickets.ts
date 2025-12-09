@@ -3,8 +3,8 @@
  * Real-time subscription for support_tickets table
  */
 
-import { useState, useEffect } from 'react';
-import { supabase } from '@/lib/supabase';
+import { useState, useEffect, useMemo } from 'react';
+import { createClient } from '@/lib/supabase/client';
 import type { RealtimeChannel } from '@supabase/supabase-js';
 
 export interface SupportTicket {
@@ -30,6 +30,7 @@ export function useRealtimeTickets(options: UseRealtimeTicketsOptions = {}) {
   const [tickets, setTickets] = useState<SupportTicket[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const supabase = useMemo(() => createClient(), []);
 
   useEffect(() => {
     let channel: RealtimeChannel;
@@ -108,7 +109,7 @@ export function useRealtimeTickets(options: UseRealtimeTicketsOptions = {}) {
         supabase.removeChannel(channel);
       }
     };
-  }, [options.onNewTicket, options.onTicketUpdate]);
+  }, [supabase, options.onNewTicket, options.onTicketUpdate]);
 
   return { tickets, loading, error };
 }
