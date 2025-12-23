@@ -68,6 +68,7 @@ export async function updateSession(request: NextRequest) {
   }
 
   // Se autenticado e completou onboarding, mas está em /onboarding → dashboard
+  // IMPORTANTE: Só redireciona se realmente completou, evita loops
   if (user && request.nextUrl.pathname === '/onboarding') {
     const { data: profile } = await supabase
       .from('profiles')
@@ -75,7 +76,9 @@ export async function updateSession(request: NextRequest) {
       .eq('id', user.id)
       .single();
 
-    if (profile?.onboarding_completed) {
+    // Só redireciona se o onboarding foi realmente completado
+    // Evita redirecionar durante o processo de salvamento
+    if (profile?.onboarding_completed === true) {
       const url = request.nextUrl.clone();
       url.pathname = '/dashboard';
       return NextResponse.redirect(url);

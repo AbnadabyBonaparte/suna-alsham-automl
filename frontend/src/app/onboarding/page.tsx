@@ -47,6 +47,7 @@ export default function OnboardingPage() {
     const [step, setStep] = useState<'boot' | 'select' | 'warp'>('boot');
     const [bootLines, setBootLines] = useState<string[]>([]);
     const [selectedClass, setSelectedClass] = useState<string | null>(null);
+    const [isSaving, setIsSaving] = useState(false);
 
     // 1. SEQUÊNCIA DE BOOT (TEXTO DE TERMINAL)
     useEffect(() => {
@@ -169,9 +170,38 @@ export default function OnboardingPage() {
         };
     }, [step]);
 
-    const handleLaunch = async () => {
-        if (!selectedClass) return;
+    // Verificar se já completou onboarding ao carregar a página
+    useEffect(() => {
+        const checkOnboarding = async () => {
+            try {
+                const supabase = createClient();
+                const { data: { user } } = await supabase.auth.getUser();
+                
+                if (user) {
+                    const { data: profile } = await supabase
+                        .from('profiles')
+                        .select('onboarding_completed')
+                        .eq('id', user.id)
+                        .single();
 
+                    if (profile?.onboarding_completed) {
+                        router.push('/dashboard');
+                    }
+                }
+            } catch (error) {
+                // Ignora erros silenciosamente
+            }
+        };
+
+        if (step === 'select') {
+            checkOnboarding();
+        }
+    }, [step, router]);
+
+    const handleLaunch = async () => {
+        if (!selectedClass || isSaving) return;
+
+        setIsSaving(true);
         setStep('warp');
 
         try {
@@ -181,6 +211,21 @@ export default function OnboardingPage() {
             if (!user) {
                 console.error('[ONBOARDING] Usuário não autenticado');
                 router.push('/login');
+                return;
+            }
+
+            // Verificar se já completou onboarding para evitar salvamento duplicado
+            const { data: existingProfile } = await supabase
+                .from('profiles')
+                .select('onboarding_completed')
+                .eq('id', user.id)
+                .single();
+
+            if (existingProfile?.onboarding_completed) {
+                console.log('[ONBOARDING] Onboarding já completado, redirecionando...');
+                setTimeout(() => {
+                    router.push('/dashboard');
+                }, 1000);
                 return;
             }
 
@@ -207,19 +252,21 @@ export default function OnboardingPage() {
 
             if (error) {
                 console.error('[ONBOARDING] Erro ao salvar perfil:', error);
-                // Continua mesmo com erro para não bloquear o usuário
-            } else {
-                console.log('[ONBOARDING] Perfil salvo com sucesso!');
+                setIsSaving(false);
+                return;
             }
+
+            console.log('[ONBOARDING] Perfil salvo com sucesso!');
         } catch (error) {
             console.error('[ONBOARDING] Erro inesperado:', error);
+            setIsSaving(false);
+            return;
         }
 
         // Tempo do salto no hiperespaço antes de ir pro dashboard
         setTimeout(() => {
             console.log('[ONBOARDING] Redirecionando para dashboard...');
             router.push('/dashboard');
-            router.refresh(); // Force refresh para recarregar dados
         }, 2500);
     };
 
@@ -296,12 +343,13 @@ export default function OnboardingPage() {
                         </div>
 
                         {/* Launch Button */}
-                        <div className={`flex justify-center mt-12 transition-opacity duration-500 ${selectedClass ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
+                        <div className={`flex justify-center mt-12 transition-opacity duration-500 ${selectedClass && !isSaving ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
                             <button
                                 onClick={handleLaunch}
-                                className="group relative px-8 py-4 bg-white text-black rounded-full font-bold text-sm tracking-[0.2em] uppercase hover:scale-105 transition-transform flex items-center gap-3 shadow-[0_0_20px_white]"
+                                disabled={isSaving}
+                                className="group relative px-8 py-4 bg-white text-black rounded-full font-bold text-sm tracking-[0.2em] uppercase hover:scale-105 transition-transform flex items-center gap-3 shadow-[0_0_20px_white] disabled:opacity-50 disabled:cursor-not-allowed"
                             >
-                                Enter The System
+                                {isSaving ? 'Initializing...' : 'Enter The System'}
                                 <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                             </button>
                         </div>
