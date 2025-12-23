@@ -29,6 +29,9 @@ export async function middleware(request: NextRequest) {
     },
   );
 
+  // Force refresh of auth state
+  await supabase.auth.getUser();
+
   const {
     data: { user },
   } = await supabase.auth.getUser();

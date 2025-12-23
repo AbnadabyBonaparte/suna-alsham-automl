@@ -45,7 +45,7 @@ export function useSales() {
       // Calculate stats
       const wonDeals = dealsData.filter(d => d.status === 'closed_won');
       const lostDeals = dealsData.filter(d => d.status === 'closed_lost');
-      const inProgressDeals = dealsData.filter(d => d.status === 'negotiation' || d.status === 'lead');
+      const inProgressDeals = dealsData.filter(d => d.stage !== 'closed');
 
       const totalValue = dealsData.reduce((sum, d) => sum + d.value, 0);
       const wonValue = wonDeals.reduce((sum, d) => sum + d.value, 0);
