@@ -193,7 +193,8 @@ export default function OnboardingPage() {
                     if (profile?.onboarding_completed && !isRedirectingRef.current) {
                         isRedirectingRef.current = true;
                         setHasCheckedOnboarding(true);
-                        router.push('/dashboard');
+                        // Usar window.location para evitar loops
+                        window.location.href = '/dashboard';
                     }
                 }
             } catch (error) {
@@ -239,9 +240,9 @@ export default function OnboardingPage() {
                 console.log('[ONBOARDING] Onboarding já completado, redirecionando...');
                 isRedirectingRef.current = true;
                 setIsSaving(false);
-                setTimeout(() => {
-                    router.push('/dashboard');
-                }, 1000);
+                localStorage.setItem('onboarding_completed', 'true');
+                // Usar window.location para evitar loops
+                window.location.href = '/dashboard';
                 return;
             }
 
@@ -263,6 +264,9 @@ export default function OnboardingPage() {
                 return;
             }
 
+            // Marcar no localStorage antes de salvar para evitar loops
+            localStorage.setItem('onboarding_saving', 'true');
+
             const { error } = await supabase
                 .from('profiles')
                 .update({
@@ -280,6 +284,10 @@ export default function OnboardingPage() {
 
             console.log('[ONBOARDING] Perfil salvo com sucesso!');
             
+            // Limpar flag de salvamento e marcar como completado
+            localStorage.removeItem('onboarding_saving');
+            localStorage.setItem('onboarding_completed', 'true');
+            
             // Marcar que está redirecionando ANTES do timeout
             isRedirectingRef.current = true;
             setHasCheckedOnboarding(true);
@@ -290,10 +298,14 @@ export default function OnboardingPage() {
         }
 
         // Tempo do salto no hiperespaço antes de ir pro dashboard
+        // IMPORTANTE: Usar window.location.href para forçar reload completo e evitar loops
         setTimeout(() => {
             if (isRedirectingRef.current) {
                 console.log('[ONBOARDING] Redirecionando para dashboard...');
-                router.push('/dashboard');
+                // Marcar no localStorage que onboarding foi completado
+                localStorage.setItem('onboarding_completed', 'true');
+                // Usar window.location para forçar reload completo e evitar loops
+                window.location.href = '/dashboard';
             }
         }, 2500);
     };
