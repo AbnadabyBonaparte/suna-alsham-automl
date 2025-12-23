@@ -48,6 +48,8 @@ export default function OnboardingPage() {
     const [bootLines, setBootLines] = useState<string[]>([]);
     const [selectedClass, setSelectedClass] = useState<string | null>(null);
     const [isSaving, setIsSaving] = useState(false);
+    const [hasCheckedOnboarding, setHasCheckedOnboarding] = useState(false);
+    const isRedirectingRef = useRef(false);
 
     // 1. SEQUÊNCIA DE BOOT (TEXTO DE TERMINAL)
     useEffect(() => {
@@ -170,36 +172,47 @@ export default function OnboardingPage() {
         };
     }, [step]);
 
-    // Verificar se já completou onboarding ao carregar a página
+    // Verificar se já completou onboarding ao carregar a página (APENAS UMA VEZ)
     useEffect(() => {
+        if (hasCheckedOnboarding || isRedirectingRef.current) return;
+
         const checkOnboarding = async () => {
+            if (isRedirectingRef.current) return;
+            
             try {
                 const supabase = createClient();
                 const { data: { user } } = await supabase.auth.getUser();
                 
-                if (user) {
+                if (user && !isRedirectingRef.current) {
                     const { data: profile } = await supabase
                         .from('profiles')
                         .select('onboarding_completed')
                         .eq('id', user.id)
                         .single();
 
-                    if (profile?.onboarding_completed) {
+                    if (profile?.onboarding_completed && !isRedirectingRef.current) {
+                        isRedirectingRef.current = true;
+                        setHasCheckedOnboarding(true);
                         router.push('/dashboard');
                     }
                 }
             } catch (error) {
                 // Ignora erros silenciosamente
+            } finally {
+                setHasCheckedOnboarding(true);
             }
         };
 
-        if (step === 'select') {
+        if (step === 'select' && !hasCheckedOnboarding) {
             checkOnboarding();
         }
-    }, [step, router]);
+    }, [step, router, hasCheckedOnboarding]);
 
     const handleLaunch = async () => {
-        if (!selectedClass || isSaving) return;
+        if (!selectedClass || isSaving || isRedirectingRef.current) {
+            console.log('[ONBOARDING] Bloqueado:', { selectedClass, isSaving, isRedirecting: isRedirectingRef.current });
+            return;
+        }
 
         setIsSaving(true);
         setStep('warp');
@@ -210,6 +223,7 @@ export default function OnboardingPage() {
 
             if (!user) {
                 console.error('[ONBOARDING] Usuário não autenticado');
+                setIsSaving(false);
                 router.push('/login');
                 return;
             }
@@ -221,8 +235,10 @@ export default function OnboardingPage() {
                 .eq('id', user.id)
                 .single();
 
-            if (existingProfile?.onboarding_completed) {
+            if (existingProfile?.onboarding_completed || isRedirectingRef.current) {
                 console.log('[ONBOARDING] Onboarding já completado, redirecionando...');
+                isRedirectingRef.current = true;
+                setIsSaving(false);
                 setTimeout(() => {
                     router.push('/dashboard');
                 }, 1000);
@@ -241,6 +257,12 @@ export default function OnboardingPage() {
             console.log('[ONBOARDING] Salvando perfil:', { userId: user.id, role, selectedClass });
 
             // CRÍTICO: Salvar que completou onboarding E o role selecionado
+            if (isRedirectingRef.current) {
+                console.log('[ONBOARDING] Redirecionamento já em andamento, cancelando salvamento');
+                setIsSaving(false);
+                return;
+            }
+
             const { error } = await supabase
                 .from('profiles')
                 .update({
@@ -257,6 +279,10 @@ export default function OnboardingPage() {
             }
 
             console.log('[ONBOARDING] Perfil salvo com sucesso!');
+            
+            // Marcar que está redirecionando ANTES do timeout
+            isRedirectingRef.current = true;
+            setHasCheckedOnboarding(true);
         } catch (error) {
             console.error('[ONBOARDING] Erro inesperado:', error);
             setIsSaving(false);
@@ -265,8 +291,10 @@ export default function OnboardingPage() {
 
         // Tempo do salto no hiperespaço antes de ir pro dashboard
         setTimeout(() => {
-            console.log('[ONBOARDING] Redirecionando para dashboard...');
-            router.push('/dashboard');
+            if (isRedirectingRef.current) {
+                console.log('[ONBOARDING] Redirecionando para dashboard...');
+                router.push('/dashboard');
+            }
         }, 2500);
     };
 
