@@ -9,7 +9,9 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { getSupabase, getAnthropic } from '@/lib/lazy-clients';
+import { z } from 'zod';
+import { getAnthropic } from '@/lib/lazy-clients';
+import { getSystemJobClient } from '@/lib/supabase/system-client';
 
 interface StrategicEvolution {
   agent_id: string;
@@ -25,9 +27,36 @@ interface StrategicEvolution {
   claude_analysis: string;
 }
 
+const CronHeaderSchema = z.object({
+  authorization: z.string().regex(/^Bearer .+$/),
+});
+
+function assertCronAuthorization(request: NextRequest) {
+  const headers = CronHeaderSchema.safeParse({
+    authorization: request.headers.get('authorization') || '',
+  });
+
+  const expectedSecret = process.env.INTERNAL_CRON_SECRET;
+
+  if (!expectedSecret) {
+    throw new Error('INTERNAL_CRON_SECRET não configurado');
+  }
+
+  if (!headers.success || headers.data.authorization !== `Bearer ${expectedSecret}`) {
+    return false;
+  }
+
+  return true;
+}
+
 export async function GET(request: NextRequest) {
   const startTime = Date.now();
-  const supabase = getSupabase();
+
+  if (!assertCronAuthorization(request)) {
+    return NextResponse.json({ error: 'Acesso não autorizado' }, { status: 401 });
+  }
+
+  const supabase = getSystemJobClient();
   
   try {
     console.log('🎯 [EVOLUÇÃO ESTRATÉGICA] Iniciando ciclo diário...');

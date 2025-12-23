@@ -7,7 +7,7 @@
  * ═══════════════════════════════════════════════════════════════
  */
 
-import { getSupabaseAdmin } from '@/lib/supabase-admin';
+import { getSystemJobClient } from '@/lib/supabase/system-client';
 import OpenAI from 'openai';
 
 // Lazy initialization do cliente OpenAI
@@ -46,7 +46,7 @@ export async function processRequest(
   try {
     console.log(`[PROCESS-SERVICE] Iniciando processamento da request ${request_id}`);
     
-    const supabaseAdmin = getSupabaseAdmin();
+    const supabaseAdmin = getSystemJobClient();
     const openai = getOpenAI();
 
     // 1. Buscar a request no banco

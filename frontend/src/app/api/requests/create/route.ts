@@ -8,38 +8,26 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { createServerClient } from '@supabase/ssr';
+import { createRouteHandlerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
-import { getSupabaseAdmin } from '@/lib/supabase-admin';
+import { z } from 'zod';
 
 // FORÇA O NEXT.JS A NÃO PRÉ-RENDERIZAR ESTA ROTA
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
 
+const CreateRequestSchema = z.object({
+  title: z.string().min(1),
+  description: z.string().optional(),
+  priority: z.enum(['low', 'normal', 'high', 'urgent']).optional(),
+  agent_id: z.string().uuid().optional(),
+});
+
 export async function POST(request: NextRequest) {
   try {
-    const supabaseAdmin = getSupabaseAdmin();
+    const supabase = createRouteHandlerClient({ cookies });
 
     // 1. Validar autenticação do usuário
-    const cookieStore = await cookies();
-    const supabase = createServerClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-      {
-        cookies: {
-          get(name: string) {
-            return cookieStore.get(name)?.value;
-          },
-          set(name: string, value: string, options: any) {
-            cookieStore.set({ name, value, ...options });
-          },
-          remove(name: string, options: any) {
-            cookieStore.set({ name, value: '', ...options });
-          },
-        },
-      }
-    );
-
     const { data: { user }, error: authError } = await supabase.auth.getUser();
 
     if (authError || !user) {
@@ -54,24 +42,16 @@ export async function POST(request: NextRequest) {
 
     // 2. Validar e extrair dados do body
     const body = await request.json();
-    const { title, description, priority, agent_id } = body;
-
-    if (!title || typeof title !== 'string' || title.trim().length === 0) {
-      return NextResponse.json(
-        { error: 'Título é obrigatório' },
-        { status: 400 }
-      );
-    }
+    const { title, description, priority, agent_id } = CreateRequestSchema.parse(body);
 
     // Validar priority
-    const validPriorities = ['low', 'normal', 'high', 'urgent'];
-    const requestPriority = priority && validPriorities.includes(priority) ? priority : 'normal';
+    const requestPriority = priority ?? 'normal';
 
     console.log(`[CREATE-REQUEST] Criando request: "${title}" com prioridade ${requestPriority}`);
 
     // 3. Se agent_id foi fornecido, validar que existe
     if (agent_id) {
-      const { data: agent, error: agentError } = await supabaseAdmin
+      const { data: agent, error: agentError } = await supabase
         .from('agents')
         .select('id, name, status')
         .eq('id', agent_id)
@@ -89,7 +69,7 @@ export async function POST(request: NextRequest) {
     }
 
     // 4. Criar a request no banco de dados
-    const { data: newRequest, error: insertError } = await supabaseAdmin
+    const { data: newRequest, error: insertError } = await supabase
       .from('requests')
       .insert({
         user_id: user.id,
@@ -132,28 +112,9 @@ export async function POST(request: NextRequest) {
 // Endpoint GET para buscar requests do usuário autenticado
 export async function GET(request: NextRequest) {
   try {
-    const supabaseAdmin = getSupabaseAdmin();
+    const supabase = createRouteHandlerClient({ cookies });
 
     // 1. Validar autenticação
-    const cookieStore = await cookies();
-    const supabase = createServerClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-      {
-        cookies: {
-          get(name: string) {
-            return cookieStore.get(name)?.value;
-          },
-          set(name: string, value: string, options: any) {
-            cookieStore.set({ name, value, ...options });
-          },
-          remove(name: string, options: any) {
-            cookieStore.set({ name, value: '', ...options });
-          },
-        },
-      }
-    );
-
     const { data: { user }, error: authError } = await supabase.auth.getUser();
 
     if (authError || !user) {
@@ -164,7 +125,7 @@ export async function GET(request: NextRequest) {
     }
 
     // 2. Buscar requests do usuário
-    const { data: requests, error: fetchError } = await supabaseAdmin
+    const { data: requests, error: fetchError } = await supabase
       .from('requests')
       .select('*')
       .eq('user_id', user.id)

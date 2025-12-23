@@ -8,8 +8,10 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { getSupabaseAdmin } from '@/lib/supabase-admin';
+import { cookies } from 'next/headers';
+import { createRouteHandlerClient } from '@supabase/ssr';
 import OpenAI from 'openai';
+import { z } from 'zod';
 
 // FORÇA O NEXT.JS A NÃO PRÉ-RENDERIZAR ESTA ROTA
 export const dynamic = 'force-dynamic';
@@ -27,12 +29,25 @@ function getOpenAI(): OpenAI {
   return _openai;
 }
 
+const ProcessRequestSchema = z.object({
+  request_id: z.string().uuid(),
+});
+
 export async function POST(request: NextRequest) {
   try {
-    const supabaseAdmin = getSupabaseAdmin();
+    const cookieStore = await cookies();
+    const supabase = createRouteHandlerClient({ cookies: () => cookieStore });
     const openai = getOpenAI();
     const body = await request.json();
-    const { request_id } = body;
+    const { request_id } = ProcessRequestSchema.parse(body);
+
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
+
+    if (!session) {
+      return NextResponse.json({ error: 'Não autenticado' }, { status: 401 });
+    }
 
     if (!request_id) {
       return NextResponse.json(
@@ -44,10 +59,11 @@ export async function POST(request: NextRequest) {
     console.log(`[PROCESS] Iniciando processamento da request ${request_id}`);
 
     // 1. Buscar a request no banco
-    const { data: requestData, error: requestError } = await supabaseAdmin
+    const { data: requestData, error: requestError } = await supabase
       .from('requests')
       .select('*')
       .eq('id', request_id)
+      .eq('user_id', session.user.id)
       .single();
 
     if (requestError || !requestData) {
@@ -61,7 +77,7 @@ export async function POST(request: NextRequest) {
     console.log(`[PROCESS] Request encontrada:`, requestData);
 
     // 2. Selecionar um agent disponível (status='idle')
-    const { data: agents, error: agentsError } = await supabaseAdmin
+    const { data: agents, error: agentsError } = await supabase
       .from('agents')
       .select('*')
       .eq('status', 'idle')
@@ -79,7 +95,7 @@ export async function POST(request: NextRequest) {
     console.log(`[PROCESS] Agent selecionado: ${agent.name} (${agent.id})`);
 
     // 3. Atualizar status da request para 'processing'
-    await supabaseAdmin
+    await supabase
       .from('requests')
       .update({
         status: 'processing',
@@ -88,7 +104,7 @@ export async function POST(request: NextRequest) {
       .eq('id', request_id);
 
     // 4. Atualizar status do agent para 'processing' e current_task
-    await supabaseAdmin
+    await supabase
       .from('agents')
       .update({
         status: 'processing',
@@ -121,7 +137,7 @@ export async function POST(request: NextRequest) {
       console.log(`[PROCESS] OpenAI respondeu com sucesso`);
 
       // 6. Salvar resultado e atualizar status da request para 'completed'
-      await supabaseAdmin
+      await supabase
         .from('requests')
         .update({
           status: 'completed',
@@ -130,7 +146,7 @@ export async function POST(request: NextRequest) {
         .eq('id', request_id);
 
       // 7. Atualizar agent para 'idle' e atualizar last_active
-      await supabaseAdmin
+      await supabase
         .from('agents')
         .update({
           status: 'idle',
@@ -154,7 +170,7 @@ export async function POST(request: NextRequest) {
       console.error('[PROCESS] Erro ao chamar OpenAI:', openaiError);
 
       // Reverter status em caso de erro
-      await supabaseAdmin
+      await supabase
         .from('requests')
         .update({
           status: 'failed',
@@ -162,7 +178,7 @@ export async function POST(request: NextRequest) {
         })
         .eq('id', request_id);
 
-      await supabaseAdmin
+      await supabase
         .from('agents')
         .update({
           status: 'idle',

@@ -9,19 +9,46 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { getSupabaseAdmin } from '@/lib/supabase-admin';
 import { processRequest } from '@/lib/process-request-service';
+import { getSystemJobClient } from '@/lib/supabase/system-client';
+import { z } from 'zod';
 
 // FORÇA O NEXT.JS A NÃO PRÉ-RENDERIZAR ESTA ROTA (OBRIGATÓRIO!)
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
 export const maxDuration = 300; // 5 minutos para processar múltiplas requests
 
+const CronHeaderSchema = z.object({
+  authorization: z.string().regex(/^Bearer .+$/),
+});
+
+function assertCronAuthorization(request: NextRequest) {
+  const headers = CronHeaderSchema.safeParse({
+    authorization: request.headers.get('authorization') || '',
+  });
+
+  const expectedSecret = process.env.INTERNAL_CRON_SECRET;
+
+  if (!expectedSecret) {
+    throw new Error('INTERNAL_CRON_SECRET não configurado');
+  }
+
+  if (!headers.success || headers.data.authorization !== `Bearer ${expectedSecret}`) {
+    return false;
+  }
+
+  return true;
+}
+
 export async function POST(request: NextRequest) {
   const startTime = Date.now();
 
   try {
-    const supabaseAdmin = getSupabaseAdmin();
+    if (!assertCronAuthorization(request)) {
+      return NextResponse.json({ error: 'Acesso não autorizado' }, { status: 401 });
+    }
+
+    const supabaseAdmin = getSystemJobClient();
     
     console.log('[QUEUE] ═══════════════════════════════════════════');
     console.log('[QUEUE] Iniciando processamento automático da fila');

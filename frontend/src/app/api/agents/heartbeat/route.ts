@@ -8,19 +8,46 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { getSupabaseAdmin } from '@/lib/supabase-admin';
+import { z } from 'zod';
+import { getSystemJobClient } from '@/lib/supabase/system-client';
 
 // FORÇA O NEXT.JS A NÃO PRÉ-RENDERIZAR ESTA ROTA
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
 
+const CronHeaderSchema = z.object({
+  authorization: z.string().regex(/^Bearer .+$/),
+});
+
+function assertCronAuthorization(request: NextRequest) {
+  const headers = CronHeaderSchema.safeParse({
+    authorization: request.headers.get('authorization') || '',
+  });
+
+  const expectedSecret = process.env.INTERNAL_CRON_SECRET;
+
+  if (!expectedSecret) {
+    throw new Error('INTERNAL_CRON_SECRET não configurado');
+  }
+
+  if (!headers.success || headers.data.authorization !== `Bearer ${expectedSecret}`) {
+    return false;
+  }
+
+  return true;
+}
+
 export async function POST(request: NextRequest) {
   try {
-    const supabaseAdmin = getSupabaseAdmin();
+    if (!assertCronAuthorization(request)) {
+      return NextResponse.json({ error: 'Acesso não autorizado' }, { status: 401 });
+    }
+
+    const supabase = getSystemJobClient();
     console.log('[HEARTBEAT] Atualizando last_active dos agents...');
 
     // Atualizar last_active de todos os agents com status 'idle'
-    const { data: updatedAgents, error } = await supabaseAdmin
+    const { data: updatedAgents, error } = await supabase
       .from('agents')
       .update({
         last_active: new Date().toISOString()
@@ -57,11 +84,15 @@ export async function POST(request: NextRequest) {
 
 export async function GET(request: NextRequest) {
   try {
-    const supabaseAdmin = getSupabaseAdmin();
+    if (!assertCronAuthorization(request)) {
+      return NextResponse.json({ error: 'Acesso não autorizado' }, { status: 401 });
+    }
+
+    const supabase = getSystemJobClient();
     console.log('[HEARTBEAT] Consultando status dos agents...');
 
     // Buscar status geral dos agents
-    const { data: agents, error } = await supabaseAdmin
+    const { data: agents, error } = await supabase
       .from('agents')
       .select('id, name, status, last_active')
       .order('last_active', { ascending: false });
