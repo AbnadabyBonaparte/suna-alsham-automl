@@ -94,7 +94,13 @@ export async function updateSession(request: NextRequest) {
   }
 
   // Se autenticado e está em /login, redirecionar baseado no onboarding
+  // IMPORTANTE: Não redirecionar durante processo de login (evita loops)
   if (user && request.nextUrl.pathname === '/login') {
+    // Verificar se é uma requisição de login (POST) - não redirecionar nesse caso
+    if (request.method === 'POST') {
+      return supabaseResponse;
+    }
+
     const { data: profile } = await supabase
       .from('profiles')
       .select('onboarding_completed')

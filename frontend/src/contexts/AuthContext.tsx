@@ -126,28 +126,63 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     const signIn = async (email: string, password: string) => {
         try {
+            console.log('[AUTH] Tentando fazer login para:', email);
+            
             const { data, error } = await supabase.auth.signInWithPassword({
                 email,
                 password,
             });
 
             if (error) {
-                console.error('[AUTH] Erro no login:', error);
+                console.error('[AUTH] Erro no login:', {
+                    message: error.message,
+                    status: error.status,
+                    name: error.name,
+                });
                 return { error };
             }
 
+            console.log('[AUTH] Login bem-sucedido, carregando usuário...');
+
+            // Aguardar um pouco para garantir que a sessão está estabelecida
+            await new Promise(resolve => setTimeout(resolve, 100));
+
             // Carregar metadata imediatamente após login
-            const { data: { user } } = await supabase.auth.getUser();
+            const { data: { user }, error: userError } = await supabase.auth.getUser();
+            
+            if (userError) {
+                console.error('[AUTH] Erro ao obter usuário:', userError);
+                return { 
+                    error: {
+                        message: 'Erro ao obter dados do usuário após login',
+                        status: 500,
+                    } as AuthError
+                };
+            }
+
             if (user) {
+                console.log('[AUTH] Usuário obtido:', user.id);
                 const metadata = await loadUserMetadata(user.id);
+                console.log('[AUTH] Metadata carregada:', metadata);
                 setMetadata(metadata);
 
                 // Redirecionar baseado no estado do onboarding
+                // Usar window.location para evitar problemas com router
                 if (metadata?.onboarding_completed) {
-                    router.push('/dashboard');
+                    console.log('[AUTH] Onboarding completo, redirecionando para dashboard');
+                    window.location.href = '/dashboard';
                 } else {
-                    router.push('/onboarding');
+                    console.log('[AUTH] Onboarding não completo, redirecionando para onboarding');
+                    window.location.href = '/onboarding';
                 }
+            } else {
+                console.error('[AUTH] Usuário não encontrado após login');
+                return { 
+                    error: {
+                        message: 'Usuário não encontrado após login',
+                        status: 500,
+                    } as AuthError
+                };
             }
 
             return { error: null };

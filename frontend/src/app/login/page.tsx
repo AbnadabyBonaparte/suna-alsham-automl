@@ -135,16 +135,25 @@ export default function LoginPage() {
             if (error) {
                 setStatus('denied');
                 // Mensagens de erro mais específicas
-                let errorMsg = 'Authentication failed';
-                if (error.message?.includes('Invalid login credentials')) {
+                let errorMsg = 'Falha na autenticação';
+                console.error('[LOGIN] Erro detalhado:', {
+                    message: error.message,
+                    status: error.status,
+                    name: error.name,
+                });
+                
+                if (error.message?.includes('Invalid login credentials') || error.message?.includes('invalid_credentials')) {
                     errorMsg = 'Email ou senha incorretos';
-                } else if (error.message?.includes('Email not confirmed')) {
+                } else if (error.message?.includes('Email not confirmed') || error.message?.includes('email_not_confirmed')) {
                     errorMsg = 'Email não confirmado. Verifique sua caixa de entrada.';
-                } else if (error.message?.includes('Too many requests')) {
+                } else if (error.message?.includes('Too many requests') || error.message?.includes('too_many_requests')) {
                     errorMsg = 'Muitas tentativas. Aguarde alguns minutos.';
+                } else if (error.status === 400) {
+                    errorMsg = 'Erro na requisição. Verifique suas credenciais.';
                 } else if (error.message) {
                     errorMsg = error.message;
                 }
+                
                 setErrorMessage(errorMsg);
                 setTimeout(() => {
                     setStatus('idle');
@@ -152,7 +161,8 @@ export default function LoginPage() {
                 }, 3000);
             } else {
                 setStatus('success');
-                // Router.push já é chamado dentro do signIn
+                console.log('[LOGIN] Login bem-sucedido, aguardando redirecionamento...');
+                // Router.push já é chamado dentro do signIn (agora usando window.location)
             }
         } catch (err: any) {
             clearInterval(interval);
@@ -283,6 +293,7 @@ export default function LoginPage() {
                                 onChange={(e) => setEmail(e.target.value)}
                                 placeholder="Commander ID"
                                 disabled={status !== 'idle'}
+                                autoComplete="email"
                                 className="w-full bg-white/5 border border-white/10 rounded-xl py-3 pl-10 pr-4 text-white placeholder-gray-600 focus:border-[var(--color-primary)] focus:bg-black transition-all outline-none font-mono text-sm"
                             />
                         </div>
@@ -297,6 +308,7 @@ export default function LoginPage() {
                                 onChange={(e) => setPassword(e.target.value)}
                                 placeholder="Access Code"
                                 disabled={status !== 'idle'}
+                                autoComplete="current-password"
                                 className="w-full bg-white/5 border border-white/10 rounded-xl py-3 pl-10 pr-4 text-white placeholder-gray-600 focus:border-[var(--color-primary)] focus:bg-black transition-all outline-none font-mono text-sm tracking-widest"
                             />
                         </div>
