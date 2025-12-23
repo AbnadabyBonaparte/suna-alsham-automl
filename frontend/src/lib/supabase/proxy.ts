@@ -55,67 +55,90 @@ export async function updateSession(request: NextRequest) {
     // Buscar profile para verificar se completou onboarding
     const { data: profile, error: profileError } = await supabase
       .from('profiles')
-      .select('onboarding_completed')
+      .select('onboarding_completed, role')
       .eq('id', user.id)
       .single();
 
-    // Debug logs (apenas em desenvolvimento)
-    if (process.env.NODE_ENV === 'development') {
-      console.log('[PROXY] Verificando onboarding:', {
-        path: request.nextUrl.pathname,
-        userId: user.id,
-        profile: profile,
-        profileError: profileError,
-        onboarding_completed: profile?.onboarding_completed,
-      });
+    // Debug logs (sempre logar para debug em produção também)
+    console.log('[PROXY] Verificando onboarding:', {
+      path: request.nextUrl.pathname,
+      userId: user.id,
+      profileExists: !!profile,
+      profileError: profileError?.message,
+      onboarding_completed: profile?.onboarding_completed,
+      role: profile?.role,
+    });
+
+    // Se profile não existe, criar automaticamente e redirecionar para onboarding
+    if (profileError && profileError.code === 'PGRST116') {
+      console.log('[PROXY] Perfil não existe, criando automaticamente...');
+      // Tentar criar perfil básico
+      const { error: insertError } = await supabase
+        .from('profiles')
+        .insert({
+          id: user.id,
+          username: user.email?.split('@')[0] || 'user',
+          onboarding_completed: false,
+        });
+
+      if (!insertError) {
+        console.log('[PROXY] Perfil criado, redirecionando para onboarding');
+        const url = request.nextUrl.clone();
+        url.pathname = '/onboarding';
+        return NextResponse.redirect(url);
+      } else {
+        console.error('[PROXY] Erro ao criar perfil:', insertError);
+        // Se não conseguir criar, permitir acesso (evita bloquear usuário)
+      }
     }
 
-    // Se houver erro ou profile não existir, permitir acesso (evita bloquear usuários legítimos)
-    // Só redireciona se tiver certeza que não completou onboarding
+    // Se profile existe mas onboarding não foi completado, redirecionar
     if (!profileError && profile && profile.onboarding_completed === false && request.nextUrl.pathname !== '/onboarding') {
+      console.log('[PROXY] Onboarding não completado, redirecionando para /onboarding');
       const url = request.nextUrl.clone();
       url.pathname = '/onboarding';
       return NextResponse.redirect(url);
     }
     
-    // Se onboarding_completed é null/undefined mas profile existe, permitir acesso ao dashboard
-    // (usuário pode estar em processo de criação de perfil)
-    // Se onboarding_completed é true, também permite acesso (já completou)
+    // Se onboarding_completed é true ou null/undefined, permitir acesso
+    // (null/undefined pode acontecer durante criação de perfil)
   }
 
   // Se autenticado e completou onboarding, mas está em /onboarding → dashboard
   // IMPORTANTE: Só redireciona se realmente completou, evita loops
-  // Adiciona delay para evitar race conditions com salvamento
   if (user && request.nextUrl.pathname === '/onboarding') {
     // Verificar se há um header indicando que está salvando (evita race condition)
     const isSaving = request.headers.get('x-onboarding-saving') === 'true';
     if (isSaving) {
-      // Se está salvando, não redireciona - deixa o cliente fazer o redirect
+      console.log('[PROXY] Salvamento de onboarding em progresso, ignorando redirect');
       return supabaseResponse;
     }
 
     const { data: profile, error: profileError } = await supabase
       .from('profiles')
-      .select('onboarding_completed')
+      .select('onboarding_completed, role')
       .eq('id', user.id)
       .single();
 
     // Debug logs
-    if (process.env.NODE_ENV === 'development') {
-      console.log('[PROXY] Verificando onboarding em /onboarding:', {
-        userId: user.id,
-        profile: profile,
-        profileError: profileError,
-        onboarding_completed: profile?.onboarding_completed,
-      });
-    }
+    console.log('[PROXY] Verificando onboarding em /onboarding:', {
+      userId: user.id,
+      profileExists: !!profile,
+      profileError: profileError?.message,
+      onboarding_completed: profile?.onboarding_completed,
+      role: profile?.role,
+    });
 
     // Só redireciona se o onboarding foi realmente completado
     // E se não está em processo de salvamento
     if (!profileError && profile && profile.onboarding_completed === true) {
+      console.log('[PROXY] Onboarding completo, redirecionando para /dashboard');
       const url = request.nextUrl.clone();
       url.pathname = '/dashboard';
       return NextResponse.redirect(url);
+    } else if (profileError) {
+      console.log('[PROXY] Erro ao buscar perfil em /onboarding:', profileError.message);
+      // Se houver erro, não redireciona (permite usuário completar onboarding)
     }
   }
 
@@ -124,22 +147,32 @@ export async function updateSession(request: NextRequest) {
   if (user && request.nextUrl.pathname === '/login') {
     // Verificar se é uma requisição de login (POST) - não redirecionar nesse caso
     if (request.method === 'POST') {
+      console.log('[PROXY] Requisição POST em /login, ignorando redirect');
       return supabaseResponse;
     }
 
-    const { data: profile } = await supabase
+    const { data: profile, error: profileError } = await supabase
       .from('profiles')
-      .select('onboarding_completed')
+      .select('onboarding_completed, role')
       .eq('id', user.id)
       .single();
+
+    console.log('[PROXY] Verificando onboarding em /login:', {
+      userId: user.id,
+      profileExists: !!profile,
+      profileError: profileError?.message,
+      onboarding_completed: profile?.onboarding_completed,
+    });
 
     const redirectTo = request.nextUrl.searchParams.get('redirect') || '/dashboard';
     const url = request.nextUrl.clone();
 
     // Se não completou onboarding, ir para onboarding
-    if (profile && !profile.onboarding_completed) {
+    if (!profileError && profile && profile.onboarding_completed === false) {
+      console.log('[PROXY] Onboarding pendente, redirecionando para /onboarding');
       url.pathname = '/onboarding';
     } else {
+      console.log(`[PROXY] Onboarding completo ou perfil não encontrado, redirecionando para ${redirectTo}`);
       url.pathname = redirectTo;
     }
 
