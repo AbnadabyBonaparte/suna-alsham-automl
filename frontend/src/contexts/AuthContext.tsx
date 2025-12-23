@@ -125,12 +125,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }, []);
 
     const signIn = async (email: string, password: string) => {
-        const { error } = await supabase.auth.signInWithPassword({
-            email,
-            password,
-        });
+        try {
+            const { data, error } = await supabase.auth.signInWithPassword({
+                email,
+                password,
+            });
 
-        if (!error) {
+            if (error) {
+                console.error('[AUTH] Erro no login:', error);
+                return { error };
+            }
+
             // Carregar metadata imediatamente após login
             const { data: { user } } = await supabase.auth.getUser();
             if (user) {
@@ -145,10 +150,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 }
             }
 
-            router.refresh();
+            return { error: null };
+        } catch (err: any) {
+            console.error('[AUTH] Erro inesperado no login:', err);
+            return { 
+                error: {
+                    message: err.message || 'Erro ao fazer login. Verifique suas credenciais.',
+                    status: 500,
+                } as AuthError
+            };
         }
-
-        return { error };
     };
 
     const signUp = async (email: string, password: string) => {

@@ -134,11 +134,22 @@ export default function LoginPage() {
 
             if (error) {
                 setStatus('denied');
-                setErrorMessage(error.message || 'Authentication failed');
+                // Mensagens de erro mais específicas
+                let errorMsg = 'Authentication failed';
+                if (error.message?.includes('Invalid login credentials')) {
+                    errorMsg = 'Email ou senha incorretos';
+                } else if (error.message?.includes('Email not confirmed')) {
+                    errorMsg = 'Email não confirmado. Verifique sua caixa de entrada.';
+                } else if (error.message?.includes('Too many requests')) {
+                    errorMsg = 'Muitas tentativas. Aguarde alguns minutos.';
+                } else if (error.message) {
+                    errorMsg = error.message;
+                }
+                setErrorMessage(errorMsg);
                 setTimeout(() => {
                     setStatus('idle');
                     setScanProgress(0);
-                }, 2000);
+                }, 3000);
             } else {
                 setStatus('success');
                 // Router.push já é chamado dentro do signIn
@@ -146,11 +157,12 @@ export default function LoginPage() {
         } catch (err: any) {
             clearInterval(interval);
             setStatus('denied');
-            setErrorMessage('Connection error. Please try again.');
+            console.error('[LOGIN] Erro inesperado:', err);
+            setErrorMessage(err.message || 'Erro de conexão. Tente novamente.');
             setTimeout(() => {
                 setStatus('idle');
                 setScanProgress(0);
-            }, 2000);
+            }, 3000);
         }
     };
 
