@@ -53,18 +53,34 @@ export async function updateSession(request: NextRequest) {
   // Se autenticado, verificar onboarding antes de acessar dashboard
   if (user && isProtectedPath) {
     // Buscar profile para verificar se completou onboarding
-    const { data: profile } = await supabase
+    const { data: profile, error: profileError } = await supabase
       .from('profiles')
       .select('onboarding_completed')
       .eq('id', user.id)
       .single();
 
-    // Se não completou onboarding, redirecionar para onboarding
-    if (profile && !profile.onboarding_completed && request.nextUrl.pathname !== '/onboarding') {
+    // Debug logs (apenas em desenvolvimento)
+    if (process.env.NODE_ENV === 'development') {
+      console.log('[PROXY] Verificando onboarding:', {
+        path: request.nextUrl.pathname,
+        userId: user.id,
+        profile: profile,
+        profileError: profileError,
+        onboarding_completed: profile?.onboarding_completed,
+      });
+    }
+
+    // Se houver erro ou profile não existir, permitir acesso (evita bloquear usuários legítimos)
+    // Só redireciona se tiver certeza que não completou onboarding
+    if (!profileError && profile && profile.onboarding_completed === false && request.nextUrl.pathname !== '/onboarding') {
       const url = request.nextUrl.clone();
       url.pathname = '/onboarding';
       return NextResponse.redirect(url);
     }
+    
+    // Se onboarding_completed é null/undefined mas profile existe, permitir acesso ao dashboard
+    // (usuário pode estar em processo de criação de perfil)
+    // Se onboarding_completed é true, também permite acesso (já completou)
   }
 
   // Se autenticado e completou onboarding, mas está em /onboarding → dashboard
@@ -78,15 +94,25 @@ export async function updateSession(request: NextRequest) {
       return supabaseResponse;
     }
 
-    const { data: profile } = await supabase
+    const { data: profile, error: profileError } = await supabase
       .from('profiles')
       .select('onboarding_completed')
       .eq('id', user.id)
       .single();
 
+    // Debug logs
+    if (process.env.NODE_ENV === 'development') {
+      console.log('[PROXY] Verificando onboarding em /onboarding:', {
+        userId: user.id,
+        profile: profile,
+        profileError: profileError,
+        onboarding_completed: profile?.onboarding_completed,
+      });
+    }
+
     // Só redireciona se o onboarding foi realmente completado
     // E se não está em processo de salvamento
-    if (profile?.onboarding_completed === true) {
+    if (!profileError && profile && profile.onboarding_completed === true) {
       const url = request.nextUrl.clone();
       url.pathname = '/dashboard';
       return NextResponse.redirect(url);
