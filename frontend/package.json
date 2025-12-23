@@ -47,5 +47,27 @@
     "tsx": "^4.21.0",
     "tw-animate-css": "^1.4.0",
     "typescript": "^5"
+  },
+  "overrides": {
+    "@react-spring/three": {
+      "react": "$react",
+      "react-dom": "$react-dom"
+    },
+    "@react-spring/animated": {
+      "react": "$react",
+      "react-dom": "$react-dom"
+    },
+    "@react-spring/core": {
+      "react": "$react",
+      "react-dom": "$react-dom"
+    },
+    "@react-spring/shared": {
+      "react": "$react",
+      "react-dom": "$react-dom"
+    },
+    "react-composer": {
+      "react": "$react",
+      "react-dom": "$react-dom"
+    }
   }
 }
