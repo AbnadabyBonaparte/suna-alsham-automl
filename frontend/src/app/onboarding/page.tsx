@@ -193,8 +193,8 @@ export default function OnboardingPage() {
                     if (profile?.onboarding_completed && !isRedirectingRef.current) {
                         isRedirectingRef.current = true;
                         setHasCheckedOnboarding(true);
-                        // Usar window.location para evitar loops
-                        window.location.href = '/dashboard';
+                        // Usar router.push - o middleware vai garantir o redirecionamento correto
+                        router.push('/dashboard');
                     }
                 }
             } catch (error) {
@@ -241,8 +241,8 @@ export default function OnboardingPage() {
                 isRedirectingRef.current = true;
                 setIsSaving(false);
                 localStorage.setItem('onboarding_completed', 'true');
-                // Usar window.location para evitar loops
-                window.location.href = '/dashboard';
+                // Usar router.push - o middleware vai garantir o redirecionamento correto
+                router.push('/dashboard');
                 return;
             }
 
@@ -298,14 +298,14 @@ export default function OnboardingPage() {
         }
 
         // Tempo do salto no hiperespaço antes de ir pro dashboard
-        // IMPORTANTE: Usar window.location.href para forçar reload completo e evitar loops
+        // Usar router.push - o middleware vai garantir o redirecionamento correto
         setTimeout(() => {
             if (isRedirectingRef.current) {
                 console.log('[ONBOARDING] Redirecionando para dashboard...');
                 // Marcar no localStorage que onboarding foi completado
                 localStorage.setItem('onboarding_completed', 'true');
-                // Usar window.location para forçar reload completo e evitar loops
-                window.location.href = '/dashboard';
+                // Usar router.push - o middleware vai garantir o redirecionamento correto
+                router.push('/dashboard');
             }
         }, 2500);
     };
