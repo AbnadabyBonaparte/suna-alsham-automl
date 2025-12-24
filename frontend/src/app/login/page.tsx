@@ -9,9 +9,9 @@
 
 "use client";
 
-import { useState, useEffect, useRef } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
-import { supabase } from '@/lib/supabase';
+import { createClient } from '@/lib/supabase/client';
 import Link from 'next/link';
 import {
     Fingerprint, Scan, ShieldCheck, AlertOctagon, Lock, Key,
@@ -21,6 +21,7 @@ import {
 export default function LoginPage() {
     const { signIn } = useAuth();
     const canvasRef = useRef<HTMLCanvasElement>(null);
+    const supabase = useMemo(() => createClient(), []);
     
     // Estados
     const [email, setEmail] = useState('');
@@ -133,23 +134,45 @@ export default function LoginPage() {
 
             if (error) {
                 setStatus('denied');
-                setErrorMessage(error.message || 'Authentication failed');
+                // Mensagens de erro mais específicas
+                let errorMsg = 'Falha na autenticação';
+                console.error('[LOGIN] Erro detalhado:', {
+                    message: error.message,
+                    status: error.status,
+                    name: error.name,
+                });
+                
+                if (error.message?.includes('Invalid login credentials') || error.message?.includes('invalid_credentials')) {
+                    errorMsg = 'Email ou senha incorretos';
+                } else if (error.message?.includes('Email not confirmed') || error.message?.includes('email_not_confirmed')) {
+                    errorMsg = 'Email não confirmado. Verifique sua caixa de entrada.';
+                } else if (error.message?.includes('Too many requests') || error.message?.includes('too_many_requests')) {
+                    errorMsg = 'Muitas tentativas. Aguarde alguns minutos.';
+                } else if (error.status === 400) {
+                    errorMsg = 'Erro na requisição. Verifique suas credenciais.';
+                } else if (error.message) {
+                    errorMsg = error.message;
+                }
+                
+                setErrorMessage(errorMsg);
                 setTimeout(() => {
                     setStatus('idle');
                     setScanProgress(0);
-                }, 2000);
+                }, 3000);
             } else {
                 setStatus('success');
-                // Router.push já é chamado dentro do signIn
+                console.log('[LOGIN] Login bem-sucedido, aguardando redirecionamento...');
+                // Router.push já é chamado dentro do signIn (agora usando window.location)
             }
         } catch (err: any) {
             clearInterval(interval);
             setStatus('denied');
-            setErrorMessage('Connection error. Please try again.');
+            console.error('[LOGIN] Erro inesperado:', err);
+            setErrorMessage(err.message || 'Erro de conexão. Tente novamente.');
             setTimeout(() => {
                 setStatus('idle');
                 setScanProgress(0);
-            }, 2000);
+            }, 3000);
         }
     };
 
@@ -270,6 +293,7 @@ export default function LoginPage() {
                                 onChange={(e) => setEmail(e.target.value)}
                                 placeholder="Commander ID"
                                 disabled={status !== 'idle'}
+                                autoComplete="email"
                                 className="w-full bg-white/5 border border-white/10 rounded-xl py-3 pl-10 pr-4 text-white placeholder-gray-600 focus:border-[var(--color-primary)] focus:bg-black transition-all outline-none font-mono text-sm"
                             />
                         </div>
@@ -284,6 +308,7 @@ export default function LoginPage() {
                                 onChange={(e) => setPassword(e.target.value)}
                                 placeholder="Access Code"
                                 disabled={status !== 'idle'}
+                                autoComplete="current-password"
                                 className="w-full bg-white/5 border border-white/10 rounded-xl py-3 pl-10 pr-4 text-white placeholder-gray-600 focus:border-[var(--color-primary)] focus:bg-black transition-all outline-none font-mono text-sm tracking-widest"
                             />
                         </div>

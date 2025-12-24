@@ -11,12 +11,14 @@ import { devtools } from 'zustand/middleware';
 
 export interface Deal {
   id: string;
-  user_id: string;
+  title: string;
   client_name: string;
   value: number;
-  status: 'lead' | 'negotiation' | 'closed_won' | 'closed_lost';
   probability: number; // 0-100
+  status: 'lead' | 'negotiation' | 'closed_won' | 'closed_lost';
   expected_close_date?: string;
+  stage: 'discovery' | 'qualification' | 'proposal' | 'negotiation' | 'closed';
+  contact_email?: string;
   notes?: string;
   created_at: string;
   updated_at: string;

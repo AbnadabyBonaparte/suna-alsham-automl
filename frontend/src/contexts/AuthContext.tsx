@@ -1,8 +1,8 @@
 "use client";
 
-import { createContext, useContext, useEffect, useState } from 'react';
-import { User, Session, AuthError, SupabaseClient } from '@supabase/supabase-js';
-import { createClient } from '@supabase/supabase-js';
+import { createContext, useContext, useEffect, useMemo, useState } from 'react';
+import { User, Session, AuthError } from '@supabase/supabase-js';
+import { createClient } from '@/lib/supabase/client';
 import { useRouter } from 'next/navigation';
 
 // Mock user para desenvolvimento
@@ -35,6 +35,7 @@ interface UserMetadata {
     founder_access?: boolean;
     subscription_plan?: string;
     subscription_status?: string;
+    onboarding_completed?: boolean;
 }
 
 interface AuthContextType {
@@ -52,39 +53,20 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// Lazy client initialization para evitar erros durante build
-let _supabaseClient: SupabaseClient | null = null;
-
-function getSupabaseClient(): SupabaseClient {
-    if (_supabaseClient) {
-        return _supabaseClient;
-    }
-    
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-    const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-    
-    if (!supabaseUrl || !supabaseAnonKey) {
-        throw new Error('Missing Supabase environment variables');
-    }
-    
-    _supabaseClient = createClient(supabaseUrl, supabaseAnonKey);
-    return _supabaseClient;
-}
-
 export function AuthProvider({ children }: { children: React.ReactNode }) {
     const [user, setUser] = useState<User | null>(null);
     const [session, setSession] = useState<Session | null>(null);
     const [metadata, setMetadata] = useState<UserMetadata | null>(null);
     const [loading, setLoading] = useState(true);
     const router = useRouter();
+    const supabase = useMemo(() => createClient(), []);
 
     // Função para carregar metadata do usuário
     const loadUserMetadata = async (userId: string) => {
         try {
-            const supabase = getSupabaseClient();
             const { data: profile, error } = await supabase
                 .from('profiles')
-                .select('subscription_plan, subscription_status, founder_access')
+                .select('subscription_plan, subscription_status, founder_access, onboarding_completed')
                 .eq('id', userId)
                 .single();
 
@@ -112,13 +94,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             setMetadata({
                 founder_access: true,
                 subscription_plan: 'enterprise',
-                subscription_status: 'active'
+                subscription_status: 'active',
+                onboarding_completed: true
             });
             setLoading(false);
             return;
         }
-
-        const supabase = getSupabaseClient();
 
         const handleAuthChange = async (_event: any, session: Session | null) => {
             setSession(session);
@@ -144,66 +125,93 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }, []);
 
     const signIn = async (email: string, password: string) => {
-        const supabase = getSupabaseClient();
-        const { error } = await supabase.auth.signInWithPassword({
-            email,
-            password,
-        });
+        try {
+            console.log('[AUTH] Tentando fazer login para:', email);
+            
+            const { data, error } = await supabase.auth.signInWithPassword({
+                email,
+                password,
+            });
 
-        if (!error) {
-            // Carregar metadata imediatamente após login
-            const { data: { user } } = await supabase.auth.getUser();
-            if (user) {
-                const metadata = await loadUserMetadata(user.id);
-
-                // Verificar se é o dono
-                if (email === 'casamondestore@gmail.com') {
-                    router.push('/dashboard');
-                    return { error: null };
-                }
-
-                // Verificar founder access
-                if (metadata?.founder_access) {
-                    router.push('/dashboard');
-                    return { error: null };
-                }
-
-                // Verificar plano enterprise
-                if (metadata?.subscription_plan === 'enterprise' && metadata?.subscription_status === 'active') {
-                    router.push('/dashboard');
-                    return { error: null };
-                }
-
-                // Verificar se tem qualquer subscription ativa
-                if (metadata?.subscription_status === 'active') {
-                    router.push('/dashboard');
-                    return { error: null };
-                }
-
-                // Não pagou - vai para pricing
-                router.push('/pricing');
+            if (error) {
+                console.error('[AUTH] Erro no login:', {
+                    message: error.message,
+                    status: error.status,
+                    name: error.name,
+                });
+                return { error };
             }
-        }
 
-        return { error };
+            console.log('[AUTH] Login bem-sucedido, carregando usuário...');
+
+            // Aguardar um pouco para garantir que a sessão está estabelecida
+            await new Promise(resolve => setTimeout(resolve, 100));
+
+            // Carregar metadata imediatamente após login
+            const { data: { user }, error: userError } = await supabase.auth.getUser();
+            
+            if (userError) {
+                console.error('[AUTH] Erro ao obter usuário:', userError);
+                return { 
+                    error: {
+                        message: 'Erro ao obter dados do usuário após login',
+                        status: 500,
+                    } as AuthError
+                };
+            }
+
+            if (user) {
+                console.log('[AUTH] Usuário obtido:', user.id);
+                const metadata = await loadUserMetadata(user.id);
+                console.log('[AUTH] Metadata carregada:', metadata);
+                setMetadata(metadata);
+
+                // Redirecionar baseado no estado do onboarding
+                // Usar router.push para evitar reload completo da página
+                if (metadata?.onboarding_completed) {
+                    console.log('[AUTH] Onboarding completo, redirecionando para dashboard');
+                    router.push('/dashboard');
+                } else {
+                    console.log('[AUTH] Onboarding não completo, redirecionando para onboarding');
+                    router.push('/onboarding');
+                }
+            } else {
+                console.error('[AUTH] Usuário não encontrado após login');
+                return { 
+                    error: {
+                        message: 'Usuário não encontrado após login',
+                        status: 500,
+                    } as AuthError
+                };
+            }
+
+            return { error: null };
+        } catch (err: any) {
+            console.error('[AUTH] Erro inesperado no login:', err);
+            return { 
+                error: {
+                    message: err.message || 'Erro ao fazer login. Verifique suas credenciais.',
+                    status: 500,
+                } as AuthError
+            };
+        }
     };
 
     const signUp = async (email: string, password: string) => {
-        const supabase = getSupabaseClient();
         const { error } = await supabase.auth.signUp({
             email,
             password,
         });
 
         if (!error) {
-            router.push('/pricing');
+            // Novos usuários sempre vão para onboarding
+            router.push('/onboarding');
         }
 
         return { error };
     };
 
     const signOut = async () => {
-        const supabase = getSupabaseClient();
         await supabase.auth.signOut();
         setMetadata(null);
         router.push('/login');

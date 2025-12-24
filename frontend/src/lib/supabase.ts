@@ -1,9 +1,9 @@
-import { createClient, SupabaseClient } from '@supabase/supabase-js';
+import { createClient as createBrowserClient } from './supabase/client';
 
 // Lazy initialization - só cria o cliente quando for realmente usado
-let _supabase: SupabaseClient | null = null;
+let _supabase: any = null;
 
-export function getSupabase(): SupabaseClient {
+export function getSupabase(): any {
   if (_supabase) {
     return _supabase;
   }
@@ -14,31 +14,35 @@ export function getSupabase(): SupabaseClient {
   if (!supabaseUrl || !supabaseAnonKey) {
     // Durante o build, retorna um cliente dummy
     console.warn('[Supabase] Env vars missing - returning dummy client for build');
-    return {
-      from: () => ({
-        select: () => Promise.resolve({ data: [], error: null }),
-        insert: () => Promise.resolve({ data: null, error: null }),
-        update: () => Promise.resolve({ data: null, error: null }),
-        delete: () => Promise.resolve({ data: null, error: null }),
-        eq: () => ({ select: () => Promise.resolve({ data: [], error: null }) }),
-      }),
-      auth: {
-        getSession: () => Promise.resolve({ data: { session: null }, error: null }),
-        getUser: () => Promise.resolve({ data: { user: null }, error: null }),
-        signInWithPassword: () => Promise.resolve({ data: null, error: null }),
-        signUp: () => Promise.resolve({ data: null, error: null }),
-        signOut: () => Promise.resolve({ error: null }),
-        onAuthStateChange: () => ({ data: { subscription: { unsubscribe: () => {} } } }),
-      },
-      channel: () => ({
-        on: () => ({ subscribe: () => ({}) }),
-      }),
-      removeChannel: () => Promise.resolve({ error: null }),
-    } as unknown as SupabaseClient;
+    return createDummyClient();
   }
 
-  _supabase = createClient(supabaseUrl, supabaseAnonKey);
+  _supabase = createBrowserClient();
   return _supabase;
+}
+
+function createDummyClient(): any {
+  return {
+    from: () => ({
+      select: () => Promise.resolve({ data: [], error: null }),
+      insert: () => Promise.resolve({ data: null, error: null }),
+      update: () => Promise.resolve({ data: null, error: null }),
+      delete: () => Promise.resolve({ data: null, error: null }),
+      eq: () => ({ select: () => Promise.resolve({ data: [], error: null }) }),
+    }),
+    auth: {
+      getSession: () => Promise.resolve({ data: { session: null }, error: null }),
+      getUser: () => Promise.resolve({ data: { user: null }, error: null }),
+      signInWithPassword: () => Promise.resolve({ data: null, error: null }),
+      signUp: () => Promise.resolve({ data: null, error: null }),
+      signOut: () => Promise.resolve({ error: null }),
+      onAuthStateChange: () => ({ data: { subscription: { unsubscribe: () => {} } } }),
+    },
+    channel: () => ({
+      on: () => ({ subscribe: () => ({}) }),
+    }),
+    removeChannel: () => Promise.resolve({ error: null }),
+  };
 }
 
 // Export direto do cliente para retrocompatibilidade

@@ -3,8 +3,8 @@
  * Real-time subscription for deals table (sales pipeline)
  */
 
-import { useState, useEffect } from 'react';
-import { supabase } from '@/lib/supabase';
+import { useState, useEffect, useMemo } from 'react';
+import { createClient } from '@/lib/supabase/client';
 import type { RealtimeChannel } from '@supabase/supabase-js';
 
 export interface Deal {
@@ -32,6 +32,7 @@ export function useRealtimeDeals(options: UseRealtimeDealsOptions = {}) {
   const [deals, setDeals] = useState<Deal[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const supabase = useMemo(() => createClient(), []);
 
   useEffect(() => {
     let channel: RealtimeChannel;
@@ -120,7 +121,7 @@ export function useRealtimeDeals(options: UseRealtimeDealsOptions = {}) {
         supabase.removeChannel(channel);
       }
     };
-  }, [options.onNewDeal, options.onDealUpdate, options.onDealClosed]);
+  }, [supabase, options.onNewDeal, options.onDealUpdate, options.onDealClosed]);
 
   // Helper to calculate pipeline value by stage
   const getPipelineByStage = () => {
