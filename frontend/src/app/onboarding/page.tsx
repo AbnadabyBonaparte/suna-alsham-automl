@@ -191,24 +191,27 @@ export default function OnboardingPage() {
                         .single();
 
                     if (profile?.onboarding_completed && !isRedirectingRef.current) {
+                        console.log('[ONBOARDING] Onboarding já completo detectado, redirecionando imediatamente...');
                         isRedirectingRef.current = true;
                         setHasCheckedOnboarding(true);
                         // Usar window.location para forçar reload completo e evitar loops com RSC
-                        window.location.href = '/dashboard';
+                        // Adicionar pequeno delay para garantir que o estado foi atualizado
+                        setTimeout(() => {
+                            window.location.href = '/dashboard';
+                        }, 100);
                         return;
                     }
                 }
             } catch (error) {
-                // Ignora erros silenciosamente
+                console.error('[ONBOARDING] Erro ao verificar onboarding:', error);
             } finally {
                 setHasCheckedOnboarding(true);
             }
         };
 
-        if (step === 'select' && !hasCheckedOnboarding) {
-            checkOnboarding();
-        }
-    }, [step, router, hasCheckedOnboarding]);
+        // Verificar imediatamente ao montar o componente
+        checkOnboarding();
+    }, []); // Sem dependências - executa uma vez ao montar
 
     const handleLaunch = async () => {
         if (!selectedClass || isSaving || isRedirectingRef.current) {

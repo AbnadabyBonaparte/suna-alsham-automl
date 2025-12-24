@@ -52,6 +52,13 @@ export async function updateSession(request: NextRequest) {
 
   // Se autenticado, verificar onboarding antes de acessar dashboard
   if (user && isProtectedPath) {
+    // CRÍTICO: NÃO verificar onboarding durante requisições RSC para evitar loops
+    const isRSCRequest = request.nextUrl.searchParams.has('_rsc');
+    if (isRSCRequest) {
+      console.log('[PROXY] Requisição RSC em rota protegida, ignorando verificação de onboarding');
+      return supabaseResponse;
+    }
+
     // Buscar profile para verificar se completou onboarding
     const { data: profile, error: profileError } = await supabase
       .from('profiles')
@@ -93,7 +100,8 @@ export async function updateSession(request: NextRequest) {
     }
 
     // Se profile existe mas onboarding não foi completado, redirecionar
-    if (!profileError && profile && profile.onboarding_completed === false && request.nextUrl.pathname !== '/onboarding') {
+    // IMPORTANTE: Só redireciona se NÃO for requisição RSC
+    if (!profileError && profile && profile.onboarding_completed === false && request.nextUrl.pathname !== '/onboarding' && !isRSCRequest) {
       console.log('[PROXY] Onboarding não completado, redirecionando para /onboarding');
       const url = request.nextUrl.clone();
       url.pathname = '/onboarding';
