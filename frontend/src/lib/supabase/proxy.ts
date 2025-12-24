@@ -106,7 +106,16 @@ export async function updateSession(request: NextRequest) {
 
   // Se autenticado e completou onboarding, mas está em /onboarding → dashboard
   // IMPORTANTE: Só redireciona se realmente completou, evita loops
+  // CRÍTICO: NÃO redirecionar durante requisições RSC (_rsc=) para evitar loop infinito
   if (user && request.nextUrl.pathname === '/onboarding') {
+    // Verificar se é uma requisição RSC (React Server Components)
+    const isRSCRequest = request.nextUrl.searchParams.has('_rsc');
+    if (isRSCRequest) {
+      // Durante requisições RSC, não redirecionar - deixa o cliente fazer o redirect
+      console.log('[PROXY] Requisição RSC em /onboarding, ignorando redirect para evitar loop');
+      return supabaseResponse;
+    }
+
     // Verificar se há um header indicando que está salvando (evita race condition)
     const isSaving = request.headers.get('x-onboarding-saving') === 'true';
     if (isSaving) {
@@ -131,7 +140,8 @@ export async function updateSession(request: NextRequest) {
 
     // Só redireciona se o onboarding foi realmente completado
     // E se não está em processo de salvamento
-    if (!profileError && profile && profile.onboarding_completed === true) {
+    // E se NÃO é uma requisição RSC
+    if (!profileError && profile && profile.onboarding_completed === true && !isRSCRequest) {
       console.log('[PROXY] Onboarding completo, redirecionando para /dashboard');
       const url = request.nextUrl.clone();
       url.pathname = '/dashboard';

@@ -193,8 +193,9 @@ export default function OnboardingPage() {
                     if (profile?.onboarding_completed && !isRedirectingRef.current) {
                         isRedirectingRef.current = true;
                         setHasCheckedOnboarding(true);
-                        // Usar router.push - o middleware vai garantir o redirecionamento correto
-                        router.push('/dashboard');
+                        // Usar window.location para forçar reload completo e evitar loops com RSC
+                        window.location.href = '/dashboard';
+                        return;
                     }
                 }
             } catch (error) {
@@ -241,8 +242,8 @@ export default function OnboardingPage() {
                 isRedirectingRef.current = true;
                 setIsSaving(false);
                 localStorage.setItem('onboarding_completed', 'true');
-                // Usar router.push - o middleware vai garantir o redirecionamento correto
-                router.push('/dashboard');
+                // Usar window.location para forçar reload completo e evitar loops com RSC
+                window.location.href = '/dashboard';
                 return;
             }
 
@@ -298,14 +299,14 @@ export default function OnboardingPage() {
         }
 
         // Tempo do salto no hiperespaço antes de ir pro dashboard
-        // Usar router.push - o middleware vai garantir o redirecionamento correto
+        // Usar window.location para forçar reload completo e evitar loops com RSC
         setTimeout(() => {
             if (isRedirectingRef.current) {
                 console.log('[ONBOARDING] Redirecionando para dashboard...');
                 // Marcar no localStorage que onboarding foi completado
                 localStorage.setItem('onboarding_completed', 'true');
-                // Usar router.push - o middleware vai garantir o redirecionamento correto
-                router.push('/dashboard');
+                // Usar window.location para forçar reload completo e evitar loops com RSC
+                window.location.href = '/dashboard';
             }
         }, 2500);
     };
