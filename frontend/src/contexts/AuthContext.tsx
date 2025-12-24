@@ -167,13 +167,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 setMetadata(metadata);
 
                 // Redirecionar baseado no estado do onboarding
-                // Usar window.location para evitar problemas com router
+                // Usar router.push para evitar reload completo da página
                 if (metadata?.onboarding_completed) {
                     console.log('[AUTH] Onboarding completo, redirecionando para dashboard');
-                    window.location.href = '/dashboard';
+                    router.push('/dashboard');
                 } else {
                     console.log('[AUTH] Onboarding não completo, redirecionando para onboarding');
-                    window.location.href = '/onboarding';
+                    router.push('/onboarding');
                 }
             } else {
                 console.error('[AUTH] Usuário não encontrado após login');
