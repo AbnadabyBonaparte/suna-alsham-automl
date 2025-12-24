@@ -9,7 +9,7 @@
 
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
+import { createServerClient } from '@supabase/ssr';
 
 // ========================================
 // ROTAS PÚBLICAS (sem autenticação)
@@ -82,40 +82,41 @@ if (pathname.startsWith('/dev/')) {
         return NextResponse.next();
     }
 
-    // Pegar token do cookie de autenticação do Supabase
-    const authToken = req.cookies.get('sb-access-token')?.value ||
-                      req.cookies.get('supabase-auth-token')?.value;
-
     // ========================================
     // 3. ROTAS DE DASHBOARD - VERIFICAÇÃO COMPLETA
     // ========================================
     if (pathname.startsWith('/dashboard')) {
-        // Se não tem token, redireciona para login
-        if (!authToken) {
-            console.log(`🔒 Acesso negado a ${pathname} - não autenticado`);
-            const url = req.nextUrl.clone();
-            url.pathname = '/login';
-            url.searchParams.set('redirect', pathname);
-            return NextResponse.redirect(url);
-        }
+        // ========================================
+        // 4. CRIAR CLIENTE SUPABASE SSR COM COOKIES
+        // ========================================
+        let response = NextResponse.next({
+            request: {
+                headers: req.headers,
+            },
+        });
 
-        // ========================================
-        // 4. VERIFICAR AUTENTICAÇÃO E PERMISSÕES
-        // ========================================
-        const supabase = createClient(supabaseUrl, supabaseAnonKey, {
-            auth: {
-                persistSession: false
-            }
+        const supabase = createServerClient(supabaseUrl, supabaseAnonKey, {
+            cookies: {
+                getAll() {
+                    return req.cookies.getAll();
+                },
+                setAll(cookiesToSet) {
+                    cookiesToSet.forEach(({ name, value, options }) => {
+                        response.cookies.set(name, value, options);
+                    });
+                },
+            },
         });
 
         try {
-            // Pegar sessão do usuário
+            // Pegar sessão do usuário usando cookies
             const { data: { session }, error: sessionError } = await supabase.auth.getSession();
 
             if (sessionError || !session) {
-                console.log(`🔒 Acesso negado a ${pathname} - sessão inválida`);
+                console.log(`🔒 Acesso negado a ${pathname} - sessão inválida`, sessionError);
                 const url = req.nextUrl.clone();
                 url.pathname = '/login';
+                url.searchParams.set('redirect', pathname);
                 return NextResponse.redirect(url);
             }
 
@@ -127,7 +128,6 @@ if (pathname.startsWith('/dev/')) {
             // ========================================
             if (userEmail === 'casamondestore@gmail.com') {
                 console.log('👑 DONO DETECTADO - ACESSO TOTAL LIBERADO');
-                const response = NextResponse.next();
                 response.headers.set('x-user-authenticated', 'true');
                 response.headers.set('x-user-founder', 'true');
                 response.headers.set('x-user-email', userEmail);
@@ -158,7 +158,6 @@ if (pathname.startsWith('/dev/')) {
 
             if (hasFounderAccess) {
                 console.log('🏆 FOUNDER ACCESS - ACESSO TOTAL LIBERADO');
-                const response = NextResponse.next();
                 response.headers.set('x-user-authenticated', 'true');
                 response.headers.set('x-user-founder', 'true');
                 response.headers.set('x-user-plan', userData?.subscription_plan || 'free');
@@ -167,7 +166,6 @@ if (pathname.startsWith('/dev/')) {
 
             if (hasEnterprisePlan && isSubscriptionActive) {
                 console.log('💎 ENTERPRISE PLAN ATIVO - ACESSO LIBERADO');
-                const response = NextResponse.next();
                 response.headers.set('x-user-authenticated', 'true');
                 response.headers.set('x-user-plan', 'enterprise');
                 response.headers.set('x-user-paid', 'true');
@@ -176,7 +174,6 @@ if (pathname.startsWith('/dev/')) {
 
             if (isSubscriptionActive) {
                 console.log('✅ SUBSCRIPTION ATIVA - ACESSO LIBERADO');
-                const response = NextResponse.next();
                 response.headers.set('x-user-authenticated', 'true');
                 response.headers.set('x-user-plan', userData?.subscription_plan || 'free');
                 response.headers.set('x-user-paid', 'true');
