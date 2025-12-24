@@ -150,7 +150,13 @@ export async function proxy(request: NextRequest) {
   }
 
   // Se onboarding FOI completado e está em /onboarding, redirecionar para dashboard
-  if (profile && profile.onboarding_completed === true && request.nextUrl.pathname === '/onboarding') {
+  // IMPORTANTE: Só redirecionar se NÃO estiver em uma requisição RSC e se realmente estiver em /onboarding
+  if (
+    profile && 
+    profile.onboarding_completed === true && 
+    request.nextUrl.pathname === '/onboarding' &&
+    !isRSCRequest
+  ) {
     console.log('[PROXY] Onboarding completo, redirecionando para /dashboard');
     const url = request.nextUrl.clone();
     url.pathname = '/dashboard';
@@ -166,7 +172,14 @@ export async function proxy(request: NextRequest) {
     request.nextUrl.pathname.startsWith(path),
   );
 
-  if (isProtectedPath && profile) {
+  if (isProtectedPath) {
+    // Se não tem profile mas está tentando acessar dashboard, deixar passar
+    // O requireDashboardAccess vai lidar com isso
+    if (!profile) {
+      console.log('[PROXY] Profile não encontrado mas permitindo acesso - requireDashboardAccess vai lidar');
+      return supabaseResponse;
+    }
+
     // Verificar se é o dono (acesso total)
     const isOwner = user.email === 'casamondestore@gmail.com';
     if (isOwner) {

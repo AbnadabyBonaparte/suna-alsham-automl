@@ -76,6 +76,24 @@ export async function requireDashboardAccess(): Promise<DashboardAccess> {
     .single();
 
   if (error || !profile) {
+    // Se o profile não existe, criar automaticamente ao invés de redirecionar
+    // Isso evita loops infinitos quando o proxy já verificou o onboarding
+    if (error?.code === 'PGRST116') {
+      // Profile não existe - criar automaticamente
+      const { error: insertError } = await supabase
+        .from('profiles')
+        .insert({
+          id: user.id,
+          username: user.email?.split('@')[0] || 'user',
+          onboarding_completed: false,
+        });
+
+      if (!insertError) {
+        // Após criar, redirecionar para onboarding
+        redirect('/onboarding');
+      }
+    }
+    // Se houver outro erro ou não conseguir criar, redirecionar para onboarding
     redirect('/onboarding');
   }
 
