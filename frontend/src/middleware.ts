@@ -66,14 +66,17 @@ export async function middleware(req: NextRequest) {
     // ========================================
     // 2. ROTAS PÚBLICAS - LIBERA IMEDIATAMENTE
     // ========================================
+    // IMPORTANTE: /onboarding é tratada depois, precisa de verificação de auth
     if (PUBLIC_ROUTES.some(route => pathname === route || pathname.startsWith('/api/'))) {
         // Permitir todas as rotas de API e rotas públicas
         if (pathname.startsWith('/api/')) {
+            console.log(`[MIDDLEWARE] Rota de API liberada: ${pathname}`);
             return NextResponse.next();
         }
 
         // Rotas públicas específicas
         if (PUBLIC_ROUTES.includes(pathname)) {
+            console.log(`[MIDDLEWARE] Rota pública liberada: ${pathname}`);
             return NextResponse.next();
         }
     }
@@ -92,8 +95,20 @@ export async function middleware(req: NextRequest) {
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
     const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
+    console.log('[MIDDLEWARE] Verificando variáveis de ambiente:', {
+        pathname,
+        hasSupabaseUrl: !!supabaseUrl,
+        hasSupabaseAnonKey: !!supabaseAnonKey,
+        supabaseUrlLength: supabaseUrl?.length || 0,
+        supabaseAnonKeyLength: supabaseAnonKey?.length || 0,
+    });
+
     if (!supabaseUrl || !supabaseAnonKey) {
-        console.warn('⚠️ Supabase não configurado no middleware');
+        console.error('⚠️ CRÍTICO: Supabase não configurado no middleware!', {
+            supabaseUrl: supabaseUrl || 'UNDEFINED',
+            supabaseAnonKey: supabaseAnonKey ? 'DEFINED' : 'UNDEFINED',
+        });
+        // Se não tem Supabase configurado, deixa passar mas loga erro
         return NextResponse.next();
     }
 
@@ -214,6 +229,14 @@ export async function middleware(req: NextRequest) {
     
     // Se está em /onboarding e já completou → redirecionar para dashboard
     if (pathname === '/onboarding') {
+        console.log('[MIDDLEWARE] Processando rota /onboarding:', {
+            userId: user?.id,
+            userEmail: user?.email,
+            profileExists: !!profile,
+            profileError: profileError?.message,
+            onboarding_completed: profile?.onboarding_completed,
+        });
+
         // Verificar se há um header indicando que está salvando (evita race condition)
         const isSaving = req.headers.get('x-onboarding-saving') === 'true';
         if (isSaving) {
@@ -222,13 +245,14 @@ export async function middleware(req: NextRequest) {
         }
 
         if (!profileError && profile && profile.onboarding_completed === true) {
-            console.log('[MIDDLEWARE] Onboarding completo, redirecionando de /onboarding para /dashboard');
+            console.log('[MIDDLEWARE] ✅ Onboarding completo detectado! Redirecionando de /onboarding para /dashboard');
             const url = req.nextUrl.clone();
             url.pathname = '/dashboard';
             return NextResponse.redirect(url);
         }
         
         // Se onboarding não completo, permite ficar em /onboarding
+        console.log('[MIDDLEWARE] Onboarding não completo ou perfil não encontrado, permitindo acesso a /onboarding');
         return response;
     }
 
