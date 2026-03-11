@@ -186,7 +186,7 @@ export async function proxy(request: NextRequest) {
       console.log('[PROXY] 👑 DONO DETECTADO - ACESSO TOTAL LIBERADO');
       supabaseResponse.headers.set('x-user-authenticated', 'true');
       supabaseResponse.headers.set('x-user-founder', 'true');
-      supabaseResponse.headers.set('x-user-email', user.email);
+      supabaseResponse.headers.set('x-user-email', user.email ?? '');
       return supabaseResponse;
     }
 
