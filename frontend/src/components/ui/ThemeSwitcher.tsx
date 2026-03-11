@@ -93,7 +93,7 @@ export function ThemeSwitcher() {
       {/* Modal Overlay - CINEMATOGRÁFICO */}
       {isOpen && (
         <div
-          className="fixed inset-0 bg-black/90 backdrop-blur-md z-[200] flex items-center justify-center p-4 animate-fadeIn"
+          className="fixed inset-0 bg-background/90 backdrop-blur-md z-[200] flex items-center justify-center p-4 animate-fadeIn"
           onClick={() => setIsOpen(false)}
         >
           <div

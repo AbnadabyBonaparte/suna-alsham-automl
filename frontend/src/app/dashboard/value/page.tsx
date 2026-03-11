@@ -12,6 +12,9 @@
 import { useState, useEffect, useRef } from 'react';
 import { Wallet, TrendingUp, ArrowUpRight, Gem, Lock, CreditCard, RefreshCw, Inbox } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
+import { LoadingState } from '@/components/ui/LoadingState';
+import { ErrorState } from '@/components/ui/ErrorState';
+import { EmptyState } from '@/components/ui/EmptyState';
 
 interface Transaction {
     id: string;
@@ -63,6 +66,8 @@ export default function ValuePage() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
+    const refetch = () => { setError(null); setLoading(true); };
+
     useEffect(() => {
         async function loadFinancialData() {
             setLoading(true);
@@ -106,6 +111,10 @@ export default function ValuePage() {
 
         loadFinancialData();
     }, []);
+
+    if (loading) return <LoadingState message="Acessando cofre seguro..." />;
+    if (error) return <ErrorState message={error} onRetry={refetch} />;
+    if (transactions.length === 0 && balance === 0) return <EmptyState title="Nenhuma transação encontrada" description="Os dados financeiros aparecerão aqui quando disponíveis." />;
     
     // 1. ENGINE VISUAL (CHUVA DE OURO/DIAMANTE)
     useEffect(() => {
@@ -156,13 +165,18 @@ export default function ValuePage() {
                     p.x = Math.random() * w;
                 }
 
+                const style = getComputedStyle(document.documentElement);
+                const goldColor = style.getPropertyValue('--color-warning').trim() || '#D4AF37';
+                const diamondColor = style.getPropertyValue('--color-primary').trim() || '#E0F2FE';
+                const textClr = style.getPropertyValue('--color-text').trim() || '#FFFFFF';
+
                 ctx.beginPath();
                 if (p.type === 'gold') {
-                    ctx.fillStyle = '#D4AF37'; // Ouro
-                    ctx.shadowColor = '#D4AF37';
+                    ctx.fillStyle = goldColor;
+                    ctx.shadowColor = goldColor;
                 } else {
-                    ctx.fillStyle = '#E0F2FE'; // Diamante (Azul claro)
-                    ctx.shadowColor = '#FFFFFF';
+                    ctx.fillStyle = diamondColor;
+                    ctx.shadowColor = textClr;
                 }
                 
                 ctx.shadowBlur = 10;
@@ -173,7 +187,7 @@ export default function ValuePage() {
                 // Brilho extra (cruz) para diamantes
                 if (p.type === 'diamond' && Math.random() > 0.95) {
                     ctx.beginPath();
-                    ctx.strokeStyle = 'white';
+                    ctx.strokeStyle = textClr;
                     ctx.lineWidth = 0.5;
                     ctx.moveTo(p.x - 4, p.y);
                     ctx.lineTo(p.x + 4, p.y);
@@ -199,21 +213,21 @@ export default function ValuePage() {
         <div className="h-[calc(100vh-6rem)] flex flex-col gap-6 overflow-hidden relative p-2">
 
             {/* FUNDO ANIMADO (O COFRE) */}
-            <div className="absolute inset-0 rounded-3xl overflow-hidden bg-[#050505] border border-white/10 shadow-2xl">
+            <div className="absolute inset-0 rounded-3xl overflow-hidden bg-surface border border-border/10 shadow-2xl">
                 <canvas ref={canvasRef} className="absolute inset-0 w-full h-full opacity-30" />
                 {/* Vignette */}
-                <div className="absolute inset-0 bg-radial-gradient from-transparent via-black/50 to-black pointer-events-none" />
+                <div className="absolute inset-0 bg-radial-gradient from-transparent via-background/50 to-background pointer-events-none" />
             </div>
 
             {/* CONTEÚDO SUPERIOR: TOTAL BALANCE */}
             <div className="relative z-10 flex flex-col items-center justify-center h-[40%] mt-8 animate-fadeIn">
-                <div className="flex items-center gap-2 mb-4 px-4 py-1 rounded-full bg-white/5 border border-white/10 backdrop-blur-md">
+                <div className="flex items-center gap-2 mb-4 px-4 py-1 rounded-full bg-surface/5 border border-border/10 backdrop-blur-md">
                     <Lock className="w-3 h-3 text-[var(--color-accent)]" />
-                    <span className="text-[10px] text-gray-400 font-mono uppercase tracking-[0.3em]">Secure Vault Access</span>
+                    <span className="text-[10px] text-textSecondary font-mono uppercase tracking-[0.3em]">Secure Vault Access</span>
                 </div>
                 
-                <h1 className="text-gray-500 text-sm uppercase tracking-widest font-serif mb-2">Total Value Locked</h1>
-                <div className="text-6xl md:text-8xl font-black text-white font-mono tracking-tighter drop-shadow-2xl flex items-baseline gap-2">
+                <h1 className="text-textSecondary text-sm uppercase tracking-widest font-serif mb-2">Total Value Locked</h1>
+                <div className="text-6xl md:text-8xl font-black text-text font-mono tracking-tighter drop-shadow-2xl flex items-baseline gap-2">
                     <RollingNumber value={balance} prefix="$" />
                 </div>
                 
@@ -227,46 +241,45 @@ export default function ValuePage() {
             <div className="relative z-10 grid grid-cols-1 md:grid-cols-3 gap-4 h-[60%] pb-4 px-4">
                 
                 {/* CARD 1: REVENUE */}
-                <div className="group bg-black/40 backdrop-blur-xl border border-white/10 rounded-2xl p-6 hover:border-[var(--color-primary)]/50 transition-all duration-500 flex flex-col justify-between hover:bg-black/60">
+                <div className="group bg-background/40 backdrop-blur-xl border border-border/10 rounded-2xl p-6 hover:border-[var(--color-primary)]/50 transition-all duration-500 flex flex-col justify-between hover:bg-background/60">
                     <div className="flex justify-between items-start">
-                        <div className="p-3 bg-white/5 rounded-xl group-hover:scale-110 transition-transform">
+                        <div className="p-3 bg-surface/5 rounded-xl group-hover:scale-110 transition-transform">
                             <Wallet className="w-6 h-6 text-[var(--color-primary)]" />
                         </div>
-                        <button className="text-gray-500 hover:text-white transition-colors">
+                        <button className="text-textSecondary hover:text-text transition-colors">
                             <ArrowUpRight className="w-5 h-5" />
                         </button>
                     </div>
                     <div>
-                        <p className="text-gray-400 text-xs uppercase tracking-widest mb-1">Monthly Revenue</p>
-                        <div className="text-3xl font-bold text-white font-mono">
+                        <p className="text-textSecondary text-xs uppercase tracking-widest mb-1">Monthly Revenue</p>
+                        <div className="text-3xl font-bold text-text font-mono">
                             <RollingNumber value={profit} prefix="$" />
                         </div>
-                        <div className="w-full h-1 bg-white/10 rounded-full mt-4 overflow-hidden">
+                        <div className="w-full h-1 bg-border/10 rounded-full mt-4 overflow-hidden">
                             <div className="h-full bg-[var(--color-primary)] w-[75%] group-hover:w-[85%] transition-all duration-1000" />
                         </div>
                     </div>
                 </div>
 
                 {/* CARD 2: ASSET ALLOCATION (VISUALIZER) */}
-                <div className="group bg-black/40 backdrop-blur-xl border border-white/10 rounded-2xl p-6 hover:border-[var(--color-accent)]/50 transition-all duration-500 flex flex-col justify-center items-center relative overflow-hidden">
+                <div className="group bg-background/40 backdrop-blur-xl border border-border/10 rounded-2xl p-6 hover:border-[var(--color-accent)]/50 transition-all duration-500 flex flex-col justify-center items-center relative overflow-hidden">
                     <div className="absolute inset-0 bg-[url('/grid.svg')] opacity-5 pointer-events-none" />
                     
                     <div className="relative w-32 h-32 flex items-center justify-center mb-4">
-                        {/* Gem Spinning */}
                         <Gem className="w-16 h-16 text-[var(--color-accent)] animate-pulse absolute" />
-                        <div className="absolute inset-0 border-2 border-dashed border-white/20 rounded-full animate-spin-slow" />
-                        <div className="absolute inset-2 border border-white/10 rounded-full animate-reverse-spin" />
+                        <div className="absolute inset-0 border-2 border-dashed border-border/20 rounded-full animate-spin-slow" />
+                        <div className="absolute inset-2 border border-border/10 rounded-full animate-reverse-spin" />
                     </div>
                     
-                    <h3 className="text-white font-bold tracking-widest text-sm">ASSET DIVERSIFICATION</h3>
-                    <p className="text-xs text-gray-500 font-mono mt-1">Crypto • Fiat • Stocks</p>
+                    <h3 className="text-text font-bold tracking-widest text-sm">ASSET DIVERSIFICATION</h3>
+                    <p className="text-xs text-textSecondary font-mono mt-1">Crypto • Fiat • Stocks</p>
                 </div>
 
                 {/* CARD 3: RECENT TRANSACTIONS */}
-                <div className="group bg-black/40 backdrop-blur-xl border border-white/10 rounded-2xl p-6 hover:border-emerald-500/30 transition-all duration-500 flex flex-col overflow-hidden">
+                <div className="group bg-background/40 backdrop-blur-xl border border-border/10 rounded-2xl p-6 hover:border-success/30 transition-all duration-500 flex flex-col overflow-hidden">
                     <div className="flex items-center gap-3 mb-6">
                         <CreditCard className="w-5 h-5" style={{ color: 'var(--color-success)' }} />
-                        <span className="text-sm font-bold text-white tracking-wider">LIVE TRANSACTIONS</span>
+                        <span className="text-sm font-bold text-text tracking-wider">LIVE TRANSACTIONS</span>
                     </div>
                     
                     <div className="flex-1 space-y-3 overflow-hidden">
@@ -276,8 +289,8 @@ export default function ValuePage() {
                             </div>
                         ) : transactions.length === 0 ? (
                             <div className="text-center py-6">
-                                <Inbox className="w-6 h-6 mx-auto mb-2 text-gray-600" />
-                                <p className="text-xs text-gray-500">Nenhuma transação</p>
+                                <Inbox className="w-6 h-6 mx-auto mb-2 text-textSecondary" />
+                                <p className="text-xs text-textSecondary">Nenhuma transação</p>
                             </div>
                         ) : (
                             transactions.slice(0, 4).map((tx) => {
@@ -285,10 +298,10 @@ export default function ValuePage() {
                                 const formatted = `${isPositive ? '+' : ''}$${Math.abs(tx.amount).toLocaleString('en-US', { minimumFractionDigits: 2 })}`;
                                 const timeAgo = tx.created_at ? new Date(tx.created_at).toLocaleString('pt-BR') : '';
                                 return (
-                                    <div key={tx.id} className="flex justify-between items-center text-xs p-2 hover:bg-white/5 rounded-lg transition-colors cursor-default">
+                                    <div key={tx.id} className="flex justify-between items-center text-xs p-2 hover:bg-surface/5 rounded-lg transition-colors cursor-default">
                                         <div className="flex flex-col">
-                                            <span className="text-gray-300 font-medium">{tx.name}</span>
-                                            <span className="text-gray-600 font-mono">{timeAgo}</span>
+                                            <span className="text-text font-medium">{tx.name}</span>
+                                            <span className="text-textSecondary font-mono">{timeAgo}</span>
                                         </div>
                                         <span className="font-mono font-bold" style={{ color: isPositive ? 'var(--color-success)' : 'var(--color-error)' }}>
                                             {formatted}

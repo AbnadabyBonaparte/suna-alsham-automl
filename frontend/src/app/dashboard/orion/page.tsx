@@ -386,7 +386,7 @@ export default function OrionPage() {
                     <canvas ref={canvasRef} className="w-full h-full absolute inset-0" />
                     
                     <div className="absolute inset-0 bg-[url('/scanlines.png')] opacity-5 pointer-events-none" />
-                    <div className="absolute inset-0 bg-radial-gradient from-transparent via-transparent to-black/80 pointer-events-none" />
+                    <div className="absolute inset-0 bg-radial-gradient from-transparent via-transparent to-background/80 pointer-events-none" />
                     
                     {/* Equalizador */}
                     <div className="absolute bottom-6 left-6 right-6 flex justify-between items-end h-8 opacity-30">

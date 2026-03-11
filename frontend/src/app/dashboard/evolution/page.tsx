@@ -579,7 +579,7 @@ export default function EvolutionPage() {
                             <button
                                 onClick={() => handleApplyEvolution('approve')}
                                 disabled={applying}
-                                className="flex-1 px-6 py-4 rounded-xl font-bold text-white transition disabled:opacity-50 flex items-center justify-center gap-2"
+                                className="flex-1 px-6 py-4 rounded-xl font-bold text-text transition disabled:opacity-50 flex items-center justify-center gap-2"
                                 style={{
                                     background: `linear-gradient(to right, ${colors.success}, ${colors.accent})`
                                 }}

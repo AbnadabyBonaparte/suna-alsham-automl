@@ -17,6 +17,8 @@ import {
     Globe, Radio, Scan, MousePointer2, Link, ExternalLink,
     CheckCircle, XCircle, Clock, RefreshCw
 } from 'lucide-react';
+import { LoadingState } from '@/components/ui/LoadingState';
+import { ErrorState } from '@/components/ui/ErrorState';
 
 const NODE_COUNT = 200;
 const SPHERE_RADIUS = 300;
@@ -60,6 +62,8 @@ export default function NexusPage() {
     const [hoveredNode, setHoveredNode] = useState<Node3D | null>(null);
     const [selectedNode, setSelectedNode] = useState<Node3D | null>(null);
     const [integrations, setIntegrations] = useState<Integration[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
     const [stats, setStats] = useState({
         totalAgents: 0,
         totalAPIs: 4,
@@ -69,10 +73,12 @@ export default function NexusPage() {
     
     const mouseRef = useRef({ x: 0, y: 0, isDown: false });
 
-    // Carregar agents e criar integrations
+    const refetch = () => { setError(null); setLoading(true); };
+
     useEffect(() => {
         async function loadData() {
             try {
+                setLoading(true);
                 // Buscar agents
                 const { data: agents, count: agentsCount } = await supabase
                     .from('agents')
@@ -169,6 +175,9 @@ export default function NexusPage() {
 
             } catch (err) {
                 console.error('Failed to load data:', err);
+                setError('Erro ao carregar dados do Neural Nexus');
+            } finally {
+                setLoading(false);
             }
         }
 
@@ -374,13 +383,16 @@ export default function NexusPage() {
             case 'ANALYST': return 'var(--color-primary)';
             case 'CHAOS': return 'var(--color-error)';
             case 'API': return 'var(--color-success)';
-            case 'WEBHOOK': return '#EC4899';
+            case 'WEBHOOK': return 'var(--color-glow)';
             default: return 'var(--color-primary)';
         }
     };
 
+    if (loading) return <LoadingState message="Inicializando Neural Nexus..." />;
+    if (error) return <ErrorState message={error} onRetry={refetch} />;
+
     return (
-        <div className="relative h-[calc(100vh-6rem)] w-full overflow-hidden rounded-3xl border border-[var(--color-primary)]/20 bg-[#020617] group">
+        <div className="relative h-[calc(100vh-6rem)] w-full overflow-hidden rounded-3xl border border-[var(--color-primary)]/20 bg-background group">
 
             <canvas
                 ref={canvasRef}
@@ -393,14 +405,14 @@ export default function NexusPage() {
 
             {/* HEADER */}
             <div className="absolute top-6 left-6 pointer-events-none z-20">
-                <div className="bg-black/40 backdrop-blur-xl border border-[var(--color-primary)]/20 p-6 rounded-2xl shadow-2xl">
+                <div className="bg-background/40 backdrop-blur-xl border border-[var(--color-primary)]/20 p-6 rounded-2xl shadow-2xl">
                     <div className="flex items-center gap-3 mb-2">
                         <Globe className="w-6 h-6 animate-pulse" style={{ color: 'var(--color-primary)' }} />
-                        <h1 className="text-2xl font-black text-white tracking-tight font-display">
+                        <h1 className="text-2xl font-black text-text tracking-tight font-display">
                             NEURAL NEXUS
                         </h1>
                     </div>
-                    <div className="flex items-center gap-4 text-xs font-mono text-gray-400">
+                    <div className="flex items-center gap-4 text-xs font-mono text-textSecondary">
                         <span className="flex items-center gap-1"><Activity className="w-3 h-3" /> LIVE FEED</span>
                         <span className="flex items-center gap-1"><Database className="w-3 h-3" /> {stats.totalAgents} NODES</span>
                     </div>
@@ -409,23 +421,23 @@ export default function NexusPage() {
 
             {/* STATS */}
             <div className="absolute top-6 right-6 z-20 space-y-3">
-                <div className="bg-black/60 backdrop-blur-xl border border-white/10 rounded-xl p-4">
+                <div className="bg-background/60 backdrop-blur-xl border border-border/10 rounded-xl p-4">
                     <div className="grid grid-cols-2 gap-4">
                         <div className="text-center">
                             <div className="text-2xl font-black" style={{ color: 'var(--color-primary)' }}>{stats.totalAgents}</div>
-                            <div className="text-[9px] text-gray-500 uppercase">Agents</div>
+                            <div className="text-[9px] text-textSecondary uppercase">Agents</div>
                         </div>
                         <div className="text-center">
                             <div className="text-2xl font-black" style={{ color: 'var(--color-success)' }}>{stats.totalAPIs}</div>
-                            <div className="text-[9px] text-gray-500 uppercase">APIs</div>
+                            <div className="text-[9px] text-textSecondary uppercase">APIs</div>
                         </div>
                         <div className="text-center">
                             <div className="text-xl font-black" style={{ color: 'var(--color-accent)' }}>{stats.activeConnections}</div>
-                            <div className="text-[9px] text-gray-500 uppercase">Active</div>
+                            <div className="text-[9px] text-textSecondary uppercase">Active</div>
                         </div>
                         <div className="text-center">
                             <div className="text-xl font-black" style={{ color: 'var(--color-warning)' }}>{stats.dataTransferred}MB</div>
-                            <div className="text-[9px] text-gray-500 uppercase">Data</div>
+                            <div className="text-[9px] text-textSecondary uppercase">Data</div>
                         </div>
                     </div>
                 </div>
@@ -433,8 +445,8 @@ export default function NexusPage() {
 
             {/* INTEGRATIONS PANEL */}
             <div className="absolute bottom-6 left-6 z-20 w-80">
-                <div className="bg-black/60 backdrop-blur-xl border border-white/10 rounded-xl p-4">
-                    <h3 className="text-sm font-bold text-white mb-3 flex items-center gap-2">
+                <div className="bg-background/60 backdrop-blur-xl border border-border/10 rounded-xl p-4">
+                    <h3 className="text-sm font-bold text-text mb-3 flex items-center gap-2">
                         <Link className="w-4 h-4" style={{ color: 'var(--color-primary)' }} />
                         Active Integrations
                     </h3>
@@ -442,7 +454,7 @@ export default function NexusPage() {
                         {integrations.map(integration => (
                             <div 
                                 key={integration.id}
-                                className="flex items-center justify-between p-3 bg-white/5 rounded-lg hover:bg-white/10 transition cursor-pointer"
+                                className="flex items-center justify-between p-3 bg-surface/5 rounded-lg hover:bg-surface/10 transition cursor-pointer"
                             >
                                 <div className="flex items-center gap-3">
                                     {integration.status === 'connected' ? (
@@ -453,11 +465,11 @@ export default function NexusPage() {
                                         <XCircle className="w-4 h-4" style={{ color: 'var(--color-error)' }} />
                                     )}
                                     <div>
-                                        <div className="text-sm font-medium text-white">{integration.name}</div>
-                                        <div className="text-[10px] text-gray-500">{integration.type}</div>
+                                        <div className="text-sm font-medium text-text">{integration.name}</div>
+                                        <div className="text-[10px] text-textSecondary">{integration.type}</div>
                                     </div>
                                 </div>
-                                <ExternalLink className="w-4 h-4 text-gray-500" />
+                                <ExternalLink className="w-4 h-4 text-textSecondary" />
                             </div>
                         ))}
                     </div>
@@ -465,15 +477,15 @@ export default function NexusPage() {
             </div>
 
             {/* FILTROS */}
-            <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex items-center gap-2 bg-black/30 backdrop-blur-xl p-2 rounded-full border border-white/10 shadow-[0_0_30px_rgba(0,0,0,0.5)]">
+            <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex items-center gap-2 bg-background/30 backdrop-blur-xl p-2 rounded-full border border-border/10 shadow-[0_0_30px_rgba(0,0,0,0.5)]">
                 {['ALL', 'CORE', 'GUARD', 'ANALYST', 'API', 'WEBHOOK'].map(f => (
                     <button
                         key={f}
                         onClick={() => setFilter(f)}
                         className={`px-6 py-2 rounded-full text-xs font-bold tracking-widest transition-all ${
                             filter === f 
-                            ? 'bg-[var(--color-primary)] text-black shadow-[0_0_20px_var(--color-primary)] scale-105' 
-                            : 'text-white/60 hover:bg-white/10 hover:text-white'
+                            ? 'bg-[var(--color-primary)] text-text shadow-[0_0_20px_var(--color-primary)] scale-105' 
+                            : 'text-text/60 hover:bg-surface/10 hover:text-text'
                         }`}
                     >
                         {f}
@@ -483,24 +495,24 @@ export default function NexusPage() {
 
             {/* NODE DETAIL PANEL */}
             {selectedNode && (
-                <div className="absolute top-6 right-6 mt-44 w-80 bg-black/60 backdrop-blur-2xl border border-white/10 p-6 rounded-2xl shadow-2xl animate-slideInRight z-30">
+                <div className="absolute top-6 right-6 mt-44 w-80 bg-background/60 backdrop-blur-2xl border border-border/10 p-6 rounded-2xl shadow-2xl animate-slideInRight z-30">
                     <div className="flex justify-between items-start mb-6">
                         <div>
                         <h2 className="text-xl font-bold mb-1" style={{ color: getRoleColor(selectedNode.role) }}>
                             {selectedNode.name}
                         </h2>
-                            <span className="text-xs font-mono text-white/50 bg-white/5 px-2 py-1 rounded">
+                            <span className="text-xs font-mono text-text/50 bg-surface/5 px-2 py-1 rounded">
                                 {selectedNode.role}
                             </span>
                         </div>
-                        <button onClick={() => setSelectedNode(null)} className="text-white/40 hover:text-white">
+                        <button onClick={() => setSelectedNode(null)} className="text-text/40 hover:text-text">
                             <Maximize2 className="w-5 h-5" />
                         </button>
                     </div>
 
                     <div className="space-y-4">
-                        <div className="bg-white/5 rounded-xl p-4 border border-white/5">
-                            <div className="flex justify-between mb-2 text-sm text-gray-400">
+                        <div className="bg-surface/5 rounded-xl p-4 border border-border/5">
+                            <div className="flex justify-between mb-2 text-sm text-textSecondary">
                                 <span>Status</span>
                                 <span style={{ color: selectedNode.active ? 'var(--color-success)' : 'var(--color-error)' }}>
                                     {selectedNode.active ? 'ACTIVE' : 'IDLE'}
@@ -509,22 +521,22 @@ export default function NexusPage() {
                         </div>
 
                         <div className="grid grid-cols-2 gap-3">
-                            <div className="bg-white/5 rounded-xl p-3 border border-white/5 flex flex-col items-center text-center">
+                            <div className="bg-surface/5 rounded-xl p-3 border border-border/5 flex flex-col items-center text-center">
                                 <Radio className="w-5 h-5 mb-2" style={{ color: 'var(--color-primary)' }} />
-                                <span className="text-xs text-gray-400">Type</span>
-                                <span className="text-sm font-mono text-white">{selectedNode.type}</span>
+                                <span className="text-xs text-textSecondary">Type</span>
+                                <span className="text-sm font-mono text-text">{selectedNode.type}</span>
                             </div>
-                            <div className="bg-white/5 rounded-xl p-3 border border-white/5 flex flex-col items-center text-center">
+                            <div className="bg-surface/5 rounded-xl p-3 border border-border/5 flex flex-col items-center text-center">
                                 <Scan className="w-5 h-5 mb-2" style={{ color: 'var(--color-accent)' }} />
-                                <span className="text-xs text-gray-400">Conns</span>
-                                <span className="text-sm font-mono text-white">{selectedNode.connections.length}</span>
+                                <span className="text-xs text-textSecondary">Conns</span>
+                                <span className="text-sm font-mono text-text">{selectedNode.connections.length}</span>
                             </div>
                         </div>
                     </div>
                 </div>
             )}
 
-            <div className="absolute bottom-8 right-8 text-white/20 text-xs font-mono flex items-center gap-2 pointer-events-none">
+            <div className="absolute bottom-8 right-8 text-text/20 text-xs font-mono flex items-center gap-2 pointer-events-none">
                 <MousePointer2 className="w-4 h-4" />
                 DRAG TO ROTATE
             </div>

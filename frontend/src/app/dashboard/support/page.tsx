@@ -48,12 +48,12 @@ function TicketModal({ ticket, onClose }: TicketModalProps) {
     const colors = statusColors[ticket.status];
 
     return (
-        <div className="fixed inset-0 z-[9998] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fadeIn">
+        <div className="fixed inset-0 z-[9998] flex items-center justify-center p-4 bg-background/80 backdrop-blur-sm animate-fadeIn">
             <div className="relative w-full max-w-2xl backdrop-blur-xl rounded-3xl p-8 shadow-2xl" style={{ background: colors.bg, border: `1px solid ${colors.border}` }}>
                 {/* Close Button */}
                 <button
                     onClick={onClose}
-                    className="absolute top-6 right-6 text-gray-400 hover:text-white transition-colors"
+                    className="absolute top-6 right-6 text-textSecondary hover:text-text transition-colors"
                 >
                     <X className="w-6 h-6" />
                 </button>
@@ -64,12 +64,12 @@ function TicketModal({ ticket, onClose }: TicketModalProps) {
                         <LifeBuoy className="w-8 h-8" style={{ color: colors.text }} />
                     </div>
                     <div className="flex-1">
-                        <h2 className="text-2xl font-bold text-white mb-1">{ticket.title}</h2>
+                        <h2 className="text-2xl font-bold text-text mb-1">{ticket.title}</h2>
                         <div className="flex gap-2 text-xs">
                             <span className="px-2 py-1 rounded uppercase font-bold" style={{ background: colors.bg, color: colors.text, border: `1px solid ${colors.border}` }}>
                                 {ticket.status.replace('_', ' ')}
                             </span>
-                            <span className="px-2 py-1 rounded bg-white/5 border border-white/10 uppercase font-bold" style={{ color: priorityColors[ticket.priority] }}>
+                            <span className="px-2 py-1 rounded bg-surface/5 border border-border/10 uppercase font-bold" style={{ color: priorityColors[ticket.priority] }}>
                                 {ticket.priority}
                             </span>
                         </div>
@@ -78,20 +78,20 @@ function TicketModal({ ticket, onClose }: TicketModalProps) {
 
                 {/* Description */}
                 <div className="mb-6">
-                    <h3 className="text-sm font-bold text-gray-400 uppercase mb-2">Description</h3>
-                    <p className="text-white leading-relaxed">{ticket.description || 'No description provided'}</p>
+                    <h3 className="text-sm font-bold text-textSecondary uppercase mb-2">Description</h3>
+                    <p className="text-text leading-relaxed">{ticket.description || 'No description provided'}</p>
                 </div>
 
                 {/* Stats Grid */}
                 <div className="grid grid-cols-2 gap-4 mb-6">
-                    <div className="bg-white/5 rounded-xl p-4">
-                        <div className="text-xs text-gray-400 uppercase mb-1">Sentiment Score</div>
+                    <div className="bg-surface/5 rounded-xl p-4">
+                        <div className="text-xs text-textSecondary uppercase mb-1">Sentiment Score</div>
                         <div className="flex items-baseline gap-2">
-                            <span className="text-2xl font-bold text-white">{ticket.sentiment}/100</span>
+                            <span className="text-2xl font-bold text-text">{ticket.sentiment}/100</span>
                             <Activity className="w-4 h-4" style={{ color: ticket.sentiment > 70 ? 'var(--color-success)' : ticket.sentiment > 40 ? 'var(--color-warning)' : 'var(--color-error)' }} />
                         </div>
                         {/* Sentiment Bar */}
-                        <div className="mt-2 h-2 w-full bg-black/50 rounded-full overflow-hidden">
+                        <div className="mt-2 h-2 w-full bg-background/50 rounded-full overflow-hidden">
                             <div
                                 className="h-full transition-all"
                                 style={{
@@ -102,12 +102,12 @@ function TicketModal({ ticket, onClose }: TicketModalProps) {
                         </div>
                     </div>
 
-                    <div className="bg-white/5 rounded-xl p-4">
-                        <div className="text-xs text-gray-400 uppercase mb-1">Created</div>
-                        <div className="text-lg font-mono text-white">
+                    <div className="bg-surface/5 rounded-xl p-4">
+                        <div className="text-xs text-textSecondary uppercase mb-1">Created</div>
+                        <div className="text-lg font-mono text-text">
                             {new Date(ticket.created_at).toLocaleDateString()}
                         </div>
-                        <div className="text-xs text-gray-500 font-mono">
+                        <div className="text-xs text-textSecondary font-mono">
                             {new Date(ticket.created_at).toLocaleTimeString()}
                         </div>
                     </div>
@@ -115,10 +115,10 @@ function TicketModal({ ticket, onClose }: TicketModalProps) {
 
                 {/* Actions */}
                 <div className="flex gap-3">
-                    <button className="flex-1 bg-[var(--color-primary)] hover:bg-[var(--color-primary)]/80 text-black font-bold py-3 px-6 rounded-xl transition-all">
+                    <button className="flex-1 bg-[var(--color-primary)] hover:bg-[var(--color-primary)]/80 text-text font-bold py-3 px-6 rounded-xl transition-all">
                         Assign to AI Agent
                     </button>
-                    <button className="px-6 py-3 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-white transition-all">
+                    <button className="px-6 py-3 bg-surface/5 hover:bg-surface/10 border border-border/10 rounded-xl text-text transition-all">
                         View Details
                         <ExternalLink className="w-4 h-4 inline ml-2" />
                     </button>
@@ -194,19 +194,23 @@ export default function SupportPage() {
             ctx.clearRect(0, 0, w, h);
             time += 0.02;
 
-            // Desenhar Tickets (Hexágonos)
+            const rootStyle = getComputedStyle(document.documentElement);
+            const successColor = rootStyle.getPropertyValue('--color-success').trim() || '#10B981';
+            const warningColor = rootStyle.getPropertyValue('--color-warning').trim() || '#F59E0B';
+            const errorColor = rootStyle.getPropertyValue('--color-error').trim() || '#EF4444';
+            const textColor = rootStyle.getPropertyValue('--color-text-secondary').trim() || '#374151';
+
             initialHexTickets.forEach(t => {
-                // Cor baseada no status REAL
-                let color = '#374151'; // Default Gray
+                let color = textColor;
                 let glow = false;
 
-                if(t.status === 'resolved' || t.status === 'closed') color = '#10B981'; // Verde
-                else if(t.status === 'in_progress') color = '#F59E0B'; // Amarelo
+                if(t.status === 'resolved' || t.status === 'closed') color = successColor;
+                else if(t.status === 'in_progress') color = warningColor;
                 else if(t.status === 'open' && t.priority === 'critical') {
-                    color = '#EF4444'; // Vermelho
+                    color = errorColor;
                     glow = true;
                 }
-                else if(t.status === 'open') color = '#F59E0B'; // Orange
+                else if(t.status === 'open') color = warningColor;
 
                 // Animação de pulso para críticos
                 const pulse = glow ? Math.sin(time * 5) * 0.2 + 1 : 1;
@@ -264,7 +268,7 @@ export default function SupportPage() {
                 // Efeito de Impacto
                 ctx.beginPath();
                 ctx.arc(aiLaser.targetX, aiLaser.targetY, 10 * aiLaser.progress, 0, Math.PI * 2);
-                ctx.fillStyle = '#FFFFFF';
+                ctx.fillStyle = rootStyle.getPropertyValue('--color-text').trim() || '#FFFFFF';
                 ctx.globalAlpha = 1 - aiLaser.progress;
                 ctx.fill();
                 ctx.globalAlpha = 1;
@@ -321,7 +325,7 @@ export default function SupportPage() {
         <div className="h-[calc(100vh-6rem)] flex flex-col lg:flex-row gap-6 p-2 overflow-hidden relative">
 
             {/* ESQUERDA: THE HIVE (VISUALIZER) */}
-            <div className="lg:w-2/3 w-full h-full relative rounded-3xl overflow-hidden border border-white/10 bg-[#02040a] group shadow-2xl">
+            <div className="lg:w-2/3 w-full h-full relative rounded-3xl overflow-hidden border border-border/10 bg-background group shadow-2xl">
 
                 {/* Header Flutuante */}
                 <div className="absolute top-6 left-6 z-20">
@@ -330,8 +334,8 @@ export default function SupportPage() {
                             <LifeBuoy className="w-6 h-6" />
                         </div>
                         <div>
-                            <h1 className="text-xl font-bold text-white tracking-tight font-display">SUPPORT HIVE</h1>
-                            <p className="text-xs text-gray-400 font-mono uppercase">
+                            <h1 className="text-xl font-bold text-text tracking-tight font-display">SUPPORT HIVE</h1>
+                            <p className="text-xs text-textSecondary font-mono uppercase">
                                 {tickets.length > 0 ? `${tickets.length} Tickets Loaded • Click to View` : 'No tickets • System Ready'}
                             </p>
                         </div>
@@ -365,9 +369,9 @@ export default function SupportPage() {
                 {tickets.length === 0 && !loading && (
                     <div className="absolute inset-0 flex items-center justify-center">
                         <div className="text-center">
-                            <LifeBuoy className="w-16 h-16 text-gray-600 mx-auto mb-4" />
-                            <h3 className="text-xl font-bold text-gray-400 mb-2">No Support Tickets</h3>
-                            <p className="text-sm text-gray-500">System is running smoothly</p>
+                            <LifeBuoy className="w-16 h-16 text-textSecondary mx-auto mb-4" />
+                            <h3 className="text-xl font-bold text-textSecondary mb-2">No Support Tickets</h3>
+                            <p className="text-sm text-textSecondary">System is running smoothly</p>
                         </div>
                     </div>
                 )}
@@ -377,25 +381,25 @@ export default function SupportPage() {
             <div className="lg:w-1/3 w-full flex flex-col gap-4">
 
                 {/* Card: AI Performance */}
-                <div className="bg-black/40 backdrop-blur-xl border border-white/10 rounded-2xl p-6 flex items-center justify-between relative overflow-hidden">
+                <div className="bg-background/40 backdrop-blur-xl border border-border/10 rounded-2xl p-6 flex items-center justify-between relative overflow-hidden">
                     {/* Background Glow */}
                     <div className="absolute -right-10 -top-10 w-32 h-32 bg-[var(--color-primary)]/20 blur-3xl rounded-full" />
 
                     <div>
-                        <div className="text-[10px] text-gray-400 font-mono uppercase mb-1">Auto-Resolution Rate</div>
-                        <div className="text-4xl font-mono text-white font-bold flex items-baseline gap-2">
+                        <div className="text-[10px] text-textSecondary font-mono uppercase mb-1">Auto-Resolution Rate</div>
+                        <div className="text-4xl font-mono text-text font-bold flex items-baseline gap-2">
                             {autoResolutionRate}%
                             <span className="text-sm flex items-center" style={{ color: 'var(--color-success)' }}><Zap className="w-3 h-3" /></span>
                         </div>
-                        <p className="text-xs text-gray-500 mt-2">AI handling {stats.resolved} tickets</p>
+                        <p className="text-xs text-textSecondary mt-2">AI handling {stats.resolved} tickets</p>
                     </div>
                     <div className="h-16 w-16 rounded-full border-4 border-[var(--color-primary)]/30 border-t-[var(--color-primary)] animate-spin" />
                 </div>
 
                 {/* Card: User Patience (Average Sentiment) */}
-                <div className="bg-black/40 backdrop-blur-xl border border-white/10 rounded-2xl p-6">
+                <div className="bg-background/40 backdrop-blur-xl border border-border/10 rounded-2xl p-6">
                     <div className="flex justify-between items-center mb-4">
-                        <h3 className="text-sm font-bold text-white flex items-center gap-2">
+                        <h3 className="text-sm font-bold text-text flex items-center gap-2">
                             <Activity className="w-4 h-4" style={{ color: 'var(--color-error)' }} />
                             AVG SENTIMENT
                         </h3>
@@ -404,7 +408,7 @@ export default function SupportPage() {
                         </span>
                     </div>
                     {/* Bar */}
-                    <div className="h-3 w-full bg-black/50 rounded-full overflow-hidden">
+                    <div className="h-3 w-full bg-background/50 rounded-full overflow-hidden">
                         <div
                             className="h-full transition-all"
                             style={{
@@ -416,24 +420,24 @@ export default function SupportPage() {
                 </div>
 
                 {/* Card: Stats Grid */}
-                <div className="bg-black/40 backdrop-blur-xl border border-white/10 rounded-2xl p-6">
-                    <h3 className="text-sm font-bold text-white mb-4 uppercase tracking-widest">Ticket Status</h3>
+                <div className="bg-background/40 backdrop-blur-xl border border-border/10 rounded-2xl p-6">
+                    <h3 className="text-sm font-bold text-text mb-4 uppercase tracking-widest">Ticket Status</h3>
                     <div className="grid grid-cols-2 gap-3">
                         <div className="rounded-xl p-3" style={{ background: 'var(--color-error)/10', border: '1px solid var(--color-error)/20' }}>
                             <div className="text-2xl font-mono font-bold" style={{ color: 'var(--color-error)' }}>{stats.open}</div>
-                            <div className="text-[10px] text-gray-400 uppercase">Open</div>
+                            <div className="text-[10px] text-textSecondary uppercase">Open</div>
                         </div>
                         <div className="rounded-xl p-3" style={{ background: 'var(--color-warning)/10', border: '1px solid var(--color-warning)/20' }}>
                             <div className="text-2xl font-mono font-bold" style={{ color: 'var(--color-warning)' }}>{stats.in_progress}</div>
-                            <div className="text-[10px] text-gray-400 uppercase">In Progress</div>
+                            <div className="text-[10px] text-textSecondary uppercase">In Progress</div>
                         </div>
                         <div className="rounded-xl p-3" style={{ background: 'var(--color-success)/10', border: '1px solid var(--color-success)/20' }}>
                             <div className="text-2xl font-mono font-bold" style={{ color: 'var(--color-success)' }}>{stats.resolved}</div>
-                            <div className="text-[10px] text-gray-400 uppercase">Resolved</div>
+                            <div className="text-[10px] text-textSecondary uppercase">Resolved</div>
                         </div>
-                        <div className="bg-gray-500/10 border border-gray-500/20 rounded-xl p-3">
-                            <div className="text-2xl font-mono font-bold text-gray-400">{stats.total}</div>
-                            <div className="text-[10px] text-gray-400 uppercase">Total</div>
+                        <div className="bg-surface/10 border border-border/20 rounded-xl p-3">
+                            <div className="text-2xl font-mono font-bold text-textSecondary">{stats.total}</div>
+                            <div className="text-[10px] text-textSecondary uppercase">Total</div>
                         </div>
                     </div>
                 </div>

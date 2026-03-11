@@ -109,13 +109,13 @@ export default function NotFound() {
     }, []);
 
     return (
-        <div className="relative min-h-screen w-full overflow-hidden flex flex-col items-center justify-center font-mono text-white">
+        <div className="relative min-h-screen w-full overflow-hidden flex flex-col items-center justify-center font-mono text-text">
             
             {/* CANVAS BACKGROUND */}
             <canvas ref={canvasRef} className="absolute inset-0 w-full h-full z-0" />
 
             {/* CONTEÚDO (Sobreposto) */}
-            <div className="relative z-10 text-center p-8 bg-black/60 backdrop-blur-md border border-red-500/30 rounded-3xl shadow-[0_0_50px_rgba(220,38,38,0.2)] animate-shake">
+            <div className="relative z-10 text-center p-8 bg-background/60 backdrop-blur-md border border-error/30 rounded-3xl shadow-[0_0_50px_rgba(220,38,38,0.2)] animate-shake">
                 
                 <div className="flex justify-center mb-6">
                     <div className="p-4 rounded-full bg-red-500/10 border border-red-500/50 animate-pulse">
@@ -127,14 +127,14 @@ export default function NotFound() {
                     REALITY FRACTURED
                 </h1>
                 
-                <p className="text-gray-400 text-sm max-w-md mx-auto mb-8 leading-relaxed">
+                <p className="text-textSecondary text-sm max-w-md mx-auto mb-8 leading-relaxed">
                     CRITICAL ERROR: SECTOR NOT FOUND. <br/>
                     The coordinates you provided do not exist in this timeline.
                 </p>
 
                 <div className="flex flex-col md:flex-row gap-4 justify-center">
                     <Link href="/dashboard">
-                        <button className="group px-8 py-3 bg-white text-black font-bold rounded-full flex items-center gap-2 hover:bg-gray-200 transition-all hover:scale-105">
+                        <button className="group px-8 py-3 bg-text text-background font-bold rounded-full flex items-center gap-2 hover:bg-text/80 transition-all hover:scale-105">
                             <RefreshCw className="w-4 h-4 group-hover:rotate-180 transition-transform duration-500" />
                             RECONSTRUCT REALITY
                         </button>
@@ -142,14 +142,14 @@ export default function NotFound() {
                     
                     <button 
                         onClick={() => window.history.back()}
-                        className="px-8 py-3 border border-white/20 rounded-full text-white/70 hover:text-white hover:bg-white/10 transition-all flex items-center gap-2"
+                        className="px-8 py-3 border border-border/20 rounded-full text-text/70 hover:text-text hover:bg-surface/10 transition-all flex items-center gap-2"
                     >
                         <ArrowLeft className="w-4 h-4" />
                         ABORT JUMP
                     </button>
                 </div>
 
-                <div className="mt-8 pt-4 border-t border-white/10 text-[10px] text-red-500/50 uppercase tracking-[0.5em]">
+                <div className="mt-8 pt-4 border-t border-border/10 text-[10px] text-red-500/50 uppercase tracking-[0.5em]">
                     Error Code: ID-10-T // Glitch Protocol Active
                 </div>
             </div>

@@ -36,12 +36,12 @@ function DealModal({ deal, onClose }: DealModalProps) {
     const colors = statusColors[deal.status];
 
     return (
-        <div className="fixed inset-0 z-[9998] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fadeIn">
+        <div className="fixed inset-0 z-[9998] flex items-center justify-center p-4 bg-background/80 backdrop-blur-sm animate-fadeIn">
             <div className={`relative w-full max-w-2xl ${colors.bg} backdrop-blur-xl border ${colors.border} rounded-3xl p-8 shadow-2xl`}>
                 {/* Close Button */}
                 <button
                     onClick={onClose}
-                    className="absolute top-6 right-6 text-gray-400 hover:text-white transition-colors"
+                    className="absolute top-6 right-6 text-textSecondary hover:text-text transition-colors"
                 >
                     <X className="w-6 h-6" />
                 </button>
@@ -52,7 +52,7 @@ function DealModal({ deal, onClose }: DealModalProps) {
                         <Briefcase className={`w-8 h-8 ${colors.text}`} />
                     </div>
                     <div className="flex-1">
-                        <h2 className="text-2xl font-bold text-white mb-1">{deal.client_name}</h2>
+                        <h2 className="text-2xl font-bold text-text mb-1">{deal.client_name}</h2>
                         <div className="flex gap-2 text-xs">
                             <span className={`px-2 py-1 rounded ${colors.bg} ${colors.text} border ${colors.border} uppercase font-bold`}>
                                 {deal.status.replace('_', ' ')}
@@ -63,22 +63,22 @@ function DealModal({ deal, onClose }: DealModalProps) {
 
                 {/* Value */}
                 <div className="mb-6">
-                    <h3 className="text-sm font-bold text-gray-400 uppercase mb-2">Deal Value</h3>
-                    <div className="text-4xl font-mono font-bold text-white">
+                    <h3 className="text-sm font-bold text-textSecondary uppercase mb-2">Deal Value</h3>
+                    <div className="text-4xl font-mono font-bold text-text">
                         ${deal.value.toLocaleString()}
                     </div>
                 </div>
 
                 {/* Stats Grid */}
                 <div className="grid grid-cols-2 gap-4 mb-6">
-                    <div className="bg-white/5 rounded-xl p-4">
-                        <div className="text-xs text-gray-400 uppercase mb-1">Probability</div>
+                    <div className="bg-surface/5 rounded-xl p-4">
+                        <div className="text-xs text-textSecondary uppercase mb-1">Probability</div>
                         <div className="flex items-baseline gap-2">
-                            <span className="text-2xl font-bold text-white">{deal.probability}%</span>
+                            <span className="text-2xl font-bold text-text">{deal.probability}%</span>
                             <TrendingUp className="w-4 h-4" style={{ color: deal.probability > 70 ? 'var(--color-success)' : deal.probability > 40 ? 'var(--color-warning)' : 'var(--color-error)' }} />
                         </div>
                         {/* Probability Bar */}
-                        <div className="mt-2 h-2 w-full bg-black/50 rounded-full overflow-hidden">
+                        <div className="mt-2 h-2 w-full bg-background/50 rounded-full overflow-hidden">
                             <div
                                 className="h-full bg-gradient-to-r from-blue-500 to-[var(--color-primary)] transition-all"
                                 style={{ width: `${deal.probability}%` }}
@@ -86,12 +86,12 @@ function DealModal({ deal, onClose }: DealModalProps) {
                         </div>
                     </div>
 
-                    <div className="bg-white/5 rounded-xl p-4">
-                        <div className="text-xs text-gray-400 uppercase mb-1">Created</div>
-                        <div className="text-lg font-mono text-white">
+                    <div className="bg-surface/5 rounded-xl p-4">
+                        <div className="text-xs text-textSecondary uppercase mb-1">Created</div>
+                        <div className="text-lg font-mono text-text">
                             {new Date(deal.created_at).toLocaleDateString()}
                         </div>
-                        <div className="text-xs text-gray-500 font-mono">
+                        <div className="text-xs text-textSecondary font-mono">
                             {new Date(deal.created_at).toLocaleTimeString()}
                         </div>
                     </div>
@@ -100,25 +100,25 @@ function DealModal({ deal, onClose }: DealModalProps) {
                 {/* Notes */}
                 {deal.notes && (
                     <div className="mb-6">
-                        <h3 className="text-sm font-bold text-gray-400 uppercase mb-2">Notes</h3>
-                        <p className="text-white leading-relaxed">{deal.notes}</p>
+                        <h3 className="text-sm font-bold text-textSecondary uppercase mb-2">Notes</h3>
+                        <p className="text-text leading-relaxed">{deal.notes}</p>
                     </div>
                 )}
 
                 {/* Expected Close Date */}
                 {deal.expected_close_date && (
                     <div className="mb-6">
-                        <h3 className="text-sm font-bold text-gray-400 uppercase mb-2">Expected Close Date</h3>
-                        <p className="text-white font-mono">{new Date(deal.expected_close_date).toLocaleDateString()}</p>
+                        <h3 className="text-sm font-bold text-textSecondary uppercase mb-2">Expected Close Date</h3>
+                        <p className="text-text font-mono">{new Date(deal.expected_close_date).toLocaleDateString()}</p>
                     </div>
                 )}
 
                 {/* Actions */}
                 <div className="flex gap-3">
-                    <button className="flex-1 bg-[var(--color-primary)] hover:bg-[var(--color-primary)]/80 text-black font-bold py-3 px-6 rounded-xl transition-all">
+                    <button className="flex-1 bg-[var(--color-primary)] hover:bg-[var(--color-primary)]/80 text-text font-bold py-3 px-6 rounded-xl transition-all">
                         Close Deal
                     </button>
-                    <button className="px-6 py-3 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-white transition-all">
+                    <button className="px-6 py-3 bg-surface/5 hover:bg-surface/10 border border-border/10 rounded-xl text-text transition-all">
                         View Pipeline
                         <ExternalLink className="w-4 h-4 inline ml-2" />
                     </button>
@@ -182,8 +182,9 @@ export default function SalesPage() {
             // Limpar
             ctx.clearRect(0, 0, w, h);
 
-            // Cor do Tema
-            const themeColor = getComputedStyle(document.documentElement).getPropertyValue('--color-primary').trim() || '#10B981';
+            const rootStyle = getComputedStyle(document.documentElement);
+            const themeColor = rootStyle.getPropertyValue('--color-primary').trim() || '#00FFD0';
+            const dotColor = rootStyle.getPropertyValue('--color-text').trim() || '#FFFFFF';
 
             // Grid de Fundo
             ctx.strokeStyle = 'rgba(255, 255, 255, 0.05)';
@@ -227,7 +228,7 @@ export default function SalesPage() {
             const lastY = h - (dataPoints[dataPoints.length - 1] / 100) * h;
 
             ctx.beginPath();
-            ctx.fillStyle = '#FFFFFF';
+            ctx.fillStyle = dotColor;
             ctx.arc(lastX, lastY, 4, 0, Math.PI * 2);
             ctx.fill();
 
@@ -267,29 +268,29 @@ export default function SalesPage() {
                         { label: 'Conversion Rate', val: `${stats.conversion_rate.toFixed(1)}%`, icon: Zap, colorVar: '--color-warning' },
                         { label: 'Active Deals', val: stats.total_deals.toString(), icon: Users, colorVar: '--color-primary' },
                     ].map((kpi, i) => (
-                        <div key={i} className="bg-black/60 backdrop-blur-xl border border-white/10 rounded-2xl p-5 relative overflow-hidden group">
+                        <div key={i} className="bg-background/60 backdrop-blur-xl border border-border/10 rounded-2xl p-5 relative overflow-hidden group">
                             <div className="absolute inset-0 bg-gradient-to-r from-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
                             <div className="flex justify-between items-start mb-2">
-                                <div className="p-2 rounded-lg bg-white/5" style={{ color: `var(${kpi.colorVar})` }}>
+                                <div className="p-2 rounded-lg bg-surface/5" style={{ color: `var(${kpi.colorVar})` }}>
                                     <kpi.icon className="w-6 h-6" />
                                 </div>
-                                <ArrowUpRight className="w-4 h-4 text-gray-500" />
+                                <ArrowUpRight className="w-4 h-4 text-textSecondary" />
                             </div>
-                            <div className="text-2xl font-bold text-white font-mono tracking-tight">{kpi.val}</div>
-                            <div className="text-xs text-gray-400 uppercase font-bold tracking-wider">{kpi.label}</div>
+                            <div className="text-2xl font-bold text-text font-mono tracking-tight">{kpi.val}</div>
+                            <div className="text-xs text-textSecondary uppercase font-bold tracking-wider">{kpi.label}</div>
                         </div>
                     ))}
                 </div>
 
                 {/* CHART SECTION (O ECG) */}
-                <div className="flex-1 bg-[#02040a] border border-white/10 rounded-3xl p-6 relative overflow-hidden shadow-2xl group">
+                <div className="flex-1 bg-background border border-border/10 rounded-3xl p-6 relative overflow-hidden shadow-2xl group">
                     {/* Header do Gráfico */}
                     <div className="absolute top-6 left-6 z-10">
-                        <h2 className="text-lg font-bold text-white flex items-center gap-2">
+                        <h2 className="text-lg font-bold text-text flex items-center gap-2">
                             <TrendingUp className="w-5 h-5 text-[var(--color-primary)]" />
                             REVENUE STREAM
                         </h2>
-                        <p className="text-xs text-gray-500 font-mono">
+                        <p className="text-xs text-textSecondary font-mono">
                             Live market data • {deals.length > 0 ? 'Real deals active' : 'No active deals'}
                         </p>
                     </div>
@@ -306,9 +307,9 @@ export default function SalesPage() {
             <div className="lg:w-1/3 w-full flex flex-col gap-4 h-full">
 
                 {/* DEAL TICKER (LISTA VIVA) */}
-                <div className="flex-1 bg-black/60 backdrop-blur-xl border border-white/10 rounded-3xl p-6 overflow-hidden flex flex-col">
+                <div className="flex-1 bg-background/60 backdrop-blur-xl border border-border/10 rounded-3xl p-6 overflow-hidden flex flex-col">
                     <div className="flex items-center justify-between mb-4">
-                        <h3 className="text-sm font-bold text-white uppercase tracking-widest flex items-center gap-2">
+                        <h3 className="text-sm font-bold text-text uppercase tracking-widest flex items-center gap-2">
                             <Briefcase className="w-4 h-4 text-[var(--color-secondary)]" />
                             Deal Flow
                         </h3>
@@ -321,8 +322,8 @@ export default function SalesPage() {
                         {deals.length === 0 && !loading && (
                             <div className="flex items-center justify-center h-full">
                                 <div className="text-center">
-                                    <Briefcase className="w-12 h-12 text-gray-600 mx-auto mb-2" />
-                                    <p className="text-sm text-gray-500">No active deals</p>
+                                    <Briefcase className="w-12 h-12 text-textSecondary mx-auto mb-2" />
+                                    <p className="text-sm text-textSecondary">No active deals</p>
                                 </div>
                             </div>
                         )}
@@ -337,7 +338,7 @@ export default function SalesPage() {
                                     group relative p-3 rounded-xl border transition-all duration-300 cursor-pointer animate-slideInRight
                                     ${targetLocked === deal.id
                                         ? 'bg-[var(--color-primary)]/10 border-[var(--color-primary)] translate-x-2'
-                                        : 'bg-white/5 border-white/5 hover:bg-white/10'}
+                                        : 'bg-surface/5 border-border/5 hover:bg-surface/10'}
                                 `}
                             >
                                 {/* Crosshair Overlay on Hover */}
@@ -348,7 +349,7 @@ export default function SalesPage() {
                                 )}
 
                                 <div className="flex justify-between items-center mb-1">
-                                    <span className="font-bold text-white text-sm">{deal.client_name}</span>
+                                    <span className="font-bold text-text text-sm">{deal.client_name}</span>
                                     <span className="font-mono text-[var(--color-primary)] font-bold">${deal.value.toLocaleString()}</span>
                                 </div>
                                 <div className="flex justify-between items-center text-xs">
@@ -367,11 +368,11 @@ export default function SalesPage() {
                                     >
                                         {deal.status.replace('_', ' ')}
                                     </span>
-                                    <span className="text-gray-500 font-mono">{new Date(deal.created_at).toLocaleDateString()}</span>
+                                    <span className="text-textSecondary font-mono">{new Date(deal.created_at).toLocaleDateString()}</span>
                                 </div>
 
                                 {/* Probability Bar */}
-                                <div className="mt-2 h-1 w-full bg-black/50 rounded-full overflow-hidden">
+                                <div className="mt-2 h-1 w-full bg-background/50 rounded-full overflow-hidden">
                                     <div
                                         className="h-full bg-gradient-to-r from-blue-500 to-[var(--color-primary)]"
                                         style={{ width: `${deal.probability}%` }}
@@ -383,19 +384,19 @@ export default function SalesPage() {
                 </div>
 
                 {/* STATS BREAKDOWN */}
-                <div className="bg-black/60 backdrop-blur-xl border border-white/10 rounded-2xl p-4">
-                    <h3 className="text-xs font-bold text-gray-400 uppercase mb-3">Pipeline Breakdown</h3>
+                <div className="bg-background/60 backdrop-blur-xl border border-border/10 rounded-2xl p-4">
+                    <h3 className="text-xs font-bold text-textSecondary uppercase mb-3">Pipeline Breakdown</h3>
                     <div className="space-y-2 text-xs">
                         <div className="flex justify-between items-center">
-                            <span className="text-gray-400">Won Deals</span>
+                            <span className="text-textSecondary">Won Deals</span>
                             <span className="font-mono font-bold" style={{ color: 'var(--color-success)' }}>${stats.won_value.toLocaleString()}</span>
                         </div>
                         <div className="flex justify-between items-center">
-                            <span className="text-gray-400">In Progress</span>
+                            <span className="text-textSecondary">In Progress</span>
                             <span className="font-mono font-bold" style={{ color: 'var(--color-warning)' }}>${stats.in_progress_value.toLocaleString()}</span>
                         </div>
                         <div className="flex justify-between items-center">
-                            <span className="text-gray-400">Avg Deal Value</span>
+                            <span className="text-textSecondary">Avg Deal Value</span>
                             <span className="font-mono text-[var(--color-primary)] font-bold">${stats.avg_deal_value.toFixed(0)}</span>
                         </div>
                     </div>

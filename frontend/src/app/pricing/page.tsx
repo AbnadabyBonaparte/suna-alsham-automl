@@ -129,7 +129,11 @@ export default function PricingPage() {
                 vx: (Math.random() - 0.5) * 0.5,
                 vy: (Math.random() - 0.5) * 0.5,
                 size: Math.random() * 2,
-                color: ['#FFD700', '#00FFD0', '#8B5CF6'][Math.floor(Math.random() * 3)]
+                color: [
+                    getComputedStyle(document.documentElement).getPropertyValue('--color-warning').trim() || '#FFD700',
+                    getComputedStyle(document.documentElement).getPropertyValue('--color-primary').trim() || '#00FFD0',
+                    getComputedStyle(document.documentElement).getPropertyValue('--color-accent').trim() || '#8B5CF6'
+                ][Math.floor(Math.random() * 3)]
             });
         }
 
@@ -194,7 +198,7 @@ export default function PricingPage() {
     const getYearlyPrice = (monthly: number) => Math.round(monthly * 10); // 2 meses grátis
 
     return (
-        <div className="min-h-screen bg-black text-white relative overflow-hidden">
+        <div className="min-h-screen bg-background text-text relative overflow-hidden">
             {/* Canvas Background */}
             <canvas ref={canvasRef} className="absolute inset-0 w-full h-full opacity-30" />
             
@@ -203,7 +207,7 @@ export default function PricingPage() {
             
             {/* Gradient Overlays */}
             <div className="absolute top-0 left-0 w-full h-96 bg-gradient-to-b from-purple-900/20 to-transparent pointer-events-none" />
-            <div className="absolute bottom-0 left-0 w-full h-96 bg-gradient-to-t from-black to-transparent pointer-events-none" />
+            <div className="absolute bottom-0 left-0 w-full h-96 bg-gradient-to-t from-background to-transparent pointer-events-none" />
 
             {/* Header */}
             <header className="relative z-10 pt-8 pb-4 px-6">
@@ -213,12 +217,12 @@ export default function PricingPage() {
                         <span className="text-xl font-black tracking-tight">ALSHAM QUANTUM</span>
                     </Link>
                     <div className="flex items-center gap-6">
-                        <Link href="/login" className="text-sm text-gray-400 hover:text-white transition-colors">
+                        <Link href="/login" className="text-sm text-textSecondary hover:text-text transition-colors">
                             Login
                         </Link>
                         <Link
                             href="/signup"
-                            className="px-4 py-2 bg-white/10 hover:bg-white/20 border border-white/20 rounded-lg text-sm font-medium transition-all"
+                            className="px-4 py-2 bg-surface/10 hover:bg-surface/20 border border-border/20 rounded-lg text-sm font-medium transition-all"
                         >
                             Criar Conta
                         </Link>
@@ -246,7 +250,7 @@ export default function PricingPage() {
                         </span>
                     </h1>
 
-                    <p className="text-xl text-gray-400 max-w-2xl mx-auto mb-8 leading-relaxed">
+                    <p className="text-xl text-textSecondary max-w-2xl mx-auto mb-8 leading-relaxed">
                         {user && !hasAccess
                             ? 'Desbloqueie todo o potencial dos 139 agentes de IA trabalhando 24/7 para automatizar suas operações.'
                             : '139 agentes de IA trabalhando 24/7 para automatizar suas operações. Sem código. Sem complexidade. Resultados em 24 horas.'
@@ -254,13 +258,13 @@ export default function PricingPage() {
                     </p>
 
                     {/* Billing Toggle */}
-                    <div className="inline-flex items-center gap-4 p-1 bg-white/5 border border-white/10 rounded-full mb-12">
+                    <div className="inline-flex items-center gap-4 p-1 bg-surface/5 border border-border/10 rounded-full mb-12">
                         <button
                             onClick={() => setBillingCycle('monthly')}
                             className={`px-6 py-2 rounded-full text-sm font-medium transition-all ${
                                 billingCycle === 'monthly' 
-                                    ? 'bg-white text-black' 
-                                    : 'text-gray-400 hover:text-white'
+                                    ? 'bg-text text-background' 
+                                    : 'text-textSecondary hover:text-text'
                             }`}
                         >
                             Mensal
@@ -269,12 +273,12 @@ export default function PricingPage() {
                             onClick={() => setBillingCycle('yearly')}
                             className={`px-6 py-2 rounded-full text-sm font-medium transition-all flex items-center gap-2 ${
                                 billingCycle === 'yearly' 
-                                    ? 'bg-white text-black' 
-                                    : 'text-gray-400 hover:text-white'
+                                    ? 'bg-text text-background' 
+                                    : 'text-textSecondary hover:text-text'
                             }`}
                         >
                             Anual
-                            <span className="px-2 py-0.5 bg-green-500 text-white text-[10px] font-bold rounded-full">
+                            <span className="px-2 py-0.5 bg-success text-text text-[10px] font-bold rounded-full">
                                 -17%
                             </span>
                         </button>
@@ -294,7 +298,7 @@ export default function PricingPage() {
                                 relative group rounded-3xl p-[1px] transition-all duration-500
                                 ${selectedPlan === plan.id || plan.id === 'enterprise' 
                                     ? `bg-gradient-to-b ${plan.color} shadow-2xl scale-105` 
-                                    : 'bg-white/10'}
+                                    : 'bg-border/10'}
                                 ${plan.id === 'enterprise' ? 'lg:-mt-4 lg:mb-4' : ''}
                             `}
                             style={{
@@ -305,12 +309,12 @@ export default function PricingPage() {
                         >
                             {/* Badge */}
                             {plan.badge && (
-                                <div className={`absolute -top-4 left-1/2 -translate-x-1/2 px-4 py-1 bg-gradient-to-r ${plan.color} rounded-full text-xs font-black tracking-wider text-white shadow-lg`}>
+                                <div className={`absolute -top-4 left-1/2 -translate-x-1/2 px-4 py-1 bg-gradient-to-r ${plan.color} rounded-full text-xs font-black tracking-wider text-text shadow-lg`}>
                                     {plan.badge}
                                 </div>
                             )}
 
-                            <div className="bg-[#0a0a0a] rounded-3xl p-8 h-full flex flex-col relative overflow-hidden">
+                            <div className="bg-surface rounded-3xl p-8 h-full flex flex-col relative overflow-hidden">
                                 {/* Background Effect */}
                                 <div className={`absolute inset-0 bg-gradient-to-b ${plan.color} opacity-5 pointer-events-none`} />
                                 
@@ -322,20 +326,20 @@ export default function PricingPage() {
                                         {plan.id === 'enterprise' && <Crown className="w-8 h-8 text-yellow-400" />}
                                         <h3 className="text-2xl font-black tracking-wider">{plan.name}</h3>
                                     </div>
-                                    <p className="text-sm text-gray-400">{plan.description}</p>
+                                    <p className="text-sm text-textSecondary">{plan.description}</p>
                                 </div>
 
                                 {/* Price */}
                                 <div className="mb-8 relative z-10">
                                     <div className="flex items-baseline gap-2">
-                                        <span className="text-sm text-gray-400">R$</span>
+                                        <span className="text-sm text-textSecondary">R$</span>
                                         <span className="text-5xl font-black">
                                             {billingCycle === 'monthly' 
                                                 ? plan.price.toLocaleString('pt-BR')
                                                 : getYearlyPrice(plan.price).toLocaleString('pt-BR')
                                             }
                                         </span>
-                                        <span className="text-gray-400">
+                                        <span className="text-textSecondary">
                                             /{billingCycle === 'monthly' ? 'mês' : 'ano'}
                                         </span>
                                     </div>
@@ -356,15 +360,15 @@ export default function PricingPage() {
                                                     plan.id === 'pro' ? 'text-purple-400' :
                                                     'text-blue-400'
                                                 }`} />
-                                                <span className="text-gray-300">{feature}</span>
+                                                <span className="text-text/80">{feature}</span>
                                             </li>
                                         ))}
                                     </ul>
                                     
                                     {plan.limitations.length > 0 && (
-                                        <ul className="space-y-2 border-t border-white/10 pt-4">
+                                        <ul className="space-y-2 border-t border-border/10 pt-4">
                                             {plan.limitations.map((limit, i) => (
-                                                <li key={i} className="flex items-start gap-3 text-sm text-gray-500">
+                                                <li key={i} className="flex items-start gap-3 text-sm text-textSecondary">
                                                     <span className="w-5 h-5 flex items-center justify-center flex-shrink-0">×</span>
                                                     <span>{limit}</span>
                                                 </li>
@@ -383,8 +387,8 @@ export default function PricingPage() {
                                         ${plan.id === 'enterprise' 
                                             ? 'bg-gradient-to-r from-yellow-400 to-orange-500 text-black hover:shadow-[0_0_40px_rgba(250,204,21,0.5)]' 
                                             : plan.id === 'pro'
-                                                ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white hover:shadow-[0_0_40px_rgba(168,85,247,0.5)]'
-                                                : 'bg-white/10 hover:bg-white/20 text-white border border-white/20'
+                                                ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-text hover:shadow-[0_0_40px_rgba(168,85,247,0.5)]'
+                                                : 'bg-surface/10 hover:bg-surface/20 text-text border border-border/20'
                                         }
                                         disabled:opacity-50 disabled:cursor-not-allowed
                                     `}
@@ -415,20 +419,20 @@ export default function PricingPage() {
                 <div className="max-w-5xl mx-auto">
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
                         <div className="p-6">
-                            <div className="text-4xl font-black text-white mb-2">139+</div>
-                            <div className="text-sm text-gray-400">Agentes de IA Ativos</div>
+                            <div className="text-4xl font-black text-text mb-2">139+</div>
+                            <div className="text-sm text-textSecondary">Agentes de IA Ativos</div>
                         </div>
                         <div className="p-6">
-                            <div className="text-4xl font-black text-white mb-2">99.9%</div>
-                            <div className="text-sm text-gray-400">Uptime Garantido</div>
+                            <div className="text-4xl font-black text-text mb-2">99.9%</div>
+                            <div className="text-sm text-textSecondary">Uptime Garantido</div>
                         </div>
                         <div className="p-6">
-                            <div className="text-4xl font-black text-white mb-2">24/7</div>
-                            <div className="text-sm text-gray-400">Auto-Evolução</div>
+                            <div className="text-4xl font-black text-text mb-2">24/7</div>
+                            <div className="text-sm text-textSecondary">Auto-Evolução</div>
                         </div>
                         <div className="p-6">
-                            <div className="text-4xl font-black text-white mb-2">&lt;50ms</div>
-                            <div className="text-sm text-gray-400">Latência Média</div>
+                            <div className="text-4xl font-black text-text mb-2">&lt;50ms</div>
+                            <div className="text-sm text-textSecondary">Latência Média</div>
                         </div>
                     </div>
                 </div>
@@ -452,11 +456,11 @@ export default function PricingPage() {
                         ].map((feature, i) => (
                             <div 
                                 key={i}
-                                className="p-6 bg-white/5 border border-white/10 rounded-2xl hover:bg-white/10 hover:border-white/20 transition-all group"
+                                className="p-6 bg-surface/5 border border-border/10 rounded-2xl hover:bg-surface/10 hover:border-border/20 transition-all group"
                             >
                                 <feature.icon className="w-10 h-10 text-[var(--color-primary)] mb-4 group-hover:scale-110 transition-transform" />
                                 <h3 className="text-lg font-bold mb-2">{feature.title}</h3>
-                                <p className="text-sm text-gray-400">{feature.desc}</p>
+                                <p className="text-sm text-textSecondary">{feature.desc}</p>
                             </div>
                         ))}
                     </div>
@@ -475,7 +479,7 @@ export default function PricingPage() {
                                 : 'Pronto para transformar seu negócio?'
                             }
                         </h2>
-                        <p className="text-xl text-gray-400 mb-8 relative z-10">
+                        <p className="text-xl text-textSecondary mb-8 relative z-10">
                             {user && !hasAccess
                                 ? 'Faça upgrade hoje e tenha acesso completo ao ALSHAM QUANTUM.'
                                 : 'Comece hoje e veja resultados em 24 horas.'
@@ -492,7 +496,7 @@ export default function PricingPage() {
                             }
                         </button>
                         
-                        <p className="text-xs text-gray-500 mt-4 relative z-10">
+                        <p className="text-xs text-textSecondary mt-4 relative z-10">
                             Garantia de 30 dias • Cancele quando quiser • Suporte 24/7
                         </p>
                     </div>
@@ -500,18 +504,18 @@ export default function PricingPage() {
             </section>
 
             {/* Footer */}
-            <footer className="relative z-10 border-t border-white/10 py-12 px-6">
+            <footer className="relative z-10 border-t border-border/10 py-12 px-6">
                 <div className="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center gap-6">
                     <div className="flex items-center gap-3">
                         <Hexagon className="w-6 h-6 text-[var(--color-primary)]" />
                         <span className="text-sm font-bold">ALSHAM QUANTUM</span>
                     </div>
-                    <div className="flex items-center gap-6 text-sm text-gray-400">
-                        <Link href="/terms" className="hover:text-white transition-colors">Termos</Link>
-                        <Link href="/privacy" className="hover:text-white transition-colors">Privacidade</Link>
-                        <Link href="/contact" className="hover:text-white transition-colors">Contato</Link>
+                    <div className="flex items-center gap-6 text-sm text-textSecondary">
+                        <Link href="/terms" className="hover:text-text transition-colors">Termos</Link>
+                        <Link href="/privacy" className="hover:text-text transition-colors">Privacidade</Link>
+                        <Link href="/contact" className="hover:text-text transition-colors">Contato</Link>
                     </div>
-                    <div className="text-sm text-gray-500">
+                    <div className="text-sm text-textSecondary">
                         © 2024 ALSHAM Global. Todos os direitos reservados.
                     </div>
                 </div>

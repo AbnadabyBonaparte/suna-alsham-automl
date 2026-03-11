@@ -82,7 +82,7 @@ export default function RequestsQueue({ refreshTrigger = 0 }: RequestsQueueProps
       case 'failed':
         return <XCircle className="w-4 h-4 text-red-400" />;
       default:
-        return <AlertCircle className="w-4 h-4 text-gray-400" />;
+        return <AlertCircle className="w-4 h-4 text-textSecondary" />;
     }
   };
 
@@ -112,7 +112,7 @@ export default function RequestsQueue({ refreshTrigger = 0 }: RequestsQueueProps
       case 'failed':
         return 'bg-red-500/10 text-red-400 border-red-500/20';
       default:
-        return 'bg-gray-500/10 text-gray-400 border-gray-500/20';
+        return 'bg-surface/10 text-textSecondary border-border/20';
     }
   };
 
@@ -125,9 +125,9 @@ export default function RequestsQueue({ refreshTrigger = 0 }: RequestsQueueProps
       case 'normal':
         return 'bg-blue-500/20 text-blue-400 border-blue-500/30';
       case 'low':
-        return 'bg-gray-500/20 text-gray-400 border-gray-500/30';
+        return 'bg-surface/20 text-textSecondary border-border/30';
       default:
-        return 'bg-gray-500/20 text-gray-400 border-gray-500/30';
+        return 'bg-surface/20 text-textSecondary border-border/30';
     }
   };
 
@@ -182,7 +182,7 @@ export default function RequestsQueue({ refreshTrigger = 0 }: RequestsQueueProps
             <Clock className="w-4 h-4" />
             <span className="text-xs font-mono">NA FILA</span>
           </div>
-          <div className="text-2xl font-bold text-white">{queuedRequests.length}</div>
+          <div className="text-2xl font-bold text-text">{queuedRequests.length}</div>
         </div>
 
         <div className="rounded-xl border border-blue-500/20 bg-blue-500/5 p-4">
@@ -190,7 +190,7 @@ export default function RequestsQueue({ refreshTrigger = 0 }: RequestsQueueProps
             <Loader2 className="w-4 h-4 animate-spin" />
             <span className="text-xs font-mono">PROCESSANDO</span>
           </div>
-          <div className="text-2xl font-bold text-white">{processingRequests.length}</div>
+          <div className="text-2xl font-bold text-text">{processingRequests.length}</div>
         </div>
 
         <div className="rounded-xl border border-green-500/20 bg-green-500/5 p-4">
@@ -198,7 +198,7 @@ export default function RequestsQueue({ refreshTrigger = 0 }: RequestsQueueProps
             <CheckCircle className="w-4 h-4" />
             <span className="text-xs font-mono">COMPLETAS</span>
           </div>
-          <div className="text-2xl font-bold text-white">{completedRequests.length}</div>
+          <div className="text-2xl font-bold text-text">{completedRequests.length}</div>
         </div>
 
         <div className="rounded-xl border border-red-500/20 bg-red-500/5 p-4">
@@ -206,7 +206,7 @@ export default function RequestsQueue({ refreshTrigger = 0 }: RequestsQueueProps
             <XCircle className="w-4 h-4" />
             <span className="text-xs font-mono">FALHARAM</span>
           </div>
-          <div className="text-2xl font-bold text-white">{failedRequests.length}</div>
+          <div className="text-2xl font-bold text-text">{failedRequests.length}</div>
         </div>
       </div>
 
@@ -221,7 +221,7 @@ export default function RequestsQueue({ refreshTrigger = 0 }: RequestsQueueProps
             {queuedRequests.map((request) => (
               <div
                 key={request.id}
-                className="flex items-start justify-between p-4 rounded-xl border border-[var(--color-border)]/20 bg-black/10 hover:bg-black/20 transition-colors group"
+                className="flex items-start justify-between p-4 rounded-xl border border-[var(--color-border)]/20 bg-background/10 hover:bg-background/20 transition-colors group"
               >
                 <div className="flex-1">
                   <div className="flex items-center gap-2 mb-2">
@@ -292,7 +292,7 @@ export default function RequestsQueue({ refreshTrigger = 0 }: RequestsQueueProps
             {completedRequests.map((request) => (
               <div
                 key={request.id}
-                className="flex items-center justify-between p-3 rounded-xl border border-[var(--color-border)]/10 bg-black/5 hover:bg-black/10 transition-colors"
+                className="flex items-center justify-between p-3 rounded-xl border border-[var(--color-border)]/10 bg-background/5 hover:bg-background/10 transition-colors"
               >
                 <div className="flex items-center gap-3">
                   <CheckCircle className="w-4 h-4 text-green-400" />

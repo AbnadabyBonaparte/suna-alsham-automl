@@ -14,16 +14,15 @@ export function getSupabase(): any {
   const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
   if (!supabaseUrl || !supabaseAnonKey) {
-    // Durante o build, retorna um cliente dummy
-    console.warn('[Supabase] Env vars missing - returning dummy client for build');
-    return createDummyClient();
+    console.warn('[Supabase] Build-time stub: env vars not available');
+    return createBuildStub();
   }
 
   _supabase = createBrowserClient();
   return _supabase;
 }
 
-function createDummyClient(): any {
+function createBuildStub(): any {
   return {
     from: () => ({
       select: () => Promise.resolve({ data: [], error: null }),

@@ -1,24 +1,8 @@
 import { supabase } from './supabase';
 import { Agent } from '@/types/quantum';
 
-// MOCK DE SEGURANÇA (Se o banco estiver vazio ou desconectado)
-const MOCK_AGENTS: Agent[] = [
-  { id: 'sec-01', name: 'SECURITY-GUARDIAN', role: 'GUARD', status: 'PROCESSING', efficiency: 99.9, currentTask: 'Monitoramento Supabase', lastActive: 'Now' },
-  { id: 'db-01', name: 'DATABASE-MASTER', role: 'CORE', status: 'IDLE', efficiency: 100, currentTask: 'Sincronização Direta', lastActive: '1m ago' },
-  { id: 'evo-01', name: 'EVOLUTION-ENGINE', role: 'CORE', status: 'LEARNING', efficiency: 97.5, currentTask: 'Análise Genética', lastActive: '5s ago' },
-  { id: 'web-01', name: 'WEB-SEARCH', role: 'SPECIALIST', status: 'WARNING', efficiency: 85.2, currentTask: 'Indexando Vercel', lastActive: 'Now' },
-  { id: 'net-01', name: 'NETWORK-OPS', role: 'ANALYST', status: 'PROCESSING', efficiency: 92.1, currentTask: 'Otimização de Rotas', lastActive: '10s ago' },
-];
-
 export async function fetchAgents(): Promise<Agent[]> {
-  // 1. Se não tem cliente Supabase configurado, retorna Mock
-  if (!supabase) {
-    console.warn("⚠️ Supabase Keys ausentes. Usando Modo Simulação.");
-    return MOCK_AGENTS;
-  }
-
   try {
-    // 2. Tenta buscar do banco real (Tabela 'agents')
     const { data, error } = await supabase
       .from('agents')
       .select('*')
@@ -26,31 +10,50 @@ export async function fetchAgents(): Promise<Agent[]> {
 
     if (error) throw error;
 
-    // 3. Se o banco estiver vazio ou der erro, retorna Mock
-    if (!data || data.length === 0) return MOCK_AGENTS;
+    if (!data || data.length === 0) return [];
 
-    // 4. Mapeia os dados do banco para o formato do Dashboard
-    return data.map((a: any) => ({
-        id: a.id,
-        name: a.name || 'Unknown Unit',
-        role: a.role || 'SPECIALIST',
-        status: a.status || 'IDLE',
-        efficiency: a.efficiency || Math.floor(Math.random() * 100),
-        currentTask: a.current_task || 'Aguardando comando',
-        lastActive: new Date().toLocaleTimeString()
+    return data.map((a: Record<string, unknown>) => ({
+      id: a.id as string,
+      name: (a.name as string) || 'Unknown Unit',
+      role: (a.role as string) || 'SPECIALIST',
+      status: (a.status as string) || 'IDLE',
+      efficiency: (a.efficiency as number) || 0,
+      currentTask: (a.current_task as string) || 'Aguardando comando',
+      lastActive: new Date().toLocaleTimeString(),
     }));
-
   } catch (error) {
-    console.error("❌ Erro Supabase:", error);
-    return MOCK_AGENTS; // Fallback seguro
+    console.error('fetchAgents failed:', error);
+    return [];
   }
 }
 
 export async function fetchSystemStatus() {
-    // Simulação de métricas do sistema baseadas nos agentes
+  try {
+    const { data, error } = await supabase
+      .from('system_metrics')
+      .select('*')
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .single();
+
+    if (error) throw error;
+
+    const { count: agentCount } = await supabase
+      .from('agents')
+      .select('*', { count: 'exact', head: true })
+      .eq('status', 'PROCESSING');
+
     return {
-        uptime: "99.99%",
-        active_agents: 57,
-        health: "OPTIMAL"
+      uptime: data?.uptime ?? '0%',
+      active_agents: agentCount ?? 0,
+      health: data?.health ?? 'UNKNOWN',
     };
+  } catch (error) {
+    console.error('fetchSystemStatus failed:', error);
+    return {
+      uptime: '0%',
+      active_agents: 0,
+      health: 'UNKNOWN',
+    };
+  }
 }

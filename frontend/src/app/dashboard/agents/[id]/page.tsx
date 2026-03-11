@@ -93,7 +93,7 @@ export default function AgentDetailPage() {
     // Loading State
     if (loading) {
         return (
-            <div className="p-8 max-w-7xl mx-auto space-y-8 min-h-screen bg-black/50">
+            <div className="p-8 max-w-7xl mx-auto space-y-8 min-h-screen bg-background/50">
                 <div className="flex items-center gap-4">
                     <Skeleton className="w-10 h-10 rounded-lg" />
                     <div className="flex-1">
@@ -112,21 +112,21 @@ export default function AgentDetailPage() {
     // 404 State
     if (notFound || !agent) {
         return (
-            <div className="p-8 max-w-7xl mx-auto min-h-screen bg-black/50 flex items-center justify-center">
+            <div className="p-8 max-w-7xl mx-auto min-h-screen bg-background/50 flex items-center justify-center">
                 <div className="text-center space-y-6">
                     <div className="relative">
                         <div className="absolute inset-0 blur-3xl rounded-full" style={{ background: 'var(--color-error)/20' }} />
                         <AlertTriangle className="w-24 h-24 mx-auto relative z-10" style={{ color: 'var(--color-error)' }} />
                     </div>
                     <div>
-                        <h1 className="text-4xl font-bold text-white mb-2">Agent Not Found</h1>
-                        <p className="text-zinc-400 mb-6">
+                        <h1 className="text-4xl font-bold text-text mb-2">Agent Not Found</h1>
+                        <p className="text-textSecondary mb-6">
                             The agent with ID <span className="font-mono" style={{ color: 'var(--color-error)' }}>{params.id}</span> does not exist in the system.
                         </p>
                     </div>
                     <Button
                         onClick={() => router.push('/dashboard/agents')}
-                        className="bg-white/10 hover:bg-white/20 text-white border border-white/20"
+                        className="bg-surface/10 hover:bg-surface/20 text-text border border-border/20"
                     >
                         <ArrowLeft className="w-4 h-4 mr-2" />
                         Back to Agents
@@ -137,26 +137,26 @@ export default function AgentDetailPage() {
     }
 
     return (
-        <div className="p-8 max-w-7xl mx-auto space-y-8 min-h-screen bg-black/50">
+        <div className="p-8 max-w-7xl mx-auto space-y-8 min-h-screen bg-background/50">
             {/* Header */}
             <div className="flex items-center gap-4">
                 <Button
                     variant="ghost"
                     onClick={() => router.back()}
-                    className="text-zinc-400 hover:text-white hover:bg-white/5"
+                    className="text-textSecondary hover:text-text hover:bg-surface/5"
                 >
                     <ArrowLeft className="w-5 h-5 mr-2" /> Voltar
                 </Button>
                 <div className="flex-1">
-                    <h1 className="text-4xl font-bold text-white flex items-center gap-3">
+                    <h1 className="text-4xl font-bold text-text flex items-center gap-3">
                         {agent.name}
                         <Badge variant="outline" className={`
-                    ${agent.status === 'ACTIVE' ? 'border-[var(--color-success)] text-[var(--color-success)]' : 'border-zinc-700 text-zinc-500'}
+                    ${agent.status === 'ACTIVE' ? 'border-[var(--color-success)] text-[var(--color-success)]' : 'border-border text-textSecondary'}
                 `}>
                             {agent.status}
                         </Badge>
                     </h1>
-                    <p className="text-zinc-400 font-mono text-sm mt-1">
+                    <p className="text-textSecondary font-mono text-sm mt-1">
                         ID: {agent.id.slice(0, 8)}... • ROLE: {agent.role} • SQUAD: {agent.squad}
                     </p>
                 </div>
@@ -177,52 +177,52 @@ export default function AgentDetailPage() {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 {/* Left Column - Metrics */}
                 <div className="space-y-6">
-                    <Card className="bg-zinc-900/40 border-white/10 backdrop-blur-sm">
+                    <Card className="bg-surface/40 border-border/10 backdrop-blur-sm">
                         <CardHeader>
-                            <CardTitle className="text-zinc-400 text-sm flex items-center gap-2">
+                            <CardTitle className="text-textSecondary text-sm flex items-center gap-2">
                                 <Activity className="w-4 h-4" /> EFICIÊNCIA NEURAL
                             </CardTitle>
                         </CardHeader>
                         <CardContent>
-                            <div className="text-5xl font-bold text-white mb-2">
+                            <div className="text-5xl font-bold text-text mb-2">
                                 {agent.efficiency.toFixed(1)}%
                             </div>
-                            <div className="w-full bg-black/50 h-2 rounded-full overflow-hidden">
+                            <div className="w-full bg-background/50 h-2 rounded-full overflow-hidden">
                                 <div
                                     className="h-full bg-gradient-to-r from-purple-500 to-blue-500 transition-all duration-1000"
                                     style={{ width: `${agent.efficiency}%` }}
                                 />
                             </div>
-                            <p className="text-xs text-zinc-500 mt-2 font-mono">
+                            <p className="text-xs text-textSecondary mt-2 font-mono">
                                 Created: {new Date(agent.created_at).toLocaleDateString()}
                             </p>
                         </CardContent>
                     </Card>
 
-                    <Card className="bg-zinc-900/40 border-white/10 backdrop-blur-sm">
+                    <Card className="bg-surface/40 border-border/10 backdrop-blur-sm">
                         <CardHeader>
-                            <CardTitle className="text-zinc-400 text-sm flex items-center gap-2">
+                            <CardTitle className="text-textSecondary text-sm flex items-center gap-2">
                                 <Cpu className="w-4 h-4" /> RECURSOS ALOCADOS
                             </CardTitle>
                         </CardHeader>
                         <CardContent className="space-y-4">
                             <div className="flex justify-between text-sm">
-                                <span className="text-zinc-500">Role</span>
-                                <span className="text-white font-mono">{agent.role}</span>
+                                <span className="text-textSecondary">Role</span>
+                                <span className="text-text font-mono">{agent.role}</span>
                             </div>
                             <div className="flex justify-between text-sm">
-                                <span className="text-zinc-500">Squad</span>
-                                <span className="text-white font-mono">{agent.squad}</span>
+                                <span className="text-textSecondary">Squad</span>
+                                <span className="text-text font-mono">{agent.squad}</span>
                             </div>
                             <div className="flex justify-between text-sm">
-                                <span className="text-zinc-500">Status</span>
+                                <span className="text-textSecondary">Status</span>
                                 <span className="font-mono font-bold" style={{ color: agent.status === 'ACTIVE' ? 'var(--color-success)' : '#71717A' }}>
                                     {agent.status}
                                 </span>
                             </div>
                             <div className="flex justify-between text-sm">
-                                <span className="text-zinc-500">Efficiency</span>
-                                <span className="text-white font-mono">{agent.efficiency.toFixed(1)}%</span>
+                                <span className="text-textSecondary">Efficiency</span>
+                                <span className="text-text font-mono">{agent.efficiency.toFixed(1)}%</span>
                             </div>
                         </CardContent>
                     </Card>
@@ -230,14 +230,14 @@ export default function AgentDetailPage() {
 
                 {/* Middle Column - Task & Console */}
                 <div className="md:col-span-2 space-y-6">
-                    <Card className="bg-zinc-900/40 border-white/10 backdrop-blur-sm h-full flex flex-col">
+                    <Card className="bg-surface/40 border-border/10 backdrop-blur-sm h-full flex flex-col">
                         <CardHeader>
-                            <CardTitle className="text-zinc-400 text-sm flex items-center gap-2">
+                            <CardTitle className="text-textSecondary text-sm flex items-center gap-2">
                                 <Terminal className="w-4 h-4" /> LIVE LOGS
                             </CardTitle>
                         </CardHeader>
                         <CardContent className="flex-1">
-                            <div className="bg-black/80 rounded-lg p-4 font-mono text-xs h-[400px] overflow-y-auto space-y-2 border border-white/5" style={{ color: 'var(--color-success)/80' }}>
+                            <div className="bg-background/80 rounded-lg p-4 font-mono text-xs h-[400px] overflow-y-auto space-y-2 border border-border/5" style={{ color: 'var(--color-success)/80' }}>
                                 <p className="opacity-50">Initializing connection to {agent.name}...</p>
                                 <p className="opacity-70">Secure channel established.</p>
                                 <p className="text-[var(--color-primary)] font-bold">&gt; Current task: {agent.current_task || 'Awaiting orders'}</p>
@@ -253,7 +253,7 @@ export default function AgentDetailPage() {
                                         &gt; [{new Date().toISOString().split('T')[1].slice(0, -1)}] Processing chunk #{Math.floor(Math.random() * 9999)}...
                                     </p>
                                 ))}
-                                <p className="animate-pulse text-white">&gt; Ready for next instruction_</p>
+                                    <p className="animate-pulse text-text">&gt; Ready for next instruction_</p>
                             </div>
                         </CardContent>
                     </Card>

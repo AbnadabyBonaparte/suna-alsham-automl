@@ -171,13 +171,13 @@ export default function AgentsPage() {
           </div>
 
           <div className="relative w-full md:w-96">
-            <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500">
+            <div className="absolute left-4 top-1/2 -translate-y-1/2 text-textSecondary">
               <IconSearch />
             </div>
             <input
               type="text"
               placeholder="Buscar unidade..."
-              className="w-full pl-14 pr-6 py-4 text-xl bg-black/40 border border-[var(--color-border)]/30 text-white placeholder:text-gray-600 focus:border-[var(--color-primary)] focus:outline-none focus:shadow-[0_0_20px_var(--color-primary)] transition-all rounded-lg"
+              className="w-full pl-14 pr-6 py-4 text-xl bg-background/40 border border-[var(--color-border)]/30 text-text placeholder:text-textSecondary focus:border-[var(--color-primary)] focus:outline-none focus:shadow-[0_0_20px_var(--color-primary)] transition-all rounded-lg"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
@@ -192,7 +192,7 @@ export default function AgentsPage() {
               onClick={() => setFilteredSquad(f)}
               className={`text-lg font-bold px-8 py-4 rounded border-2 transition-all uppercase tracking-wider ${filteredSquad === f
                 ? "bg-[var(--color-primary)]/10 text-[var(--color-primary)] border-[var(--color-primary)] shadow-[0_0_30px_var(--color-primary)]"
-                : "bg-transparent border-[var(--color-border)]/30 text-gray-400 hover:text-[var(--color-primary)] hover:border-[var(--color-primary)]/70"
+                : "bg-transparent border-[var(--color-border)]/30 text-textSecondary hover:text-[var(--color-primary)] hover:border-[var(--color-primary)]/70"
                 }`}
             >
               {f}
@@ -215,14 +215,14 @@ export default function AgentsPage() {
                 <div className="p-8">
                   <div className="flex items-start justify-between mb-6">
                     <div className="flex items-center gap-6">
-                      <div className="p-4 rounded-2xl bg-black/80 border border-[var(--color-border)]/30 group-hover:scale-110 transition-all text-[var(--color-primary)] shadow-[0_0_15px_var(--color-primary)]">
+                      <div className="p-4 rounded-2xl bg-background/80 border border-[var(--color-border)]/30 group-hover:scale-110 transition-all text-[var(--color-primary)] shadow-[0_0_15px_var(--color-primary)]">
                         {renderIcon(agent.role)}
                       </div>
                       <div>
-                        <h3 className="text-2xl font-black text-white group-hover:text-[var(--color-primary)] transition-colors orbitron tracking-wide">
+                        <h3 className="text-2xl font-black text-text group-hover:text-[var(--color-primary)] transition-colors orbitron tracking-wide">
                           {agent.name}
                         </h3>
-                        <span className="inline-block mt-2 text-xs px-3 py-1 bg-black/80 border border-[var(--color-primary)]/40 text-[var(--color-primary)] rounded uppercase font-bold tracking-widest">
+                        <span className="inline-block mt-2 text-xs px-3 py-1 bg-background/80 border border-[var(--color-primary)]/40 text-[var(--color-primary)] rounded uppercase font-bold tracking-widest">
                           {agent.role} UNIT
                         </span>
                       </div>
@@ -235,7 +235,7 @@ export default function AgentsPage() {
                         ? "bg-[var(--color-success)]/10 text-[var(--color-success)] border-[var(--color-success)]/50"
                         : agent.status === "PROCESSING"
                           ? "bg-[var(--color-warning)]/10 text-[var(--color-warning)] border-[var(--color-warning)]/50 animate-pulse"
-                          : "bg-gray-700/20 text-gray-400 border-gray-700/50"
+                          : "bg-surface/20 text-textSecondary border-border/50"
                         }`}
                     >
                       ● {agent.status}
@@ -245,10 +245,10 @@ export default function AgentsPage() {
                   <div className="space-y-6">
                     <div>
                       <div className="flex justify-between text-sm mb-2 font-mono">
-                        <span className="text-gray-400">INTEGRIDADE NEURAL</span>
+                        <span className="text-textSecondary">INTEGRIDADE NEURAL</span>
                         <span className="text-[var(--color-primary)] font-bold">{agent.efficiency.toFixed(1)}%</span>
                       </div>
-                      <div className="w-full bg-white/5 h-2 rounded-full overflow-hidden">
+                      <div className="w-full bg-surface/5 h-2 rounded-full overflow-hidden">
                         <div
                           className="h-full bg-gradient-to-r from-[var(--color-secondary)] via-[var(--color-primary)] to-[var(--color-accent)]"
                           style={{ width: `${agent.efficiency}%` }}
@@ -256,9 +256,9 @@ export default function AgentsPage() {
                       </div>
                     </div>
 
-                    <div className="pt-6 border-t border-white/10">
-                      <p className="text-[10px] text-gray-500 uppercase tracking-widest mb-2">TAREFA ATUAL</p>
-                      <p className="text-lg text-gray-300 font-mono leading-relaxed border-l-2 border-[var(--color-primary)] pl-4">
+                    <div className="pt-6 border-t border-border/10">
+                      <p className="text-[10px] text-textSecondary uppercase tracking-widest mb-2">TAREFA ATUAL</p>
+                      <p className="text-lg text-textSecondary font-mono leading-relaxed border-l-2 border-[var(--color-primary)] pl-4">
                         &quot;{agent.currentTask}&quot;
                       </p>
                     </div>
@@ -272,7 +272,7 @@ export default function AgentsPage() {
         {/* MODAL DE DETALHES DO AGENT */}
         {selectedAgent && (
           <div
-            className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4"
+            className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm p-4"
             onClick={() => setSelectedAgent(null)}
           >
             <div
@@ -282,21 +282,21 @@ export default function AgentsPage() {
               {/* Close Button */}
               <button
                 onClick={() => setSelectedAgent(null)}
-                className="absolute top-4 right-4 p-2 rounded-lg bg-black/40 hover:bg-black/60 text-gray-400 hover:text-white transition-all"
+                className="absolute top-4 right-4 p-2 rounded-lg bg-background/40 hover:bg-background/60 text-textSecondary hover:text-text transition-all"
               >
                 <X className="w-6 h-6" />
               </button>
 
               {/* Header */}
               <div className="flex items-center gap-6 mb-8">
-                <div className="p-6 rounded-2xl bg-black/80 border border-[var(--color-border)]/30 text-[var(--color-primary)] shadow-[0_0_20px_var(--color-primary)]">
+                <div className="p-6 rounded-2xl bg-background/80 border border-[var(--color-border)]/30 text-[var(--color-primary)] shadow-[0_0_20px_var(--color-primary)]">
                   {renderIcon(selectedAgent.role)}
                 </div>
                 <div>
-                  <h2 className="text-4xl font-black text-white orbitron tracking-wide mb-2">
+                  <h2 className="text-4xl font-black text-text orbitron tracking-wide mb-2">
                     {selectedAgent.name}
                   </h2>
-                  <span className="inline-block text-sm px-4 py-1 bg-black/80 border border-[var(--color-primary)]/40 text-[var(--color-primary)] rounded uppercase font-bold tracking-widest">
+                  <span className="inline-block text-sm px-4 py-1 bg-background/80 border border-[var(--color-primary)]/40 text-[var(--color-primary)] rounded uppercase font-bold tracking-widest">
                     {selectedAgent.role} UNIT
                   </span>
                 </div>
@@ -304,10 +304,10 @@ export default function AgentsPage() {
 
               {/* Stats Grid */}
               <div className="grid grid-cols-2 gap-6 mb-8">
-                <div className="bg-black/40 border border-white/10 rounded-xl p-6">
+                <div className="bg-background/40 border border-border/10 rounded-xl p-6">
                   <div className="flex items-center gap-3 mb-3">
                     <Activity className="w-5 h-5 text-[var(--color-primary)]" />
-                    <span className="text-sm text-gray-400 uppercase font-mono">Status</span>
+                    <span className="text-sm text-textSecondary uppercase font-mono">Status</span>
                   </div>
                   <div
                     className={`text-2xl font-bold ${
@@ -320,43 +320,43 @@ export default function AgentsPage() {
                   </div>
                 </div>
 
-                <div className="bg-black/40 border border-white/10 rounded-xl p-6">
+                <div className="bg-background/40 border border-border/10 rounded-xl p-6">
                   <div className="flex items-center gap-3 mb-3">
                     <TrendingUp className="w-5 h-5 text-[var(--color-secondary)]" />
-                    <span className="text-sm text-gray-400 uppercase font-mono">Efficiency</span>
+                    <span className="text-sm text-textSecondary uppercase font-mono">Efficiency</span>
                   </div>
-                  <div className="text-2xl font-bold text-white">
+                  <div className="text-2xl font-bold text-text">
                     {selectedAgent.efficiency.toFixed(1)}%
                   </div>
                 </div>
 
-                <div className="bg-black/40 border border-white/10 rounded-xl p-6">
+                <div className="bg-background/40 border border-border/10 rounded-xl p-6">
                   <div className="flex items-center gap-3 mb-3">
                     <Clock className="w-5 h-5 text-[var(--color-accent)]" />
-                    <span className="text-sm text-gray-400 uppercase font-mono">Agent ID</span>
+                    <span className="text-sm text-textSecondary uppercase font-mono">Agent ID</span>
                   </div>
-                  <div className="text-xl font-mono text-white">
+                  <div className="text-xl font-mono text-text">
                     #{selectedAgent.id}
                   </div>
                 </div>
 
-                <div className="bg-black/40 border border-white/10 rounded-xl p-6">
+                <div className="bg-background/40 border border-border/10 rounded-xl p-6">
                   <div className="flex items-center gap-3 mb-3">
                     <ZapIcon className="w-5 h-5" style={{ color: 'var(--color-warning)' }} />
-                    <span className="text-sm text-gray-400 uppercase font-mono">Role</span>
+                    <span className="text-sm text-textSecondary uppercase font-mono">Role</span>
                   </div>
-                  <div className="text-xl font-bold text-white">
+                  <div className="text-xl font-bold text-text">
                     {selectedAgent.role}
                   </div>
                 </div>
               </div>
 
               {/* Current Task */}
-              <div className="bg-black/40 border border-white/10 rounded-xl p-6">
-                <h3 className="text-xs text-gray-500 uppercase tracking-widest mb-3 font-mono">
+              <div className="bg-background/40 border border-border/10 rounded-xl p-6">
+                <h3 className="text-xs text-textSecondary uppercase tracking-widest mb-3 font-mono">
                   Current Task
                 </h3>
-                <p className="text-lg text-gray-300 font-mono leading-relaxed border-l-4 border-[var(--color-primary)] pl-4">
+                <p className="text-lg text-textSecondary font-mono leading-relaxed border-l-4 border-[var(--color-primary)] pl-4">
                   &quot;{selectedAgent.currentTask}&quot;
                 </p>
               </div>
@@ -364,12 +364,12 @@ export default function AgentsPage() {
               {/* Efficiency Bar */}
               <div className="mt-8">
                 <div className="flex justify-between text-sm mb-2 font-mono">
-                  <span className="text-gray-400">NEURAL INTEGRITY</span>
+                  <span className="text-textSecondary">NEURAL INTEGRITY</span>
                   <span className="text-[var(--color-primary)] font-bold">
                     {selectedAgent.efficiency.toFixed(1)}%
                   </span>
                 </div>
-                <div className="w-full bg-white/5 h-4 rounded-full overflow-hidden">
+                <div className="w-full bg-surface/5 h-4 rounded-full overflow-hidden">
                   <div
                     className="h-full bg-gradient-to-r from-[var(--color-secondary)] via-[var(--color-primary)] to-[var(--color-accent)] transition-all duration-1000"
                     style={{ width: `${selectedAgent.efficiency}%` }}
@@ -384,14 +384,14 @@ export default function AgentsPage() {
                   disabled={processing}
                   className={`w-full py-4 px-6 rounded-xl font-bold text-lg uppercase tracking-wider transition-all ${
                     processing
-                      ? 'bg-gray-700 text-gray-400 cursor-not-allowed'
-                      : 'bg-gradient-to-r from-[var(--color-secondary)] via-[var(--color-primary)] to-[var(--color-accent)] text-white hover:scale-105 hover:shadow-[0_0_30px_var(--color-primary)]'
+                      ? 'bg-surface text-textSecondary cursor-not-allowed'
+                      : 'bg-gradient-to-r from-[var(--color-secondary)] via-[var(--color-primary)] to-[var(--color-accent)] text-text hover:scale-105 hover:shadow-[0_0_30px_var(--color-primary)]'
                   }`}
                 >
                   <div className="flex items-center justify-center gap-3">
                     {processing ? (
                       <>
-                        <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-white"></div>
+                        <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-border"></div>
                         Processando...
                       </>
                     ) : (
@@ -411,7 +411,7 @@ export default function AgentsPage() {
                     <CheckCircle className="w-6 h-6" style={{ color: 'var(--color-success)' }} />
                     <h4 className="text-lg font-bold" style={{ color: 'var(--color-success)' }}>SUCESSO!</h4>
                   </div>
-                  <p className="text-sm text-gray-300 font-mono leading-relaxed">
+                  <p className="text-sm text-textSecondary font-mono leading-relaxed">
                     {result}
                   </p>
                 </div>
@@ -423,7 +423,7 @@ export default function AgentsPage() {
                     <AlertCircle className="w-6 h-6" style={{ color: 'var(--color-error)' }} />
                     <h4 className="text-lg font-bold" style={{ color: 'var(--color-error)' }}>ERRO!</h4>
                   </div>
-                  <p className="text-sm text-gray-300 font-mono leading-relaxed">
+                  <p className="text-sm text-textSecondary font-mono leading-relaxed">
                     {error}
                   </p>
                 </div>

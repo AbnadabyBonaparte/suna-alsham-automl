@@ -84,7 +84,7 @@ export default function MatrixTerminal() {
   // Renderização da Intro Cinematográfica
   if (showIntro) {
     return (
-      <div className="h-full w-full flex items-center justify-center bg-black text-green-500 font-mono text-2xl md:text-4xl">
+      <div className="h-full w-full flex items-center justify-center bg-background text-success font-mono text-2xl md:text-4xl">
         <span className="animate-pulse">{introText}</span><span className="animate-blink">_</span>
       </div>
     );
@@ -92,16 +92,16 @@ export default function MatrixTerminal() {
 
   // Renderização do Terminal
   return (
-    <div className="h-full w-full bg-black border border-green-500/20 rounded-lg p-4 font-mono text-sm relative overflow-hidden shadow-[0_0_30px_rgba(34,197,94,0.1)]">
+    <div className="h-full w-full bg-background border border-success/20 rounded-lg p-4 font-mono text-sm relative overflow-hidden shadow-[0_0_30px_rgba(34,197,94,0.1)]">
       {/* Scanline Effect */}
       <div className="absolute inset-0 bg-[linear-gradient(transparent_50%,rgba(0,0,0,0.25)_50%)] bg-[length:100%_4px] pointer-events-none z-10 opacity-20"></div>
       
-      <div className="flex justify-between items-center border-b border-green-500/30 pb-2 mb-4">
+      <div className="flex justify-between items-center border-b border-success/30 pb-2 mb-4">
          <h3 className="text-green-400 font-bold flex items-center gap-2">
             <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
             LIVE KERNEL STREAM
          </h3>
-         <Badge variant="outline" className="border-green-500/50 text-green-500">SECURE CONNECTION</Badge>
+         <Badge variant="outline" className="border-success/50 text-success">SECURE CONNECTION</Badge>
       </div>
 
       <div className="h-[calc(100%-3rem)] overflow-y-auto space-y-2 scrollbar-hide" ref={scrollRef}>
@@ -119,7 +119,7 @@ export default function MatrixTerminal() {
             <span className="text-green-400 flex-1">{log.msg}</span>
           </div>
         ))}
-        <div className="animate-pulse text-green-500">_</div>
+        <div className="animate-pulse text-success">_</div>
       </div>
     </div>
   );

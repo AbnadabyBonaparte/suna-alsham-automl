@@ -14,8 +14,8 @@ export function getSupabaseAdmin(): SupabaseClient {
   const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
   if (!supabaseUrl || !supabaseServiceRoleKey) {
-    // Durante o build, retorna um cliente dummy
-    console.warn('[SupabaseAdmin] Env vars missing - returning dummy client for build');
+    // Build-time stub: retorna cliente inerte
+    console.warn('[SupabaseAdmin] Build-time stub: env vars not available');
     return {
       from: () => ({
         select: () => Promise.resolve({ data: [], error: null }),

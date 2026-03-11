@@ -24,28 +24,28 @@ const ICON_MAP: Record<NotificationType, React.ElementType> = {
 
 const COLOR_MAP: Record<NotificationType, { bg: string; border: string; icon: string; text: string }> = {
   success: {
-    bg: 'bg-emerald-500/10',
-    border: 'border-emerald-500/30',
-    icon: 'text-emerald-400',
-    text: 'text-emerald-100',
+    bg: 'bg-success/10',
+    border: 'border-success/30',
+    icon: 'text-success',
+    text: 'text-success',
   },
   error: {
-    bg: 'bg-red-500/10',
-    border: 'border-red-500/30',
-    icon: 'text-red-400',
-    text: 'text-red-100',
+    bg: 'bg-error/10',
+    border: 'border-error/30',
+    icon: 'text-error',
+    text: 'text-error',
   },
   warning: {
-    bg: 'bg-yellow-500/10',
-    border: 'border-yellow-500/30',
-    icon: 'text-yellow-400',
-    text: 'text-yellow-100',
+    bg: 'bg-warning/10',
+    border: 'border-warning/30',
+    icon: 'text-warning',
+    text: 'text-warning',
   },
   info: {
-    bg: 'bg-blue-500/10',
-    border: 'border-blue-500/30',
-    icon: 'text-blue-400',
-    text: 'text-blue-100',
+    bg: 'bg-primary/10',
+    border: 'border-primary/30',
+    icon: 'text-primary',
+    text: 'text-primary',
   },
 };
 
@@ -94,7 +94,7 @@ export function ToastContainer() {
                   {notification.title}
                 </h4>
                 {notification.message && (
-                  <p className="text-xs text-gray-300 leading-relaxed">
+                  <p className="text-xs text-textSecondary leading-relaxed">
                     {notification.message}
                   </p>
                 )}
@@ -105,7 +105,7 @@ export function ToastContainer() {
                 onClick={() => removeNotification(notification.id)}
                 className={`
                   relative z-10 flex-shrink-0
-                  ${colors.icon} hover:text-white
+                  ${colors.icon} hover:text-text
                   transition-colors
                 `}
                 aria-label="Close notification"
@@ -128,7 +128,7 @@ export function ToastContainer() {
 
               {/* Scan Line Effect */}
               <motion.div
-                className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent"
+                className="absolute inset-0 bg-gradient-to-r from-transparent via-surface/5 to-transparent"
                 initial={{ x: '-100%' }}
                 animate={{ x: '100%' }}
                 transition={{

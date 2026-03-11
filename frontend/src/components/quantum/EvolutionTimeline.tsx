@@ -44,7 +44,7 @@ export default function EvolutionTimeline() {
 
       {WAVES.map((wave, index) => (
         <div key={wave.id} className="relative pl-12 group">
-          <div className={`absolute left-0 top-1 w-10 h-10 rounded-full bg-black border-2 flex items-center justify-center z-10 transition-all duration-500 ${
+          <div className={`absolute left-0 top-1 w-10 h-10 rounded-full bg-background border-2 flex items-center justify-center z-10 transition-all duration-500 ${
             wave.status === 'COMPLETED' ? 'border-green-500 shadow-[0_0_15px_rgba(34,197,94,0.3)]' :
             wave.status === 'IN_PROGRESS' ? 'border-blue-500 animate-pulse shadow-[0_0_20px_rgba(59,130,246,0.4)]' :
             'border-zinc-800 opacity-50'
@@ -71,7 +71,7 @@ export default function EvolutionTimeline() {
             </p>
             
             {wave.status !== 'LOCKED' && (
-                <div className="w-full bg-black/50 h-1.5 rounded-full overflow-hidden">
+                <div className="w-full bg-background/50 h-1.5 rounded-full overflow-hidden">
                     <div 
                         className={`h-full ${wave.status === 'COMPLETED' ? 'bg-green-500' : 'bg-blue-500 animate-pulse'}`} 
                         style={{ width: wave.status === 'COMPLETED' ? '100%' : '42%' }}

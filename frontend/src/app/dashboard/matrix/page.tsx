@@ -14,6 +14,8 @@ import { useState, useEffect, useRef, FormEvent } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useTheme } from '@/hooks/useTheme';
 import { Terminal, Shield, Wifi, Cpu, AlertOctagon, Command, Network, Users, Activity, Zap } from 'lucide-react';
+import { LoadingState } from '@/components/ui/LoadingState';
+import { ErrorState } from '@/components/ui/ErrorState';
 
 interface LogEntry {
   id: number;
@@ -44,6 +46,8 @@ export default function MatrixPage() {
   const [isGlitching, setIsGlitching] = useState(false);
   const [nodes, setNodes] = useState<NetworkNode[]>([]);
   const [selectedNode, setSelectedNode] = useState<NetworkNode | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [networkStats, setNetworkStats] = useState({
     totalNodes: 0,
     activeNodes: 0,
@@ -51,14 +55,17 @@ export default function MatrixPage() {
     dataFlow: 0,
   });
 
+  const refetch = () => { setError(null); setLoading(true); };
+
   useEffect(() => {
     async function loadNodes() {
       try {
-        const { data: agents, error } = await supabase
+        setLoading(true);
+        const { data: agents, error: dbError } = await supabase
           .from('agents')
           .select('*');
 
-        if (error) throw error;
+        if (dbError) throw dbError;
 
         const networkNodes: NetworkNode[] = (agents || []).map((agent, i) => ({
           id: agent.id,
@@ -83,6 +90,9 @@ export default function MatrixPage() {
 
       } catch (err) {
         console.error('Failed to load nodes:', err);
+        setError('Erro ao carregar nodes da Matrix');
+      } finally {
+        setLoading(false);
       }
     }
 
@@ -323,6 +333,9 @@ export default function MatrixPage() {
         default: return colors.textSecondary;
     }
   };
+
+  if (loading) return <LoadingState message="Conectando à Matrix..." />;
+  if (error) return <ErrorState message={error} onRetry={refetch} />;
 
   return (
     <div 

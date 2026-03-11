@@ -99,6 +99,11 @@ export default function SocialPage() {
         window.addEventListener('resize', resize);
         resize();
 
+        const styles = getComputedStyle(document.documentElement);
+        const successColor = styles.getPropertyValue('--color-success').trim() || '#10B981';
+        const errorColor = styles.getPropertyValue('--color-error').trim() || '#EF4444';
+        const warningColor = styles.getPropertyValue('--color-warning').trim() || '#F59E0B';
+
         const render = () => {
             const w = canvas.width;
             const h = canvas.height;
@@ -107,10 +112,9 @@ export default function SocialPage() {
             ctx.clearRect(0, 0, w, h);
             time += 0.05;
 
-            // Cor baseada no sentimento
-            let color = '#10B981'; // Verde
-            if (sentimentScore < 40) color = '#EF4444'; // Vermelho
-            else if (sentimentScore < 60) color = '#F59E0B'; // Amarelo
+            let color = successColor;
+            if (sentimentScore < 40) color = errorColor;
+            else if (sentimentScore < 60) color = warningColor;
 
             // Desenhar múltiplas ondas
             for(let i = 0; i < 3; i++) {
@@ -159,21 +163,21 @@ export default function SocialPage() {
             <div className="lg:w-2/3 w-full flex flex-col gap-6">
                 
                 {/* 1. SENTIMENT WAVE VISUALIZER */}
-                <div className="flex-1 bg-black/40 backdrop-blur-xl border border-white/10 rounded-3xl p-0 relative overflow-hidden shadow-2xl group flex flex-col">
+                <div className="flex-1 bg-background/40 backdrop-blur-xl border border-border/10 rounded-3xl p-0 relative overflow-hidden shadow-2xl group flex flex-col">
                     {/* Header Flutuante */}
                     <div className="absolute top-6 left-6 z-10 flex justify-between w-[calc(100%-3rem)]">
                         <div>
-                            <h2 className="text-lg font-bold text-white flex items-center gap-2 tracking-tight">
+                            <h2 className="text-lg font-bold text-text flex items-center gap-2 tracking-tight">
                                 <Radio className="w-5 h-5 text-[var(--color-primary)] animate-pulse" />
                                 GLOBAL SENTIMENT
                             </h2>
-                            <p className="text-xs text-gray-400 font-mono">Real-time emotional analysis</p>
+                            <p className="text-xs text-textSecondary font-mono">Real-time emotional analysis</p>
                         </div>
                         <div className="text-right">
                             <div className="text-3xl font-mono font-bold" style={{ color: sentimentScore > 60 ? 'var(--color-success)' : 'var(--color-error)' }}>
                                 {sentimentScore.toFixed(0)}%
                             </div>
-                            <div className="text-[10px] text-gray-500 uppercase tracking-widest">Positive Index</div>
+                            <div className="text-[10px] text-textSecondary uppercase tracking-widest">Positive Index</div>
                         </div>
                     </div>
 
@@ -191,9 +195,9 @@ export default function SocialPage() {
                             <RefreshCw className="w-8 h-8 animate-spin text-[var(--color-primary)]" />
                         </div>
                     ) : posts.length === 0 ? (
-                        <div className="flex-1 flex flex-col items-center justify-center bg-black/40 rounded-2xl border border-white/5">
-                            <Inbox className="w-10 h-10 text-gray-600 mb-2" />
-                            <p className="text-sm text-gray-500">Nenhum post encontrado</p>
+                        <div className="flex-1 flex flex-col items-center justify-center bg-background/40 rounded-2xl border border-border/5">
+                            <Inbox className="w-10 h-10 text-textSecondary mb-2" />
+                            <p className="text-sm text-textSecondary">Nenhum post encontrado</p>
                         </div>
                     ) : (
                         ['positive', 'neutral', 'negative'].map((sentiment, i) => {
@@ -208,7 +212,7 @@ export default function SocialPage() {
                                         flex-1 rounded-2xl border transition-all duration-500 cursor-pointer relative overflow-hidden flex flex-col items-center justify-center
                                         ${activeTrend === sentiment
                                             ? 'bg-[var(--color-primary)]/20 border-[var(--color-primary)] scale-105 z-10' 
-                                            : 'bg-black/40 border-white/5 hover:bg-white/10'}
+                                            : 'bg-background/40 border-border/5 hover:bg-surface/10'}
                                     `}
                                 >
                                     <div 
@@ -220,8 +224,8 @@ export default function SocialPage() {
                                     />
                                     
                                     <div className="relative z-10 text-center">
-                                        <div className="text-xs text-gray-400 font-mono mb-1 uppercase">{sentiment}</div>
-                                        <div className="text-3xl font-bold text-white">{pct}%</div>
+                                        <div className="text-xs text-textSecondary font-mono mb-1 uppercase">{sentiment}</div>
+                                        <div className="text-3xl font-bold text-text">{pct}%</div>
                                         <div className="mt-2 flex items-center justify-center gap-1 text-xs font-mono">
                                             <TrendingUp className="w-3 h-3" />
                                             <span>{count} posts</span>
@@ -235,11 +239,11 @@ export default function SocialPage() {
             </div>
 
             {/* DIREITA: LIVE FEED WATERFALL */}
-            <div className="lg:w-1/3 w-full bg-[#02040a] border border-white/10 rounded-3xl p-0 overflow-hidden relative flex flex-col shadow-2xl">
+            <div className="lg:w-1/3 w-full bg-background border border-border/10 rounded-3xl p-0 overflow-hidden relative flex flex-col shadow-2xl">
                 {/* Header */}
-                <div className="p-6 border-b border-white/5 bg-black/20 backdrop-blur-xl z-10">
+                <div className="p-6 border-b border-border/5 bg-background/20 backdrop-blur-xl z-10">
                     <div className="flex items-center justify-between mb-4">
-                        <h3 className="text-sm font-bold text-white uppercase tracking-widest flex items-center gap-2">
+                        <h3 className="text-sm font-bold text-text uppercase tracking-widest flex items-center gap-2">
                             <Globe className="w-4 h-4" style={{ color: 'var(--color-accent)' }} />
                             Live Feed
                         </h3>
@@ -250,18 +254,18 @@ export default function SocialPage() {
                     </div>
                     {/* Search */}
                     <div className="relative">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-textSecondary" />
                         <input 
                             type="text" 
                             placeholder="Filter stream..." 
-                            className="w-full bg-white/5 border border-white/10 rounded-xl pl-9 pr-4 py-2 text-xs text-white focus:border-[var(--color-primary)] transition-all outline-none"
+                            className="w-full bg-surface/5 border border-border/10 rounded-xl pl-9 pr-4 py-2 text-xs text-text focus:border-[var(--color-primary)] transition-all outline-none"
                         />
                     </div>
                 </div>
 
                 {/* Waterfall Container */}
-                <div className="flex-1 overflow-y-auto p-4 space-y-3 scrollbar-thin scrollbar-thumb-white/10 relative">
-                    <div className="absolute top-0 left-0 right-0 h-8 bg-gradient-to-b from-[#02040a] to-transparent z-10 pointer-events-none" />
+                <div className="flex-1 overflow-y-auto p-4 space-y-3 scrollbar-thin scrollbar-thumb-border/10 relative">
+                    <div className="absolute top-0 left-0 right-0 h-8 bg-gradient-to-b from-background to-transparent z-10 pointer-events-none" />
                     
                     {loading ? (
                         <div className="flex items-center justify-center py-12">
@@ -273,42 +277,42 @@ export default function SocialPage() {
                         </div>
                     ) : posts.length === 0 ? (
                         <div className="flex flex-col items-center justify-center py-12">
-                            <Inbox className="w-12 h-12 text-gray-600 mb-3" />
-                            <p className="text-sm text-gray-500">Nenhum post social encontrado</p>
-                            <p className="text-xs text-gray-600 mt-1">Os dados aparecerão aqui quando disponíveis</p>
+                            <Inbox className="w-12 h-12 text-textSecondary mb-3" />
+                            <p className="text-sm text-textSecondary">Nenhum post social encontrado</p>
+                            <p className="text-xs text-textSecondary mt-1">Os dados aparecerão aqui quando disponíveis</p>
                         </div>
                     ) : (
                         posts.map((post, i) => (
                             <div 
                                 key={post.id}
-                                className="bg-white/5 hover:bg-white/10 border border-white/5 hover:border-[var(--color-primary)]/30 rounded-xl p-4 transition-all duration-300 animate-slideInBottom group"
+                                className="bg-surface/5 hover:bg-surface/10 border border-border/5 hover:border-[var(--color-primary)]/30 rounded-xl p-4 transition-all duration-300 animate-slideInBottom group"
                                 style={{ animationDelay: `${i * 0.1}s` }}
                             >
                                 <div className="flex justify-between items-start mb-2">
                                     <div className="flex items-center gap-2">
-                                        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-gray-700 to-black border border-white/10 flex items-center justify-center font-bold text-xs text-white">
+                                        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-surface to-background border border-border/10 flex items-center justify-center font-bold text-xs text-text">
                                             {post.user.charAt(1)?.toUpperCase() || '?'}
                                         </div>
                                         <div>
-                                            <div className="text-xs font-bold text-white group-hover:text-[var(--color-primary)] transition-colors">{post.user}</div>
-                                            <div className="text-[10px] text-gray-500">{post.platform} • {post.created_at ? new Date(post.created_at).toLocaleString('pt-BR') : 'Recente'}</div>
+                                            <div className="text-xs font-bold text-text group-hover:text-[var(--color-primary)] transition-colors">{post.user}</div>
+                                            <div className="text-[10px] text-textSecondary">{post.platform} • {post.created_at ? new Date(post.created_at).toLocaleString('pt-BR') : 'Recente'}</div>
                                         </div>
                                     </div>
-                                    <Hash className="w-3 h-3 text-gray-600" />
+                                    <Hash className="w-3 h-3 text-textSecondary" />
                                 </div>
                                 
-                                <p className="text-sm text-gray-300 leading-relaxed mb-3">
+                                <p className="text-sm text-textSecondary leading-relaxed mb-3">
                                     {post.content}
                                 </p>
 
-                                <div className="flex gap-4 text-xs text-gray-500 font-mono">
+                                <div className="flex gap-4 text-xs text-textSecondary font-mono">
                                     <div className="flex items-center gap-1 hover:text-[var(--color-error)] transition-colors cursor-pointer">
                                         <Heart className="w-3 h-3" /> {formatCount(post.likes)}
                                     </div>
                                     <div className="flex items-center gap-1 hover:text-[var(--color-primary)] transition-colors cursor-pointer">
                                         <Share2 className="w-3 h-3" /> {formatCount(post.shares)}
                                     </div>
-                                    <div className="flex items-center gap-1 hover:text-white transition-colors cursor-pointer">
+                                    <div className="flex items-center gap-1 hover:text-text transition-colors cursor-pointer">
                                         <MessageCircle className="w-3 h-3" /> Reply
                                     </div>
                                 </div>
@@ -316,7 +320,7 @@ export default function SocialPage() {
                         ))
                     )}
                     
-                    <div className="absolute bottom-0 left-0 right-0 h-20 bg-gradient-to-t from-[#02040a] to-transparent z-10 pointer-events-none" />
+                    <div className="absolute bottom-0 left-0 right-0 h-20 bg-gradient-to-t from-background to-transparent z-10 pointer-events-none" />
                 </div>
             </div>
 

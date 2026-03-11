@@ -12,6 +12,9 @@
 import { useState, useEffect, useRef } from 'react';
 import { Trophy, Crown, Medal, Star, Zap, Target, Award, Gift, Lock as LockIconLucide, RefreshCw } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
+import { LoadingState } from '@/components/ui/LoadingState';
+import { ErrorState } from '@/components/ui/ErrorState';
+import { EmptyState } from '@/components/ui/EmptyState';
 
 interface Achievement {
     id: string;
@@ -52,6 +55,8 @@ export default function GamificationPage() {
     const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+
+    const refetch = () => { setError(null); setLoading(true); };
 
     useEffect(() => {
         async function loadData() {
@@ -122,9 +127,13 @@ export default function GamificationPage() {
         window.addEventListener('resize', resize);
         resize();
 
-        // Criar explosão de partículas
+        const rootStyle = getComputedStyle(document.documentElement);
+        const confettiPrimary = rootStyle.getPropertyValue('--color-primary').trim() || '#00FFD0';
+        const confettiError = rootStyle.getPropertyValue('--color-error').trim() || '#EF4444';
+        const confettiText = rootStyle.getPropertyValue('--color-text').trim() || '#FFFFFF';
+
         const createExplosion = (x: number, y: number) => {
-            const colors = ['#FFD700', '#00FFD0', '#EF4444', '#FFFFFF'];
+            const colors = ['#FFD700', confettiPrimary, confettiError, confettiText];
             for(let i=0; i<50; i++) {
                 particles.push({
                     x, y,
@@ -189,6 +198,10 @@ export default function GamificationPage() {
         }
     };
 
+    if (loading) return <LoadingState message="Carregando Hall of Legends..." />;
+    if (error) return <ErrorState message={error} onRetry={refetch} />;
+    if (achievements.length === 0 && leaderboard.length === 0) return <EmptyState title="Nenhuma conquista encontrada" description="As conquistas e o leaderboard aparecerão aqui quando configurados." />;
+
     return (
         <div className="h-[calc(100vh-6rem)] flex flex-col lg:flex-row gap-6 p-2 overflow-hidden relative">
 
@@ -199,7 +212,7 @@ export default function GamificationPage() {
             <div className="w-full lg:w-96 flex flex-col gap-6 relative z-10">
                 
                 {/* Card: Level Reactor */}
-                <div className="bg-black/60 backdrop-blur-xl border border-white/10 rounded-3xl p-8 flex flex-col items-center justify-center shadow-2xl relative overflow-hidden group">
+                <div className="bg-background/60 backdrop-blur-xl border border-border/10 rounded-3xl p-8 flex flex-col items-center justify-center shadow-2xl relative overflow-hidden group">
                     {/* Background Glow */}
                     <div className="absolute inset-0 bg-radial-gradient from-[var(--color-primary)]/20 to-transparent opacity-20 animate-pulse" />
                     
@@ -222,18 +235,18 @@ export default function GamificationPage() {
                         
                         {/* Conteúdo Central */}
                         <div className="absolute inset-0 flex flex-col items-center justify-center">
-                            <span className="text-gray-400 text-xs font-mono uppercase tracking-widest">Level</span>
-                            <span className="text-5xl font-black text-white font-display">{level}</span>
+                            <span className="text-textSecondary text-xs font-mono uppercase tracking-widest">Level</span>
+                            <span className="text-5xl font-black text-text font-display">{level}</span>
                             <span className="text-[var(--color-primary)] text-sm font-bold mt-1">{xp}%</span>
                         </div>
                     </div>
 
-                    <h2 className="text-2xl font-bold text-white text-center mb-1">Supreme Commander</h2>
-                    <p className="text-gray-500 text-xs font-mono uppercase tracking-widest">Class S • Architect</p>
+                    <h2 className="text-2xl font-bold text-text text-center mb-1">Supreme Commander</h2>
+                    <p className="text-textSecondary text-xs font-mono uppercase tracking-widest">Class S • Architect</p>
 
                     <button 
                         onClick={handleClaim}
-                        className="mt-8 w-full py-3 bg-[var(--color-primary)] hover:bg-[var(--color-accent)] text-black font-bold rounded-xl transition-all shadow-[0_0_20px_rgba(var(--color-primary-rgb),0.4)] flex items-center justify-center gap-2"
+                        className="mt-8 w-full py-3 bg-[var(--color-primary)] hover:bg-[var(--color-accent)] text-text font-bold rounded-xl transition-all shadow-[0_0_20px_rgba(var(--color-primary-rgb),0.4)] flex items-center justify-center gap-2"
                     >
                         <Gift className="w-4 h-4" />
                         CLAIM DAILY REWARD
@@ -241,10 +254,10 @@ export default function GamificationPage() {
                 </div>
 
                 {/* Card: Leaderboard */}
-                <div className="flex-1 bg-black/60 backdrop-blur-xl border border-white/10 rounded-3xl p-6 overflow-hidden">
+                <div className="flex-1 bg-background/60 backdrop-blur-xl border border-border/10 rounded-3xl p-6 overflow-hidden">
                     <div className="flex items-center gap-3 mb-6">
                         <Trophy className="w-5 h-5" style={{ color: 'var(--color-warning)' }} />
-                        <h3 className="text-sm font-bold text-white uppercase tracking-widest">Elite Leaderboard</h3>
+                        <h3 className="text-sm font-bold text-text uppercase tracking-widest">Elite Leaderboard</h3>
                     </div>
                     
                     <div className="space-y-2">
@@ -254,24 +267,24 @@ export default function GamificationPage() {
                             </div>
                         ) : leaderboard.length === 0 ? (
                             <div className="text-center py-8">
-                                <Trophy className="w-8 h-8 mx-auto mb-2 text-gray-600" />
-                                <p className="text-xs text-gray-500 font-mono">Nenhum dado no leaderboard</p>
+                                <Trophy className="w-8 h-8 mx-auto mb-2 text-textSecondary" />
+                                <p className="text-xs text-textSecondary font-mono">Nenhum dado no leaderboard</p>
                             </div>
                         ) : (
                             leaderboard.map((user) => (
-                                <div key={user.rank} className="flex items-center justify-between p-3 rounded-xl bg-white/5 hover:bg-white/10 transition-colors border border-white/5 group">
+                                <div key={user.rank} className="flex items-center justify-between p-3 rounded-xl bg-surface/5 hover:bg-surface/10 transition-colors border border-border/5 group">
                                     <div className="flex items-center gap-3">
                                         <div className={`
                                             w-8 h-8 rounded-lg flex items-center justify-center font-bold text-sm
-                                            ${user.rank === 1 ? 'bg-[var(--color-warning)] text-black shadow-[0_0_10px_var(--color-warning)]' : 
-                                              user.rank === 2 ? 'bg-gray-300 text-black' : 
-                                              user.rank === 3 ? 'bg-[#B45309] text-white' : 'bg-gray-800 text-gray-400'}
+                                            ${user.rank === 1 ? 'bg-[var(--color-warning)] text-text shadow-[0_0_10px_var(--color-warning)]' : 
+                                              user.rank === 2 ? 'bg-surface text-text' : 
+                                              user.rank === 3 ? 'bg-[#B45309] text-text' : 'bg-surface text-textSecondary'}
                                         `}>
                                             {user.rank}
                                         </div>
                                         <div className="flex flex-col">
-                                            <span className="text-sm text-white font-medium">{user.name}</span>
-                                            <span className="text-[10px] text-gray-500 font-mono">{user.role}</span>
+                                            <span className="text-sm text-text font-medium">{user.name}</span>
+                                            <span className="text-[10px] text-textSecondary font-mono">{user.role}</span>
                                         </div>
                                     </div>
                                     <span className="text-xs font-mono text-[var(--color-primary)] group-hover:scale-110 transition-transform">
@@ -285,11 +298,11 @@ export default function GamificationPage() {
             </div>
 
             {/* DIREITA: HALL OF ACHIEVEMENTS (GRID 3D) */}
-            <div className="flex-1 bg-[#02040a] rounded-3xl border border-white/10 p-8 overflow-y-auto scrollbar-thin scrollbar-thumb-white/10">
+            <div className="flex-1 bg-background rounded-3xl border border-border/10 p-8 overflow-y-auto scrollbar-thin scrollbar-thumb-white/10">
                 <div className="flex items-center justify-between mb-8">
                     <div>
-                        <h1 className="text-3xl font-black text-white tracking-tight font-display">HALL OF LEGENDS</h1>
-                        <p className="text-gray-400 text-sm mt-1">Desbloqueie protocolos secretos para evoluir.</p>
+                        <h1 className="text-3xl font-black text-text tracking-tight font-display">HALL OF LEGENDS</h1>
+                        <p className="text-textSecondary text-sm mt-1">Desbloqueie protocolos secretos para evoluir.</p>
                     </div>
                     <div className="flex gap-2">
                         <span className="px-3 py-1 rounded-full bg-[var(--color-primary)]/10 text-[var(--color-primary)] border border-[var(--color-primary)]/20 text-xs font-bold">
@@ -308,9 +321,9 @@ export default function GamificationPage() {
                     </div>
                 ) : achievements.length === 0 ? (
                     <div className="flex flex-col items-center justify-center h-64">
-                        <Award className="w-16 h-16 mb-4 text-gray-600" />
-                        <p className="text-xl font-bold text-white">Nenhuma conquista cadastrada</p>
-                        <p className="text-sm text-gray-500 mt-2">As conquistas aparecerão aqui quando configuradas</p>
+                        <Award className="w-16 h-16 mb-4 text-textSecondary" />
+                        <p className="text-xl font-bold text-text">Nenhuma conquista cadastrada</p>
+                        <p className="text-sm text-textSecondary mt-2">As conquistas aparecerão aqui quando configuradas</p>
                     </div>
                 ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -325,8 +338,8 @@ export default function GamificationPage() {
                                 relative group h-64 rounded-2xl border transition-all duration-500 cursor-pointer
                                 flex flex-col items-center justify-center text-center p-6 perspective-1000
                                 ${ach.unlocked 
-                                    ? 'bg-white/5 border-white/10 hover:border-[var(--color-primary)]/50' 
-                                    : 'bg-black/40 border-white/5 opacity-50 grayscale hover:opacity-70'}
+                                    ? 'bg-surface/5 border-border/10 hover:border-[var(--color-primary)]/50' 
+                                    : 'bg-background/40 border-border/5 opacity-50 grayscale hover:opacity-70'}
                             `}
                             style={{
                                 transformStyle: 'preserve-3d',
@@ -342,20 +355,20 @@ export default function GamificationPage() {
                                 transition-transform duration-500 shadow-xl
                                 ${ach.unlocked 
                                     ? `bg-gradient-to-br ${
-                                        ach.rarity === 'legendary' ? 'from-yellow-400 to-amber-600 text-black' : 
-                                        ach.rarity === 'epic' ? 'from-purple-500 to-indigo-600 text-white' : 
-                                        'from-blue-400 to-cyan-600 text-white'
+                                        ach.rarity === 'legendary' ? 'from-yellow-400 to-amber-600 text-text' : 
+                                        ach.rarity === 'epic' ? 'from-purple-500 to-indigo-600 text-text' : 
+                                        'from-blue-400 to-cyan-600 text-text'
                                       }` 
-                                    : 'bg-gray-800 text-gray-600'}
+                                    : 'bg-surface text-textSecondary'}
                                 ${hoveredCard === ach.id ? 'scale-110 rotate-y-180' : ''}
                             `}>
                                 <IconComponent className="w-10 h-10" />
                             </div>
 
-                            <h3 className={`text-lg font-bold mb-2 ${ach.unlocked ? 'text-white' : 'text-gray-500'}`}>
+                            <h3 className={`text-lg font-bold mb-2 ${ach.unlocked ? 'text-text' : 'text-textSecondary'}`}>
                                 {ach.title}
                             </h3>
-                            <p className="text-xs text-gray-400 leading-relaxed">
+                            <p className="text-xs text-textSecondary leading-relaxed">
                                 {ach.description}
                             </p>
 
@@ -369,8 +382,8 @@ export default function GamificationPage() {
                             </div>
 
                             {!ach.unlocked && (
-                                <div className="absolute inset-0 flex items-center justify-center bg-black/60 backdrop-blur-[2px] rounded-2xl">
-                                    <LockIconLucide className="w-8 h-8 text-gray-500" />
+                                <div className="absolute inset-0 flex items-center justify-center bg-background/60 backdrop-blur-[2px] rounded-2xl">
+                                    <LockIconLucide className="w-8 h-8 text-textSecondary" />
                                 </div>
                             )}
                         </div>

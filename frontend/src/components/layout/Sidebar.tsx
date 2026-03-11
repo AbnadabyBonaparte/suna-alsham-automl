@@ -86,7 +86,7 @@ export default function Sidebar({ isOpen = true, onClose }: SidebarProps) {
     <>
       {/* Overlay Escuro para Mobile */}
       <div 
-        className={`fixed inset-0 bg-black/90 z-40 lg:hidden backdrop-blur-sm transition-opacity duration-500 ${
+        className={`fixed inset-0 bg-background/90 z-40 lg:hidden backdrop-blur-sm transition-opacity duration-500 ${
           isOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
         }`}
         onClick={onClose}

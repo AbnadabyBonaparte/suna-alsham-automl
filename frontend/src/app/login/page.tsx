@@ -224,11 +224,11 @@ export default function LoginPage() {
     };
 
     return (
-        <div className="min-h-screen w-full flex items-center justify-center bg-black relative overflow-hidden">
+        <div className="min-h-screen w-full flex items-center justify-center bg-background relative overflow-hidden">
             
             {/* BACKGROUND ANIMADO (GRID + PARTICLES) */}
             <div className="absolute inset-0 bg-[url('/grid.svg')] opacity-10 animate-pulse" />
-            <div className="absolute inset-0 bg-radial-gradient from-transparent via-black/80 to-black pointer-events-none" />
+            <div className="absolute inset-0 bg-radial-gradient from-transparent via-background/80 to-background pointer-events-none" />
             
             {/* SCANNER VISUALIZER (ABSOLUTE CENTER BACKGROUND) */}
             <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-30 blur-3xl">
@@ -246,19 +246,18 @@ export default function LoginPage() {
                     status === 'scanning' ? 'bg-[var(--color-primary)] opacity-50' : 
                     status === 'success' ? 'bg-[var(--color-success)] opacity-80 scale-105' :
                     status === 'denied' ? 'bg-[var(--color-error)] opacity-80 animate-shake' :
-                    'bg-white/10 opacity-20'
+                    'bg-surface/10 opacity-20'
                 }`} />
 
-                <div className="relative bg-black/80 backdrop-blur-2xl border border-white/10 rounded-3xl p-8 shadow-2xl overflow-hidden">
+                <div className="relative bg-background/80 backdrop-blur-2xl border border-border/10 rounded-3xl p-8 shadow-2xl overflow-hidden">
                     
                     {/* SCANNER CANVAS */}
                     <div className="flex justify-center mb-4 relative">
                         <div className="w-24 h-24 relative">
                             <canvas ref={canvasRef} className="w-full h-full" />
-                            {/* Icon Overlay */}
-                            <div className="absolute inset-0 flex items-center justify-center text-white/50">
-                                {status === 'success' ? <ShieldCheck className="w-8 h-8 text-black z-10" /> : 
-                                 status === 'denied' ? <AlertOctagon className="w-8 h-8 text-black z-10" /> :
+                            <div className="absolute inset-0 flex items-center justify-center text-text/50">
+                                {status === 'success' ? <ShieldCheck className="w-8 h-8 text-background z-10" /> : 
+                                 status === 'denied' ? <AlertOctagon className="w-8 h-8 text-background z-10" /> :
                                  <Scan className="w-8 h-8 opacity-50" />}
                             </div>
                         </div>
@@ -266,7 +265,7 @@ export default function LoginPage() {
 
                     {/* HEADER TEXT */}
                     <div className="text-center mb-6">
-                        <h1 className="text-2xl font-black text-white tracking-tight font-display flex items-center justify-center gap-2">
+                        <h1 className="text-2xl font-black text-text tracking-tight font-display flex items-center justify-center gap-2">
                             ALSHAM <Sparkles className="w-4 h-4 text-[var(--color-primary)]" />
                         </h1>
                         <p className={`text-[10px] font-mono mt-1 tracking-[0.2em] uppercase transition-colors ${
@@ -285,7 +284,7 @@ export default function LoginPage() {
                     <form onSubmit={handleEmailLogin} className="space-y-4 relative">
                         
                         <div className="group relative">
-                            <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 group-focus-within:text-[var(--color-primary)] transition-colors">
+                            <div className="absolute left-4 top-1/2 -translate-y-1/2 text-textSecondary group-focus-within:text-[var(--color-primary)] transition-colors">
                                 <Mail className="w-4 h-4" />
                             </div>
                             <input 
@@ -295,12 +294,12 @@ export default function LoginPage() {
                                 placeholder="Commander ID"
                                 disabled={status !== 'idle'}
                                 autoComplete="email"
-                                className="w-full bg-white/5 border border-white/10 rounded-xl py-3 pl-10 pr-4 text-white placeholder-gray-600 focus:border-[var(--color-primary)] focus:bg-black transition-all outline-none font-mono text-sm"
+                                className="w-full bg-surface/5 border border-border/10 rounded-xl py-3 pl-10 pr-4 text-text placeholder-textSecondary focus:border-[var(--color-primary)] focus:bg-background transition-all outline-none font-mono text-sm"
                             />
                         </div>
 
                         <div className="group relative">
-                            <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 group-focus-within:text-[var(--color-primary)] transition-colors">
+                            <div className="absolute left-4 top-1/2 -translate-y-1/2 text-textSecondary group-focus-within:text-[var(--color-primary)] transition-colors">
                                 <Key className="w-4 h-4" />
                             </div>
                             <input 
@@ -310,7 +309,7 @@ export default function LoginPage() {
                                 placeholder="Access Code"
                                 disabled={status !== 'idle'}
                                 autoComplete="current-password"
-                                className="w-full bg-white/5 border border-white/10 rounded-xl py-3 pl-10 pr-4 text-white placeholder-gray-600 focus:border-[var(--color-primary)] focus:bg-black transition-all outline-none font-mono text-sm tracking-widest"
+                                className="w-full bg-surface/5 border border-border/10 rounded-xl py-3 pl-10 pr-4 text-text placeholder-textSecondary focus:border-[var(--color-primary)] focus:bg-background transition-all outline-none font-mono text-sm tracking-widest"
                             />
                         </div>
 
@@ -320,8 +319,8 @@ export default function LoginPage() {
                             className={`
                                 w-full py-3 rounded-xl font-bold text-xs tracking-widest uppercase transition-all relative overflow-hidden group
                                 ${status === 'success' ? 'bg-[var(--color-success)] text-black' : 
-                                  status === 'denied' ? 'bg-[var(--color-error)] text-white' : 
-                                  'bg-[var(--color-primary)] text-black hover:bg-[var(--color-accent)]'}
+                                  status === 'denied' ? 'bg-[var(--color-error)] text-text' : 
+                                  'bg-[var(--color-primary)] text-background hover:bg-[var(--color-accent)]'}
                             `}
                         >
                             <div className="relative z-10 flex items-center justify-center gap-2">
@@ -334,7 +333,7 @@ export default function LoginPage() {
                             {/* Progress Bar Overlay */}
                             {status === 'scanning' && (
                                 <div 
-                                    className="absolute inset-0 bg-white/30 transition-all duration-100 ease-linear"
+                                    className="absolute inset-0 bg-surface/30 transition-all duration-100 ease-linear"
                                     style={{ width: `${scanProgress}%` }}
                                 />
                             )}
@@ -343,9 +342,9 @@ export default function LoginPage() {
 
                     {/* DIVIDER */}
                     <div className="my-6 flex items-center gap-4">
-                        <div className="h-[1px] flex-1 bg-white/10" />
-                        <span className="text-[10px] font-mono text-gray-600 uppercase">OR CONNECT WITH</span>
-                        <div className="h-[1px] flex-1 bg-white/10" />
+                        <div className="h-[1px] flex-1 bg-border/10" />
+                        <span className="text-[10px] font-mono text-textSecondary uppercase">OR CONNECT WITH</span>
+                        <div className="h-[1px] flex-1 bg-border/10" />
                     </div>
 
                     {/* SOCIAL BUTTONS */}
@@ -353,33 +352,33 @@ export default function LoginPage() {
                         <button
                             onClick={handleGoogleLogin}
                             disabled={status !== 'idle'}
-                            className="flex items-center justify-center gap-2 py-3 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/30 transition-all group"
+                            className="flex items-center justify-center gap-2 py-3 rounded-xl bg-surface/5 hover:bg-surface/10 border border-border/10 hover:border-border/30 transition-all group"
                         >
-                            <Chrome className="w-4 h-4 text-white group-hover:text-blue-400 transition-colors" />
-                            <span className="text-xs font-bold text-gray-400 group-hover:text-white">GOOGLE</span>
+                            <Chrome className="w-4 h-4 text-text group-hover:text-[var(--color-primary)] transition-colors" />
+                            <span className="text-xs font-bold text-textSecondary group-hover:text-text">GOOGLE</span>
                         </button>
 
                         <button
                             onClick={handleGithubLogin}
                             disabled={status !== 'idle'}
-                            className="flex items-center justify-center gap-2 py-3 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/30 transition-all group"
+                            className="flex items-center justify-center gap-2 py-3 rounded-xl bg-surface/5 hover:bg-surface/10 border border-border/10 hover:border-border/30 transition-all group"
                         >
-                            <Github className="w-4 h-4 text-white group-hover:text-purple-400 transition-colors" />
-                            <span className="text-xs font-bold text-gray-400 group-hover:text-white">GITHUB</span>
+                            <Github className="w-4 h-4 text-text group-hover:text-[var(--color-accent)] transition-colors" />
+                            <span className="text-xs font-bold text-textSecondary group-hover:text-text">GITHUB</span>
                         </button>
                     </div>
 
                     {/* Signup Link */}
                     <div className="mt-6 text-center">
-                        <Link href="/signup" className="text-xs text-gray-500 hover:text-[var(--color-primary)] transition-colors font-mono">
+                        <Link href="/signup" className="text-xs text-textSecondary hover:text-[var(--color-primary)] transition-colors font-mono">
                             Não tem conta? <span className="font-bold">Criar conta</span>
                         </Link>
                     </div>
 
                     {/* Footer Links */}
-                    <div className="mt-6 flex justify-between text-[9px] text-gray-700 font-mono uppercase">
-                        <button className="hover:text-white transition-colors">Reset Protocol</button>
-                        <button className="hover:text-white transition-colors">Emergency Override</button>
+                    <div className="mt-6 flex justify-between text-[9px] text-textSecondary font-mono uppercase">
+                        <button className="hover:text-text transition-colors">Reset Protocol</button>
+                        <button className="hover:text-text transition-colors">Emergency Override</button>
                     </div>
                 </div>
             </div>

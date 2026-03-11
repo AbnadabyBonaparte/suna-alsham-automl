@@ -21,10 +21,10 @@ import {
 import { useAnalytics } from '@/hooks/useAnalytics';
 
 const ROLE_COLORS: Record<string, string> = {
-    CORE: '#00FFD0',
-    GUARD: '#FF6B6B',
-    ANALYST: '#845EF7',
-    SPECIALIST: '#FFD93D',
+    CORE: 'var(--color-primary)',
+    GUARD: 'var(--color-error)',
+    ANALYST: 'var(--color-accent)',
+    SPECIALIST: 'var(--color-glow)',
 };
 
 export default function AnalyticsPage() {
@@ -81,17 +81,22 @@ export default function AnalyticsPage() {
         window.addEventListener('resize', resize);
         resize();
 
+        const styles = getComputedStyle(document.documentElement);
+        const primaryColor = styles.getPropertyValue('--color-primary').trim() || '#00FFD0';
+        const errorColorResolved = styles.getPropertyValue('--color-error').trim() || '#EF4444';
+        const bgColor = styles.getPropertyValue('--color-background').trim() || '#020617';
+
         const render = () => {
             const w = canvas.width;
             const h = canvas.height;
 
-            ctx.fillStyle = '#020617';
+            ctx.fillStyle = bgColor;
             ctx.fillRect(0, 0, w, h);
 
             time += 0.03;
 
-            const themeColor = '#00FFD0';
-            const errorColor = '#EF4444';
+            const themeColor = primaryColor;
+            const errorColor = errorColorResolved;
             const efficiencyFactor = Math.max(0.3, avgEfficiency / 100);
 
             for(let r=ROWS-1; r>0; r--) {
@@ -179,10 +184,10 @@ export default function AnalyticsPage() {
 
     if (loading) {
         return (
-            <div className="h-[calc(100vh-6rem)] flex items-center justify-center bg-[#020617] rounded-3xl">
+            <div className="h-[calc(100vh-6rem)] flex items-center justify-center bg-background rounded-3xl">
                 <div className="text-center">
-                    <div className="w-16 h-16 border-4 border-[#00FFD0] border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-                    <p className="text-[#00FFD0] font-mono">INITIALIZING OMNISCIENCE...</p>
+                    <div className="w-16 h-16 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+                    <p className="text-primary font-mono">INITIALIZING OMNISCIENCE...</p>
                 </div>
             </div>
         );
@@ -192,7 +197,7 @@ export default function AnalyticsPage() {
         <div className="h-[calc(100vh-6rem)] flex flex-col p-2 overflow-hidden relative">
 
             {/* CANVAS BACKGROUND */}
-            <div className="absolute inset-0 rounded-3xl overflow-hidden bg-[#020617] border border-white/10 -z-10">
+            <div className="absolute inset-0 rounded-3xl overflow-hidden bg-background border border-border/10 -z-10">
                 <canvas ref={canvasRef} className="w-full h-full" />
             </div>
 
@@ -200,26 +205,26 @@ export default function AnalyticsPage() {
             <div className={`flex flex-col md:flex-row justify-between items-start md:items-center px-6 pt-4 pb-2 relative z-10 transition-all duration-700 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-4'}`}>
                 <div>
                     <div className="flex items-center gap-3 mb-1">
-                        <BarChart3 className="w-7 h-7 text-[#00FFD0]" />
-                        <h1 className="text-3xl font-black text-white tracking-tight">OMNISCIENCE</h1>
+                        <BarChart3 className="w-7 h-7 text-primary" />
+                        <h1 className="text-3xl font-black text-text tracking-tight">OMNISCIENCE</h1>
                         <span className="text-[10px] font-mono px-2 py-0.5 rounded" style={{ background: 'var(--color-success)/20', color: 'var(--color-success)', border: '1px solid var(--color-success)/30' }}>
                             REAL DATA
                         </span>
                     </div>
-                    <p className="text-xs text-gray-500 font-mono">Analytics v10.0 • Data Honesty Protocol</p>
+                    <p className="text-xs text-textSecondary font-mono">Analytics v10.0 • Data Honesty Protocol</p>
                 </div>
 
                 <div className="flex items-center gap-3 mt-2 md:mt-0">
                     {/* TIME RANGE SELECTOR */}
-                    <div className="flex gap-1 bg-black/40 backdrop-blur rounded-lg p-1 border border-white/10">
+                    <div className="flex gap-1 bg-background/40 backdrop-blur rounded-lg p-1 border border-border/10">
                         {(['7d', '30d', '90d'] as const).map((range) => (
                             <button
                                 key={range}
                                 onClick={() => setTimeRange(range)}
                                 className={`px-3 py-1 rounded text-xs font-mono transition-all ${
                                     timeRange === range
-                                        ? 'bg-[#00FFD0] text-black font-bold'
-                                        : 'text-gray-400 hover:text-white'
+                                        ? 'bg-primary text-text font-bold'
+                                        : 'text-textSecondary hover:text-text'
                                 }`}
                             >
                                 {range.toUpperCase()}
@@ -248,56 +253,56 @@ export default function AnalyticsPage() {
             <div className={`grid grid-cols-2 lg:grid-cols-4 gap-3 px-6 py-2 relative z-10 transition-all duration-700 delay-100 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
                 
                 {/* Efficiency */}
-                <div className="group bg-black/50 backdrop-blur-lg border border-white/10 rounded-xl p-4 hover:border-[#00FFD0]/50 transition-all">
+                <div className="group bg-background/50 backdrop-blur-lg border border-border/10 rounded-xl p-4 hover:border-primary/50 transition-all">
                     <div className="flex justify-between items-start mb-2">
-                        <TrendingUp className="w-5 h-5 text-[#00FFD0]" />
+                        <TrendingUp className="w-5 h-5 text-primary" />
                         <span className="text-[9px] font-bold px-1.5 py-0.5 rounded" style={{ background: 'var(--color-success)/20', color: 'var(--color-success)' }}>LIVE</span>
                     </div>
-                    <div className="text-2xl font-bold text-white font-mono">{avgEfficiency}%</div>
-                    <div className="text-[10px] text-gray-500 uppercase">Avg Efficiency</div>
+                    <div className="text-2xl font-bold text-text font-mono">{avgEfficiency}%</div>
+                    <div className="text-[10px] text-textSecondary uppercase">Avg Efficiency</div>
                     <div className="mt-2 flex items-end gap-0.5 h-4">
                         {data?.agentsBySquad?.map((s, i) => (
-                            <div key={i} className="flex-1 rounded-sm" style={{ height: `${s.avgEfficiency}%`, backgroundColor: ROLE_COLORS[s.squad] || '#6B7280' }} />
+                            <div key={i} className="flex-1 rounded-sm" style={{ height: `${s.avgEfficiency}%`, backgroundColor: ROLE_COLORS[s.squad] || 'var(--color-text-secondary)' }} />
                         ))}
                     </div>
                 </div>
 
                 {/* Agents */}
-                <div className="group bg-black/50 backdrop-blur-lg border border-white/10 rounded-xl p-4 hover:border-[var(--color-accent)]/50 transition-all">
+                <div className="group bg-background/50 backdrop-blur-lg border border-border/10 rounded-xl p-4 hover:border-[var(--color-accent)]/50 transition-all">
                     <div className="flex justify-between items-start mb-2">
                         <Users className="w-5 h-5" style={{ color: 'var(--color-accent)' }} />
                         <span className="text-[9px] font-bold px-1.5 py-0.5 rounded" style={{ background: 'var(--color-accent)/20', color: 'var(--color-accent)' }}>CONFIG</span>
                     </div>
-                    <div className="text-2xl font-bold text-white font-mono">{totalAgents}</div>
-                    <div className="text-[10px] text-gray-500 uppercase">Total Agents</div>
-                    <div className="mt-2 flex items-center gap-1 text-[10px] text-gray-500">
+                    <div className="text-2xl font-bold text-text font-mono">{totalAgents}</div>
+                    <div className="text-[10px] text-textSecondary uppercase">Total Agents</div>
+                    <div className="mt-2 flex items-center gap-1 text-[10px] text-textSecondary">
                         <Zap className="w-3 h-3" style={{ color: 'var(--color-warning)' }} />
                         {activeAgents} operational
                     </div>
                 </div>
 
                 {/* Requests */}
-                <div className="group bg-black/50 backdrop-blur-lg border border-white/10 rounded-xl p-4 hover:border-[var(--color-primary)]/50 transition-all">
+                <div className="group bg-background/50 backdrop-blur-lg border border-border/10 rounded-xl p-4 hover:border-[var(--color-primary)]/50 transition-all">
                     <div className="flex justify-between items-start mb-2">
                         <Activity className="w-5 h-5" style={{ color: 'var(--color-primary)' }} />
                         <span className="text-[9px] font-bold px-1.5 py-0.5 rounded" style={{ background: 'var(--color-primary)/20', color: 'var(--color-primary)' }}>QUEUE</span>
                     </div>
-                    <div className="text-2xl font-bold text-white font-mono">{totalRequests}</div>
-                    <div className="text-[10px] text-gray-500 uppercase">Requests</div>
-                    <div className="mt-2 w-full bg-white/10 h-1 rounded-full overflow-hidden">
+                    <div className="text-2xl font-bold text-text font-mono">{totalRequests}</div>
+                    <div className="text-[10px] text-textSecondary uppercase">Requests</div>
+                    <div className="mt-2 w-full bg-surface/10 h-1 rounded-full overflow-hidden">
                         <div className="h-full" style={{ width: `${Math.min(totalRequests * 10, 100)}%`, background: 'var(--color-primary)' }} />
                     </div>
                 </div>
 
                 {/* AI Prediction */}
-                <div className="group bg-black/50 backdrop-blur-lg border border-white/10 rounded-xl p-4 hover:border-[var(--color-warning)]/50 transition-all relative overflow-hidden">
+                <div className="group bg-background/50 backdrop-blur-lg border border-border/10 rounded-xl p-4 hover:border-[var(--color-warning)]/50 transition-all relative overflow-hidden">
                     <div className="absolute -top-4 -right-4 w-16 h-16 blur-2xl rounded-full" style={{ background: 'var(--color-warning)/20' }} />
                     <div className="flex justify-between items-start mb-2">
                         <BrainCircuit className="w-5 h-5" style={{ color: 'var(--color-warning)' }} />
                         <span className="text-[9px] font-bold px-1.5 py-0.5 rounded" style={{ background: 'var(--color-warning)/20', color: 'var(--color-warning)' }}>AI</span>
                     </div>
-                    <div className="text-lg font-bold text-white leading-tight">"{getPrediction()}"</div>
-                    <div className="text-[10px] text-gray-500 uppercase mt-1">Based on {totalAgents} agents</div>
+                    <div className="text-lg font-bold text-text leading-tight">"{getPrediction()}"</div>
+                    <div className="text-[10px] text-textSecondary uppercase mt-1">Based on {totalAgents} agents</div>
                 </div>
             </div>
 
@@ -305,23 +310,23 @@ export default function AnalyticsPage() {
             <div className={`flex-1 grid grid-cols-1 lg:grid-cols-2 gap-3 px-6 py-2 min-h-0 relative z-10 transition-all duration-700 delay-200 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
                 
                 {/* BAR CHART */}
-                <div className="bg-black/50 backdrop-blur-lg border border-white/10 rounded-xl p-4 flex flex-col">
-                    <h3 className="text-white font-bold text-sm flex items-center gap-2 mb-2">
-                        <Eye className="w-4 h-4 text-[#00FFD0]" />
+                <div className="bg-background/50 backdrop-blur-lg border border-border/10 rounded-xl p-4 flex flex-col">
+                    <h3 className="text-text font-bold text-sm flex items-center gap-2 mb-2">
+                        <Eye className="w-4 h-4 text-primary" />
                         Agents by Role
                     </h3>
                     <div className="flex-1 min-h-0">
                         <ResponsiveContainer width="100%" height="100%">
                             <BarChart data={data?.agentsBySquad || []} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                                <XAxis dataKey="squad" stroke="#64748b" fontSize={10} tickLine={false} axisLine={false} />
-                                <YAxis stroke="#64748b" fontSize={10} tickLine={false} axisLine={false} />
+                                <XAxis dataKey="squad" stroke="var(--color-text-secondary)" fontSize={10} tickLine={false} axisLine={false} />
+                                <YAxis stroke="var(--color-text-secondary)" fontSize={10} tickLine={false} axisLine={false} />
                                 <Tooltip
-                                    contentStyle={{ background: '#0f172a', border: '1px solid #334155', borderRadius: '8px', fontSize: '11px' }}
+                                    contentStyle={{ background: 'var(--color-background)', border: '1px solid var(--color-border)', borderRadius: '8px', fontSize: '11px' }}
                                     formatter={(value: number) => [value, 'Agents']}
                                 />
                                 <Bar dataKey="count" radius={[4, 4, 0, 0]}>
                                     {data?.agentsBySquad?.map((entry, index) => (
-                                        <Cell key={index} fill={ROLE_COLORS[entry.squad] || '#6B7280'} />
+                                        <Cell key={index} fill={ROLE_COLORS[entry.squad] || 'var(--color-text-secondary)'} />
                                     ))}
                                 </Bar>
                             </BarChart>
@@ -330,9 +335,9 @@ export default function AnalyticsPage() {
                 </div>
 
                 {/* LINE CHART */}
-                <div className="bg-black/50 backdrop-blur-lg border border-white/10 rounded-xl p-4 flex flex-col">
-                    <h3 className="text-white font-bold text-sm flex items-center gap-2 mb-2">
-                        <Clock className="w-4 h-4 text-[#00FFD0]" />
+                <div className="bg-background/50 backdrop-blur-lg border border-border/10 rounded-xl p-4 flex flex-col">
+                    <h3 className="text-text font-bold text-sm flex items-center gap-2 mb-2">
+                        <Clock className="w-4 h-4 text-primary" />
                         Efficiency Over Time ({timeRange})
                     </h3>
                     <div className="flex-1 min-h-0">
@@ -340,17 +345,17 @@ export default function AnalyticsPage() {
                             <AreaChart data={data?.efficiencyOverTime || []} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                                 <defs>
                                     <linearGradient id="effGradient" x1="0" y1="0" x2="0" y2="1">
-                                        <stop offset="5%" stopColor="#00FFD0" stopOpacity={0.3}/>
-                                        <stop offset="95%" stopColor="#00FFD0" stopOpacity={0}/>
+                                        <stop offset="5%" stopColor="var(--color-primary)" stopOpacity={0.3}/>
+                                        <stop offset="95%" stopColor="var(--color-primary)" stopOpacity={0}/>
                                     </linearGradient>
                                 </defs>
-                                <XAxis dataKey="date" stroke="#64748b" fontSize={9} tickLine={false} axisLine={false} />
-                                <YAxis stroke="#64748b" fontSize={10} tickLine={false} axisLine={false} domain={[0, 100]} />
+                                <XAxis dataKey="date" stroke="var(--color-text-secondary)" fontSize={9} tickLine={false} axisLine={false} />
+                                <YAxis stroke="var(--color-text-secondary)" fontSize={10} tickLine={false} axisLine={false} domain={[0, 100]} />
                                 <Tooltip
-                                    contentStyle={{ background: '#0f172a', border: '1px solid #334155', borderRadius: '8px', fontSize: '11px' }}
+                                    contentStyle={{ background: 'var(--color-background)', border: '1px solid var(--color-border)', borderRadius: '8px', fontSize: '11px' }}
                                     formatter={(value: number) => [`${value}%`, 'Efficiency']}
                                 />
-                                <Area type="monotone" dataKey="efficiency" stroke="#00FFD0" strokeWidth={2} fill="url(#effGradient)" />
+                                <Area type="monotone" dataKey="efficiency" stroke="var(--color-primary)" strokeWidth={2} fill="url(#effGradient)" />
                             </AreaChart>
                         </ResponsiveContainer>
                     </div>
@@ -358,16 +363,16 @@ export default function AnalyticsPage() {
             </div>
 
             {/* FOOTER */}
-            <div className="bg-black/60 backdrop-blur-xl border-t border-white/10 px-6 py-2 relative z-10 flex justify-between items-center text-[10px] font-mono text-gray-500">
+            <div className="bg-background/60 backdrop-blur-xl border-t border-border/10 px-6 py-2 relative z-10 flex justify-between items-center text-[10px] font-mono text-textSecondary">
                 <div className="flex items-center gap-3">
-                    <Activity className="w-3 h-3 text-[#00FFD0]" />
+                    <Activity className="w-3 h-3 text-primary" />
                     <span>Supabase Real-time</span>
-                    <span className="text-gray-700">|</span>
+                    <span className="text-textSecondary">|</span>
                     <span>{data?.agentsBySquad?.length || 0} roles</span>
                 </div>
                 <div className="flex items-center gap-3">
-                    <span>UPTIME: <span className="text-white">{data?.systemMetrics?.uptime?.toLocaleString()}h</span></span>
-                    <span className="text-gray-700">|</span>
+                    <span>UPTIME: <span className="text-text">{data?.systemMetrics?.uptime?.toLocaleString()}h</span></span>
+                    <span className="text-textSecondary">|</span>
                     <span>LATENCY: <span style={{ color: latency < 500 ? 'var(--color-success)' : latency < 1000 ? 'var(--color-warning)' : 'var(--color-error)' }}>{latency}ms</span></span>
                 </div>
             </div>

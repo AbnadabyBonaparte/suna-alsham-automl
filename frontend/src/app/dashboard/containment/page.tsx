@@ -12,6 +12,8 @@
 import { useState, useEffect, useRef } from 'react';
 import { supabase } from '@/lib/supabase';
 import { Shield, ShieldAlert, Lock, Unlock, AlertTriangle, Activity, XOctagon, CheckCircle, Clock, Zap, Eye, RefreshCw } from 'lucide-react';
+import { LoadingState } from '@/components/ui/LoadingState';
+import { ErrorState } from '@/components/ui/ErrorState';
 
 const DEFCON_LEVELS = [
     { lvl: 5, label: 'NORMAL', color: '#10B981', desc: 'Protocolos padrão ativos. Sistema operando normalmente.' },
@@ -37,6 +39,8 @@ export default function ContainmentPage() {
     const [threatsBlocked, setThreatsBlocked] = useState(0);
     const [isLockdown, setIsLockdown] = useState(false);
     const [events, setEvents] = useState<SecurityEvent[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
     const [stats, setStats] = useState({
         totalRequests: 0,
         failedRequests: 0,
@@ -44,10 +48,12 @@ export default function ContainmentPage() {
         uptime: 0,
     });
 
-    // Carregar dados reais
+    const refetch = () => { setError(null); setLoading(true); };
+
     useEffect(() => {
         async function loadSecurityData() {
             try {
+                setLoading(true);
                 // Total requests
                 const { count: totalRequests } = await supabase
                     .from('requests')
@@ -95,6 +101,9 @@ export default function ContainmentPage() {
 
             } catch (err) {
                 console.error('Failed to load security data:', err);
+                setError('Erro ao carregar dados de segurança');
+            } finally {
+                setLoading(false);
             }
         }
 
@@ -138,6 +147,10 @@ export default function ContainmentPage() {
         window.addEventListener('resize', resize);
         resize();
 
+        const styles = getComputedStyle(document.documentElement);
+        const textColor = styles.getPropertyValue('--color-text').trim() || '#FFFFFF';
+        const canvasErrorColor = styles.getPropertyValue('--color-error').trim() || '#EF4444';
+
         const render = () => {
             const w = canvas.width;
             const h = canvas.height;
@@ -145,7 +158,7 @@ export default function ContainmentPage() {
             const cy = h / 2;
 
             const currentDefcon = DEFCON_LEVELS.find(d => d.lvl === defcon) || DEFCON_LEVELS[0];
-            const shieldColor = isLockdown ? '#FFFFFF' : currentDefcon.color;
+            const shieldColor = isLockdown ? textColor : currentDefcon.color;
 
             ctx.fillStyle = 'rgba(0, 0, 0, 0.2)';
             ctx.fillRect(0, 0, w, h);
@@ -212,7 +225,7 @@ export default function ContainmentPage() {
                 if (dist < 160) {
                     att.active = false;
                     ctx.beginPath();
-                    ctx.strokeStyle = '#FFFFFF';
+                    ctx.strokeStyle = textColor;
                     ctx.lineWidth = 2;
                     ctx.arc(cx + att.x, cy + att.y, 10, 0, Math.PI * 2);
                     ctx.stroke();
@@ -223,12 +236,12 @@ export default function ContainmentPage() {
                 const py = cy + att.y * scale;
 
                 ctx.beginPath();
-                ctx.fillStyle = '#EF4444';
+                ctx.fillStyle = canvasErrorColor;
                 ctx.arc(px, py, 3 * scale, 0, Math.PI * 2);
                 ctx.fill();
                 
                 ctx.beginPath();
-                ctx.strokeStyle = '#EF4444';
+                ctx.strokeStyle = canvasErrorColor;
                 ctx.lineWidth = 1;
                 ctx.moveTo(px, py);
                 ctx.lineTo(px - dx*20*scale, py - dy*20*scale);
@@ -266,6 +279,9 @@ export default function ContainmentPage() {
 
     const currentDefcon = DEFCON_LEVELS.find(d => d.lvl === defcon) || DEFCON_LEVELS[0];
 
+    if (loading) return <LoadingState message="Inicializando protocolos de segurança..." />;
+    if (error) return <ErrorState message={error} onRetry={refetch} />;
+
     return (
         <div className="h-[calc(100vh-6rem)] flex flex-col lg:flex-row gap-6 p-2 overflow-hidden relative">
 
@@ -273,12 +289,12 @@ export default function ContainmentPage() {
             <div className="lg:w-1/3 w-full flex flex-col gap-4 relative z-10">
                 
                 {/* DEFCON STATUS */}
-                <div className="bg-black/60 backdrop-blur-xl border border-white/10 rounded-2xl p-6 shadow-2xl">
+                <div className="bg-background/60 backdrop-blur-xl border border-border/10 rounded-2xl p-6 shadow-2xl">
                     <div className="flex items-center gap-3 mb-6">
                         <ShieldAlert className="w-6 h-6" style={{ color: currentDefcon.color }} />
                         <div>
-                            <h2 className="text-xl font-bold text-white tracking-tight">THREAT LEVEL</h2>
-                            <p className="text-xs text-gray-400 font-mono">Global Security Protocol</p>
+                            <h2 className="text-xl font-bold text-text tracking-tight">THREAT LEVEL</h2>
+                            <p className="text-xs text-textSecondary font-mono">Global Security Protocol</p>
                         </div>
                     </div>
 
@@ -290,7 +306,7 @@ export default function ContainmentPage() {
                                 className={`w-full p-3 rounded-lg border flex items-center justify-between transition-all duration-300 ${
                                     defcon === level.lvl 
                                     ? 'scale-105' 
-                                    : 'bg-transparent border-white/5 text-gray-500 hover:bg-white/5'
+                                    : 'bg-transparent border-border/5 text-textSecondary hover:bg-surface/5'
                                 }`}
                                 style={{ 
                                     borderColor: defcon === level.lvl ? level.color : '',
@@ -298,10 +314,10 @@ export default function ContainmentPage() {
                                 }}
                             >
                                 <div className="flex items-center gap-3">
-                                    <span className={`font-black text-lg ${defcon === level.lvl ? 'text-white' : ''}`}>
+                                    <span className={`font-black text-lg ${defcon === level.lvl ? 'text-text' : ''}`}>
                                         {level.lvl}
                                     </span>
-                                    <span className={`text-xs font-bold tracking-widest ${defcon === level.lvl ? 'text-white' : ''}`}>
+                                    <span className={`text-xs font-bold tracking-widest ${defcon === level.lvl ? 'text-text' : ''}`}>
                                         {level.label}
                                     </span>
                                 </div>
@@ -310,8 +326,8 @@ export default function ContainmentPage() {
                         ))}
                     </div>
                     
-                    <div className="mt-6 pt-4 border-t border-white/10">
-                        <p className="text-xs text-gray-400 font-mono leading-relaxed">
+                    <div className="mt-6 pt-4 border-t border-border/10">
+                        <p className="text-xs text-textSecondary font-mono leading-relaxed">
                             STATUS: <span style={{color: currentDefcon.color}}>{currentDefcon.desc}</span>
                         </p>
                     </div>
@@ -319,15 +335,15 @@ export default function ContainmentPage() {
 
                 {/* STATS */}
                 <div className="grid grid-cols-2 gap-3">
-                    <div className="bg-black/60 backdrop-blur-xl border border-white/10 rounded-xl p-4 text-center">
+                    <div className="bg-background/60 backdrop-blur-xl border border-border/10 rounded-xl p-4 text-center">
                         <CheckCircle className="w-5 h-5 mx-auto mb-2" style={{ color: 'var(--color-success)' }} />
-                        <div className="text-xl font-black text-white">{stats.totalRequests}</div>
-                        <div className="text-[9px] text-gray-500 uppercase">Total Requests</div>
+                        <div className="text-xl font-black text-text">{stats.totalRequests}</div>
+                        <div className="text-[9px] text-textSecondary uppercase">Total Requests</div>
                     </div>
-                    <div className="bg-black/60 backdrop-blur-xl border border-white/10 rounded-xl p-4 text-center">
+                    <div className="bg-background/60 backdrop-blur-xl border border-border/10 rounded-xl p-4 text-center">
                         <XOctagon className="w-5 h-5 mx-auto mb-2" style={{ color: 'var(--color-error)' }} />
-                        <div className="text-xl font-black text-white">{stats.failedRequests}</div>
-                        <div className="text-[9px] text-gray-500 uppercase">Failed</div>
+                        <div className="text-xl font-black text-text">{stats.failedRequests}</div>
+                        <div className="text-[9px] text-textSecondary uppercase">Failed</div>
                     </div>
                 </div>
 
@@ -337,15 +353,15 @@ export default function ContainmentPage() {
                     className={`group relative overflow-hidden rounded-2xl p-6 border transition-all duration-500 flex items-center justify-center gap-4 ${
                         isLockdown 
                         ? 'bg-[var(--color-error)] border-[var(--color-error)] shadow-[0_0_50px_var(--color-error)/50]' 
-                        : 'bg-black/40 border-white/10 hover:border-white/30'
+                        : 'bg-background/40 border-border/10 hover:border-border/30'
                     }`}
                 >
-                    {isLockdown ? <Lock className="w-8 h-8 text-white animate-bounce" /> : <Unlock className="w-8 h-8 text-gray-400 group-hover:text-white" />}
+                    {isLockdown ? <Lock className="w-8 h-8 text-text animate-bounce" /> : <Unlock className="w-8 h-8 text-textSecondary group-hover:text-text" />}
                     <div className="text-left">
-                        <h3 className={`text-lg font-black tracking-widest ${isLockdown ? 'text-white' : 'text-gray-400 group-hover:text-white'}`}>
+                        <h3 className={`text-lg font-black tracking-widest ${isLockdown ? 'text-text' : 'text-textSecondary group-hover:text-text'}`}>
                             {isLockdown ? 'SYSTEM LOCKDOWN' : 'INITIATE LOCKDOWN'}
                         </h3>
-                        <p className={`text-xs font-mono ${isLockdown ? 'text-white/80' : 'text-gray-600'}`}>
+                        <p className={`text-xs font-mono ${isLockdown ? 'text-text/80' : 'text-textSecondary'}`}>
                             {isLockdown ? 'ALL EXTERNAL CONNECTIONS SEVERED' : 'Emergency Protocol Override'}
                         </p>
                     </div>
@@ -354,27 +370,27 @@ export default function ContainmentPage() {
             </div>
 
             {/* DIREITA: VISUALIZAÇÃO DO ESCUDO */}
-            <div className="flex-1 relative bg-[#02040a] rounded-3xl border border-white/10 overflow-hidden shadow-2xl group">
+            <div className="flex-1 relative bg-background rounded-3xl border border-border/10 overflow-hidden shadow-2xl group">
                 
                 {/* Stats Overlay */}
                 <div className="absolute top-6 left-6 z-20 flex gap-6">
                     <div>
-                        <div className="text-[10px] text-gray-500 font-mono uppercase mb-1">Shield Integrity</div>
-                        <div className="text-2xl font-mono text-white flex items-center gap-2">
+                        <div className="text-[10px] text-textSecondary font-mono uppercase mb-1">Shield Integrity</div>
+                        <div className="text-2xl font-mono text-text flex items-center gap-2">
                             {integrity.toFixed(1)}%
-                            <div className="h-2 w-24 bg-gray-800 rounded-full overflow-hidden ml-2">
+                            <div className="h-2 w-24 bg-surface rounded-full overflow-hidden ml-2">
                                 <div 
                                     className="h-full transition-all duration-300"
                                     style={{ 
                                         width: `${integrity}%`,
-                                        backgroundColor: integrity > 70 ? '#10B981' : integrity > 40 ? '#F59E0B' : '#EF4444'
+                                        backgroundColor: integrity > 70 ? 'var(--color-success)' : integrity > 40 ? 'var(--color-warning)' : 'var(--color-error)'
                                     }}
                                 />
                             </div>
                         </div>
                     </div>
                     <div>
-                        <div className="text-[10px] text-gray-500 font-mono uppercase mb-1">Threats Blocked</div>
+                        <div className="text-[10px] text-textSecondary font-mono uppercase mb-1">Threats Blocked</div>
                         <div className="text-2xl font-mono" style={{ color: 'var(--color-success)' }}>{threatsBlocked.toLocaleString()}</div>
                     </div>
                 </div>
@@ -383,13 +399,13 @@ export default function ContainmentPage() {
                 <div className="absolute bottom-6 right-6 z-20 w-80">
                     <div className="space-y-2">
                         {events.map((event) => (
-                            <div key={event.id} className="bg-black/60 backdrop-blur border border-white/10 p-2 rounded flex items-center gap-2 text-xs font-mono animate-fadeIn">
+                            <div key={event.id} className="bg-background/60 backdrop-blur border border-border/10 p-2 rounded flex items-center gap-2 text-xs font-mono animate-fadeIn">
                                 {event.type === 'blocked' ? (
                                     <XOctagon className="w-3 h-3" style={{ color: 'var(--color-error)' }} />
                                 ) : (
                                     <AlertTriangle className="w-3 h-3" style={{ color: 'var(--color-warning)' }} />
                                 )}
-                                <span className="text-gray-300">[{event.type.toUpperCase()}] {event.message} from {event.source}</span>
+                                <span className="text-textSecondary">[{event.type.toUpperCase()}] {event.message} from {event.source}</span>
                             </div>
                         ))}
                     </div>
@@ -398,7 +414,7 @@ export default function ContainmentPage() {
                 <canvas ref={canvasRef} className="w-full h-full absolute inset-0" />
                 
                 <div className="absolute inset-0 bg-[url('/grid.svg')] opacity-10 pointer-events-none" />
-                <div className="absolute inset-0 bg-radial-gradient from-transparent via-transparent to-black/80 pointer-events-none" />
+                <div className="absolute inset-0 bg-radial-gradient from-transparent via-transparent to-background/80 pointer-events-none" />
                 
                 {/* Warning Flash */}
                 <div 

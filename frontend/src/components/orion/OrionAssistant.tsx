@@ -749,7 +749,7 @@ export default function OrionAssistant() {
                       boxShadow: isListening 
                         ? `0 0 30px ${errorColor}60, inset 0 0 20px rgba(0, 0, 0, 0.3)`
                         : `0 0 20px ${primaryColor}20`,
-                      color: isListening ? '#FFFFFF' : primaryColor,
+                      color: isListening ? textColor : primaryColor,
                     }}
                     title={isListening ? 'Parar de ouvir' : voiceState.browserSupported ? 'Clique para falar' : 'Navegador não suporta voz'}
                   >

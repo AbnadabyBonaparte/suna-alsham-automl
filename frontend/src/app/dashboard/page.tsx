@@ -36,11 +36,11 @@ function ConfirmModal({ isOpen, onClose, onConfirm, title, message, confirmText,
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fadeIn">
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-background/80 backdrop-blur-sm animate-fadeIn">
       <div className="relative w-full max-w-md bg-[var(--color-surface)]/95 backdrop-blur-xl border border-[var(--color-border)]/30 rounded-3xl p-8 shadow-2xl">
         <button
           onClick={onClose}
-          className="absolute top-6 right-6 text-gray-400 hover:text-white transition-colors"
+          className="absolute top-6 right-6 text-textSecondary hover:text-text transition-colors"
         >
           <X className="w-6 h-6" />
         </button>
@@ -49,14 +49,14 @@ function ConfirmModal({ isOpen, onClose, onConfirm, title, message, confirmText,
           <div className="w-12 h-12 rounded-xl flex items-center justify-center mb-4" style={{ background: isDestructive ? 'var(--color-error)/10' : 'var(--color-primary)/10', color: isDestructive ? 'var(--color-error)' : 'var(--color-primary)' }}>
             {isDestructive ? <AlertCircle className="w-6 h-6" /> : <Globe className="w-6 h-6" />}
           </div>
-          <h2 className="text-2xl font-bold text-white mb-2">{title}</h2>
-          <p className="text-gray-400 leading-relaxed">{message}</p>
+          <h2 className="text-2xl font-bold text-text mb-2">{title}</h2>
+          <p className="text-textSecondary leading-relaxed">{message}</p>
         </div>
 
         <div className="flex gap-3">
           <button
             onClick={onClose}
-            className="flex-1 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-white py-3 px-6 transition-all font-bold"
+            className="flex-1 bg-surface/5 hover:bg-surface/10 border border-border/10 rounded-xl text-text py-3 px-6 transition-all font-bold"
           >
             Cancel
           </button>
@@ -65,7 +65,7 @@ function ConfirmModal({ isOpen, onClose, onConfirm, title, message, confirmText,
               onConfirm();
               onClose();
             }}
-            className="flex-1 text-black font-bold py-3 px-6 rounded-xl transition-all"
+            className="flex-1 text-text font-bold py-3 px-6 rounded-xl transition-all"
             style={{ background: isDestructive ? 'var(--color-error)' : 'var(--color-primary)' }}
           >
             {confirmText}
@@ -235,11 +235,11 @@ export default function CockpitPage() {
             </p>
           </div>
           <div className="flex gap-4">
-            <div className="px-4 py-2 rounded-xl bg-black/20 border border-[var(--color-border)]/30 backdrop-blur-md text-center hover:scale-105 transition-transform">
+            <div className="px-4 py-2 rounded-xl bg-background/20 border border-[var(--color-border)]/30 backdrop-blur-md text-center hover:scale-105 transition-transform">
               <div className="text-[10px] text-[var(--color-text-secondary)] uppercase font-mono">Latência</div>
               <div className="text-xl font-bold text-[var(--color-primary)] font-mono">{loading ? "..." : `${latencyMs}ms`}</div>
             </div>
-            <div className="px-4 py-2 rounded-xl bg-black/20 border border-[var(--color-border)]/30 backdrop-blur-md text-center hover:scale-105 transition-transform">
+            <div className="px-4 py-2 rounded-xl bg-background/20 border border-[var(--color-border)]/30 backdrop-blur-md text-center hover:scale-105 transition-transform">
               <div className="text-[10px] text-[var(--color-text-secondary)] uppercase font-mono">Uptime</div>
               <div className="text-xl font-bold text-[var(--color-success)] font-mono">{loading ? "..." : `${uptimePercent.toFixed(1)}%`}</div>
             </div>
@@ -294,7 +294,7 @@ export default function CockpitPage() {
               </span>
             </div>
           </div>
-          <div className="flex-1 rounded-2xl border border-dashed border-[var(--color-border)]/20 bg-black/10 flex items-center justify-center relative overflow-hidden group">
+          <div className="flex-1 rounded-2xl border border-dashed border-[var(--color-border)]/20 bg-background/10 flex items-center justify-center relative overflow-hidden group">
             <div className="absolute inset-0 opacity-10 bg-[url('/grid.svg')] animate-pulse" />
             <div className="flex items-end justify-center gap-1 h-32 w-full px-10 opacity-70">
               {(activeAgents > 0 && agentEfficiencies.length > 0 ? agentEfficiencies : Array.from({ length: 40 }, () => 5)).map((efficiency, i) => (
@@ -311,7 +311,7 @@ export default function CockpitPage() {
               ))}
             </div>
             <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-              <p className="text-[var(--color-text)] font-mono text-sm bg-black/50 px-4 py-2 rounded-lg backdrop-blur">
+              <p className="text-[var(--color-text)] font-mono text-sm bg-background/50 px-4 py-2 rounded-lg backdrop-blur">
                 {loading ? 'Carregando...' : `Processando dados de ${totalAgents} agentes em tempo real`}
               </p>
             </div>
@@ -325,21 +325,21 @@ export default function CockpitPage() {
               Infraestrutura
             </h3>
             <div className="space-y-4">
-              <div className="flex justify-between items-center p-3 rounded-xl bg-black/10 border border-white/5 hover:bg-black/20 transition-colors">
+              <div className="flex justify-between items-center p-3 rounded-xl bg-background/10 border border-border/5 hover:bg-background/20 transition-colors">
                 <div className="flex items-center gap-3">
                   <div className="w-2 h-2 rounded-full bg-[var(--color-success)] shadow-[0_0_10px_var(--color-success)] animate-pulse" />
                   <span className="text-sm text-[var(--color-text)]">Agentes Neurais</span>
                 </div>
                 <span className="text-xs font-mono text-[var(--color-text-secondary)]">{loading ? '...' : `${activeAgents}/${totalAgents}`}</span>
               </div>
-              <div className="flex justify-between items-center p-3 rounded-xl bg-black/10 border border-white/5 hover:bg-black/20 transition-colors">
+              <div className="flex justify-between items-center p-3 rounded-xl bg-background/10 border border-border/5 hover:bg-background/20 transition-colors">
                 <div className="flex items-center gap-3">
                   <div className="w-2 h-2 rounded-full bg-[var(--color-success)] shadow-[0_0_10px_var(--color-success)] animate-pulse" />
                   <span className="text-sm text-[var(--color-text)]">Efficiency Core</span>
                 </div>
                 <span className="text-xs font-mono text-[var(--color-text-secondary)]">{loading ? '...' : `${avgEfficiency.toFixed(1)}%`}</span>
               </div>
-              <div className="flex justify-between items-center p-3 rounded-xl bg-black/10 border border-white/5 hover:bg-black/20 transition-colors">
+              <div className="flex justify-between items-center p-3 rounded-xl bg-background/10 border border-border/5 hover:bg-background/20 transition-colors">
                 <div className="flex items-center gap-3">
                   <div className="w-2 h-2 rounded-full bg-[var(--color-success)] shadow-[0_0_10px_var(--color-success)] animate-pulse" />
                   <span className="text-sm text-[var(--color-text)]">Social Monitor</span>
@@ -392,7 +392,7 @@ export default function CockpitPage() {
                 value={requestTitle}
                 onChange={(e) => setRequestTitle(e.target.value)}
                 placeholder="Ex: Analisar dados de vendas"
-                className="w-full px-4 py-3 rounded-xl bg-black/20 border border-[var(--color-border)]/30 text-[var(--color-text)] placeholder-gray-500 focus:outline-none focus:border-[var(--color-primary)] transition-colors"
+                className="w-full px-4 py-3 rounded-xl bg-background/20 border border-[var(--color-border)]/30 text-[var(--color-text)] placeholder-textSecondary focus:outline-none focus:border-[var(--color-primary)] transition-colors"
                 disabled={isSubmittingRequest}
               />
             </div>
@@ -406,7 +406,7 @@ export default function CockpitPage() {
                 onChange={(e) => setRequestDescription(e.target.value)}
                 placeholder="Descreva o que você precisa..."
                 rows={4}
-                className="w-full px-4 py-3 rounded-xl bg-black/20 border border-[var(--color-border)]/30 text-[var(--color-text)] placeholder-gray-500 focus:outline-none focus:border-[var(--color-primary)] transition-colors resize-none"
+                className="w-full px-4 py-3 rounded-xl bg-background/20 border border-[var(--color-border)]/30 text-[var(--color-text)] placeholder-textSecondary focus:outline-none focus:border-[var(--color-primary)] transition-colors resize-none"
                 disabled={isSubmittingRequest}
               />
             </div>
@@ -418,7 +418,7 @@ export default function CockpitPage() {
               <select
                 value={requestPriority}
                 onChange={(e) => setRequestPriority(e.target.value as any)}
-                className="w-full px-4 py-3 rounded-xl bg-black/20 border border-[var(--color-border)]/30 text-[var(--color-text)] focus:outline-none focus:border-[var(--color-primary)] transition-colors cursor-pointer"
+                className="w-full px-4 py-3 rounded-xl bg-background/20 border border-[var(--color-border)]/30 text-[var(--color-text)] focus:outline-none focus:border-[var(--color-primary)] transition-colors cursor-pointer"
                 disabled={isSubmittingRequest}
               >
                 <option value="low">Baixa</option>
@@ -431,7 +431,7 @@ export default function CockpitPage() {
             <button
               type="submit"
               disabled={isSubmittingRequest || !requestTitle.trim()}
-              className="w-full bg-[var(--color-primary)] hover:bg-[var(--color-primary)]/80 disabled:bg-gray-600 disabled:cursor-not-allowed text-black font-bold py-3 px-6 rounded-xl transition-all flex items-center justify-center gap-2"
+              className="w-full bg-[var(--color-primary)] hover:bg-[var(--color-primary)]/80 disabled:bg-surface disabled:cursor-not-allowed text-text font-bold py-3 px-6 rounded-xl transition-all flex items-center justify-center gap-2"
             >
               {isSubmittingRequest ? (
                 <>

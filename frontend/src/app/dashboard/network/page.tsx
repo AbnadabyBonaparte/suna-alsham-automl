@@ -12,6 +12,8 @@
 import { useState, useEffect, useRef } from 'react';
 import { supabase } from '@/lib/supabase';
 import { Globe, Server, Wifi, Radio, MapPin, Activity, Zap, X, TrendingUp, Clock, Database, Cpu, Brain } from 'lucide-react';
+import { LoadingState } from '@/components/ui/LoadingState';
+import { ErrorState } from '@/components/ui/ErrorState';
 
 interface NetworkServer {
     id: string;
@@ -29,6 +31,8 @@ export default function NetworkPage() {
     const [selectedServer, setSelectedServer] = useState<NetworkServer | null>(null);
     const [rotation, setRotation] = useState(0);
     const [servers, setServers] = useState<NetworkServer[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
     const [stats, setStats] = useState({ 
         packets: 0, 
         latency: 24,
@@ -38,10 +42,12 @@ export default function NetworkPage() {
     });
     const [supabaseLatency, setSupabaseLatency] = useState<number>(0);
 
-    // Carregar dados reais e criar servers
+    const refetch = () => { setError(null); setLoading(true); };
+
     useEffect(() => {
         async function loadNetworkData() {
             try {
+                setLoading(true);
                 // Medir latência real do Supabase
                 const start = performance.now();
                 const { count: agentsCount } = await supabase
@@ -79,6 +85,9 @@ export default function NetworkPage() {
 
             } catch (err) {
                 console.error('Failed to load network data:', err);
+                setError('Erro ao carregar dados da rede');
+            } finally {
+                setLoading(false);
             }
         }
 
@@ -123,6 +132,13 @@ export default function NetworkPage() {
         window.addEventListener('resize', resize);
         resize();
 
+        const styles = getComputedStyle(document.documentElement);
+        const primaryColor = styles.getPropertyValue('--color-primary').trim() || '#0EA5E9';
+        const successColor = styles.getPropertyValue('--color-success').trim() || '#10B981';
+        const accentColor = styles.getPropertyValue('--color-accent').trim() || '#8B5CF6';
+        const glowColor = styles.getPropertyValue('--color-glow').trim() || '#FFD700';
+        const textColor = styles.getPropertyValue('--color-text').trim() || '#FFFFFF';
+
         const render = () => {
             const w = canvas.width;
             const h = canvas.height;
@@ -135,7 +151,7 @@ export default function NetworkPage() {
             time += 0.005;
             setRotation(time);
 
-            const themeColor = '#0EA5E9';
+            const themeColor = primaryColor;
 
             // Desenhar globo de pontos
             dots.forEach(dot => {
@@ -175,16 +191,16 @@ export default function NetworkPage() {
                 if (z > 0) {
                     // Ping wave
                     const wave = (Date.now() / 20) % 50;
-                    ctx.strokeStyle = server.type === 'database' ? '#10B981' : 
-                                     server.type === 'api' ? '#8B5CF6' : 
-                                     server.type === 'agent' ? '#FFD700' : themeColor;
+                    ctx.strokeStyle = server.type === 'database' ? successColor : 
+                                     server.type === 'api' ? accentColor : 
+                                     server.type === 'agent' ? glowColor : themeColor;
                     ctx.globalAlpha = 1 - (wave / 50);
                     ctx.beginPath();
                     ctx.arc(px, py, wave * scale, 0, Math.PI * 2);
                     ctx.stroke();
 
                     // Ponto central
-                    ctx.fillStyle = '#FFFFFF';
+                    ctx.fillStyle = textColor;
                     ctx.globalAlpha = 1;
                     ctx.beginPath();
                     ctx.arc(px, py, 4 * scale, 0, Math.PI * 2);
@@ -200,7 +216,7 @@ export default function NetworkPage() {
 
                     // Label
                     ctx.font = `bold ${10 * scale}px monospace`;
-                    ctx.fillStyle = '#FFFFFF';
+                    ctx.fillStyle = textColor;
                     ctx.globalAlpha = 1;
                     ctx.fillText(server.id, px + 5, py - 25 * scale);
                 }
@@ -208,7 +224,7 @@ export default function NetworkPage() {
 
             // Satélites
             ctx.globalAlpha = 0.1;
-            ctx.strokeStyle = '#FFFFFF';
+            ctx.strokeStyle = textColor;
             ctx.lineWidth = 1;
             
             ctx.beginPath();
@@ -222,8 +238,8 @@ export default function NetworkPage() {
                 const sy = cy + Math.sin(sat.angle) * (sat.radius * 0.3);
                 
                 if (Math.sin(sat.angle) > 0) {
-                    ctx.fillStyle = '#FCD34D';
-                    ctx.shadowColor = '#FCD34D';
+                    ctx.fillStyle = glowColor;
+                    ctx.shadowColor = glowColor;
                     ctx.shadowBlur = 10;
                     ctx.beginPath();
                     ctx.arc(sx, sy, sat.size, 0, Math.PI * 2);
@@ -287,33 +303,36 @@ export default function NetworkPage() {
         return () => clearInterval(interval);
     }, []);
 
+    if (loading) return <LoadingState message="Escaneando rede global..." />;
+    if (error) return <ErrorState message={error} onRetry={refetch} />;
+
     return (
         <div className="h-[calc(100vh-6rem)] flex flex-col lg:flex-row gap-6 p-2 overflow-hidden relative">
             
             {/* CANVAS */}
-            <div className="absolute inset-0 bg-[#020617] -z-10">
+            <div className="absolute inset-0 bg-background -z-10">
                 <canvas ref={canvasRef} className="w-full h-full" />
                 <div className="absolute inset-0 bg-[url('/grid.svg')] opacity-10 pointer-events-none" />
-                <div className="absolute inset-0 bg-radial-gradient from-transparent via-transparent to-black/90 pointer-events-none" />
+                <div className="absolute inset-0 bg-radial-gradient from-transparent via-transparent to-background/90 pointer-events-none" />
             </div>
 
             {/* ESQUERDA: LISTA DE SERVIDORES */}
             <div className="w-full lg:w-80 flex flex-col gap-4 z-10 h-full pointer-events-none">
-                <div className="bg-black/60 backdrop-blur-xl border border-cyan-500/20 rounded-2xl p-6 pointer-events-auto shadow-2xl">
+                <div className="bg-background/60 backdrop-blur-xl border border-cyan-500/20 rounded-2xl p-6 pointer-events-auto shadow-2xl">
                     <div className="flex items-center gap-3 mb-6">
                         <Globe className="w-6 h-6 animate-spin" style={{ animationDuration: '10s', color: 'var(--color-primary)' }} />
                         <div>
-                            <h1 className="text-xl font-black text-white tracking-tight font-display">GLOBAL NET</h1>
-                            <p className="text-xs text-gray-400 font-mono">Active Nodes: {servers.length}</p>
+                            <h1 className="text-xl font-black text-text tracking-tight font-display">GLOBAL NET</h1>
+                            <p className="text-xs text-textSecondary font-mono">Active Nodes: {servers.length}</p>
                         </div>
                     </div>
 
-                    <div className="space-y-3 max-h-[400px] overflow-y-auto scrollbar-thin scrollbar-thumb-white/10">
+                    <div className="space-y-3 max-h-[400px] overflow-y-auto scrollbar-thin scrollbar-thumb-border/10">
                         {servers.map((server) => (
                             <div
                                 key={server.id}
                                 onClick={() => setSelectedServer(server)}
-                                className="group p-3 rounded-lg border border-white/5 bg-white/5 hover:bg-white/10 hover:border-cyan-500/50 transition-all cursor-pointer hover:scale-105"
+                                className="group p-3 rounded-lg border border-border/5 bg-surface/5 hover:bg-surface/10 hover:border-cyan-500/50 transition-all cursor-pointer hover:scale-105"
                             >
                                 <div className="flex justify-between items-start mb-2">
                                     <div className="flex items-center gap-2">
@@ -321,14 +340,14 @@ export default function NetworkPage() {
                                          server.type === 'api' ? <Cpu className="w-3 h-3" style={{ color: 'var(--color-accent)' }} /> :
                                          server.type === 'agent' ? <Brain className="w-3 h-3" style={{ color: 'var(--color-warning)' }} /> :
                                          <MapPin className="w-3 h-3" style={{ color: 'var(--color-primary)' }} />}
-                                        <span className="text-sm font-bold text-white">{server.id}</span>
+                                        <span className="text-sm font-bold text-text">{server.id}</span>
                                     </div>
                                     <span className="text-xs font-mono" style={{ color: server.load > 80 ? 'var(--color-error)' : 'var(--color-success)' }}>
                                         {server.load}% LOAD
                                     </span>
                                 </div>
-                                <div className="text-xs text-gray-400 font-mono pl-5">{server.name}</div>
-                                <div className="mt-3 h-1 w-full bg-black/50 rounded-full overflow-hidden">
+                                <div className="text-xs text-textSecondary font-mono pl-5">{server.name}</div>
+                                <div className="mt-3 h-1 w-full bg-background/50 rounded-full overflow-hidden">
                                     <div 
                                         className="h-full transition-all duration-1000" 
                                         style={{ width: `${server.load}%`, background: server.load > 80 ? 'var(--color-error)' : 'var(--color-primary)' }} 
@@ -342,33 +361,33 @@ export default function NetworkPage() {
 
             {/* DIREITA: STATS */}
             <div className="absolute top-6 right-6 z-10 flex flex-col gap-3 w-64">
-                <div className="bg-black/60 backdrop-blur-xl border border-white/10 rounded-xl p-4">
+                <div className="bg-background/60 backdrop-blur-xl border border-border/10 rounded-xl p-4">
                     <div className="flex justify-between items-center mb-2">
-                        <span className="text-xs text-gray-400 uppercase font-mono">Supabase Latency</span>
+                        <span className="text-xs text-textSecondary uppercase font-mono">Supabase Latency</span>
                         <Wifi className="w-4 h-4" style={{ color: 'var(--color-success)' }} />
                     </div>
-                    <div className="text-3xl font-mono text-white">{supabaseLatency} <span className="text-sm text-gray-500">ms</span></div>
+                    <div className="text-3xl font-mono text-text">{supabaseLatency} <span className="text-sm text-textSecondary">ms</span></div>
                 </div>
 
-                <div className="bg-black/60 backdrop-blur-xl border border-white/10 rounded-xl p-4">
+                <div className="bg-background/60 backdrop-blur-xl border border-border/10 rounded-xl p-4">
                     <div className="flex justify-between items-center mb-2">
-                        <span className="text-xs text-gray-400 uppercase font-mono">Total Requests</span>
+                        <span className="text-xs text-textSecondary uppercase font-mono">Total Requests</span>
                         <Activity className="w-4 h-4" style={{ color: 'var(--color-primary)' }} />
                     </div>
-                    <div className="text-2xl font-mono text-white">{stats.totalRequests.toLocaleString()}</div>
+                    <div className="text-2xl font-mono text-text">{stats.totalRequests.toLocaleString()}</div>
                 </div>
 
-                <div className="bg-black/60 backdrop-blur-xl border border-white/10 rounded-xl p-4">
+                <div className="bg-background/60 backdrop-blur-xl border border-border/10 rounded-xl p-4">
                     <div className="flex justify-between items-center mb-2">
-                        <span className="text-xs text-gray-400 uppercase font-mono">Active Agents</span>
+                        <span className="text-xs text-textSecondary uppercase font-mono">Active Agents</span>
                         <Brain className="w-4 h-4" style={{ color: 'var(--color-warning)' }} />
                     </div>
-                    <div className="text-2xl font-mono text-white">{stats.totalAgents}</div>
+                    <div className="text-2xl font-mono text-text">{stats.totalAgents}</div>
                 </div>
 
-                <div className="bg-black/60 backdrop-blur-xl border border-white/10 rounded-xl p-4">
+                <div className="bg-background/60 backdrop-blur-xl border border-border/10 rounded-xl p-4">
                     <div className="flex justify-between items-center mb-2">
-                        <span className="text-xs text-gray-400 uppercase font-mono">Network Status</span>
+                        <span className="text-xs text-textSecondary uppercase font-mono">Network Status</span>
                         <Radio className="w-4 h-4 animate-pulse" style={{ color: 'var(--color-success)' }} />
                     </div>
                     <div className="text-sm font-bold tracking-widest" style={{ color: 'var(--color-success)' }}>ENCRYPTED</div>
@@ -376,7 +395,7 @@ export default function NetworkPage() {
             </div>
 
             {/* RODAPÉ */}
-            <div className="absolute bottom-8 left-1/2 -translate-x-1/2 bg-black/40 backdrop-blur-md border border-white/10 px-6 py-2 rounded-full text-xs font-mono text-gray-400 flex items-center gap-3">
+            <div className="absolute bottom-8 left-1/2 -translate-x-1/2 bg-background/40 backdrop-blur-md border border-border/10 px-6 py-2 rounded-full text-xs font-mono text-textSecondary flex items-center gap-3">
                 <div className="w-2 h-2 rounded-full animate-ping" style={{ background: 'var(--color-primary)' }} />
                 <span>SCANNING SECTOR {Math.floor(rotation * 100 % 360)}°</span>
             </div>
@@ -384,70 +403,70 @@ export default function NetworkPage() {
             {/* MODAL */}
             {selectedServer && (
                 <div
-                    className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4"
+                    className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm p-4"
                     onClick={() => setSelectedServer(null)}
                 >
                     <div
-                        className="relative bg-black/95 border-2 border-cyan-500/50 backdrop-blur-xl rounded-2xl p-8 max-w-2xl w-full shadow-[0_0_80px_rgba(6,182,212,0.3)]"
+                        className="relative bg-background/95 border-2 border-cyan-500/50 backdrop-blur-xl rounded-2xl p-8 max-w-2xl w-full shadow-[0_0_80px_rgba(6,182,212,0.3)]"
                         onClick={(e) => e.stopPropagation()}
                     >
                         <button
                             onClick={() => setSelectedServer(null)}
-                            className="absolute top-4 right-4 p-2 rounded-lg bg-black/40 hover:bg-black/60 text-gray-400 hover:text-white transition-all"
+                            className="absolute top-4 right-4 p-2 rounded-lg bg-background/40 hover:bg-background/60 text-textSecondary hover:text-text transition-all"
                         >
                             <X className="w-6 h-6" />
                         </button>
 
                         <div className="flex items-center gap-6 mb-8">
-                            <div className="p-6 rounded-2xl bg-black/80 border border-[var(--color-primary)]/30 shadow-[0_0_20px_var(--color-primary)/30]" style={{ color: 'var(--color-primary)' }}>
+                            <div className="p-6 rounded-2xl bg-background/80 border border-[var(--color-primary)]/30 shadow-[0_0_20px_var(--color-primary)/30]" style={{ color: 'var(--color-primary)' }}>
                                 {selectedServer.type === 'database' ? <Database className="w-8 h-8" /> :
                                  selectedServer.type === 'api' ? <Cpu className="w-8 h-8" /> :
                                  selectedServer.type === 'agent' ? <Brain className="w-8 h-8" /> :
                                  <Server className="w-8 h-8" />}
                             </div>
                             <div>
-                                <h2 className="text-4xl font-black text-white tracking-wide mb-2">
+                                <h2 className="text-4xl font-black text-text tracking-wide mb-2">
                                     {selectedServer.id}
                                 </h2>
-                                <p className="text-gray-400 font-mono">{selectedServer.name}</p>
+                                <p className="text-textSecondary font-mono">{selectedServer.name}</p>
                             </div>
                         </div>
 
                         <div className="grid grid-cols-2 gap-6 mb-6">
-                            <div className="bg-black/40 border border-white/10 rounded-xl p-6">
+                            <div className="bg-background/40 border border-border/10 rounded-xl p-6">
                                 <div className="flex items-center gap-3 mb-3">
                                     <Activity className="w-5 h-5" style={{ color: 'var(--color-primary)' }} />
-                                    <span className="text-sm text-gray-400 uppercase font-mono">Server Load</span>
+                                    <span className="text-sm text-textSecondary uppercase font-mono">Server Load</span>
                                 </div>
                                 <div className="text-3xl font-bold" style={{ color: selectedServer.load > 80 ? 'var(--color-error)' : 'var(--color-success)' }}>
                                     {selectedServer.load}%
                                 </div>
                             </div>
 
-                            <div className="bg-black/40 border border-white/10 rounded-xl p-6">
+                            <div className="bg-background/40 border border-border/10 rounded-xl p-6">
                                 <div className="flex items-center gap-3 mb-3">
                                     <TrendingUp className="w-5 h-5" style={{ color: 'var(--color-success)' }} />
-                                    <span className="text-sm text-gray-400 uppercase font-mono">Requests</span>
+                                    <span className="text-sm text-textSecondary uppercase font-mono">Requests</span>
                                 </div>
-                                <div className="text-3xl font-bold text-white">
+                                <div className="text-3xl font-bold text-text">
                                     {selectedServer.requests.toLocaleString()}
                                 </div>
                             </div>
 
-                            <div className="bg-black/40 border border-white/10 rounded-xl p-6">
+                            <div className="bg-background/40 border border-border/10 rounded-xl p-6">
                                 <div className="flex items-center gap-3 mb-3">
                                     <MapPin className="w-5 h-5" style={{ color: 'var(--color-warning)' }} />
-                                    <span className="text-sm text-gray-400 uppercase font-mono">Location</span>
+                                    <span className="text-sm text-textSecondary uppercase font-mono">Location</span>
                                 </div>
-                                <div className="text-xl font-mono text-white">
+                                <div className="text-xl font-mono text-text">
                                     {selectedServer.lat}°, {selectedServer.lon}°
                                 </div>
                             </div>
 
-                            <div className="bg-black/40 border border-white/10 rounded-xl p-6">
+                            <div className="bg-background/40 border border-border/10 rounded-xl p-6">
                                 <div className="flex items-center gap-3 mb-3">
                                     <Zap className="w-5 h-5" style={{ color: 'var(--color-success)' }} />
-                                    <span className="text-sm text-gray-400 uppercase font-mono">Status</span>
+                                    <span className="text-sm text-textSecondary uppercase font-mono">Status</span>
                                 </div>
                                 <div className="text-xl font-bold" style={{ color: selectedServer.status === 'online' ? 'var(--color-success)' : 'var(--color-error)' }}>
                                     {selectedServer.status.toUpperCase()}
@@ -455,19 +474,19 @@ export default function NetworkPage() {
                             </div>
                         </div>
 
-                        <div className="bg-black/40 border border-white/10 rounded-xl p-6">
-                            <h3 className="text-xs text-gray-500 uppercase tracking-widest mb-3 font-mono">
+                        <div className="bg-background/40 border border-border/10 rounded-xl p-6">
+                            <h3 className="text-xs text-textSecondary uppercase tracking-widest mb-3 font-mono">
                                 Resource Usage
                             </h3>
                             <div className="space-y-3">
                                 <div>
                                     <div className="flex justify-between text-sm mb-2 font-mono">
-                                        <span className="text-gray-400">CPU</span>
+                                        <span className="text-textSecondary">CPU</span>
                                         <span className="font-bold" style={{ color: selectedServer.load > 80 ? 'var(--color-error)' : 'var(--color-primary)' }}>
                                             {selectedServer.load}%
                                         </span>
                                     </div>
-                                    <div className="w-full bg-white/5 h-3 rounded-full overflow-hidden">
+                                    <div className="w-full bg-surface/5 h-3 rounded-full overflow-hidden">
                                         <div
                                             className="h-full transition-all duration-1000"
                                             style={{

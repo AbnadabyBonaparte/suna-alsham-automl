@@ -21,21 +21,21 @@ const CLASSES = [
         title: 'THE ARCHITECT', 
         desc: 'Foco em construção e criação de agentes.', 
         icon: Cpu, 
-        color: '#00FFD0' 
+        color: 'var(--color-primary)' 
     },
     { 
         id: 'observer', 
         title: 'THE OBSERVER', 
         desc: 'Monitoramento de segurança e logs.', 
         icon: Eye, 
-        color: '#8B5CF6' 
+        color: 'var(--color-accent)' 
     },
     { 
         id: 'strategist', 
         title: 'THE STRATEGIST', 
         desc: 'Análise de dados e ROI financeiro.', 
         icon: Zap, 
-        color: '#F59E0B' 
+        color: 'var(--color-warning)' 
     },
 ];
 
@@ -114,12 +114,13 @@ export default function OnboardingPage() {
             const cx = w / 2;
             const cy = h / 2;
 
-            // Fundo
-            ctx.fillStyle = '#000000';
+            const bgClr = getComputedStyle(document.documentElement).getPropertyValue('--color-background').trim() || '#000000';
+            const textClr = getComputedStyle(document.documentElement).getPropertyValue('--color-text').trim() || '#FFFFFF';
+            const primaryClr = getComputedStyle(document.documentElement).getPropertyValue('--color-primary').trim() || '#00FFD0';
+            ctx.fillStyle = bgClr;
             
-            // Se estiver no WARP, rastro longo (Motion Blur)
             if (step === 'warp') {
-                ctx.fillStyle = 'rgba(0, 0, 0, 0.1)';
+                ctx.fillStyle = `${bgClr}1A`;
             }
             ctx.fillRect(0, 0, w, h);
 
@@ -146,7 +147,7 @@ export default function OnboardingPage() {
                     const prevX = cx + star.x * prevScale;
                     const prevY = cy + star.y * prevScale;
 
-                    ctx.strokeStyle = '#FFFFFF';
+                    ctx.strokeStyle = textClr;
                     ctx.lineWidth = 2 * scale;
                     ctx.beginPath();
                     ctx.moveTo(prevX, prevY);
@@ -155,7 +156,7 @@ export default function OnboardingPage() {
                 } else {
                     // Se normal, desenha pontos
                     const size = (1 - star.z / 2000) * 3;
-                    ctx.fillStyle = '#FFFFFF';
+                    ctx.fillStyle = textClr;
                     ctx.beginPath();
                     ctx.arc(x, y, size, 0, Math.PI * 2);
                     ctx.fill();
@@ -315,7 +316,7 @@ export default function OnboardingPage() {
     };
 
     return (
-        <div className="min-h-screen w-full relative overflow-hidden font-sans text-white bg-black">
+        <div className="min-h-screen w-full relative overflow-hidden font-sans text-text bg-background">
             
             {/* CANVAS BACKGROUND (STARFIELD) */}
             <canvas ref={canvasRef} className="absolute inset-0 w-full h-full z-0" />
@@ -325,19 +326,19 @@ export default function OnboardingPage() {
                 
                 {/* FASE 1: BOOT SEQUENCE */}
                 {step === 'boot' && (
-                    <div className="w-full max-w-lg bg-black/80 border border-green-500/30 p-8 rounded-xl font-mono text-sm shadow-2xl backdrop-blur-sm">
-                        <div className="flex items-center gap-2 mb-4 border-b border-green-500/20 pb-2">
-                            <Terminal className="w-4 h-4 text-green-500" />
-                            <span className="text-green-500 font-bold">SYSTEM BOOT</span>
+                    <div className="w-full max-w-lg bg-background/80 border border-success/30 p-8 rounded-xl font-mono text-sm shadow-2xl backdrop-blur-sm">
+                        <div className="flex items-center gap-2 mb-4 border-b border-success/20 pb-2">
+                            <Terminal className="w-4 h-4 text-success" />
+                            <span className="text-success font-bold">SYSTEM BOOT</span>
                         </div>
                         <div className="space-y-1">
                             {bootLines.map((line, i) => (
-                                <div key={i} className="text-green-400/80">
-                                    <span className="mr-2 text-green-600">&gt;</span>
+                                <div key={i} className="text-success/80">
+                                    <span className="mr-2 text-success/60">&gt;</span>
                                     {line}
                                 </div>
                             ))}
-                            <div className="animate-pulse text-green-500">_</div>
+                            <div className="animate-pulse text-success">_</div>
                         </div>
                     </div>
                 )}
@@ -347,7 +348,7 @@ export default function OnboardingPage() {
                     <div className="w-full max-w-5xl animate-fadeIn">
                         <div className="text-center mb-12">
                             <h1 className="text-4xl md:text-5xl font-black tracking-tighter mb-2">INITIALIZE PROFILE</h1>
-                            <p className="text-gray-400 font-mono text-sm uppercase tracking-widest">Select your operating paradigm</p>
+                            <p className="text-textSecondary font-mono text-sm uppercase tracking-widest">Select your operating paradigm</p>
                         </div>
 
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -361,24 +362,24 @@ export default function OnboardingPage() {
                                             group relative p-8 rounded-3xl border transition-all duration-300 text-left
                                             flex flex-col justify-between h-80
                                             ${isSelected 
-                                                ? 'bg-white/10 border-white scale-105 shadow-[0_0_30px_rgba(255,255,255,0.2)]' 
-                                                : 'bg-black/40 border-white/10 hover:bg-white/5 hover:border-white/30 hover:scale-102'
+                                                ? 'bg-surface/10 border-text scale-105 shadow-[0_0_30px_rgba(255,255,255,0.2)]' 
+                                                : 'bg-background/40 border-border/10 hover:bg-surface/5 hover:border-border/30 hover:scale-102'
                                             }
                                         `}
                                     >
                                         <div>
                                             <div 
-                                                className={`p-4 rounded-2xl w-fit mb-6 transition-colors ${isSelected ? 'bg-white text-black' : 'bg-white/5 text-white'}`}
+                                                className={`p-4 rounded-2xl w-fit mb-6 transition-colors ${isSelected ? 'bg-text text-background' : 'bg-surface/5 text-text'}`}
                                                 style={{ color: isSelected ? 'black' : cls.color }}
                                             >
                                                 <cls.icon className="w-8 h-8" />
                                             </div>
                                             <h3 className="text-2xl font-bold mb-2 tracking-tight">{cls.title}</h3>
-                                            <p className="text-sm text-gray-400 leading-relaxed">{cls.desc}</p>
+                                            <p className="text-sm text-textSecondary leading-relaxed">{cls.desc}</p>
                                         </div>
 
-                                        <div className={`flex items-center gap-2 text-xs font-bold uppercase tracking-widest transition-colors ${isSelected ? 'text-white' : 'text-gray-600'}`}>
-                                            {isSelected ? <Check className="w-4 h-4" /> : <div className="w-4 h-4 rounded-full border border-gray-600" />}
+                                        <div className={`flex items-center gap-2 text-xs font-bold uppercase tracking-widest transition-colors ${isSelected ? 'text-text' : 'text-textSecondary'}`}>
+                                            {isSelected ? <Check className="w-4 h-4" /> : <div className="w-4 h-4 rounded-full border border-textSecondary" />}
                                             {isSelected ? 'Selected' : 'Select'}
                                         </div>
                                     </button>
@@ -391,7 +392,7 @@ export default function OnboardingPage() {
                             <button
                                 onClick={handleLaunch}
                                 disabled={isSaving}
-                                className="group relative px-8 py-4 bg-white text-black rounded-full font-bold text-sm tracking-[0.2em] uppercase hover:scale-105 transition-transform flex items-center gap-3 shadow-[0_0_20px_white] disabled:opacity-50 disabled:cursor-not-allowed"
+                                className="group relative px-8 py-4 bg-text text-background rounded-full font-bold text-sm tracking-[0.2em] uppercase hover:scale-105 transition-transform flex items-center gap-3 shadow-[0_0_20px_var(--color-glow)] disabled:opacity-50 disabled:cursor-not-allowed"
                             >
                                 {isSaving ? 'Initializing...' : 'Enter The System'}
                                 <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
@@ -403,7 +404,7 @@ export default function OnboardingPage() {
                 {/* FASE 3: WARP SPEED (APENAS CANVAS ATIVO) */}
                 {step === 'warp' && (
                     <div className="absolute inset-0 flex items-center justify-center z-20">
-                        <h1 className="text-6xl md:text-9xl font-black text-white tracking-tighter animate-ping opacity-50">
+                        <h1 className="text-6xl md:text-9xl font-black text-text tracking-tighter animate-ping opacity-50">
                             ALSHAM
                         </h1>
                     </div>

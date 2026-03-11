@@ -14,7 +14,7 @@ export function PlanBadge() {
 
     if (isLoading) {
         return (
-            <div className="animate-pulse h-7 w-24 bg-white/10 rounded-full" />
+            <div className="animate-pulse h-7 w-24 bg-surface/10 rounded-full" />
         );
     }
 
@@ -22,7 +22,7 @@ export function PlanBadge() {
         return (
             <a
                 href="/pricing"
-                className="flex items-center gap-1.5 px-3 py-1 bg-white/5 hover:bg-white/10 border border-white/10 rounded-full text-xs font-medium text-gray-400 hover:text-white transition-all"
+                className="flex items-center gap-1.5 px-3 py-1 bg-surface/5 hover:bg-surface/10 border border-border/10 rounded-full text-xs font-medium text-textSecondary hover:text-text transition-all"
             >
                 <Zap className="w-3 h-3" />
                 Fazer Upgrade
@@ -42,9 +42,9 @@ export function PlanBadge() {
                 
                 {/* Tooltip */}
                 <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2 opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity">
-                    <div className="bg-black/90 border border-yellow-500/30 rounded-lg px-3 py-2 text-xs text-center whitespace-nowrap">
+                    <div className="bg-background/90 border border-warning/30 rounded-lg px-3 py-2 text-xs text-center whitespace-nowrap">
                         <p className="text-yellow-400 font-bold">Plano Enterprise</p>
-                        <p className="text-gray-400">Acesso ilimitado a todos os recursos</p>
+                        <p className="text-textSecondary">Acesso ilimitado a todos os recursos</p>
                     </div>
                 </div>
             </div>

@@ -179,7 +179,7 @@ export default function RequestsPage() {
             {/* ESQUERDA: CONSOLE DE COMANDO (FORM) */}
             <div className="lg:w-1/2 w-full flex flex-col gap-6 relative z-10">
                 
-                <div className="flex-1 bg-black/60 backdrop-blur-xl border border-white/10 rounded-3xl p-8 overflow-y-auto shadow-2xl flex flex-col relative overflow-hidden group">
+                <div className="flex-1 bg-background/60 backdrop-blur-xl border border-border/10 rounded-3xl p-8 overflow-y-auto shadow-2xl flex flex-col relative overflow-hidden group">
                     
                     {/* Header */}
                     <div className="flex items-center gap-3 mb-8">
@@ -187,7 +187,7 @@ export default function RequestsPage() {
                             <Zap className="w-6 h-6 text-[var(--color-primary)]" />
                         </div>
                         <div>
-                            <h1 className="text-2xl font-bold text-white tracking-tight font-display">FABRICATION DECK</h1>
+                            <h1 className="text-2xl font-bold text-text tracking-tight font-display">FABRICATION DECK</h1>
                             <p className="text-xs text-[var(--color-textSecondary)] font-mono uppercase">Initialize New Protocol</p>
                         </div>
                     </div>
@@ -201,7 +201,7 @@ export default function RequestsPage() {
                                 value={title}
                                 onChange={(e) => setTitle(e.target.value)}
                                 placeholder="Ex: Analyze Competitor Data..."
-                                className="w-full bg-white/5 border border-white/10 rounded-xl p-4 text-white placeholder-gray-600 focus:border-[var(--color-primary)] focus:bg-white/10 transition-all outline-none font-mono"
+                                className="w-full bg-surface/5 border border-border/10 rounded-xl p-4 text-text placeholder-textSecondary focus:border-[var(--color-primary)] focus:bg-surface/10 transition-all outline-none font-mono"
                             />
                         </div>
 
@@ -211,19 +211,19 @@ export default function RequestsPage() {
                                 value={desc}
                                 onChange={(e) => setDesc(e.target.value)}
                                 placeholder="// Enter complex instructions here..."
-                                className="w-full h-32 bg-white/5 border border-white/10 rounded-xl p-4 text-white placeholder-gray-600 focus:border-[var(--color-primary)] focus:bg-white/10 transition-all outline-none font-mono resize-none"
+                                className="w-full h-32 bg-surface/5 border border-border/10 rounded-xl p-4 text-text placeholder-textSecondary focus:border-[var(--color-primary)] focus:bg-surface/10 transition-all outline-none font-mono resize-none"
                             />
                         </div>
 
                         {/* Upload Zone */}
-                        <div className="border-2 border-dashed border-white/10 rounded-xl p-6 flex flex-col items-center justify-center text-gray-500 hover:border-[var(--color-primary)]/50 hover:bg-[var(--color-primary)]/5 transition-all cursor-pointer group/upload">
+                        <div className="border-2 border-dashed border-border/10 rounded-xl p-6 flex flex-col items-center justify-center text-textSecondary hover:border-[var(--color-primary)]/50 hover:bg-[var(--color-primary)]/5 transition-all cursor-pointer group/upload">
                             <UploadCloud className="w-8 h-8 mb-2 group-hover/upload:text-[var(--color-primary)] transition-colors" />
                             <span className="text-xs uppercase font-bold tracking-wider">Drop Data Fragments Here</span>
                         </div>
                     </div>
 
                     {/* Footer Action */}
-                    <div className="mt-8 pt-6 border-t border-white/10 flex justify-between items-center">
+                    <div className="mt-8 pt-6 border-t border-border/10 flex justify-between items-center">
                         <div className="flex gap-2">
                             <span className="w-2 h-2 rounded-full bg-[var(--color-primary)] animate-pulse" />
                             <span className="text-xs text-[var(--color-primary)] font-mono">SYSTEM READY</span>
@@ -235,7 +235,7 @@ export default function RequestsPage() {
                                 px-8 py-3 rounded-xl font-bold text-sm tracking-widest uppercase transition-all flex items-center gap-2
                                 ${isSubmitting 
                                     ? 'bg-[var(--color-surface)] text-[var(--color-textSecondary)] cursor-not-allowed' 
-                                    : 'bg-[var(--color-primary)] text-black hover:bg-[var(--color-accent)] hover:shadow-[0_0_20px_rgba(var(--color-primary-rgb),0.4)]'
+                                    : 'bg-[var(--color-primary)] text-text hover:bg-[var(--color-accent)] hover:shadow-[0_0_20px_rgba(var(--color-primary-rgb),0.4)]'
                                 }
                             `}
                         >
@@ -254,9 +254,9 @@ export default function RequestsPage() {
 
             {/* DIREITA: FILA DE PROCESSAMENTO (JOB QUEUE) */}
             <div className="lg:w-1/4 w-full flex flex-col h-full relative z-10">
-                <div className="bg-[#02040a] border border-white/10 rounded-3xl p-0 overflow-hidden flex flex-col h-full shadow-2xl">
-                    <div className="p-6 border-b border-white/5 bg-white/5">
-                        <h2 className="text-sm font-bold text-white uppercase tracking-widest flex items-center gap-2">
+                <div className="bg-background border border-border/10 rounded-3xl p-0 overflow-hidden flex flex-col h-full shadow-2xl">
+                    <div className="p-6 border-b border-border/5 bg-surface/5">
+                        <h2 className="text-sm font-bold text-text uppercase tracking-widest flex items-center gap-2">
                             <Cpu className="w-4 h-4" style={{ color: 'var(--color-accent)' }} />
                             Active Queue
                         </h2>
@@ -269,12 +269,12 @@ export default function RequestsPage() {
                                 style={{
                                     animation: `slideInRight 0.4s ease-out ${index * 0.05}s both`
                                 }}
-                                className="group relative bg-black/40 border border-white/5 hover:border-[var(--color-primary)]/30 rounded-xl p-4 transition-all hover:translate-x-[-5px] hover:scale-105 cursor-pointer overflow-hidden"
+                                className="group relative bg-background/40 border border-border/5 hover:border-[var(--color-primary)]/30 rounded-xl p-4 transition-all hover:translate-x-[-5px] hover:scale-105 cursor-pointer overflow-hidden"
                             >
                                 {/* Hover Preview Overlay */}
                                 <div className="absolute inset-0 bg-gradient-to-r from-[var(--color-primary)]/0 via-[var(--color-primary)]/5 to-[var(--color-primary)]/0 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
                                 <div className="flex justify-between items-start mb-2">
-                                    <div className="p-2 rounded-lg bg-white/5 text-gray-300 group-hover:text-[var(--color-primary)] transition-colors">
+                                    <div className="p-2 rounded-lg bg-surface/5 text-textSecondary group-hover:text-[var(--color-primary)] transition-colors">
                                         <Box className="w-4 h-4" />
                                     </div>
                                     <span 
@@ -294,14 +294,14 @@ export default function RequestsPage() {
                                         {job.status}
                                     </span>
                                 </div>
-                                <h3 className="font-bold text-white text-sm mb-1 truncate">{job.title}</h3>
+                                <h3 className="font-bold text-text text-sm mb-1 truncate">{job.title}</h3>
                                 <div className="flex items-center gap-2 text-xs text-[var(--color-textSecondary)] font-mono">
                                     <Clock className="w-3 h-3" /> {job.timestamp}
                                 </div>
                                 
-                                {/* Progress Bar (Fake) */}
+                                {/* Progress Bar */}
                                 {job.status === 'processing' && (
-                                    <div className="mt-3 h-1 w-full bg-white/10 rounded-full overflow-hidden">
+                                    <div className="mt-3 h-1 w-full bg-surface/10 rounded-full overflow-hidden">
                                         <div className="h-full w-2/3 animate-pulse" style={{ background: 'var(--color-warning)' }} />
                                     </div>
                                 )}

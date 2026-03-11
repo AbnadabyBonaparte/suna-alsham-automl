@@ -108,10 +108,8 @@ export default function SettingsPage() {
 
     const handleSave = async () => {
         if (activeTab !== 'profile') {
-            // Mock save para outras tabs
             setIsSaving(true);
-            setTimeout(() => {
-                setIsSaving(false);
+            try {
                 setSaveSuccess(true);
                 addNotification({
                     type: 'success',
@@ -119,7 +117,9 @@ export default function SettingsPage() {
                     message: `${activeTab} preferences have been updated.`,
                 });
                 setTimeout(() => setSaveSuccess(false), 3000);
-            }, 1500);
+            } finally {
+                setIsSaving(false);
+            }
             return;
         }
 
@@ -160,8 +160,8 @@ export default function SettingsPage() {
             {/* ESQUERDA: NAVEGAÇÃO (RACK) */}
             <div className="w-full lg:w-64 flex flex-col gap-2">
                 <div className="mb-6 px-4">
-                    <h1 className="text-2xl font-black text-white tracking-tight font-display">CONFIG</h1>
-                    <p className="text-xs text-gray-500 font-mono uppercase tracking-widest">Bios v13.3</p>
+                    <h1 className="text-2xl font-black text-text tracking-tight font-display">CONFIG</h1>
+                    <p className="text-xs text-textSecondary font-mono uppercase tracking-widest">Bios v13.3</p>
                 </div>
 
                 {TABS.map((tab) => (
@@ -171,11 +171,11 @@ export default function SettingsPage() {
                         className={`
                             group relative flex items-center gap-4 px-4 py-4 rounded-xl transition-all duration-300 overflow-hidden
                             ${activeTab === tab.id 
-                                ? 'bg-[var(--color-primary)]/10 text-white shadow-[inset_4px_0_0_0_var(--color-primary)]' 
-                                : 'text-gray-500 hover:bg-white/5 hover:text-gray-300'}
+                                ? 'bg-[var(--color-primary)]/10 text-text shadow-[inset_4px_0_0_0_var(--color-primary)]' 
+                                : 'text-textSecondary hover:bg-surface/5 hover:text-textSecondary'}
                         `}
                     >
-                        <tab.icon className={`w-5 h-5 transition-colors ${activeTab === tab.id ? 'text-[var(--color-primary)]' : 'group-hover:text-white'}`} />
+                        <tab.icon className={`w-5 h-5 transition-colors ${activeTab === tab.id ? 'text-[var(--color-primary)]' : 'group-hover:text-text'}`} />
                         <span className="font-bold text-sm tracking-wide">{tab.label}</span>
                         
                         {/* Hover Light */}
@@ -185,11 +185,11 @@ export default function SettingsPage() {
             </div>
 
             {/* DIREITA: CONTEÚDO (PAINEL DE CONTROLE) */}
-            <div className="flex-1 bg-black/40 backdrop-blur-xl border border-white/10 rounded-3xl p-8 relative overflow-hidden shadow-2xl flex flex-col">
+            <div className="flex-1 bg-background/40 backdrop-blur-xl border border-border/10 rounded-3xl p-8 relative overflow-hidden shadow-2xl flex flex-col">
                 
                 {/* Header da Tab */}
-                <div className="flex justify-between items-center mb-8 border-b border-white/5 pb-4">
-                    <h2 className="text-xl font-bold text-white flex items-center gap-3 uppercase tracking-widest">
+                <div className="flex justify-between items-center mb-8 border-b border-border/5 pb-4">
+                    <h2 className="text-xl font-bold text-text flex items-center gap-3 uppercase tracking-widest">
                         {activeTab === 'profile' && <User className="w-6 h-6 text-[var(--color-primary)]" />}
                         {activeTab === 'system' && <Cpu className="w-6 h-6 text-[var(--color-primary)]" />}
                         {activeTab === 'neural' && <Zap className="w-6 h-6 text-[var(--color-primary)]" />}
@@ -213,7 +213,7 @@ export default function SettingsPage() {
                         <button
                             onClick={handleSave}
                             disabled={isSaving || loading}
-                            className="flex items-center gap-2 px-6 py-2 bg-[var(--color-primary)] hover:bg-[var(--color-accent)] text-black font-bold rounded-full transition-all disabled:opacity-50"
+                            className="flex items-center gap-2 px-6 py-2 bg-[var(--color-primary)] hover:bg-[var(--color-accent)] text-text font-bold rounded-full transition-all disabled:opacity-50"
                         >
                             {isSaving ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
                             {isSaving ? 'OVERWRITING...' : 'SAVE CHANGES'}
@@ -221,13 +221,13 @@ export default function SettingsPage() {
                     </div>
                 </div>
 
-                <div className="flex-1 overflow-y-auto pr-4 space-y-8 scrollbar-thin scrollbar-thumb-white/10">
+                <div className="flex-1 overflow-y-auto pr-4 space-y-8 scrollbar-thin scrollbar-thumb-border/10">
                     
                     {/* --- CONTEÚDO: PROFILE --- */}
                     {activeTab === 'profile' && (
                         <div className="flex flex-col md:flex-row gap-8">
                             {/* ID CARD HOLOGRÁFICO */}
-                            <div className="w-full md:w-80 h-48 rounded-2xl bg-gradient-to-br from-[#1a1a1a] to-black border border-white/10 relative overflow-hidden group shadow-2xl transform transition-transform hover:scale-[1.02]">
+                            <div className="w-full md:w-80 h-48 rounded-2xl bg-gradient-to-br from-surface to-background border border-border/10 relative overflow-hidden group shadow-2xl transform transition-transform hover:scale-[1.02]">
                                 {/* Efeito Holográfico (CSS Gradient) */}
                                 <div className="absolute inset-0 bg-[url('/noise.png')] opacity-10 mix-blend-overlay" />
                                 <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/5 to-transparent opacity-0 group-hover:opacity-30 transition-opacity duration-700" />
@@ -243,16 +243,16 @@ export default function SettingsPage() {
                                             <div className="w-16 h-16 rounded-xl bg-[var(--color-primary)]/20 border border-[var(--color-primary)] flex items-center justify-center mb-4">
                                                 <Fingerprint className="w-8 h-8 text-[var(--color-primary)]" />
                                             </div>
-                                            <h3 className="text-lg font-bold text-white">
+                                            <h3 className="text-lg font-bold text-text">
                                                 {profile?.full_name || profile?.username || 'Agent'}
                                             </h3>
-                                            <p className="text-xs text-gray-500 font-mono uppercase tracking-widest">
+                                            <p className="text-xs text-textSecondary font-mono uppercase tracking-widest">
                                                 {profile?.username ? `@${profile.username}` : 'Quantum Operative'}
                                             </p>
                                         </div>
 
                                         <div className="absolute bottom-6 right-6 text-right">
-                                            <div className="text-[10px] text-gray-600 font-mono">
+                                            <div className="text-[10px] text-textSecondary font-mono">
                                                 ID: {profile?.id.slice(0, 8).toUpperCase() || 'UNKNOWN'}
                                             </div>
                                             <div className="flex items-center justify-end gap-1 mt-1">
@@ -270,25 +270,25 @@ export default function SettingsPage() {
                             {/* Campos de Edição */}
                             <div className="flex-1 space-y-4">
                                 <div className="space-y-2">
-                                    <label className="text-xs font-bold text-gray-500 uppercase tracking-widest">Username</label>
+                                    <label className="text-xs font-bold text-textSecondary uppercase tracking-widest">Username</label>
                                     <input
                                         type="text"
                                         value={username}
                                         onChange={(e) => setUsername(e.target.value)}
                                         placeholder="Enter username"
                                         disabled={loading}
-                                        className="w-full bg-white/5 border border-white/10 rounded-xl p-3 text-white focus:border-[var(--color-primary)] outline-none transition-all font-mono disabled:opacity-50"
+                                        className="w-full bg-surface/5 border border-border/10 rounded-xl p-3 text-text focus:border-[var(--color-primary)] outline-none transition-all font-mono disabled:opacity-50"
                                     />
                                 </div>
                                 <div className="space-y-2">
-                                    <label className="text-xs font-bold text-gray-500 uppercase tracking-widest">Full Name</label>
+                                    <label className="text-xs font-bold text-textSecondary uppercase tracking-widest">Full Name</label>
                                     <input
                                         type="text"
                                         value={fullName}
                                         onChange={(e) => setFullName(e.target.value)}
                                         placeholder="Enter full name"
                                         disabled={loading}
-                                        className="w-full bg-white/5 border border-white/10 rounded-xl p-3 text-white focus:border-[var(--color-primary)] outline-none transition-all font-mono disabled:opacity-50"
+                                        className="w-full bg-surface/5 border border-border/10 rounded-xl p-3 text-text focus:border-[var(--color-primary)] outline-none transition-all font-mono disabled:opacity-50"
                                     />
                                 </div>
                                 {error && (
@@ -304,29 +304,29 @@ export default function SettingsPage() {
                     {activeTab === 'system' && (
                         <div className="space-y-8">
                             {/* Audio Calibration */}
-                            <div className="bg-black/20 rounded-2xl p-6 border border-white/5">
+                            <div className="bg-background/20 rounded-2xl p-6 border border-border/5">
                                 <div className="flex justify-between items-center mb-4">
                                     <div className="flex items-center gap-3">
-                                        <Volume2 className="w-5 h-5 text-gray-400" />
-                                        <span className="text-sm font-bold text-white">Audio Output Level</span>
+                                        <Volume2 className="w-5 h-5 text-textSecondary" />
+                                        <span className="text-sm font-bold text-text">Audio Output Level</span>
                                     </div>
                                     <span className="text-xs font-mono text-[var(--color-primary)]">{volume}%</span>
                                 </div>
-                                <div className="h-24 bg-black/40 rounded-xl border border-white/5 overflow-hidden mb-4 relative">
+                                <div className="h-24 bg-background/40 rounded-xl border border-border/5 overflow-hidden mb-4 relative">
                                     <canvas ref={audioCanvasRef} className="w-full h-full" />
                                 </div>
                                 <input 
                                     type="range" min="0" max="100" value={volume} onChange={(e) => setVolume(Number(e.target.value))}
-                                    className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-[var(--color-primary)]"
+                                    className="w-full h-2 bg-surface rounded-lg appearance-none cursor-pointer accent-[var(--color-primary)]"
                                 />
                             </div>
 
                             {/* Performance Mode */}
-                            <div className="bg-black/20 rounded-2xl p-6 border border-white/5">
+                            <div className="bg-background/20 rounded-2xl p-6 border border-border/5">
                                 <div className="flex justify-between items-center mb-4">
                                     <div className="flex items-center gap-3">
-                                        <Monitor className="w-5 h-5 text-gray-400" />
-                                        <span className="text-sm font-bold text-white">Graphics Quality</span>
+                                        <Monitor className="w-5 h-5 text-textSecondary" />
+                                        <span className="text-sm font-bold text-text">Graphics Quality</span>
                                     </div>
                                     <span className="text-xs font-mono" style={{ color: 'var(--color-warning)' }}>ULTRA</span>
                                 </div>
@@ -334,7 +334,7 @@ export default function SettingsPage() {
                                     {[20, 40, 60, 80, 100].map((val) => (
                                         <div 
                                             key={val} 
-                                            className={`h-2 flex-1 rounded-full transition-all ${performance >= val ? 'bg-[var(--color-primary)] shadow-[0_0_10px_var(--color-primary)]' : 'bg-gray-800'}`}
+                                            className={`h-2 flex-1 rounded-full transition-all ${performance >= val ? 'bg-[var(--color-primary)] shadow-[0_0_10px_var(--color-primary)]' : 'bg-surface'}`}
                                         />
                                     ))}
                                 </div>
@@ -362,18 +362,18 @@ export default function SettingsPage() {
                                     className={`
                                         cursor-pointer p-5 rounded-2xl border transition-all duration-300 flex items-center justify-between group
                                         ${opt.state
-                                            ? 'bg-white/5 border-[var(--color-primary)]/30'
-                                            : 'bg-black/40 border-white/5 opacity-60'}
+                                            ? 'bg-surface/5 border-[var(--color-primary)]/30'
+                                            : 'bg-background/40 border-border/5 opacity-60'}
                                     `}
                                 >
                                     <div className="flex items-center gap-3">
                                         <opt.icon className="w-5 h-5" style={{ color: `var(${opt.colorVar})` }} />
-                                        <span className={`font-bold text-sm ${opt.state ? 'text-white' : 'text-gray-500'}`}>{opt.label}</span>
+                                        <span className={`font-bold text-sm ${opt.state ? 'text-text' : 'text-textSecondary'}`}>{opt.label}</span>
                                     </div>
 
                                     {/* Toggle Switch Visual */}
-                                    <div className={`w-12 h-6 rounded-full p-1 transition-colors ${opt.state ? 'bg-[var(--color-primary)]' : 'bg-gray-700'}`}>
-                                        <div className={`w-4 h-4 bg-white rounded-full shadow-md transition-transform ${opt.state ? 'translate-x-6' : 'translate-x-0'}`} />
+                                    <div className={`w-12 h-6 rounded-full p-1 transition-colors ${opt.state ? 'bg-[var(--color-primary)]' : 'bg-surface'}`}>
+                                        <div className={`w-4 h-4 bg-surface rounded-full shadow-md transition-transform ${opt.state ? 'translate-x-6' : 'translate-x-0'}`} />
                                     </div>
                                 </div>
                             ))}
@@ -383,7 +383,7 @@ export default function SettingsPage() {
                     {/* --- CONTEÚDO: NOTIFICATIONS --- */}
                     {activeTab === 'notifications' && (
                         <div className="space-y-6">
-                            <p className="text-sm text-gray-400 font-mono">
+                            <p className="text-sm text-textSecondary font-mono">
                                 Configure how you receive alerts and updates from the Alsham Quantum system.
                             </p>
 
@@ -400,28 +400,28 @@ export default function SettingsPage() {
                                         className={`
                                             cursor-pointer p-6 rounded-2xl border transition-all duration-300 group
                                             ${opt.state
-                                                ? 'bg-white/5 border-[var(--color-primary)]/30 shadow-[0_0_20px_rgba(var(--color-primary-rgb),0.1)]'
-                                                : 'bg-black/40 border-white/5 hover:border-white/10'}
+                                                ? 'bg-surface/5 border-[var(--color-primary)]/30 shadow-[0_0_20px_rgba(var(--color-primary-rgb),0.1)]'
+                                                : 'bg-background/40 border-border/5 hover:border-border/10'}
                                         `}
                                     >
                                         <div className="flex items-center justify-between">
                                             <div className="flex items-center gap-4">
-                                                <div className={`p-3 rounded-xl transition-colors ${opt.state ? 'bg-[var(--color-primary)]/20 text-[var(--color-primary)]' : 'bg-white/5 text-gray-500'}`}>
+                                                <div className={`p-3 rounded-xl transition-colors ${opt.state ? 'bg-[var(--color-primary)]/20 text-[var(--color-primary)]' : 'bg-surface/5 text-textSecondary'}`}>
                                                     <opt.icon className="w-5 h-5" />
                                                 </div>
                                                 <div>
-                                                    <h4 className={`font-bold text-sm ${opt.state ? 'text-white' : 'text-gray-500'}`}>
+                                                    <h4 className={`font-bold text-sm ${opt.state ? 'text-text' : 'text-textSecondary'}`}>
                                                         {opt.label}
                                                     </h4>
-                                                    <p className="text-xs text-gray-600 mt-0.5">
+                                                    <p className="text-xs text-textSecondary mt-0.5">
                                                         {opt.desc}
                                                     </p>
                                                 </div>
                                             </div>
 
                                             {/* Toggle Switch Visual */}
-                                            <div className={`w-14 h-7 rounded-full p-1 transition-all ${opt.state ? 'bg-[var(--color-primary)] shadow-[0_0_15px_var(--color-primary)]' : 'bg-gray-700'}`}>
-                                                <div className={`w-5 h-5 bg-white rounded-full shadow-md transition-transform ${opt.state ? 'translate-x-7' : 'translate-x-0'}`} />
+                                            <div className={`w-14 h-7 rounded-full p-1 transition-all ${opt.state ? 'bg-[var(--color-primary)] shadow-[0_0_15px_var(--color-primary)]' : 'bg-surface'}`}>
+                                                <div className={`w-5 h-5 bg-surface rounded-full shadow-md transition-transform ${opt.state ? 'translate-x-7' : 'translate-x-0'}`} />
                                             </div>
                                         </div>
                                     </div>

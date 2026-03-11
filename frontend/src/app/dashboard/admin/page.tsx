@@ -83,16 +83,17 @@ export default function AdminPage() {
             });
         }
 
+        const styles = getComputedStyle(document.documentElement);
+        const themeColor = styles.getPropertyValue('--color-primary').trim() || '#00FFD0';
+        const glowColor = styles.getPropertyValue('--color-glow').trim() || '#FFD700';
+        const textColor = styles.getPropertyValue('--color-text').trim() || '#FFFFFF';
+
         const render = () => {
             const w = canvas.width;
             const h = canvas.height;
 
-            // Limpar com rastro (Ghosting)
             ctx.fillStyle = 'rgba(0, 0, 0, 0.1)';
             ctx.fillRect(0, 0, w, h);
-
-            // Cor do Tema
-            const themeColor = getComputedStyle(document.documentElement).getPropertyValue('--color-primary').trim() || '#00FFD0';
 
             // Conexões (Rede de Usuários)
             ctx.lineWidth = 0.5;
@@ -121,7 +122,7 @@ export default function AdminPage() {
 
                 // Desenhar Usuário (Alma)
                 ctx.beginPath();
-                ctx.fillStyle = u.role === 'admin' ? '#FFD700' : themeColor;
+                ctx.fillStyle = u.role === 'admin' ? glowColor : themeColor;
                 ctx.shadowBlur = 10;
                 ctx.shadowColor = ctx.fillStyle;
                 ctx.arc(u.x, u.y, u.role === 'admin' ? 4 : 2, 0, Math.PI * 2);
@@ -132,7 +133,7 @@ export default function AdminPage() {
             // Olho Central (O Observador)
             const cx = w/2;
             const cy = h/2;
-            ctx.strokeStyle = '#FFFFFF';
+            ctx.strokeStyle = textColor;
             ctx.lineWidth = 2;
             ctx.globalAlpha = 0.1;
             ctx.beginPath();
@@ -205,13 +206,13 @@ export default function AdminPage() {
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 relative z-10">
 
                 {/* Card 1: The Eye (User Monitor) */}
-                <div className="lg:col-span-2 bg-black/60 backdrop-blur-xl border border-white/10 rounded-3xl overflow-hidden relative h-64 group shadow-2xl">
+                <div className="lg:col-span-2 bg-background/60 backdrop-blur-xl border border-border/10 rounded-3xl overflow-hidden relative h-64 group shadow-2xl">
                     <div className="absolute top-6 left-6 z-10">
-                        <h2 className="text-lg font-bold text-white flex items-center gap-2 tracking-tight">
+                        <h2 className="text-lg font-bold text-text flex items-center gap-2 tracking-tight">
                             <Eye className="w-5 h-5 text-[var(--color-primary)] animate-pulse" />
                             PANOPTICON VIEW
                         </h2>
-                        <p className="text-xs text-gray-400 font-mono uppercase">
+                        <p className="text-xs text-textSecondary font-mono uppercase">
                             Monitoring {activeUsers} Active Souls {totalUsers > 0 && `• ${totalUsers} Total Registered`}
                         </p>
                     </div>
@@ -224,25 +225,25 @@ export default function AdminPage() {
                 </div>
 
                 {/* Card 2: System Controls (Dangerous) */}
-                <div className="bg-[#0a0a0a] border border-white/10 rounded-3xl p-6 flex flex-col justify-between relative overflow-hidden">
+                <div className="bg-surface border border-border/10 rounded-3xl p-6 flex flex-col justify-between relative overflow-hidden">
                     {/* Warning Stripes Background */}
                     <div className="absolute top-0 right-0 w-32 h-full bg-[url('/stripes.png')] opacity-5 pointer-events-none" />
 
                     <div className="flex items-center gap-3 mb-4">
                         <ShieldAlert className="w-6 h-6" style={{ color: 'var(--color-error)' }} />
-                        <h2 className="text-lg font-bold text-white tracking-tight">OVERRIDE PROTOCOLS</h2>
+                        <h2 className="text-lg font-bold text-text tracking-tight">OVERRIDE PROTOCOLS</h2>
                     </div>
 
                     <div className="space-y-4">
                         {/* Emergency Stop Switch */}
-                        <div className="flex items-center justify-between p-3 rounded-xl border border-white/5 bg-white/5">
-                            <span className="text-sm font-bold text-gray-300">Global Freeze</span>
+                        <div className="flex items-center justify-between p-3 rounded-xl border border-border/5 bg-surface/5">
+                            <span className="text-sm font-bold text-textSecondary">Global Freeze</span>
                             <button
                                 onClick={handleDbStatusToggle}
                                 className="relative w-12 h-6 rounded-full transition-colors duration-300"
-                                style={{ background: dbStatus === 'FROZEN' ? 'var(--color-error)' : '#374151' }}
+                                style={{ background: dbStatus === 'FROZEN' ? 'var(--color-error)' : 'var(--color-border)' }}
                             >
-                                <div className={`absolute top-1 left-1 w-4 h-4 bg-white rounded-full transition-transform duration-300 ${dbStatus === 'FROZEN' ? 'translate-x-6' : ''}`} />
+                                <div className={`absolute top-1 left-1 w-4 h-4 bg-surface rounded-full transition-transform duration-300 ${dbStatus === 'FROZEN' ? 'translate-x-6' : ''}`} />
                             </button>
                         </div>
 
@@ -252,10 +253,10 @@ export default function AdminPage() {
                             {!isSafetyOff && (
                                 <button
                                     onClick={() => setIsSafetyOff(true)}
-                                    className="absolute inset-0 bg-white/5 backdrop-blur-[2px] border border-white/10 rounded-xl flex items-center justify-center z-10 hover:bg-white/10 transition-all group-hover:scale-[1.02]"
+                                    className="absolute inset-0 bg-surface/5 backdrop-blur-[2px] border border-border/10 rounded-xl flex items-center justify-center z-10 hover:bg-surface/10 transition-all group-hover:scale-[1.02]"
                                 >
-                                    <Lock className="w-5 h-5 text-gray-400 mr-2" />
-                                    <span className="text-xs font-mono font-bold text-gray-400 tracking-widest">DISENGAGE SAFETY</span>
+                                    <Lock className="w-5 h-5 text-textSecondary mr-2" />
+                                    <span className="text-xs font-mono font-bold text-textSecondary tracking-widest">DISENGAGE SAFETY</span>
                                 </button>
                             )}
 
@@ -264,7 +265,7 @@ export default function AdminPage() {
                                 onClick={handleNukeArm}
                                 className={`w-full py-4 rounded-xl font-black tracking-widest flex items-center justify-center gap-2 transition-all ${
                                     isNukeArmed
-                                    ? 'bg-[var(--color-error)] text-white animate-pulse shadow-[0_0_30px_var(--color-error)]'
+                                    ? 'bg-[var(--color-error)] text-text animate-pulse shadow-[0_0_30px_var(--color-error)]'
                                     : 'bg-[var(--color-error)]/20 text-[var(--color-error)] border border-[var(--color-error)]/40'
                                 }`}
                             >
@@ -280,19 +281,19 @@ export default function AdminPage() {
             <div className="flex-1 grid grid-cols-1 lg:grid-cols-2 gap-6 relative z-10">
 
                 {/* DB CONSOLE (SQL DEMO) */}
-                <div className="bg-[#02040a] border border-white/10 rounded-3xl p-6 flex flex-col shadow-xl">
+                <div className="bg-background border border-border/10 rounded-3xl p-6 flex flex-col shadow-xl">
                     <div className="flex justify-between items-center mb-4">
                         <div className="flex items-center gap-2">
                             <Database className="w-5 h-5" style={{ color: 'var(--color-primary)' }} />
-                            <span className="font-bold text-white text-sm tracking-wider">REALITY EDITOR (SQL)</span>
+                            <span className="font-bold text-text text-sm tracking-wider">REALITY EDITOR (SQL)</span>
                         </div>
                         <span className="text-[10px] px-2 py-1 rounded font-mono" style={{ background: dbStatus === 'OPTIMAL' ? 'var(--color-success)/20' : 'var(--color-error)/20', color: dbStatus === 'OPTIMAL' ? 'var(--color-success)' : 'var(--color-error)', border: `1px solid ${dbStatus === 'OPTIMAL' ? 'var(--color-success)/30' : 'var(--color-error)/30'}` }}>
                             DB_STATUS: {dbStatus}
                         </span>
                     </div>
 
-                    <div className="flex-1 bg-black/50 border border-white/5 rounded-xl p-4 font-mono text-sm text-gray-300 overflow-hidden relative">
-                        <div className="absolute left-4 top-4 bottom-4 w-[1px] bg-white/10" />
+                    <div className="flex-1 bg-background/50 border border-border/5 rounded-xl p-4 font-mono text-sm text-textSecondary overflow-hidden relative">
+                        <div className="absolute left-4 top-4 bottom-4 w-[1px] bg-surface/10" />
                         <div className="pl-6 space-y-1">
                             <div className="opacity-50">1  SELECT id, username, full_name</div>
                             <div className="opacity-50">2  FROM profiles</div>
@@ -303,12 +304,12 @@ export default function AdminPage() {
                                     value={query}
                                     onChange={(e) => setQuery(e.target.value)}
                                     placeholder="WHERE created_at > NOW() - INTERVAL '7 days';"
-                                    className="bg-transparent border-none outline-none w-full placeholder-gray-700"
+                                    className="bg-transparent border-none outline-none w-full placeholder-textSecondary"
                                     style={{ color: 'var(--color-primary)' }}
                                 />
                             </div>
                             {query && (
-                                <div className="mt-4 pt-4 border-t border-white/5">
+                                <div className="mt-4 pt-4 border-t border-border/5">
                                     <div className="text-xs" style={{ color: 'var(--color-success)' }}>
                                         -- Query Result: {users.length} rows returned
                                     </div>
@@ -324,7 +325,7 @@ export default function AdminPage() {
                                     message: `Found ${users.length} users matching query`,
                                 });
                             }}
-                            className="absolute bottom-4 right-4 p-2 bg-white/10 hover:bg-[var(--color-primary)]/20 rounded-lg transition-all hover:scale-110"
+                            className="absolute bottom-4 right-4 p-2 bg-surface/10 hover:bg-[var(--color-primary)]/20 rounded-lg transition-all hover:scale-110"
                             style={{ color: 'var(--color-primary)' }}
                         >
                             <Terminal className="w-4 h-4" />
@@ -333,43 +334,43 @@ export default function AdminPage() {
                 </div>
 
                 {/* USER LIST (REAL DATA) */}
-                <div className="bg-black/40 backdrop-blur-xl border border-white/10 rounded-3xl p-6 flex flex-col">
+                <div className="bg-background/40 backdrop-blur-xl border border-border/10 rounded-3xl p-6 flex flex-col">
                     <div className="flex justify-between items-center mb-4">
-                        <h3 className="font-bold text-white text-sm flex items-center gap-2">
+                        <h3 className="font-bold text-text text-sm flex items-center gap-2">
                             <Users className="w-4 h-4 text-[var(--color-primary)]" />
                             Elite Users ({filteredUsers.length})
                         </h3>
                         <div className="relative">
-                            <Search className="w-3 h-3 text-gray-500 absolute left-3 top-1/2 -translate-y-1/2" />
+                            <Search className="w-3 h-3 text-textSecondary absolute left-3 top-1/2 -translate-y-1/2" />
                             <input
                                 type="text"
                                 placeholder="Find Soul..."
                                 value={searchTerm}
                                 onChange={(e) => setSearchTerm(e.target.value)}
-                                className="bg-white/5 border border-white/10 rounded-full pl-8 pr-3 py-1 text-xs text-white focus:border-[var(--color-primary)] outline-none w-32 focus:w-48 transition-all"
+                                className="bg-surface/5 border border-border/10 rounded-full pl-8 pr-3 py-1 text-xs text-text focus:border-[var(--color-primary)] outline-none w-32 focus:w-48 transition-all"
                             />
                         </div>
                     </div>
 
-                    <div className="space-y-2 overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-white/10">
+                    <div className="space-y-2 overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-border/10">
                         {filteredUsers.length === 0 && !loading && (
-                            <div className="text-center py-8 text-gray-500">
+                            <div className="text-center py-8 text-textSecondary">
                                 <Users className="w-12 h-12 mx-auto mb-2 opacity-50" />
                                 <p className="text-sm">No users found</p>
                             </div>
                         )}
 
                         {filteredUsers.slice(0, 20).map((user) => (
-                            <div key={user.id} className="group flex items-center justify-between p-3 rounded-xl bg-white/5 hover:bg-white/10 border border-transparent hover:border-white/10 transition-all cursor-pointer">
+                            <div key={user.id} className="group flex items-center justify-between p-3 rounded-xl bg-surface/5 hover:bg-surface/10 border border-transparent hover:border-border/10 transition-all cursor-pointer">
                                 <div className="flex items-center gap-3">
-                                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-gray-800 to-black border border-white/10 flex items-center justify-center text-xs font-bold text-white">
+                                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-surface to-background border border-border/10 flex items-center justify-center text-xs font-bold text-text">
                                         {(user.username || user.full_name || 'U')[0].toUpperCase()}
                                     </div>
                                     <div>
-                                        <div className="text-sm font-medium text-gray-200 group-hover:text-white">
+                                        <div className="text-sm font-medium text-textSecondary group-hover:text-text">
                                             {user.username || user.full_name || 'Unknown User'}
                                         </div>
-                                        <div className="text-[10px] text-gray-500 font-mono">
+                                        <div className="text-[10px] text-textSecondary font-mono">
                                             ID: {user.id.slice(0, 8)}...
                                         </div>
                                     </div>

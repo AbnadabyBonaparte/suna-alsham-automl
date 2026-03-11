@@ -39,8 +39,7 @@ export default function ApiPage() {
 
     const responseRef = useRef<HTMLPreElement>(null);
 
-    // Simulação de Request
-    const handleSend = () => {
+    const handleSend = async () => {
         setIsLoading(true);
         setResponse(null);
         setStatus(null);
@@ -48,38 +47,38 @@ export default function ApiPage() {
 
         const startTime = performance.now();
 
-        // Simular delay de rede e resposta
-        setTimeout(() => {
+        try {
+            const fetchOptions: RequestInit = {
+                method,
+                headers: { 'Content-Type': 'application/json' },
+            };
+
+            const res = await fetch(url, fetchOptions);
             const endTime = performance.now();
             setLatency(Math.round(endTime - startTime));
-            
-            // Gerar resposta fake baseada no método
-            const mockData = generateMockResponse(method, url);
-            
-            setStatus(mockData.status);
-            setResponse(JSON.stringify(mockData.data, null, 2));
-            setIsLoading(false);
-        }, 800 + Math.random() * 1000);
-    };
+            setStatus(res.status);
 
-    const generateMockResponse = (m: string, u: string) => {
-        const success = Math.random() > 0.2;
-        if (!success) return { status: 500, data: { error: "INTERNAL_QUANTUM_FLUX", code: "Q-500", message: "Neural alignment failed." } };
-        
-        return {
-            status: 200,
-            data: {
-                success: true,
-                timestamp: new Date().toISOString(),
-                cluster: "ORION-X7",
-                payload: Array.from({length: 5}, (_, i) => ({
-                    id: `obj_${Math.random().toString(16).substr(2, 8)}`,
-                    type: "entity",
-                    integrity: Math.floor(Math.random() * 100),
-                    status: "active"
-                }))
+            const contentType = res.headers.get('content-type') || '';
+            if (contentType.includes('application/json')) {
+                const data = await res.json();
+                setResponse(JSON.stringify(data, null, 2));
+            } else {
+                const text = await res.text();
+                setResponse(text);
             }
-        };
+        } catch (err: unknown) {
+            const endTime = performance.now();
+            setLatency(Math.round(endTime - startTime));
+            setStatus(0);
+            const errorMessage = err instanceof Error ? err.message : 'Unknown error';
+            setResponse(JSON.stringify({
+                error: 'REQUEST_FAILED',
+                message: errorMessage,
+                hint: 'The endpoint may be unreachable, blocked by CORS, or unavailable.',
+            }, null, 2));
+        } finally {
+            setIsLoading(false);
+        }
     };
 
     const handleCopy = () => {
@@ -132,7 +131,7 @@ export default function ApiPage() {
             <div className="relative z-10 flex items-center gap-3 px-4 py-3 rounded-xl bg-[var(--color-warning)]/10 border border-[var(--color-warning)]/30">
                 <Zap className="w-4 h-4 flex-shrink-0" style={{ color: 'var(--color-warning)' }} />
                 <span className="text-xs font-mono" style={{ color: 'var(--color-warning)' }}>
-                    API Playground — Respostas simuladas para demonstração
+                    API Playground — Executa requests reais contra o endpoint informado
                 </span>
             </div>
 
@@ -141,12 +140,12 @@ export default function ApiPage() {
             <div className="lg:w-1/2 w-full flex flex-col gap-6 h-full">
                 
                 {/* Painel Principal */}
-                <div className="bg-black/60 backdrop-blur-xl border border-white/10 rounded-3xl p-8 shadow-2xl flex flex-col gap-6 relative overflow-hidden group">
+                <div className="bg-background/60 backdrop-blur-xl border border-border/10 rounded-3xl p-8 shadow-2xl flex flex-col gap-6 relative overflow-hidden group">
                     
                     {/* Header */}
                     <div className="flex justify-between items-center">
                         <div>
-                            <h1 className="text-2xl font-bold text-white tracking-tight font-display flex items-center gap-2">
+                            <h1 className="text-2xl font-bold text-text tracking-tight font-display flex items-center gap-2">
                                 <Globe className="w-6 h-6 text-[var(--color-primary)]" />
                                 QUANTUM GATE
                             </h1>
@@ -159,11 +158,11 @@ export default function ApiPage() {
                     </div>
 
                     {/* URL Bar (Estilo Browser Sci-Fi) */}
-                    <div className="flex items-center gap-0 bg-black/40 border border-white/10 rounded-xl p-1 focus-within:border-[var(--color-primary)]/50 transition-all shadow-lg">
+                    <div className="flex items-center gap-0 bg-background/40 border border-border/10 rounded-xl p-1 focus-within:border-[var(--color-primary)]/50 transition-all shadow-lg">
                         {/* Method Selector */}
                         <div className="relative group/method">
                             <div
-                                className="px-4 py-3 font-bold font-mono text-sm cursor-pointer hover:text-white transition-colors"
+                                className="px-4 py-3 font-bold font-mono text-sm cursor-pointer hover:text-text transition-colors"
                                 style={{
                                     color: method === 'GET' ? 'var(--color-primary)' :
                                         method === 'POST' ? 'var(--color-success)' :
@@ -173,12 +172,12 @@ export default function ApiPage() {
                                 {method}
                             </div>
                             {/* Dropdown (Hover) */}
-                            <div className="absolute top-full left-0 mt-2 w-32 bg-[#0a0a0a] border border-white/10 rounded-lg overflow-hidden shadow-xl opacity-0 pointer-events-none group-hover/method:opacity-100 group-hover/method:pointer-events-auto transition-all z-50">
+                            <div className="absolute top-full left-0 mt-2 w-32 bg-background border border-border/10 rounded-lg overflow-hidden shadow-xl opacity-0 pointer-events-none group-hover/method:opacity-100 group-hover/method:pointer-events-auto transition-all z-50">
                                 {METHODS.map(m => (
                                     <div 
                                         key={m} 
                                         onClick={() => setMethod(m)}
-                                        className="px-4 py-2 text-xs font-mono text-[var(--color-textSecondary)] hover:bg-white/10 hover:text-white cursor-pointer"
+                                        className="px-4 py-2 text-xs font-mono text-[var(--color-textSecondary)] hover:bg-surface/10 hover:text-text cursor-pointer"
                                     >
                                         {m}
                                     </div>
@@ -186,14 +185,14 @@ export default function ApiPage() {
                             </div>
                         </div>
 
-                        <div className="w-[1px] h-6 bg-white/10 mx-2" />
+                        <div className="w-[1px] h-6 bg-surface/10 mx-2" />
 
                         {/* URL Input */}
                         <input 
                             type="text" 
                             value={url}
                             onChange={(e) => setUrl(e.target.value)}
-                            className="flex-1 bg-transparent border-none outline-none text-white font-mono text-sm placeholder-gray-600"
+                            className="flex-1 bg-transparent border-none outline-none text-text font-mono text-sm placeholder-textSecondary"
                             placeholder="https://api.endpoint..."
                         />
                     </div>
@@ -204,7 +203,7 @@ export default function ApiPage() {
                         disabled={isLoading}
                         className={`
                             relative w-full py-4 rounded-xl font-bold text-sm tracking-widest uppercase overflow-hidden group/btn transition-all
-                            ${isLoading ? 'bg-[var(--color-surface)] cursor-not-allowed' : 'bg-[var(--color-primary)] text-black hover:scale-[1.02] shadow-[0_0_30px_rgba(var(--color-primary-rgb),0.4)]'}
+                            ${isLoading ? 'bg-[var(--color-surface)] cursor-not-allowed' : 'bg-[var(--color-primary)] text-text hover:scale-[1.02] shadow-[0_0_30px_rgba(var(--color-primary-rgb),0.4)]'}
                         `}
                     >
                         <div className="relative z-10 flex items-center justify-center gap-2">
@@ -212,7 +211,7 @@ export default function ApiPage() {
                             {isLoading ? 'TRANSMITTING...' : 'EXECUTE REQUEST'}
                         </div>
                         {/* Scanline Effect no Botão */}
-                        {!isLoading && <div className="absolute inset-0 bg-white/20 translate-x-[-100%] group-hover/btn:translate-x-[100%] transition-transform duration-500 ease-in-out skew-x-12" />}
+                        {!isLoading && <div className="absolute inset-0 bg-surface/20 translate-x-[-100%] group-hover/btn:translate-x-[100%] transition-transform duration-500 ease-in-out skew-x-12" />}
                     </button>
 
                     {/* Presets */}
@@ -223,7 +222,7 @@ export default function ApiPage() {
                                 <button
                                     key={i}
                                     onClick={() => { setMethod(ep.method); setUrl(`https://api.alsham.quantum${ep.path}`); }}
-                                    className="px-3 py-2 rounded-lg bg-white/5 hover:bg-white/10 border border-white/5 hover:border-[var(--color-primary)]/30 text-xs text-gray-300 transition-all flex items-center gap-2"
+                                    className="px-3 py-2 rounded-lg bg-surface/5 hover:bg-surface/10 border border-border/5 hover:border-[var(--color-primary)]/30 text-xs text-textSecondary transition-all flex items-center gap-2"
                                 >
                                     <span className="font-mono font-bold" style={{ color: ep.method === 'GET' ? 'var(--color-primary)' : ep.method === 'POST' ? 'var(--color-success)' : 'var(--color-error)' }}>
                                         {ep.method.charAt(0)}
@@ -236,19 +235,19 @@ export default function ApiPage() {
                 </div>
 
                 {/* Configurações Adicionais (Headers/Body) */}
-                <div className="flex-1 bg-black/40 backdrop-blur-xl border border-white/10 rounded-3xl p-6 relative">
-                    <div className="flex gap-4 border-b border-white/5 pb-2 mb-4">
+                <div className="flex-1 bg-background/40 backdrop-blur-xl border border-border/10 rounded-3xl p-6 relative">
+                    <div className="flex gap-4 border-b border-border/5 pb-2 mb-4">
                         <button className="text-sm font-bold text-[var(--color-primary)] border-b-2 border-[var(--color-primary)] pb-2">Params</button>
-                        <button className="text-sm font-bold text-[var(--color-textSecondary)] hover:text-white pb-2 transition-colors">Headers</button>
-                        <button className="text-sm font-bold text-[var(--color-textSecondary)] hover:text-white pb-2 transition-colors">Body</button>
+                        <button className="text-sm font-bold text-[var(--color-textSecondary)] hover:text-text pb-2 transition-colors">Headers</button>
+                        <button className="text-sm font-bold text-[var(--color-textSecondary)] hover:text-text pb-2 transition-colors">Body</button>
                     </div>
                     
                     <div className="font-mono text-xs text-[var(--color-textSecondary)]">
-                        <div className="flex items-center gap-2 p-2 bg-black/20 rounded mb-2">
+                        <div className="flex items-center gap-2 p-2 bg-background/20 rounded mb-2">
                             <span style={{ color: 'var(--color-warning)' }}>Authorization:</span>
                             <span className="truncate">Bearer sk_test_51MxQ...</span>
                         </div>
-                        <div className="flex items-center gap-2 p-2 bg-black/20 rounded">
+                        <div className="flex items-center gap-2 p-2 bg-background/20 rounded">
                             <span style={{ color: 'var(--color-accent)' }}>Content-Type:</span>
                             <span>application/json</span>
                         </div>
@@ -257,10 +256,10 @@ export default function ApiPage() {
             </div>
 
             {/* DIREITA: RESPONSE TERMINAL */}
-            <div className="lg:w-1/2 w-full bg-[#050505] border border-white/10 rounded-3xl p-0 overflow-hidden relative flex flex-col shadow-2xl">
+            <div className="lg:w-1/2 w-full bg-background border border-border/10 rounded-3xl p-0 overflow-hidden relative flex flex-col shadow-2xl">
                 
                 {/* Terminal Header */}
-                <div className="h-12 bg-white/5 border-b border-white/5 flex items-center justify-between px-4">
+                <div className="h-12 bg-surface/5 border-b border-border/5 flex items-center justify-between px-4">
                     <div className="flex items-center gap-3">
                         <div className="flex gap-1.5">
                             <div className="w-3 h-3 rounded-full" style={{ background: 'var(--color-error)/20', border: '1px solid var(--color-error)/50' }} />
@@ -284,11 +283,11 @@ export default function ApiPage() {
                 </div>
 
                 {/* Terminal Body */}
-                <div className="flex-1 relative overflow-hidden bg-black/80">
+                <div className="flex-1 relative overflow-hidden bg-background/80">
                     {/* Loading State */}
                     {isLoading && (
-                        <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 z-20 bg-black/50 backdrop-blur-sm">
-                            <div className="w-16 h-16 border-4 border-t-[var(--color-primary)] border-white/10 rounded-full animate-spin" />
+                        <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 z-20 bg-background/50 backdrop-blur-sm">
+                            <div className="w-16 h-16 border-4 border-t-[var(--color-primary)] border-border/10 rounded-full animate-spin" />
                             <p className="text-xs font-mono text-[var(--color-primary)] animate-pulse">ESTABLISHING UPLINK...</p>
                         </div>
                     )}
@@ -313,7 +312,7 @@ export default function ApiPage() {
                     {response && (
                         <button 
                             onClick={handleCopy}
-                            className="absolute top-4 right-4 p-2 bg-white/10 hover:bg-white/20 rounded-lg text-white transition-all z-10"
+                            className="absolute top-4 right-4 p-2 bg-surface/10 hover:bg-surface/20 rounded-lg text-text transition-all z-10"
                         >
                             {copied ? <Check className="w-4 h-4" style={{ color: 'var(--color-success)' }} /> : <Copy className="w-4 h-4" />}
                         </button>

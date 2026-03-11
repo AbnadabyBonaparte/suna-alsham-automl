@@ -17,7 +17,7 @@ interface SkeletonProps {
 export function Skeleton({ className = '' }: SkeletonProps) {
   return (
     <motion.div
-      className={`bg-white/5 rounded-lg overflow-hidden relative ${className}`}
+      className={`bg-surface/5 rounded-lg overflow-hidden relative ${className}`}
       initial={{ opacity: 0.5 }}
       animate={{ opacity: [0.5, 0.8, 0.5] }}
       transition={{
@@ -27,7 +27,7 @@ export function Skeleton({ className = '' }: SkeletonProps) {
       }}
     >
       <motion.div
-        className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent"
+        className="absolute inset-0 bg-gradient-to-r from-transparent via-surface/10 to-transparent"
         initial={{ x: '-100%' }}
         animate={{ x: '100%' }}
         transition={{
@@ -42,7 +42,7 @@ export function Skeleton({ className = '' }: SkeletonProps) {
 
 export function SkeletonCard() {
   return (
-    <div className="bg-black/40 backdrop-blur-xl border border-white/10 rounded-2xl p-6 space-y-4">
+    <div className="bg-background/40 backdrop-blur-xl border border-border/10 rounded-2xl p-6 space-y-4">
       <Skeleton className="h-8 w-3/4" />
       <Skeleton className="h-4 w-full" />
       <Skeleton className="h-4 w-5/6" />

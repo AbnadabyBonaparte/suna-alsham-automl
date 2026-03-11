@@ -310,7 +310,7 @@ export default function QuantumBrainPage() {
               <h1 className="text-xl font-black tracking-tight flex items-center gap-2" style={{ color: 'var(--color-text)' }}>
                 QUANTUM BRAIN
                 <span 
-                  className="px-2 py-0.5 text-[10px] font-bold text-white rounded-full animate-pulse"
+                  className="px-2 py-0.5 text-[10px] font-bold text-text rounded-full animate-pulse"
                   style={{ background: 'linear-gradient(to right, var(--color-primary), var(--color-accent))' }}
                 >
                   GODMODE
@@ -665,7 +665,7 @@ export default function QuantumBrainPage() {
                           p === 'normal' ? 'var(--color-primary)' :
                           'var(--color-text-secondary)'
                         : 'var(--color-surface)',
-                      color: priority === p ? 'white' : 'var(--color-text-secondary)',
+                      color: priority === p ? 'var(--color-text)' : 'var(--color-text-secondary)',
                       border: `1px solid ${priority === p ? 'transparent' : 'var(--color-border)/20'}`
                     }}
                   >
@@ -725,7 +725,7 @@ export default function QuantumBrainPage() {
                 background: isProcessing 
                   ? 'var(--color-primary)/20'
                   : 'linear-gradient(to right, var(--color-primary), var(--color-accent))',
-                color: isProcessing ? 'var(--color-primary)' : 'white',
+                color: isProcessing ? 'var(--color-primary)' : 'var(--color-text)',
                 boxShadow: isProcessing ? 'none' : '0 0 30px var(--color-glow)/50'
               }}
             >

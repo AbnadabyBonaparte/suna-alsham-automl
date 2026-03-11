@@ -66,7 +66,9 @@ export default function LandingPage() {
             ctx.fillRect(0, 0, w, h);
 
             // Desenhar Estrelas
-            ctx.fillStyle = '#FFFFFF';
+            const textClr = getComputedStyle(document.documentElement).getPropertyValue('--color-text').trim() || '#FFFFFF';
+            const primaryClr = getComputedStyle(document.documentElement).getPropertyValue('--color-primary').trim() || '#00FFD0';
+            ctx.fillStyle = textClr;
             stars.forEach(star => {
                 star.z -= speed;
 
@@ -92,7 +94,7 @@ export default function LandingPage() {
                     const prevX = cx + star.x / ((star.z + speed) * 0.001);
                     const prevY = cy + star.y / ((star.z + speed) * 0.001);
 
-                    ctx.strokeStyle = `rgba(0, 255, 208, ${alpha})`; // Ciano
+                    ctx.strokeStyle = `${primaryClr}${Math.round(alpha * 255).toString(16).padStart(2, '0')}`;
                     ctx.lineWidth = size;
                     ctx.beginPath();
                     ctx.moveTo(prevX, prevY);
@@ -110,7 +112,7 @@ export default function LandingPage() {
 
             // Se entrando, flash branco no final
             if (isEntering && speed > 40) {
-                ctx.fillStyle = `rgba(255, 255, 255, ${(speed - 40) / 10})`;
+                ctx.fillStyle = `${textClr}${Math.round(((speed - 40) / 10) * 255).toString(16).padStart(2, '0')}`;
                 ctx.fillRect(0, 0, w, h);
             }
 
@@ -148,7 +150,7 @@ export default function LandingPage() {
 
     return (
         <div 
-            className="min-h-screen w-full relative overflow-hidden bg-black cursor-none" 
+            className="min-h-screen w-full relative overflow-hidden bg-background cursor-none" 
             onMouseMove={handleMouseMove}
         >
             {/* CANVAS */}
@@ -166,12 +168,12 @@ export default function LandingPage() {
                         </span>
                     </div>
                     
-                    <h1 className="text-6xl md:text-9xl font-black text-white tracking-tighter font-display mix-blend-difference animate-scaleIn">
+                    <h1 className="text-6xl md:text-9xl font-black text-text tracking-tighter font-display mix-blend-difference animate-scaleIn">
                         ALSHAM
-                        <span className="block text-transparent bg-clip-text bg-gradient-to-b from-white to-gray-600">QUANTUM</span>
+                        <span className="block text-transparent bg-clip-text bg-gradient-to-b from-text to-textSecondary">QUANTUM</span>
                     </h1>
                     
-                    <p className="text-gray-400 max-w-md mx-auto font-light text-sm md:text-base tracking-wide leading-relaxed animate-fadeInUp">
+                    <p className="text-textSecondary max-w-md mx-auto font-light text-sm md:text-base tracking-wide leading-relaxed animate-fadeInUp">
                         A convergência final entre inteligência artificial e controle operacional. 
                         Bem-vindo à Singularidade.
                     </p>
@@ -182,10 +184,10 @@ export default function LandingPage() {
                     onClick={handleEnter}
                     className="group relative px-12 py-6 bg-transparent overflow-hidden rounded-full transition-all hover:scale-105"
                 >
-                    <div className="absolute inset-0 border border-white/20 rounded-full group-hover:border-[var(--color-primary)] transition-colors duration-500" />
-                    <div className="absolute inset-0 bg-white/5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-500 blur-xl" />
+                    <div className="absolute inset-0 border border-border/20 rounded-full group-hover:border-[var(--color-primary)] transition-colors duration-500" />
+                    <div className="absolute inset-0 bg-surface/5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-500 blur-xl" />
                     
-                    <span className="relative z-10 flex items-center gap-4 text-sm font-bold tracking-[0.3em] text-white uppercase">
+                    <span className="relative z-10 flex items-center gap-4 text-sm font-bold tracking-[0.3em] text-text uppercase">
                         Enter The System
                         <ArrowRight className="w-4 h-4 group-hover:translate-x-2 transition-transform duration-300" />
                     </span>
@@ -195,7 +197,7 @@ export default function LandingPage() {
 
             {/* RODAPÉ */}
             <div className={`absolute bottom-8 w-full text-center transition-opacity duration-500 ${isEntering ? 'opacity-0' : 'opacity-100'}`}>
-                <div className="flex justify-center gap-8 text-[10px] text-gray-600 font-mono uppercase tracking-widest">
+                <div className="flex justify-center gap-8 text-[10px] text-textSecondary font-mono uppercase tracking-widest">
                     <span className="flex items-center gap-2">
                         <Circle className="w-2 h-2 text-green-500 fill-green-500 animate-pulse" /> 
                         Neural Net Active
@@ -215,7 +217,7 @@ export default function LandingPage() {
                         transform: 'translate(-50%, -50%)'
                     }}
                 >
-                    <div className="w-1 h-1 bg-white rounded-full" />
+                    <div className="w-1 h-1 bg-text rounded-full" />
                 </div>
             )}
 
