@@ -56,8 +56,7 @@ export default function MatrixPage() {
       try {
         const { data: agents, error } = await supabase
           .from('agents')
-          .select('*')
-          .limit(139);
+          .select('*');
 
         if (error) throw error;
 
@@ -66,20 +65,9 @@ export default function MatrixPage() {
           name: agent.name || `NODE_${String(i).padStart(3, '0')}`,
           squad: agent.squad || 'NEXUS',
           status: agent.status || 'active',
-          efficiency: agent.efficiency || Math.floor(Math.random() * 40 + 60),
-          connections: Math.floor(Math.random() * 10 + 2),
+          efficiency: agent.efficiency || 0,
+          connections: agent.connections || 0,
         }));
-
-        while (networkNodes.length < 139) {
-          networkNodes.push({
-            id: `mock_${networkNodes.length}`,
-            name: `NODE_${String(networkNodes.length).padStart(3, '0')}`,
-            squad: ['NEXUS', 'VOID', 'SENTINEL', 'CHAOS', 'COMMAND'][Math.floor(Math.random() * 5)],
-            status: Math.random() > 0.1 ? 'active' : 'idle',
-            efficiency: Math.floor(Math.random() * 40 + 60),
-            connections: Math.floor(Math.random() * 10 + 2),
-          });
-        }
 
         setNodes(networkNodes);
 
@@ -90,7 +78,7 @@ export default function MatrixPage() {
           totalNodes: networkNodes.length,
           activeNodes,
           connections: totalConnections,
-          dataFlow: Math.floor(Math.random() * 5000 + 1000),
+          dataFlow: totalConnections > 0 ? totalConnections * 10 : 0,
         });
 
       } catch (err) {

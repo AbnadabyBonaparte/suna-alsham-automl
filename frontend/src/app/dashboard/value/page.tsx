@@ -10,7 +10,15 @@
 "use client";
 
 import { useState, useEffect, useRef } from 'react';
-import { Wallet, TrendingUp, ArrowUpRight, Gem, Lock, CreditCard, RefreshCw } from 'lucide-react';
+import { Wallet, TrendingUp, ArrowUpRight, Gem, Lock, CreditCard, RefreshCw, Inbox } from 'lucide-react';
+import { supabase } from '@/lib/supabase';
+
+interface Transaction {
+    id: string;
+    name: string;
+    amount: number;
+    created_at: string;
+}
 
 // Componente de Contador Rolante (Odometer Effect)
 const RollingNumber = ({ value, prefix = "" }: { value: number, prefix?: string }) => {
@@ -49,8 +57,55 @@ const RollingNumber = ({ value, prefix = "" }: { value: number, prefix?: string 
 
 export default function ValuePage() {
     const canvasRef = useRef<HTMLCanvasElement>(null);
-    const [balance, setBalance] = useState(1420590.00);
-    const [profit, setProfit] = useState(12450.00);
+    const [balance, setBalance] = useState(0);
+    const [profit, setProfit] = useState(0);
+    const [transactions, setTransactions] = useState<Transaction[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
+
+    useEffect(() => {
+        async function loadFinancialData() {
+            setLoading(true);
+            setError(null);
+            try {
+                const { data: txData, error: txError } = await supabase
+                    .from('transactions')
+                    .select('*')
+                    .order('created_at', { ascending: false })
+                    .limit(20);
+
+                if (txError) throw txError;
+
+                const mapped: Transaction[] = (txData || []).map((t) => ({
+                    id: t.id,
+                    name: t.name || t.description || 'Transação',
+                    amount: t.amount || 0,
+                    created_at: t.created_at,
+                }));
+                setTransactions(mapped);
+
+                const totalBalance = mapped.reduce((sum, t) => sum + t.amount, 0);
+                setBalance(totalBalance);
+
+                const { data: invoiceData, error: invError } = await supabase
+                    .from('invoices')
+                    .select('amount, status')
+                    .eq('status', 'paid');
+
+                if (invError) throw invError;
+
+                const totalProfit = (invoiceData || []).reduce((sum, inv) => sum + (inv.amount || 0), 0);
+                setProfit(totalProfit);
+            } catch (err) {
+                console.error('Failed to load financial data:', err);
+                setError('Erro ao carregar dados financeiros');
+            } finally {
+                setLoading(false);
+            }
+        }
+
+        loadFinancialData();
+    }, []);
     
     // 1. ENGINE VISUAL (CHUVA DE OURO/DIAMANTE)
     useEffect(() => {
@@ -139,33 +194,9 @@ export default function ValuePage() {
         };
     }, []);
 
-    // Simulação de Live Data
-    useEffect(() => {
-        const interval = setInterval(() => {
-            // Flutuação de mercado
-            setBalance(prev => prev + (Math.random() - 0.4) * 1000);
-            setProfit(prev => prev + (Math.random() - 0.3) * 100);
-        }, 3000);
-        return () => clearInterval(interval);
-    }, []);
 
     return (
         <div className="h-[calc(100vh-6rem)] flex flex-col gap-6 overflow-hidden relative p-2">
-
-            {/* COMING SOON BADGE */}
-            <div className="absolute top-4 right-4 z-50 animate-pulse">
-                <div className="bg-gradient-to-r from-[var(--color-primary)]/20 via-[var(--color-accent)]/20 to-[var(--color-secondary)]/20 backdrop-blur-xl border-2 border-[var(--color-primary)]/50 rounded-2xl px-6 py-3 shadow-[0_0_30px_var(--color-primary)]">
-                    <div className="flex items-center gap-3">
-                        <div className="w-2 h-2 rounded-full bg-[var(--color-primary)] animate-ping" />
-                        <span className="text-sm font-black text-white uppercase tracking-widest orbitron">
-                            Coming Soon
-                        </span>
-                    </div>
-                    <div className="text-[10px] text-gray-400 text-center mt-1 font-mono">
-                        Feature in development
-                    </div>
-                </div>
-            </div>
 
             {/* FUNDO ANIMADO (O COFRE) */}
             <div className="absolute inset-0 rounded-3xl overflow-hidden bg-[#050505] border border-white/10 shadow-2xl">
@@ -239,22 +270,33 @@ export default function ValuePage() {
                     </div>
                     
                     <div className="flex-1 space-y-3 overflow-hidden">
-                        {[
-                            { name: 'Agente Alpha', time: '2s ago', val: '+$120.00' },
-                            { name: 'Neural Network', time: '5s ago', val: '-$45.00' },
-                            { name: 'Server Cost', time: '12s ago', val: '-$200.00' },
-                            { name: 'Client #992', time: '45s ago', val: '+$4,500.00' },
-                        ].map((tx, i) => (
-                            <div key={i} className="flex justify-between items-center text-xs p-2 hover:bg-white/5 rounded-lg transition-colors cursor-default">
-                                <div className="flex flex-col">
-                                    <span className="text-gray-300 font-medium">{tx.name}</span>
-                                    <span className="text-gray-600 font-mono">{tx.time}</span>
-                                </div>
-                                <span className="font-mono font-bold" style={{ color: tx.val.startsWith('+') ? 'var(--color-success)' : 'var(--color-error)' }}>
-                                    {tx.val}
-                                </span>
+                        {loading ? (
+                            <div className="flex items-center justify-center py-6">
+                                <RefreshCw className="w-5 h-5 animate-spin text-[var(--color-primary)]" />
                             </div>
-                        ))}
+                        ) : transactions.length === 0 ? (
+                            <div className="text-center py-6">
+                                <Inbox className="w-6 h-6 mx-auto mb-2 text-gray-600" />
+                                <p className="text-xs text-gray-500">Nenhuma transação</p>
+                            </div>
+                        ) : (
+                            transactions.slice(0, 4).map((tx) => {
+                                const isPositive = tx.amount >= 0;
+                                const formatted = `${isPositive ? '+' : ''}$${Math.abs(tx.amount).toLocaleString('en-US', { minimumFractionDigits: 2 })}`;
+                                const timeAgo = tx.created_at ? new Date(tx.created_at).toLocaleString('pt-BR') : '';
+                                return (
+                                    <div key={tx.id} className="flex justify-between items-center text-xs p-2 hover:bg-white/5 rounded-lg transition-colors cursor-default">
+                                        <div className="flex flex-col">
+                                            <span className="text-gray-300 font-medium">{tx.name}</span>
+                                            <span className="text-gray-600 font-mono">{timeAgo}</span>
+                                        </div>
+                                        <span className="font-mono font-bold" style={{ color: isPositive ? 'var(--color-success)' : 'var(--color-error)' }}>
+                                            {formatted}
+                                        </span>
+                                    </div>
+                                );
+                            })
+                        )}
                     </div>
                 </div>
 

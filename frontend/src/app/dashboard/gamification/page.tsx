@@ -10,41 +10,100 @@
 "use client";
 
 import { useState, useEffect, useRef } from 'react';
-import { Trophy, Crown, Medal, Star, Zap, Target, Award, Gift } from 'lucide-react';
+import { Trophy, Crown, Medal, Star, Zap, Target, Award, Gift, Lock as LockIconLucide, RefreshCw } from 'lucide-react';
+import { supabase } from '@/lib/supabase';
 
-const ACHIEVEMENTS = [
-    { id: 1, title: 'Genesis Architect', desc: 'Criou o primeiro Agente', icon: CpuIcon, rarity: 'legendary', unlocked: true },
-    { id: 2, title: 'Neural Master', desc: 'Atingiu 1000 conexões', icon: NetworkIcon, rarity: 'epic', unlocked: true },
-    { id: 3, title: 'Void Walker', desc: 'Sobreviveu a um Kernel Panic', icon: GhostIcon, rarity: 'rare', unlocked: false },
-    { id: 4, title: 'Diamond Hands', desc: 'Acumulou $1M em valor', icon: DiamondIcon, rarity: 'epic', unlocked: true },
-    { id: 5, title: 'Security Breaker', desc: 'Venceu o sistema de defesa', icon: LockIcon, rarity: 'rare', unlocked: false },
-    { id: 6, title: 'Time Traveler', desc: 'Uptime de 99.9% por 1 ano', icon: ClockIcon, rarity: 'legendary', unlocked: false },
-];
+interface Achievement {
+    id: string;
+    title: string;
+    description: string;
+    rarity: string;
+    unlocked: boolean;
+    icon_type?: string;
+}
 
-const LEADERBOARD = [
-    { rank: 1, name: 'Admin Prime', xp: 99420, role: 'ARCHITECT' },
-    { rank: 2, name: 'Sentinel X', xp: 84300, role: 'GUARD' },
-    { rank: 3, name: 'Nexus Core', xp: 76100, role: 'AI' },
-    { rank: 4, name: 'Deep Blue', xp: 62400, role: 'ANALYST' },
-    { rank: 5, name: 'User_007', xp: 51200, role: 'OPERATOR' },
-];
+interface LeaderboardEntry {
+    rank: number;
+    name: string;
+    xp: number;
+    role: string;
+}
 
-// Ícones personalizados para evitar imports excessivos
-function CpuIcon({className}: {className?: string}) { return <Zap className={className} /> }
-function NetworkIcon({className}: {className?: string}) { return <Target className={className} /> }
-function GhostIcon({className}: {className?: string}) { return <Award className={className} /> }
-function DiamondIcon({className}: {className?: string}) { return <Gift className={className} /> }
-function LockIcon({className}: {className?: string}) { return <Medal className={className} /> }
-function ClockIcon({className}: {className?: string}) { return <Star className={className} /> }
+function getAchievementIcon(iconType: string | undefined) {
+    switch (iconType) {
+        case 'cpu': return Zap;
+        case 'network': return Target;
+        case 'ghost': return Award;
+        case 'diamond': return Gift;
+        case 'lock': return Medal;
+        case 'clock': return Star;
+        default: return Award;
+    }
+}
 
 export default function GamificationPage() {
     const canvasRef = useRef<HTMLCanvasElement>(null);
     
-    // Estado
     const [xp, setXp] = useState(0);
-    const [level, setLevel] = useState(42);
-    const [targetXp] = useState(75); // Porcentagem para o próximo nível
-    const [hoveredCard, setHoveredCard] = useState<number | null>(null);
+    const [level, setLevel] = useState(0);
+    const [targetXp] = useState(75);
+    const [hoveredCard, setHoveredCard] = useState<string | null>(null);
+    const [achievements, setAchievements] = useState<Achievement[]>([]);
+    const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
+
+    useEffect(() => {
+        async function loadData() {
+            setLoading(true);
+            setError(null);
+            try {
+                const { data: achData, error: achError } = await supabase
+                    .from('achievements')
+                    .select('*');
+
+                if (achError) throw achError;
+
+                const mapped: Achievement[] = (achData || []).map((a) => ({
+                    id: a.id,
+                    title: a.title || 'Achievement',
+                    description: a.description || '',
+                    rarity: a.rarity || 'rare',
+                    unlocked: a.unlocked ?? false,
+                    icon_type: a.icon_type,
+                }));
+                setAchievements(mapped);
+
+                const { data: lbData, error: lbError } = await supabase
+                    .from('leaderboard')
+                    .select('*')
+                    .order('xp', { ascending: false })
+                    .limit(10);
+
+                if (lbError) throw lbError;
+
+                const lbMapped: LeaderboardEntry[] = (lbData || []).map((entry, idx) => ({
+                    rank: idx + 1,
+                    name: entry.name || `User ${idx + 1}`,
+                    xp: entry.xp || 0,
+                    role: entry.role || 'OPERATOR',
+                }));
+                setLeaderboard(lbMapped);
+
+                if (lbMapped.length > 0) {
+                    const topXp = lbMapped[0].xp;
+                    setLevel(Math.floor(topXp / 1000));
+                }
+            } catch (err) {
+                console.error('Failed to load gamification data:', err);
+                setError('Erro ao carregar dados');
+            } finally {
+                setLoading(false);
+            }
+        }
+
+        loadData();
+    }, []);
 
     // 1. ENGINE DE PARTÍCULAS (CONFETE DIGITAL)
     useEffect(() => {
@@ -133,22 +192,6 @@ export default function GamificationPage() {
     return (
         <div className="h-[calc(100vh-6rem)] flex flex-col lg:flex-row gap-6 p-2 overflow-hidden relative">
 
-            {/* COMING SOON BADGE */}
-            <div className="absolute top-4 right-4 z-50 animate-pulse">
-                <div className="bg-gradient-to-r from-[var(--color-primary)]/20 via-[var(--color-accent)]/20 to-[var(--color-secondary)]/20 backdrop-blur-xl border-2 border-[var(--color-primary)]/50 rounded-2xl px-6 py-3 shadow-[0_0_30px_var(--color-primary)]">
-                    <div className="flex items-center gap-3">
-                        <div className="w-2 h-2 rounded-full bg-[var(--color-primary)] animate-ping" />
-                        <span className="text-sm font-black text-white uppercase tracking-widest orbitron">
-                            Coming Soon
-                        </span>
-                        <Zap className="w-4 h-4 text-[var(--color-accent)]" />
-                    </div>
-                    <div className="text-[10px] text-gray-400 text-center mt-1 font-mono">
-                        Feature in development
-                    </div>
-                </div>
-            </div>
-
             {/* CANVAS DE PARTÍCULAS (OVERLAY) */}
             <canvas ref={canvasRef} className="absolute inset-0 w-full h-full pointer-events-none z-50" />
 
@@ -205,27 +248,38 @@ export default function GamificationPage() {
                     </div>
                     
                     <div className="space-y-2">
-                        {LEADERBOARD.map((user) => (
-                            <div key={user.rank} className="flex items-center justify-between p-3 rounded-xl bg-white/5 hover:bg-white/10 transition-colors border border-white/5 group">
-                                <div className="flex items-center gap-3">
-                                    <div className={`
-                                        w-8 h-8 rounded-lg flex items-center justify-center font-bold text-sm
-                                        ${user.rank === 1 ? 'bg-[var(--color-warning)] text-black shadow-[0_0_10px_var(--color-warning)]' : 
-                                          user.rank === 2 ? 'bg-gray-300 text-black' : 
-                                          user.rank === 3 ? 'bg-[#B45309] text-white' : 'bg-gray-800 text-gray-400'}
-                                    `}>
-                                        {user.rank}
-                                    </div>
-                                    <div className="flex flex-col">
-                                        <span className="text-sm text-white font-medium">{user.name}</span>
-                                        <span className="text-[10px] text-gray-500 font-mono">{user.role}</span>
-                                    </div>
-                                </div>
-                                <span className="text-xs font-mono text-[var(--color-primary)] group-hover:scale-110 transition-transform">
-                                    {user.xp.toLocaleString()} XP
-                                </span>
+                        {loading ? (
+                            <div className="flex items-center justify-center py-8">
+                                <RefreshCw className="w-6 h-6 animate-spin text-[var(--color-primary)]" />
                             </div>
-                        ))}
+                        ) : leaderboard.length === 0 ? (
+                            <div className="text-center py-8">
+                                <Trophy className="w-8 h-8 mx-auto mb-2 text-gray-600" />
+                                <p className="text-xs text-gray-500 font-mono">Nenhum dado no leaderboard</p>
+                            </div>
+                        ) : (
+                            leaderboard.map((user) => (
+                                <div key={user.rank} className="flex items-center justify-between p-3 rounded-xl bg-white/5 hover:bg-white/10 transition-colors border border-white/5 group">
+                                    <div className="flex items-center gap-3">
+                                        <div className={`
+                                            w-8 h-8 rounded-lg flex items-center justify-center font-bold text-sm
+                                            ${user.rank === 1 ? 'bg-[var(--color-warning)] text-black shadow-[0_0_10px_var(--color-warning)]' : 
+                                              user.rank === 2 ? 'bg-gray-300 text-black' : 
+                                              user.rank === 3 ? 'bg-[#B45309] text-white' : 'bg-gray-800 text-gray-400'}
+                                        `}>
+                                            {user.rank}
+                                        </div>
+                                        <div className="flex flex-col">
+                                            <span className="text-sm text-white font-medium">{user.name}</span>
+                                            <span className="text-[10px] text-gray-500 font-mono">{user.role}</span>
+                                        </div>
+                                    </div>
+                                    <span className="text-xs font-mono text-[var(--color-primary)] group-hover:scale-110 transition-transform">
+                                        {user.xp.toLocaleString()} XP
+                                    </span>
+                                </div>
+                            ))
+                        )}
                     </div>
                 </div>
             </div>
@@ -239,13 +293,30 @@ export default function GamificationPage() {
                     </div>
                     <div className="flex gap-2">
                         <span className="px-3 py-1 rounded-full bg-[var(--color-primary)]/10 text-[var(--color-primary)] border border-[var(--color-primary)]/20 text-xs font-bold">
-                            {ACHIEVEMENTS.filter(a => a.unlocked).length}/{ACHIEVEMENTS.length} UNLOCKED
+                            {achievements.filter(a => a.unlocked).length}/{achievements.length} UNLOCKED
                         </span>
                     </div>
                 </div>
 
+                {loading ? (
+                    <div className="flex items-center justify-center h-64">
+                        <RefreshCw className="w-10 h-10 animate-spin text-[var(--color-primary)]" />
+                    </div>
+                ) : error ? (
+                    <div className="flex flex-col items-center justify-center h-64">
+                        <p className="text-sm text-[var(--color-error)]">{error}</p>
+                    </div>
+                ) : achievements.length === 0 ? (
+                    <div className="flex flex-col items-center justify-center h-64">
+                        <Award className="w-16 h-16 mb-4 text-gray-600" />
+                        <p className="text-xl font-bold text-white">Nenhuma conquista cadastrada</p>
+                        <p className="text-sm text-gray-500 mt-2">As conquistas aparecerão aqui quando configuradas</p>
+                    </div>
+                ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {ACHIEVEMENTS.map((ach) => (
+                    {achievements.map((ach) => {
+                        const IconComponent = getAchievementIcon(ach.icon_type);
+                        return (
                         <div 
                             key={ach.id}
                             onMouseEnter={() => setHoveredCard(ach.id)}
@@ -262,12 +333,10 @@ export default function GamificationPage() {
                                 transform: hoveredCard === ach.id ? 'translateY(-10px) scale(1.02)' : 'none'
                             }}
                         >
-                            {/* Efeito de Brilho (Foil Effect) */}
                             {ach.unlocked && (
                                 <div className="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-20 transition-opacity bg-gradient-to-tr from-transparent via-white to-transparent pointer-events-none" />
                             )}
 
-                            {/* Ícone 3D */}
                             <div className={`
                                 w-20 h-20 rounded-full flex items-center justify-center mb-6 text-3xl
                                 transition-transform duration-500 shadow-xl
@@ -280,17 +349,16 @@ export default function GamificationPage() {
                                     : 'bg-gray-800 text-gray-600'}
                                 ${hoveredCard === ach.id ? 'scale-110 rotate-y-180' : ''}
                             `}>
-                                <ach.icon className="w-10 h-10" />
+                                <IconComponent className="w-10 h-10" />
                             </div>
 
                             <h3 className={`text-lg font-bold mb-2 ${ach.unlocked ? 'text-white' : 'text-gray-500'}`}>
                                 {ach.title}
                             </h3>
                             <p className="text-xs text-gray-400 leading-relaxed">
-                                {ach.desc}
+                                {ach.description}
                             </p>
 
-                            {/* Badge de Raridade */}
                             <div className={`
                                 absolute top-4 right-4 px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider
                                 ${ach.rarity === 'legendary' ? 'text-[var(--color-warning)] border border-[var(--color-warning)]/30' : 
@@ -300,15 +368,16 @@ export default function GamificationPage() {
                                 {ach.rarity}
                             </div>
 
-                            {/* Cadeado se bloqueado */}
                             {!ach.unlocked && (
                                 <div className="absolute inset-0 flex items-center justify-center bg-black/60 backdrop-blur-[2px] rounded-2xl">
-                                    <LockIcon className="w-8 h-8 text-gray-500" />
+                                    <LockIconLucide className="w-8 h-8 text-gray-500" />
                                 </div>
                             )}
                         </div>
-                    ))}
+                        );
+                    })}
                 </div>
+                )}
             </div>
 
             {/* Efeitos de Fundo */}

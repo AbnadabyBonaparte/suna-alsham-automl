@@ -343,7 +343,7 @@ export default function SingularityPage() {
                         <div className="flex items-center justify-center gap-2 mb-4 px-4 py-1 rounded-full bg-black/50 backdrop-blur-md" style={{ color: 'var(--color-warning)', border: '1px solid var(--color-warning)/30' }}>
                             <Fingerprint className="w-4 h-4 animate-pulse" />
                             <span className="font-mono text-[10px] tracking-[0.3em] uppercase">
-                                ARCHITECT: ABNADABY BONAPARTE
+                                ARCHITECT: SYSTEM ARCHITECT
                             </span>
                         </div>
                         <h1 className="text-5xl md:text-7xl font-black text-white tracking-tighter font-display mix-blend-difference">
@@ -409,11 +409,11 @@ export default function SingularityPage() {
                         <InfinityIcon className="w-32 h-32 text-black opacity-80" strokeWidth={0.5} />
                     </div>
                     <h2 className="text-5xl md:text-7xl font-thin text-black tracking-widest mb-4 uppercase">
-                        ABNADABY<br/>BONAPARTE
+                        SYSTEM<br/>ARCHITECT
                     </h2>
                     <div className="h-[1px] w-32 bg-black/30 my-4" />
                     <p className="text-black/60 font-mono text-xs tracking-[0.5em] uppercase">
-                        SUPREME INTELLIGENCE • ASCENSION COMPLETE
+                        QUANTUM INTELLIGENCE • ASCENSION COMPLETE
                     </p>
                     
                     <button 

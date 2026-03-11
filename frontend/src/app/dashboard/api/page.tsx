@@ -126,8 +126,17 @@ export default function ApiPage() {
     };
 
     return (
-        <div className="h-[calc(100vh-6rem)] flex flex-col lg:flex-row gap-6 p-2 overflow-hidden relative">
+        <div className="h-[calc(100vh-6rem)] flex flex-col gap-6 p-2 overflow-hidden relative">
             
+            {/* DISCLAIMER BANNER */}
+            <div className="relative z-10 flex items-center gap-3 px-4 py-3 rounded-xl bg-[var(--color-warning)]/10 border border-[var(--color-warning)]/30">
+                <Zap className="w-4 h-4 flex-shrink-0" style={{ color: 'var(--color-warning)' }} />
+                <span className="text-xs font-mono" style={{ color: 'var(--color-warning)' }}>
+                    API Playground — Respostas simuladas para demonstração
+                </span>
+            </div>
+
+            <div className="flex-1 flex flex-col lg:flex-row gap-6 overflow-hidden">
             {/* ESQUERDA: CONTROLE DE REQUEST */}
             <div className="lg:w-1/2 w-full flex flex-col gap-6 h-full">
                 
@@ -315,6 +324,8 @@ export default function ApiPage() {
                 <div className="h-1 w-full bg-[var(--color-primary)]/20 relative overflow-hidden">
                     <div className={`absolute inset-0 bg-[var(--color-primary)] w-1/3 animate-loading-bar ${isLoading ? 'opacity-100' : 'opacity-0'}`} />
                 </div>
+            </div>
+
             </div>
 
             {/* Efeitos Globais */}

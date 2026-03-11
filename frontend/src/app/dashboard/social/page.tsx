@@ -12,30 +12,73 @@
 import { useState, useEffect, useRef } from 'react';
 import { 
     MessageCircle, Heart, Share2, TrendingUp, 
-    Globe, Radio, Zap, Search, Hash 
+    Globe, Radio, Zap, Search, Hash, RefreshCw, Inbox
 } from 'lucide-react';
+import { supabase } from '@/lib/supabase';
 
-// Dados Mockados
-const TRENDS = [
-    { id: 1, tag: '#AIRevolution', volume: 98, sentiment: 'positive' },
-    { id: 2, tag: '#CryptoCrash', volume: 85, sentiment: 'negative' },
-    { id: 3, tag: '#AlshamQuantum', volume: 92, sentiment: 'positive' },
-    { id: 4, tag: '#CyberSec', volume: 60, sentiment: 'neutral' },
-    { id: 5, tag: '#MarsColony', volume: 75, sentiment: 'positive' },
-];
+interface SocialPost {
+    id: string;
+    user: string;
+    content: string;
+    likes: number;
+    shares: number;
+    platform: string;
+    sentiment?: string;
+    created_at?: string;
+}
 
-const POSTS = [
-    { id: 1, user: '@elon_musk_ai', content: 'A singularidade está mais próxima do que imaginamos. 🚀', likes: '42k', shares: '12k', platform: 'X' },
-    { id: 2, user: '@dev_squad', content: 'Alguém já testou o novo protocolo Orion? Absurdo.', likes: '1.2k', shares: '300', platform: 'Reddit' },
-    { id: 3, user: '@tech_insider', content: 'Vazou a nova arquitetura de rede neural. Thread 🧵', likes: '8k', shares: '4k', platform: 'X' },
-    { id: 4, user: '@crypto_whale', content: 'Mercado derretendo. HODL! 📉', likes: '500', shares: '50', platform: 'Discord' },
-    { id: 5, user: '@future_is_now', content: 'A era biológica acabou.', likes: '900', shares: '120', platform: 'Instagram' },
-];
+function formatCount(n: number): string {
+    if (n >= 1000) return `${(n / 1000).toFixed(1)}k`;
+    return String(n);
+}
 
 export default function SocialPage() {
     const waveCanvasRef = useRef<HTMLCanvasElement>(null);
-    const [activeTrend, setActiveTrend] = useState<number | null>(null);
-    const [sentimentScore, setSentimentScore] = useState(78); // 0-100
+    const [activeTrend, setActiveTrend] = useState<string | null>(null);
+    const [sentimentScore, setSentimentScore] = useState(50);
+    const [posts, setPosts] = useState<SocialPost[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
+
+    useEffect(() => {
+        async function loadSocialData() {
+            setLoading(true);
+            setError(null);
+            try {
+                const { data, error: fetchError } = await supabase
+                    .from('social_posts')
+                    .select('*')
+                    .order('created_at', { ascending: false })
+                    .limit(20);
+
+                if (fetchError) throw fetchError;
+
+                const mapped: SocialPost[] = (data || []).map((p) => ({
+                    id: p.id,
+                    user: p.user || '@unknown',
+                    content: p.content || '',
+                    likes: p.likes || 0,
+                    shares: p.shares || 0,
+                    platform: p.platform || 'Web',
+                    sentiment: p.sentiment,
+                    created_at: p.created_at,
+                }));
+                setPosts(mapped);
+
+                if (mapped.length > 0) {
+                    const positive = mapped.filter(p => p.sentiment === 'positive').length;
+                    setSentimentScore(Math.round((positive / mapped.length) * 100));
+                }
+            } catch (err) {
+                console.error('Failed to load social data:', err);
+                setError('Erro ao carregar dados sociais');
+            } finally {
+                setLoading(false);
+            }
+        }
+
+        loadSocialData();
+    }, []);
 
     // 1. ENGINE VISUAL (ONDA DE SENTIMENTO)
     useEffect(() => {
@@ -108,36 +151,9 @@ export default function SocialPage() {
         return () => window.removeEventListener('resize', resize);
     }, [sentimentScore]);
 
-    // Simulador de Live Data
-    useEffect(() => {
-        const interval = setInterval(() => {
-            // Flutuar sentimento
-            setSentimentScore(prev => {
-                const change = (Math.random() - 0.5) * 10;
-                return Math.max(0, Math.min(100, prev + change));
-            });
-        }, 2000);
-        return () => clearInterval(interval);
-    }, []);
 
     return (
         <div className="h-[calc(100vh-6rem)] flex flex-col lg:flex-row gap-6 p-2 overflow-hidden relative">
-
-            {/* COMING SOON BADGE */}
-            <div className="absolute top-4 right-4 z-50 animate-pulse">
-                <div className="bg-gradient-to-r from-[var(--color-primary)]/20 via-[var(--color-accent)]/20 to-[var(--color-secondary)]/20 backdrop-blur-xl border-2 border-[var(--color-primary)]/50 rounded-2xl px-6 py-3 shadow-[0_0_30px_var(--color-primary)]">
-                    <div className="flex items-center gap-3">
-                        <div className="w-2 h-2 rounded-full bg-[var(--color-primary)] animate-ping" />
-                        <span className="text-sm font-black text-white uppercase tracking-widest orbitron">
-                            Coming Soon
-                        </span>
-                        <Zap className="w-4 h-4 text-[var(--color-accent)]" />
-                    </div>
-                    <div className="text-[10px] text-gray-400 text-center mt-1 font-mono">
-                        Feature in development
-                    </div>
-                </div>
-            </div>
 
             {/* ESQUERDA: VISUALIZAÇÃO MACRO */}
             <div className="lg:w-2/3 w-full flex flex-col gap-6">
@@ -168,39 +184,53 @@ export default function SocialPage() {
                     <div className="absolute inset-0 bg-[url('/grid.svg')] opacity-10 pointer-events-none" />
                 </div>
 
-                {/* 2. TRENDING BUBBLES */}
+                {/* 2. SENTIMENT SUMMARY */}
                 <div className="h-48 flex gap-4">
-                    {TRENDS.map((trend, i) => (
-                        <div 
-                            key={trend.id}
-                            onMouseEnter={() => setActiveTrend(trend.id)}
-                            onMouseLeave={() => setActiveTrend(null)}
-                            className={`
-                                flex-1 rounded-2xl border transition-all duration-500 cursor-pointer relative overflow-hidden flex flex-col items-center justify-center
-                                ${activeTrend === trend.id 
-                                    ? 'bg-[var(--color-primary)]/20 border-[var(--color-primary)] scale-105 z-10' 
-                                    : 'bg-black/40 border-white/5 hover:bg-white/10'}
-                            `}
-                        >
-                            {/* Bubble Visual */}
-                            <div 
-                                className="absolute w-32 h-32 rounded-full blur-2xl opacity-20 transition-all duration-1000"
-                                style={{
-                                    background: trend.sentiment === 'positive' ? 'var(--color-success)' : trend.sentiment === 'negative' ? 'var(--color-error)' : 'var(--color-primary)'
-                                }}
-                                style={{ transform: activeTrend === trend.id ? 'scale(1.5)' : 'scale(1)' }}
-                            />
-                            
-                            <div className="relative z-10 text-center">
-                                <div className="text-xs text-gray-400 font-mono mb-1">#{i + 1} TRENDING</div>
-                                <div className="text-lg font-bold text-white">{trend.tag}</div>
-                                <div className="mt-2 flex items-center justify-center gap-1 text-xs font-mono">
-                                    <TrendingUp className="w-3 h-3" />
-                                    <span>{trend.volume}k Vol</span>
-                                </div>
-                            </div>
+                    {loading ? (
+                        <div className="flex-1 flex items-center justify-center">
+                            <RefreshCw className="w-8 h-8 animate-spin text-[var(--color-primary)]" />
                         </div>
-                    ))}
+                    ) : posts.length === 0 ? (
+                        <div className="flex-1 flex flex-col items-center justify-center bg-black/40 rounded-2xl border border-white/5">
+                            <Inbox className="w-10 h-10 text-gray-600 mb-2" />
+                            <p className="text-sm text-gray-500">Nenhum post encontrado</p>
+                        </div>
+                    ) : (
+                        ['positive', 'neutral', 'negative'].map((sentiment, i) => {
+                            const count = posts.filter(p => p.sentiment === sentiment).length;
+                            const pct = posts.length > 0 ? Math.round((count / posts.length) * 100) : 0;
+                            return (
+                                <div 
+                                    key={sentiment}
+                                    onMouseEnter={() => setActiveTrend(sentiment)}
+                                    onMouseLeave={() => setActiveTrend(null)}
+                                    className={`
+                                        flex-1 rounded-2xl border transition-all duration-500 cursor-pointer relative overflow-hidden flex flex-col items-center justify-center
+                                        ${activeTrend === sentiment
+                                            ? 'bg-[var(--color-primary)]/20 border-[var(--color-primary)] scale-105 z-10' 
+                                            : 'bg-black/40 border-white/5 hover:bg-white/10'}
+                                    `}
+                                >
+                                    <div 
+                                        className="absolute w-32 h-32 rounded-full blur-2xl opacity-20 transition-all duration-1000"
+                                        style={{
+                                            background: sentiment === 'positive' ? 'var(--color-success)' : sentiment === 'negative' ? 'var(--color-error)' : 'var(--color-primary)',
+                                            transform: activeTrend === sentiment ? 'scale(1.5)' : 'scale(1)'
+                                        }}
+                                    />
+                                    
+                                    <div className="relative z-10 text-center">
+                                        <div className="text-xs text-gray-400 font-mono mb-1 uppercase">{sentiment}</div>
+                                        <div className="text-3xl font-bold text-white">{pct}%</div>
+                                        <div className="mt-2 flex items-center justify-center gap-1 text-xs font-mono">
+                                            <TrendingUp className="w-3 h-3" />
+                                            <span>{count} posts</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            );
+                        })
+                    )}
                 </div>
             </div>
 
@@ -233,42 +263,58 @@ export default function SocialPage() {
                 <div className="flex-1 overflow-y-auto p-4 space-y-3 scrollbar-thin scrollbar-thumb-white/10 relative">
                     <div className="absolute top-0 left-0 right-0 h-8 bg-gradient-to-b from-[#02040a] to-transparent z-10 pointer-events-none" />
                     
-                    {POSTS.map((post, i) => (
-                        <div 
-                            key={post.id}
-                            className="bg-white/5 hover:bg-white/10 border border-white/5 hover:border-[var(--color-primary)]/30 rounded-xl p-4 transition-all duration-300 animate-slideInBottom group"
-                            style={{ animationDelay: `${i * 0.1}s` }}
-                        >
-                            <div className="flex justify-between items-start mb-2">
-                                <div className="flex items-center gap-2">
-                                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-gray-700 to-black border border-white/10 flex items-center justify-center font-bold text-xs text-white">
-                                        {post.user.charAt(1).toUpperCase()}
-                                    </div>
-                                    <div>
-                                        <div className="text-xs font-bold text-white group-hover:text-[var(--color-primary)] transition-colors">{post.user}</div>
-                                        <div className="text-[10px] text-gray-500">{post.platform} • Just now</div>
-                                    </div>
-                                </div>
-                                <Hash className="w-3 h-3 text-gray-600" />
-                            </div>
-                            
-                            <p className="text-sm text-gray-300 leading-relaxed mb-3">
-                                {post.content}
-                            </p>
-
-                            <div className="flex gap-4 text-xs text-gray-500 font-mono">
-                                <div className="flex items-center gap-1 hover:text-[var(--color-error)] transition-colors cursor-pointer">
-                                    <Heart className="w-3 h-3" /> {post.likes}
-                                </div>
-                                <div className="flex items-center gap-1 hover:text-[var(--color-primary)] transition-colors cursor-pointer">
-                                    <Share2 className="w-3 h-3" /> {post.shares}
-                                </div>
-                                <div className="flex items-center gap-1 hover:text-white transition-colors cursor-pointer">
-                                    <MessageCircle className="w-3 h-3" /> Reply
-                                </div>
-                            </div>
+                    {loading ? (
+                        <div className="flex items-center justify-center py-12">
+                            <RefreshCw className="w-8 h-8 animate-spin text-[var(--color-primary)]" />
                         </div>
-                    ))}
+                    ) : error ? (
+                        <div className="text-center py-12">
+                            <p className="text-sm text-[var(--color-error)]">{error}</p>
+                        </div>
+                    ) : posts.length === 0 ? (
+                        <div className="flex flex-col items-center justify-center py-12">
+                            <Inbox className="w-12 h-12 text-gray-600 mb-3" />
+                            <p className="text-sm text-gray-500">Nenhum post social encontrado</p>
+                            <p className="text-xs text-gray-600 mt-1">Os dados aparecerão aqui quando disponíveis</p>
+                        </div>
+                    ) : (
+                        posts.map((post, i) => (
+                            <div 
+                                key={post.id}
+                                className="bg-white/5 hover:bg-white/10 border border-white/5 hover:border-[var(--color-primary)]/30 rounded-xl p-4 transition-all duration-300 animate-slideInBottom group"
+                                style={{ animationDelay: `${i * 0.1}s` }}
+                            >
+                                <div className="flex justify-between items-start mb-2">
+                                    <div className="flex items-center gap-2">
+                                        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-gray-700 to-black border border-white/10 flex items-center justify-center font-bold text-xs text-white">
+                                            {post.user.charAt(1)?.toUpperCase() || '?'}
+                                        </div>
+                                        <div>
+                                            <div className="text-xs font-bold text-white group-hover:text-[var(--color-primary)] transition-colors">{post.user}</div>
+                                            <div className="text-[10px] text-gray-500">{post.platform} • {post.created_at ? new Date(post.created_at).toLocaleString('pt-BR') : 'Recente'}</div>
+                                        </div>
+                                    </div>
+                                    <Hash className="w-3 h-3 text-gray-600" />
+                                </div>
+                                
+                                <p className="text-sm text-gray-300 leading-relaxed mb-3">
+                                    {post.content}
+                                </p>
+
+                                <div className="flex gap-4 text-xs text-gray-500 font-mono">
+                                    <div className="flex items-center gap-1 hover:text-[var(--color-error)] transition-colors cursor-pointer">
+                                        <Heart className="w-3 h-3" /> {formatCount(post.likes)}
+                                    </div>
+                                    <div className="flex items-center gap-1 hover:text-[var(--color-primary)] transition-colors cursor-pointer">
+                                        <Share2 className="w-3 h-3" /> {formatCount(post.shares)}
+                                    </div>
+                                    <div className="flex items-center gap-1 hover:text-white transition-colors cursor-pointer">
+                                        <MessageCircle className="w-3 h-3" /> Reply
+                                    </div>
+                                </div>
+                            </div>
+                        ))
+                    )}
                     
                     <div className="absolute bottom-0 left-0 right-0 h-20 bg-gradient-to-t from-[#02040a] to-transparent z-10 pointer-events-none" />
                 </div>

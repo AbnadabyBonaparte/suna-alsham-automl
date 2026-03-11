@@ -97,7 +97,7 @@ export default function EvolutionPage() {
             }
         } catch (error) {
             console.error('Erro ao carregar dados:', error);
-            addNotification('Erro ao carregar dados de evolução', 'error');
+            addNotification({ type: 'error', title: 'Erro ao carregar dados de evolução' });
         } finally {
             setLoading(false);
         }
@@ -126,13 +126,13 @@ export default function EvolutionPage() {
                     analysis: data.analysis,
                 });
                 setShowProposalModal(true);
-                addNotification(`Proposta de evolução gerada para ${agentName}!`, 'success');
+                addNotification({ type: 'success', title: `Proposta de evolução gerada para ${agentName}!` });
             } else {
-                addNotification(`Erro: ${data.error}`, 'error');
+                addNotification({ type: 'error', title: `Erro: ${data.error}` });
             }
         } catch (error) {
             console.error('Erro ao analisar agent:', error);
-            addNotification('Erro ao analisar agent com Claude', 'error');
+            addNotification({ type: 'error', title: 'Erro ao analisar agent com Claude' });
         } finally {
             setProposing(false);
             setAnalyzing(false);
@@ -158,19 +158,19 @@ export default function EvolutionPage() {
 
             if (data.success) {
                 if (action === 'approve') {
-                    addNotification(`🧬 Agent ${currentProposal.agent_name} evoluído com sucesso!`, 'success');
+                    addNotification({ type: 'success', title: `🧬 Agent ${currentProposal.agent_name} evoluído com sucesso!` });
                 } else {
-                    addNotification(`Proposta para ${currentProposal.agent_name} rejeitada`, 'info');
+                    addNotification({ type: 'info', title: `Proposta para ${currentProposal.agent_name} rejeitada` });
                 }
                 setShowProposalModal(false);
                 setCurrentProposal(null);
                 loadData();
             } else {
-                addNotification(`Erro: ${data.error}`, 'error');
+                addNotification({ type: 'error', title: `Erro: ${data.error}` });
             }
         } catch (error) {
             console.error('Erro ao aplicar evolução:', error);
-            addNotification('Erro ao processar ação', 'error');
+            addNotification({ type: 'error', title: 'Erro ao processar ação' });
         } finally {
             setApplying(false);
         }

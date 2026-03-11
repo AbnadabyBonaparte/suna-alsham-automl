@@ -41,7 +41,7 @@ export default function ContainmentPage() {
         totalRequests: 0,
         failedRequests: 0,
         activeAgents: 0,
-        uptime: 99.9,
+        uptime: 0,
     });
 
     // Carregar dados reais
@@ -65,15 +65,20 @@ export default function ContainmentPage() {
                     .select('*', { count: 'exact', head: true })
                     .eq('status', 'active');
 
+                const total = totalRequests || 0;
+                const failed = failedRequests || 0;
+                const uptimePercent = total > 0
+                    ? Math.round(((total - failed) / total) * 1000) / 10
+                    : 0;
+
                 setStats({
-                    totalRequests: totalRequests || 0,
-                    failedRequests: failedRequests || 0,
+                    totalRequests: total,
+                    failedRequests: failed,
                     activeAgents: activeAgents || 0,
-                    uptime: 99.9,
+                    uptime: uptimePercent,
                 });
 
-                // Calcular threats blocked baseado em failed requests
-                setThreatsBlocked(Math.floor((failedRequests || 0) * 1.5 + Math.random() * 1000));
+                setThreatsBlocked(failed);
 
                 // Calcular integridade
                 const integrityScore = totalRequests && totalRequests > 0 
