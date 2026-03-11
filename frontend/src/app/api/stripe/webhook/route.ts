@@ -28,7 +28,7 @@ export async function POST(req: Request) {
   }
 
   const stripe = new Stripe(stripeSecretKey, {
-    apiVersion: '2023-10-16',
+    apiVersion: '2023-10-16' as Stripe.LatestApiVersion,
   });
 
   const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
@@ -47,7 +47,7 @@ export async function POST(req: Request) {
   }
 
   if (event.type === 'checkout.session.completed') {
-    const session = event.data.object as Stripe.CheckoutSession;
+    const session = event.data.object as Stripe.Checkout.Session;
 
     const { client_reference_id, customer, amount_total } = session;
 
@@ -71,7 +71,7 @@ export async function POST(req: Request) {
             plan: 'enterprise',
             paid: true,
             stripe_customer_id: customer as string,
-            amount_paid: amount_total / 100, // Stripe returns amount in cents
+            amount_paid: (amount_total ?? 0) / 100,
             last_payment_date: new Date().toISOString(),
           })
           .eq('id', client_reference_id);
@@ -81,17 +81,16 @@ export async function POST(req: Request) {
           return new NextResponse('Error updating user', { status: 500 });
         }
       } else {
-        // Handle case where user does not exist (e.g., create new user or log error)
         console.warn(`User with ID ${client_reference_id} not found. Creating new user.`);
 
         const { error: insertError } = await supabaseAdmin
-          .from('users') // Replace 'users' with your actual user table name
+          .from('users')
           .insert({
             id: client_reference_id,
             plan: 'enterprise',
             paid: true,
             stripe_customer_id: customer as string,
-            amount_paid: amount_total / 100,
+            amount_paid: (amount_total ?? 0) / 100,
             last_payment_date: new Date().toISOString(),
             // Add other necessary fields for a new user
           });

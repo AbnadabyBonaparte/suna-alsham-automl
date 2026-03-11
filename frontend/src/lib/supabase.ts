@@ -1,5 +1,6 @@
 /** @deprecated Use createClient from '@/lib/supabase/client' instead */
 
+import type { SupabaseClient } from '@supabase/supabase-js';
 import { createClient as createBrowserClient } from './supabase/client';
 
 // Lazy initialization - só cria o cliente quando for realmente usado

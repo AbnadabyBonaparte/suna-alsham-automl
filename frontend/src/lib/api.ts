@@ -15,8 +15,8 @@ export async function fetchAgents(): Promise<Agent[]> {
     return data.map((a: Record<string, unknown>) => ({
       id: a.id as string,
       name: (a.name as string) || 'Unknown Unit',
-      role: (a.role as string) || 'SPECIALIST',
-      status: (a.status as string) || 'IDLE',
+      role: ((a.role as string) || 'SPECIALIST') as Agent['role'],
+      status: ((a.status as string) || 'IDLE') as Agent['status'],
       efficiency: (a.efficiency as number) || 0,
       currentTask: (a.current_task as string) || 'Aguardando comando',
       lastActive: new Date().toLocaleTimeString(),

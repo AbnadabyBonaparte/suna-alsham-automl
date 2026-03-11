@@ -4,15 +4,15 @@ import { fetchAgents } from './api';
 
 // DADOS DE FALLBACK (Caso o Backend esteja dormindo)
 const FALLBACK_AGENTS: Agent[] = [
-  { id: 'orc-alpha', name: 'ORCHESTRA ALPHA', role: 'CORE', status: 'ACTIVE', efficiency: 99.9, currentTask: 'Sincronizando 5 nós neurais', lastActive: 'Now' },
+  { id: 'orc-alpha', name: 'ORCHESTRA ALPHA', role: 'CORE', status: 'PROCESSING', efficiency: 99.9, currentTask: 'Sincronizando 5 nós neurais', lastActive: 'Now' },
   { id: 'rev-hunt', name: 'REVENUE HUNTER', role: 'SPECIALIST', status: 'PROCESSING', efficiency: 94.2, currentTask: 'Analisando padrões de compra globais', lastActive: 'Now' },
-  { id: 'sec-guard', name: 'SECURITY GUARDIAN', role: 'GUARD', status: 'ACTIVE', efficiency: 100.0, currentTask: 'Varredura de ameaças quânticas', lastActive: 'Now' },
+  { id: 'sec-guard', name: 'SECURITY GUARDIAN', role: 'GUARD', status: 'PROCESSING', efficiency: 100.0, currentTask: 'Varredura de ameaças quânticas', lastActive: 'Now' },
   { id: 'cont-cre', name: 'CONTENT CREATOR', role: 'ANALYST', status: 'IDLE', efficiency: 87.15, currentTask: 'Agregando multicanal', lastActive: '2m ago' },
   { id: 'mark-pred', name: 'MARKET PREDICTOR', role: 'ANALYST', status: 'WARNING', efficiency: 76.1, currentTask: 'Recalculando volatilidade do mercado', lastActive: '1m ago' },
-  { id: 'supp-sent', name: 'SUPPORT SENTINEL', role: 'SPECIALIST', status: 'ACTIVE', efficiency: 98.3, currentTask: 'Monitoramento de tickets em tempo real', lastActive: 'Now' },
-  { id: 'dev-mast', name: 'DEVOPS MASTER', role: 'CORE', status: 'ACTIVE', efficiency: 98.4, currentTask: 'Otimizando pipeline CI/CD', lastActive: 'Now' },
+  { id: 'supp-sent', name: 'SUPPORT SENTINEL', role: 'SPECIALIST', status: 'PROCESSING', efficiency: 98.3, currentTask: 'Monitoramento de tickets em tempo real', lastActive: 'Now' },
+  { id: 'dev-mast', name: 'DEVOPS MASTER', role: 'CORE', status: 'PROCESSING', efficiency: 98.4, currentTask: 'Otimizando pipeline CI/CD', lastActive: 'Now' },
   { id: 'data-min', name: 'DATA MINER', role: 'ANALYST', status: 'PROCESSING', efficiency: 91.4, currentTask: 'Extração de dados profundos', lastActive: 'Now' },
-  { id: 'net-watch', name: 'NETWORK WATCHER', role: 'GUARD', status: 'ACTIVE', efficiency: 100.0, currentTask: 'Ping 2ms - Latência zero', lastActive: 'Now' },
+  { id: 'net-watch', name: 'NETWORK WATCHER', role: 'GUARD', status: 'PROCESSING', efficiency: 100.0, currentTask: 'Ping 2ms - Latência zero', lastActive: 'Now' },
 ];
 
 export const useQuantumStore = create<QuantumState>((set, get) => ({

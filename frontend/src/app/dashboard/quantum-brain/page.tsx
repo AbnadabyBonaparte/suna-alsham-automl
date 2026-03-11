@@ -45,9 +45,10 @@ interface Agent {
   id: string;
   name: string;
   role: string;
-  squad: string;
+  squad?: string;
   status: string;
   efficiency: number;
+  current_task?: string;
 }
 
 // Squads disponíveis - USANDO VARIÁVEIS CSS
@@ -274,7 +275,7 @@ export default function QuantumBrainPage() {
   });
 
   // Filtrar agents para dropdown
-  const filteredAgents = (agents || []).filter((agent: Agent) => 
+  const filteredAgents = ((agents || []) as Agent[]).filter(agent => 
     agent.name?.toLowerCase().includes(agentSearch.toLowerCase()) ||
     agent.role?.toLowerCase().includes(agentSearch.toLowerCase()) ||
     agent.squad?.toLowerCase().includes(agentSearch.toLowerCase())
@@ -594,7 +595,7 @@ export default function QuantumBrainPage() {
               >
                 <span>
                   {selectedAgent === 'auto' ? '🤖 Automático (ORION decide)' : 
-                   agents?.find((a: Agent) => a.id === selectedAgent)?.name || selectedAgent}
+                   (agents as Agent[] | undefined)?.find(a => a.id === selectedAgent)?.name || selectedAgent}
                 </span>
                 <ChevronDown className={`w-4 h-4 transition-transform ${showAgentDropdown ? 'rotate-180' : ''}`} style={{ color: 'var(--color-text-secondary)' }} />
               </button>
@@ -629,7 +630,7 @@ export default function QuantumBrainPage() {
                   >
                     🤖 Automático (ORION decide)
                   </button>
-                  {filteredAgents.slice(0, 20).map((agent: Agent) => (
+                  {filteredAgents.slice(0, 20).map((agent) => (
                     <button
                       key={agent.id}
                       onClick={() => { setSelectedAgent(agent.id); setShowAgentDropdown(false); }}

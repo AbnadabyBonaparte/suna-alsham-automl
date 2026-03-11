@@ -27,7 +27,7 @@ export function useAnalytics() {
 
       // Agrupar por role
       const roleMap = new Map<string, { count: number; totalEff: number }>();
-      agents?.forEach(agent => {
+      agents?.forEach((agent: { role?: string; efficiency?: number; status?: string }) => {
         const role = agent.role || 'UNKNOWN';
         const current = roleMap.get(role) || { count: 0, totalEff: 0 };
         roleMap.set(role, {
@@ -50,7 +50,7 @@ export function useAnalytics() {
       if (requestsError) throw requestsError;
 
       const statusMap = new Map<string, number>();
-      requests?.forEach(req => {
+      requests?.forEach((req: { status?: string }) => {
         const status = req.status || 'unknown';
         statusMap.set(status, (statusMap.get(status) || 0) + 1);
       });
@@ -62,9 +62,9 @@ export function useAnalytics() {
 
       // 3. Calcular métricas gerais
       const totalAgents = agents?.length || 0;
-      const activeAgents = agents?.filter(a => a.status === 'running').length || 0;
+      const activeAgents = agents?.filter((a: { status?: string }) => a.status === 'running').length || 0;
       const avgEfficiency = totalAgents > 0
-        ? Math.round(agents!.reduce((sum, a) => sum + (a.efficiency || 0), 0) / totalAgents)
+        ? Math.round(agents!.reduce((sum: number, a: { efficiency?: number }) => sum + (a.efficiency || 0), 0) / totalAgents)
         : 0;
 
       // 4. Gerar dados de eficiência ao longo do tempo
@@ -98,10 +98,10 @@ export function useAnalytics() {
   };
 }
 
-function generateTimeSeriesFromAgents(agents: any[], days: number) {
+function generateTimeSeriesFromAgents(agents: { efficiency?: number }[], days: number) {
   const result = [];
   const baseEfficiency = agents.length > 0
-    ? agents.reduce((sum, a) => sum + (a.efficiency || 0), 0) / agents.length
+    ? agents.reduce((sum: number, a: { efficiency?: number }) => sum + (a.efficiency || 0), 0) / agents.length
     : 0;
 
   for (let i = days - 1; i >= 0; i--) {

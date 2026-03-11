@@ -25,9 +25,9 @@ export function useDashboardStats() {
         if (agentsError) throw agentsError;
 
         const avgEfficiency = agents?.length
-          ? agents.reduce((sum, a) => sum + (a.efficiency || 0), 0) / agents.length
+          ? agents.reduce((sum: number, a: { efficiency?: number }) => sum + (a.efficiency || 0), 0) / agents.length
           : 0;
-        const agentEfficiencies = agents?.map(a => a.efficiency || 0) || [];
+        const agentEfficiencies = agents?.map((a: { efficiency?: number }) => a.efficiency || 0) || [];
 
         const { count: totalAgentsCount } = await supabase
           .from('agents')

@@ -1,12 +1,15 @@
 import { create } from 'zustand';
 
-interface Agent {
+export interface Agent {
   id: string;
   name: string;
   role: string;
   status: string;
   efficiency: number;
-  current_task: string;
+  current_task?: string;
+  currentTask?: string;
+  squad?: string;
+  last_active?: string;
 }
 
 interface AgentsStore {

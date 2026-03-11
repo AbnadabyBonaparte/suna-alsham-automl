@@ -47,7 +47,7 @@ export default function SingularityPage() {
     });
     const [countdown, setCountdown] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
     
-    const requestRef = useRef<number>();
+    const requestRef = useRef<number>(null);
 
     const refetch = () => { setError(null); setLoading(true); };
 

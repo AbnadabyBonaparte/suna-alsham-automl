@@ -80,7 +80,7 @@ export default function AgentDetailPage() {
         play("click");
         setIsEvolving(true);
         setTimeout(() => {
-            play("upgrade");
+            play("click");
             setIsEvolving(false);
             addNotification({
                 type: 'success',

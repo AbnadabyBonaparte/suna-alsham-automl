@@ -24,8 +24,15 @@ interface SidebarProps {
   onClose?: () => void;
 }
 
-// Configuração dos Grupos de Menu - SEM CORES FIXAS
-const MENU_GROUPS = [
+interface MenuItem {
+  name: string;
+  href: string;
+  icon: React.ComponentType<{ className?: string; style?: React.CSSProperties }>;
+  badge?: string;
+  special?: boolean;
+}
+
+const MENU_GROUPS: { title: string; items: MenuItem[] }[] = [
   {
     title: "COMMAND CENTER",
     items: [

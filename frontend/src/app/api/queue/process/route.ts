@@ -106,7 +106,7 @@ export async function POST(request: NextRequest) {
       results: results.map(r => ({
         request_id: r.request_id,
         success: r.success,
-        agent_name: r.agent_name,
+        agent_name: 'agent_name' in r ? r.agent_name : undefined,
         error: r.error
       })),
       timestamp: new Date().toISOString()

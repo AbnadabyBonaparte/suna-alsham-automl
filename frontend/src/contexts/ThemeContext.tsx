@@ -33,17 +33,6 @@ const STORAGE_KEY = 'alsham_quantum_theme';
 const SOUND_STORAGE_KEY = 'alsham_quantum_sound_enabled';
 const TRANSITION_DURATION = 800; // ms
 
-// Type augmentation para View Transitions API
-declare global {
-  interface Document {
-    startViewTransition?: (callback: () => void) => {
-      finished: Promise<void>;
-      ready: Promise<void>;
-      updateCallbackDone: Promise<void>;
-    };
-  }
-}
-
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const [currentTheme, setCurrentTheme] = useState<ThemeId>(DEFAULT_THEME);
   const [isTransitioning, setIsTransitioning] = useState(false);

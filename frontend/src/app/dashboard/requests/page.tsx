@@ -296,7 +296,7 @@ export default function RequestsPage() {
                                 </div>
                                 <h3 className="font-bold text-text text-sm mb-1 truncate">{job.title}</h3>
                                 <div className="flex items-center gap-2 text-xs text-[var(--color-textSecondary)] font-mono">
-                                    <Clock className="w-3 h-3" /> {job.timestamp}
+                                    <Clock className="w-3 h-3" /> {(job as unknown as Record<string, string>).timestamp || (job as unknown as Record<string, string>).created_at || ''}
                                 </div>
                                 
                                 {/* Progress Bar */}

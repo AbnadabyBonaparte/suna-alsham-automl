@@ -44,7 +44,7 @@ export function useAudioVisualizer(): UseAudioVisualizerReturn {
   const analyserRef = useRef<AnalyserNode | null>(null);
   const sourceRef = useRef<MediaStreamAudioSourceNode | null>(null);
   const animationFrameRef = useRef<number | null>(null);
-  const dataArrayRef = useRef<Uint8Array | null>(null);
+  const dataArrayRef = useRef<Uint8Array<ArrayBuffer> | null>(null);
 
   // ═══════════════════════════════════════════════════════════════════════════════
   // CLEANUP

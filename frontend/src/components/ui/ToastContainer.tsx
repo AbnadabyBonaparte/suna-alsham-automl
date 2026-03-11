@@ -15,7 +15,7 @@ import {
 } from 'lucide-react';
 import { useNotificationStore, type NotificationType } from '@/stores/useNotificationStore';
 
-const ICON_MAP: Record<NotificationType, React.ElementType> = {
+const ICON_MAP: Record<NotificationType, React.ComponentType<{ className?: string }>> = {
   success: CheckCircle,
   error: XCircle,
   warning: AlertTriangle,

@@ -4,16 +4,6 @@ import { ThemeId, ThemeConfig, THEMES, DEFAULT_THEME, THEME_ORDER } from '@/type
 
 const TRANSITION_DURATION = 800;
 
-declare global {
-  interface Document {
-    startViewTransition?: (callback: () => void) => {
-      finished: Promise<void>;
-      ready: Promise<void>;
-      updateCallbackDone: Promise<void>;
-    };
-  }
-}
-
 function applyThemeToDOM(themeId: ThemeId): void {
   if (typeof document === 'undefined') return;
   const theme = THEMES[themeId];
@@ -81,8 +71,8 @@ export const useUIStore = create<UIStore>()(
             set({ isTransitioning: false }, false, 'ui/setTheme:end');
           }, TRANSITION_DURATION);
 
-          if (typeof window !== 'undefined' && (window as Record<string, unknown>).gtag) {
-            (window as Record<string, unknown> & { gtag: (...args: unknown[]) => void }).gtag(
+          if (typeof window !== 'undefined' && (window as unknown as Record<string, unknown>).gtag) {
+            ((window as unknown as Record<string, unknown>).gtag as (...args: unknown[]) => void)(
               'event',
               'theme_change',
               { theme_name: theme },

@@ -259,7 +259,7 @@ export default function AgentsPage() {
                     <div className="pt-6 border-t border-border/10">
                       <p className="text-[10px] text-textSecondary uppercase tracking-widest mb-2">TAREFA ATUAL</p>
                       <p className="text-lg text-textSecondary font-mono leading-relaxed border-l-2 border-[var(--color-primary)] pl-4">
-                        &quot;{agent.currentTask}&quot;
+                        &quot;{agent.currentTask || agent.current_task || 'Awaiting orders'}&quot;
                       </p>
                     </div>
                   </div>
@@ -357,7 +357,7 @@ export default function AgentsPage() {
                   Current Task
                 </h3>
                 <p className="text-lg text-textSecondary font-mono leading-relaxed border-l-4 border-[var(--color-primary)] pl-4">
-                  &quot;{selectedAgent.currentTask}&quot;
+                  &quot;{selectedAgent.currentTask || selectedAgent.current_task || 'Awaiting orders'}&quot;
                 </p>
               </div>
 

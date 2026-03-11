@@ -22,7 +22,7 @@ export async function POST(req: Request) {
   }
 
   const stripe = new Stripe(stripeSecretKey, {
-    apiVersion: '2023-10-16',
+    apiVersion: '2023-10-16' as Stripe.LatestApiVersion,
   });
 
   try {
@@ -52,7 +52,8 @@ export async function POST(req: Request) {
 // GET: Verificar status da sessão
 // ========================================
 export async function GET(request: Request) {
-    const sessionId = request.nextUrl.searchParams.get('session_id');
+    const url = new URL(request.url);
+    const sessionId = url.searchParams.get('session_id');
 
     if (!sessionId) {
         return NextResponse.json(
@@ -71,7 +72,7 @@ export async function GET(request: Request) {
         }
 
         const stripe = new Stripe(stripeSecretKey, {
-            apiVersion: '2025-04-30.basil',
+            apiVersion: '2023-10-16' as Stripe.LatestApiVersion,
         });
 
         const session = await stripe.checkout.sessions.retrieve(sessionId);

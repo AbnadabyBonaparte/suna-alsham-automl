@@ -74,6 +74,6 @@ export function getPlanById(planId: string) {
 
 export function hasFeature(planId: string, feature: string): boolean {
     const plan = getPlanById(planId);
-    return plan.limits.features.includes(feature);
+    return (plan.limits.features as readonly string[]).includes(feature);
 }
 

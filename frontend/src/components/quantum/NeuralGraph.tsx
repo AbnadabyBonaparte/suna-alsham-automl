@@ -20,8 +20,9 @@ const getStatusColor = (status: string) => {
   }
 };
 
-function Node({ agent, position }: any) {
-  const ref = useRef<any>();
+function Node({ agent, position }: { agent: { status: string; name: string; efficiency: number; role?: string }; position: [number, number, number] }) {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const ref = useRef<any>(null);
   const [hovered, setHover] = useState(false);
   const color = getStatusColor(agent.status);
 

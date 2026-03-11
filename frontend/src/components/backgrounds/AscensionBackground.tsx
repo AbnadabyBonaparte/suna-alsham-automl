@@ -22,7 +22,7 @@ interface LightParticle {
 export function AscensionBackground() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const particlesRef = useRef<LightParticle[]>([]);
-  const animationFrameRef = useRef<number>();
+  const animationFrameRef = useRef<number>(null);
 
   useEffect(() => {
     const canvas = canvasRef.current;

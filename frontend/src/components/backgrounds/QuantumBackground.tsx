@@ -29,7 +29,7 @@ interface Particle {
 export default function QuantumBackground({ color = '#00FFD0' }: QuantumBackgroundProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const particlesRef = useRef<Particle[]>([]);
-  const animationFrameRef = useRef<number>();
+  const animationFrameRef = useRef<number>(null);
 
   useEffect(() => {
     const canvas = canvasRef.current;

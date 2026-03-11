@@ -1,11 +1,12 @@
 "use client";
 
 import { useRef, useMemo } from "react";
+import * as THREE from "three";
 import { Canvas, useFrame } from "@react-three/fiber";
 import { Points, PointMaterial } from "@react-three/drei";
 
-function StarField(props: any) {
-  const ref = useRef<any>();
+function StarField(props: Record<string, unknown>) {
+  const ref = useRef<THREE.Points>(null);
   
   // Gera as posições APENAS UMA VEZ (Otimização Extrema)
   const positions = useMemo(() => {
