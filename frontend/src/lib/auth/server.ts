@@ -53,14 +53,13 @@ export async function requireDashboardAccess(): Promise<DashboardAccess> {
   const isDevMode = process.env.NEXT_PUBLIC_DEV_MODE === 'true';
 
   const {
-    data: { session },
-  } = await supabase.auth.getSession();
+    data: { user },
+    error: userError,
+  } = await supabase.auth.getUser();
 
-  if (!session || !session.user) {
+  if (userError || !user) {
     redirect('/login?redirect=/dashboard');
   }
-
-  const user = session.user;
 
   if (isDevMode) {
     console.log('[AUTH][DEV] session', session);
@@ -112,9 +111,9 @@ export async function requireDashboardAccess(): Promise<DashboardAccess> {
     console.log('[AUTH][DEV] hasAccess', hasAccess);
   }
 
-  if (!hasAccess) {
-    redirect('/pricing?reason=payment_required');
-  }
+  // Permitir acesso ao dashboard mesmo sem subscription ativa
+  // O controle de features premium é feito nos componentes individuais
+  // Redirecionar para pricing apenas bloqueia o fluxo e causa loops
 
   return {
     profile,
