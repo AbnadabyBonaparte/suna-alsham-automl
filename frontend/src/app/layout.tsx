@@ -1,31 +1,23 @@
-/**
- * ═══════════════════════════════════════════════════════════════
- * ALSHAM QUANTUM - ROOT LAYOUT (COM TEMA INTEGRADO)
- * ═══════════════════════════════════════════════════════════════
- * 📁 PATH: frontend/src/app/layout.tsx
- * ═══════════════════════════════════════════════════════════════
- */
-
 import type { Metadata } from 'next';
 import { Inter, Orbitron, Rajdhani } from 'next/font/google';
 import './globals.css';
-import { ThemeProvider } from '@/contexts/ThemeContext';
-import { AuthProvider } from '@/contexts/AuthContext';
+import { ThemeHydrator } from '@/components/ThemeHydrator';
+import { AuthHydrator } from '@/components/AuthHydrator';
 import { GlobalKeyListener } from '@/components/layout/GlobalKeyListener';
 import RealityBackground from '@/components/backgrounds/RealityBackground';
 import { ThemeSwitcher } from '@/components/ui/ThemeSwitcher';
 
-const inter = Inter({ 
+const inter = Inter({
   subsets: ['latin'],
   variable: '--font-inter',
 });
 
-const orbitron = Orbitron({ 
+const orbitron = Orbitron({
   subsets: ['latin'],
   variable: '--font-orbitron',
 });
 
-const rajdhani = Rajdhani({ 
+const rajdhani = Rajdhani({
   subsets: ['latin'],
   weight: ['300', '400', '500', '600', '700'],
   variable: '--font-rajdhani',
@@ -49,8 +41,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html 
-      lang="pt-BR" 
+    <html
+      lang="pt-BR"
       className={`${inter.variable} ${orbitron.variable} ${rajdhani.variable}`}
       suppressHydrationWarning
     >
@@ -58,23 +50,17 @@ export default function RootLayout({
         <link rel="icon" href="/favicon.ico" />
       </head>
       <body className="antialiased">
-        <AuthProvider>
-          <ThemeProvider>
-            {/* Background Animado (muda com o tema) */}
-            <RealityBackground />
-            
-            {/* Keyboard Shortcuts (Alt+Shift+T para trocar tema) */}
-            <GlobalKeyListener />
-            
-            {/* Conteúdo Principal */}
-            <main className="relative z-10">
-              {children}
-            </main>
-            
-            {/* Theme Switcher (Botão Floating) */}
-            <ThemeSwitcher />
-          </ThemeProvider>
-        </AuthProvider>
+        <ThemeHydrator />
+        <AuthHydrator />
+
+        <RealityBackground />
+        <GlobalKeyListener />
+
+        <main className="relative z-10">
+          {children}
+        </main>
+
+        <ThemeSwitcher />
       </body>
     </html>
   );

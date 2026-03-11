@@ -1,3 +1,5 @@
+/** @deprecated Use createClient from '@/lib/supabase/client' instead */
+
 import { createClient as createBrowserClient } from './supabase/client';
 
 // Lazy initialization - só cria o cliente quando for realmente usado

@@ -188,14 +188,14 @@ export default function RequestsPage() {
                         </div>
                         <div>
                             <h1 className="text-2xl font-bold text-white tracking-tight font-display">FABRICATION DECK</h1>
-                            <p className="text-xs text-gray-400 font-mono uppercase">Initialize New Protocol</p>
+                            <p className="text-xs text-[var(--color-textSecondary)] font-mono uppercase">Initialize New Protocol</p>
                         </div>
                     </div>
 
                     {/* Inputs */}
                     <div className="space-y-6 flex-1">
                         <div className="space-y-2">
-                            <label className="text-xs font-bold text-gray-500 uppercase tracking-widest ml-1">Directive Title</label>
+                            <label className="text-xs font-bold text-[var(--color-textSecondary)] uppercase tracking-widest ml-1">Directive Title</label>
                             <input 
                                 type="text" 
                                 value={title}
@@ -206,7 +206,7 @@ export default function RequestsPage() {
                         </div>
 
                         <div className="space-y-2">
-                            <label className="text-xs font-bold text-gray-500 uppercase tracking-widest ml-1">Parameters / Context</label>
+                            <label className="text-xs font-bold text-[var(--color-textSecondary)] uppercase tracking-widest ml-1">Parameters / Context</label>
                             <textarea 
                                 value={desc}
                                 onChange={(e) => setDesc(e.target.value)}
@@ -234,7 +234,7 @@ export default function RequestsPage() {
                             className={`
                                 px-8 py-3 rounded-xl font-bold text-sm tracking-widest uppercase transition-all flex items-center gap-2
                                 ${isSubmitting 
-                                    ? 'bg-gray-700 text-gray-400 cursor-not-allowed' 
+                                    ? 'bg-[var(--color-surface)] text-[var(--color-textSecondary)] cursor-not-allowed' 
                                     : 'bg-[var(--color-primary)] text-black hover:bg-[var(--color-accent)] hover:shadow-[0_0_20px_rgba(var(--color-primary-rgb),0.4)]'
                                 }
                             `}
@@ -295,7 +295,7 @@ export default function RequestsPage() {
                                     </span>
                                 </div>
                                 <h3 className="font-bold text-white text-sm mb-1 truncate">{job.title}</h3>
-                                <div className="flex items-center gap-2 text-xs text-gray-500 font-mono">
+                                <div className="flex items-center gap-2 text-xs text-[var(--color-textSecondary)] font-mono">
                                     <Clock className="w-3 h-3" /> {job.timestamp}
                                 </div>
                                 

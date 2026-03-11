@@ -12,7 +12,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuthStore } from '@/stores/useAuthStore';
 import { 
     Check, Zap, Crown, Rocket, Shield, Brain, 
     Users, Database, ArrowRight, Sparkles, Star,
@@ -96,7 +96,9 @@ const PLANS = [
 
 export default function PricingPage() {
     const router = useRouter();
-    const { user, hasAccess, loading: authLoading } = useAuth();
+    const user = useAuthStore((s) => s.user);
+    const hasAccess = useAuthStore((s) => s.hasAccess)();
+    const authLoading = useAuthStore((s) => s.isLoading);
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const [selectedPlan, setSelectedPlan] = useState<string | null>(null);
     const [isLoading, setIsLoading] = useState<string | null>(null);

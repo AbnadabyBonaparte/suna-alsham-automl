@@ -1,3 +1,5 @@
+/** @deprecated Use getSupabaseAdmin from '@/lib/supabase-admin' with new pattern */
+
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 
 // Lazy initialization - só cria o cliente quando for realmente usado

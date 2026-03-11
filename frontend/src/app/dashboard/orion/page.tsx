@@ -12,7 +12,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { supabase } from '@/lib/supabase';
-import { useTheme } from '@/contexts/ThemeContext';
+import { useTheme } from '@/hooks/useTheme';
 import { 
     Crown, Mic, MicOff, Send, Bot, User, Sparkles, 
     ChevronDown, Cpu, Volume2, BrainCircuit, Activity,

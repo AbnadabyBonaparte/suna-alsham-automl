@@ -27,7 +27,7 @@ import { useOrionVoice } from '@/hooks/useOrionVoice';
 import { useAudioVisualizer, useOrionPulse } from '@/hooks/useAudioVisualizer';
 import { useOrionChat, type Message } from '@/hooks/useOrionChat';
 import { useOrionSounds } from '@/hooks/useOrionSounds';
-import { useTheme } from '@/contexts/ThemeContext';
+import { useTheme } from '@/hooks/useTheme';
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // COMPONENTE PRINCIPAL

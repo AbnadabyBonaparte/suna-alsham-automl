@@ -12,7 +12,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { supabase } from '@/lib/supabase';
-import { useTheme } from '@/contexts/ThemeContext';
+import { useTheme } from '@/hooks/useTheme';
 import { Eye, AlertTriangle, ShieldAlert, Database, XCircle, Trash2, Activity, RefreshCw, Filter, Clock, Zap } from 'lucide-react';
 
 interface VoidLog {

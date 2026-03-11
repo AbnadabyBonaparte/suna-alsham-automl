@@ -10,7 +10,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuthStore } from '@/stores/useAuthStore';
 import { createClient } from '@/lib/supabase/client';
 import Link from 'next/link';
 import {
@@ -19,7 +19,7 @@ import {
 } from 'lucide-react';
 
 export default function LoginPage() {
-    const { signIn } = useAuth();
+    const signIn = useAuthStore((s) => s.signIn);
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const supabase = useMemo(() => createClient(), []);
     
@@ -56,10 +56,11 @@ export default function LoginPage() {
             time += 0.05;
 
             // Cor do Tema (Baseada no Status)
-            let color = '#00FFD0'; // Idle (Ciano)
-            if (status === 'scanning') color = '#F59E0B'; // Scanning (Amarelo)
-            if (status === 'success') color = '#10B981'; // Success (Verde)
-            if (status === 'denied') color = '#EF4444'; // Denied (Vermelho)
+            const style = getComputedStyle(document.documentElement);
+            let color = style.getPropertyValue('--color-primary').trim() || '#00FFD0';
+            if (status === 'scanning') color = style.getPropertyValue('--color-warning').trim() || '#F59E0B';
+            if (status === 'success') color = style.getPropertyValue('--color-success').trim() || '#10B981';
+            if (status === 'denied') color = style.getPropertyValue('--color-error').trim() || '#EF4444';
 
             // 1. Anéis Giratórios (Íris)
             ctx.strokeStyle = color;
@@ -232,8 +233,8 @@ export default function LoginPage() {
             {/* SCANNER VISUALIZER (ABSOLUTE CENTER BACKGROUND) */}
             <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-30 blur-3xl">
                 <div className={`w-96 h-96 rounded-full transition-colors duration-1000 ${
-                    status === 'success' ? 'bg-green-500' : 
-                    status === 'denied' ? 'bg-red-500' : 
+                    status === 'success' ? 'bg-[var(--color-success)]' : 
+                    status === 'denied' ? 'bg-[var(--color-error)]' : 
                     'bg-[var(--color-primary)]'
                 }`} />
             </div>
@@ -243,8 +244,8 @@ export default function LoginPage() {
                 {/* Borda Brilhante Animada */}
                 <div className={`absolute inset-0 rounded-3xl blur-md transition-all duration-500 ${
                     status === 'scanning' ? 'bg-[var(--color-primary)] opacity-50' : 
-                    status === 'success' ? 'bg-green-500 opacity-80 scale-105' :
-                    status === 'denied' ? 'bg-red-500 opacity-80 animate-shake' :
+                    status === 'success' ? 'bg-[var(--color-success)] opacity-80 scale-105' :
+                    status === 'denied' ? 'bg-[var(--color-error)] opacity-80 animate-shake' :
                     'bg-white/10 opacity-20'
                 }`} />
 
@@ -269,9 +270,9 @@ export default function LoginPage() {
                             ALSHAM <Sparkles className="w-4 h-4 text-[var(--color-primary)]" />
                         </h1>
                         <p className={`text-[10px] font-mono mt-1 tracking-[0.2em] uppercase transition-colors ${
-                            status === 'success' ? 'text-green-400' : 
-                            status === 'denied' ? 'text-red-400' : 
-                            'text-gray-500'
+                            status === 'success' ? 'text-[var(--color-success)]' : 
+                            status === 'denied' ? 'text-[var(--color-error)]' : 
+                            'text-[var(--color-textSecondary)]'
                         }`}>
                             {status === 'idle' && 'Identity Verification Required'}
                             {status === 'scanning' && 'Processing Biometrics...'}
@@ -318,8 +319,8 @@ export default function LoginPage() {
                             disabled={status !== 'idle'}
                             className={`
                                 w-full py-3 rounded-xl font-bold text-xs tracking-widest uppercase transition-all relative overflow-hidden group
-                                ${status === 'success' ? 'bg-green-500 text-black' : 
-                                  status === 'denied' ? 'bg-red-500 text-white' : 
+                                ${status === 'success' ? 'bg-[var(--color-success)] text-black' : 
+                                  status === 'denied' ? 'bg-[var(--color-error)] text-white' : 
                                   'bg-[var(--color-primary)] text-black hover:bg-[var(--color-accent)]'}
                             `}
                         >

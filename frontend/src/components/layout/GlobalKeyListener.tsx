@@ -10,7 +10,7 @@
 'use client';
 
 import { useEffect } from 'react';
-import { useTheme } from '@/contexts/ThemeContext';
+import { useTheme } from '@/hooks/useTheme';
 import { useRouter } from 'next/navigation';
 
 export function GlobalKeyListener() {

@@ -9,7 +9,7 @@
 
 'use client';
 
-import { useTheme } from '@/contexts/ThemeContext';
+import { useTheme } from '@/hooks/useTheme';
 import dynamic from 'next/dynamic';
 
 // Lazy load backgrounds para performance máxima

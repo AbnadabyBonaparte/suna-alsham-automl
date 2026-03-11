@@ -10,7 +10,7 @@
 'use client';
 
 import { useState } from 'react';
-import { useTheme } from '@/contexts/ThemeContext';
+import { useTheme } from '@/hooks/useTheme';
 import { THEMES, THEME_ORDER, ThemeId } from '@/types/theme';
 import { 
   Palette, 

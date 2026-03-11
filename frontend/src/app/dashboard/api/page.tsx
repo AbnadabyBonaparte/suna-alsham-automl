@@ -101,7 +101,7 @@ export default function ApiPage() {
         return json.replace(
             /("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g,
             (match) => {
-                let cls = 'text-gray-400';
+                let cls = '';
                 if (/^"/.test(match)) {
                     if (/:$/.test(match)) {
                         cls = 'font-semibold'; // keys (use accent via style)
@@ -141,7 +141,7 @@ export default function ApiPage() {
                                 <Globe className="w-6 h-6 text-[var(--color-primary)]" />
                                 QUANTUM GATE
                             </h1>
-                            <p className="text-xs text-gray-400 font-mono mt-1">Secure API Endpoint Tester v4.0</p>
+                            <p className="text-xs text-[var(--color-textSecondary)] font-mono mt-1">Secure API Endpoint Tester v4.0</p>
                         </div>
                         <div className="px-3 py-1 rounded-full text-xs font-bold font-mono flex items-center gap-2" style={{ background: 'var(--color-success)/10', border: '1px solid var(--color-success)/20', color: 'var(--color-success)' }}>
                             <div className="w-2 h-2 rounded-full animate-pulse" style={{ background: 'var(--color-success)' }} />
@@ -169,7 +169,7 @@ export default function ApiPage() {
                                     <div 
                                         key={m} 
                                         onClick={() => setMethod(m)}
-                                        className="px-4 py-2 text-xs font-mono text-gray-400 hover:bg-white/10 hover:text-white cursor-pointer"
+                                        className="px-4 py-2 text-xs font-mono text-[var(--color-textSecondary)] hover:bg-white/10 hover:text-white cursor-pointer"
                                     >
                                         {m}
                                     </div>
@@ -195,7 +195,7 @@ export default function ApiPage() {
                         disabled={isLoading}
                         className={`
                             relative w-full py-4 rounded-xl font-bold text-sm tracking-widest uppercase overflow-hidden group/btn transition-all
-                            ${isLoading ? 'bg-gray-800 cursor-not-allowed' : 'bg-[var(--color-primary)] text-black hover:scale-[1.02] shadow-[0_0_30px_rgba(var(--color-primary-rgb),0.4)]'}
+                            ${isLoading ? 'bg-[var(--color-surface)] cursor-not-allowed' : 'bg-[var(--color-primary)] text-black hover:scale-[1.02] shadow-[0_0_30px_rgba(var(--color-primary-rgb),0.4)]'}
                         `}
                     >
                         <div className="relative z-10 flex items-center justify-center gap-2">
@@ -208,7 +208,7 @@ export default function ApiPage() {
 
                     {/* Presets */}
                     <div className="mt-4">
-                        <p className="text-[10px] text-gray-500 uppercase font-bold mb-3 tracking-widest">Quick Access</p>
+                        <p className="text-[10px] text-[var(--color-textSecondary)] uppercase font-bold mb-3 tracking-widest">Quick Access</p>
                         <div className="flex flex-wrap gap-2">
                             {ENDPOINTS.map((ep, i) => (
                                 <button
@@ -230,11 +230,11 @@ export default function ApiPage() {
                 <div className="flex-1 bg-black/40 backdrop-blur-xl border border-white/10 rounded-3xl p-6 relative">
                     <div className="flex gap-4 border-b border-white/5 pb-2 mb-4">
                         <button className="text-sm font-bold text-[var(--color-primary)] border-b-2 border-[var(--color-primary)] pb-2">Params</button>
-                        <button className="text-sm font-bold text-gray-500 hover:text-white pb-2 transition-colors">Headers</button>
-                        <button className="text-sm font-bold text-gray-500 hover:text-white pb-2 transition-colors">Body</button>
+                        <button className="text-sm font-bold text-[var(--color-textSecondary)] hover:text-white pb-2 transition-colors">Headers</button>
+                        <button className="text-sm font-bold text-[var(--color-textSecondary)] hover:text-white pb-2 transition-colors">Body</button>
                     </div>
                     
-                    <div className="font-mono text-xs text-gray-500">
+                    <div className="font-mono text-xs text-[var(--color-textSecondary)]">
                         <div className="flex items-center gap-2 p-2 bg-black/20 rounded mb-2">
                             <span style={{ color: 'var(--color-warning)' }}>Authorization:</span>
                             <span className="truncate">Bearer sk_test_51MxQ...</span>
@@ -258,7 +258,7 @@ export default function ApiPage() {
                             <div className="w-3 h-3 rounded-full" style={{ background: 'var(--color-warning)/20', border: '1px solid var(--color-warning)/50' }} />
                             <div className="w-3 h-3 rounded-full" style={{ background: 'var(--color-success)/20', border: '1px solid var(--color-success)/50' }} />
                         </div>
-                        <span className="text-xs font-mono text-gray-500">RESPONSE_STREAM</span>
+                        <span className="text-xs font-mono text-[var(--color-textSecondary)]">RESPONSE_STREAM</span>
                     </div>
                     <div className="flex items-center gap-3">
                         {status && (
@@ -293,7 +293,7 @@ export default function ApiPage() {
                                 dangerouslySetInnerHTML={{ __html: syntaxHighlight(response) }}
                             />
                         ) : (
-                            <div className="h-full flex flex-col items-center justify-center text-gray-700 select-none">
+                            <div className="h-full flex flex-col items-center justify-center text-[var(--color-textSecondary)] select-none">
                                 <Server className="w-16 h-16 mb-4 opacity-20" />
                                 <p className="text-xs font-mono uppercase tracking-widest">Awaiting Transmission</p>
                             </div>

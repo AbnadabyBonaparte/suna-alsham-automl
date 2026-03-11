@@ -12,7 +12,7 @@
 
 import { useState, useEffect } from 'react';
 import { useNotificationStore } from '@/stores/useNotificationStore';
-import { useTheme } from '@/contexts/ThemeContext';
+import { useTheme } from '@/hooks/useTheme';
 import {
     Dna, Brain, TrendingDown, Zap, X, Check, AlertTriangle,
     Clock, Target, Activity, History, ChevronRight, Sparkles,
