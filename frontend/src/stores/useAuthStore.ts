@@ -112,30 +112,7 @@ export const useAuthStore = create<AuthStore>()(
               return { error };
             }
 
-            await new Promise((r) => setTimeout(r, 100));
-
-            const {
-              data: { user },
-              error: userError,
-            } = await supabase.auth.getUser();
-
-            if (userError || !user) {
-              return {
-                error: {
-                  message: userError?.message || 'Usuário não encontrado após login',
-                  status: 500,
-                } as AuthError,
-              };
-            }
-
-            const metadata = await loadUserMetadata(user.id);
-            set({ metadata }, false, 'auth/setMetadata');
-
-            if (metadata?.onboarding_completed) {
-              window.location.href = '/dashboard';
-            } else {
-              window.location.href = '/onboarding';
-            }
+            window.location.href = '/dashboard';
 
             return { error: null };
           } catch (err: unknown) {

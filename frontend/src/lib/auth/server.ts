@@ -62,7 +62,6 @@ export async function requireDashboardAccess(): Promise<DashboardAccess> {
   }
 
   if (isDevMode) {
-    console.log('[AUTH][DEV] session', session);
     console.log('[AUTH][DEV] user.id', user.id);
   }
 
