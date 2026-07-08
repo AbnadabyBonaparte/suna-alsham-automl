@@ -162,8 +162,9 @@ export default function LoginPage() {
                 }, 3000);
             } else {
                 setStatus('success');
-                console.log('[LOGIN] Login bem-sucedido, aguardando redirecionamento...');
-                // Router.push já é chamado dentro do signIn (agora usando window.location)
+                console.log('[LOGIN] Login bem-sucedido, redirecionando...');
+                // Redireciona de fato para o dashboard (hard nav aciona o middleware de auth)
+                window.location.href = '/dashboard';
             }
         } catch (err: any) {
             clearInterval(interval);
