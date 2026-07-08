@@ -106,3 +106,5 @@ export async function GET() {
     timestamp: new Date().toISOString(),
   });
 }
+
+// redeploy: bind ANTHROPIC_API_KEY (ORION)
