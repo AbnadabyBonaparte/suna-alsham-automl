@@ -33,6 +33,11 @@ export function useDashboardStats() {
           .from('agents')
           .select('*', { count: 'exact', head: true });
 
+        const { count: activeAgentsCount } = await supabase
+          .from('agents')
+          .select('*', { count: 'exact', head: true })
+          .eq('status', 'ACTIVE');
+
         const { count: dealsCount } = await supabase
           .from('deals')
           .select('*', { count: 'exact', head: true });
@@ -57,7 +62,7 @@ export function useDashboardStats() {
         store.setStats({
           totalAgents: totalAgentsCount || 0,
           avgEfficiency: Math.round(avgEfficiency * 10) / 10,
-          activeAgents: 0,
+          activeAgents: activeAgentsCount || 0,
           totalDeals: dealsCount || 0,
           totalTickets: ticketsCount || 0,
           totalPosts: postsCount || 0,
