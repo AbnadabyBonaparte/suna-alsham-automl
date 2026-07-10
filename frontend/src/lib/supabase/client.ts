@@ -11,21 +11,25 @@ import type { SupabaseClient } from '@supabase/supabase-js';
  */
 let browserClient: SupabaseClient | null = null;
 
+// Build-safe fallbacks: `createBrowserClient` throws immediately when URL/key
+// are absent, which crashes `next build` prerender (CI/preview have no env).
+// Production always sets the real values; these placeholders only exist so the
+// module can be constructed at build time — the client is re-created in the
+// browser with the real env at runtime.
+const SUPABASE_URL =
+  process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co';
+const SUPABASE_ANON_KEY =
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'placeholder-anon-key';
+
 export function createClient(): SupabaseClient {
   // No server (SSR) sempre cria um cliente novo — não há window/lock.
   if (typeof window === 'undefined') {
-    return createBrowserClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    );
+    return createBrowserClient(SUPABASE_URL, SUPABASE_ANON_KEY);
   }
 
   if (browserClient) return browserClient;
 
-  browserClient = createBrowserClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-  );
+  browserClient = createBrowserClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
   return browserClient;
 }

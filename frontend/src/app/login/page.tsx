@@ -9,6 +9,11 @@
 
 "use client";
 
+// Opt out of static prerendering: this route builds a Supabase browser
+// client at render time, which requires env vars absent during `next build`
+// (CI/preview). Rendering dynamically avoids the prerender crash.
+export const dynamic = "force-dynamic";
+
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useAuthStore } from '@/stores/useAuthStore';
 import { createClient } from '@/lib/supabase/client';
