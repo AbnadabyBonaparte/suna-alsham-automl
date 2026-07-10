@@ -71,10 +71,7 @@ export async function requireDashboardAccess(): Promise<DashboardAccess> {
     error: userError,
   } = await supabase.auth.getUser();
 
-  console.log('[AUTH] getUser result:', { userId: user?.id, error: userError?.message });
-
   if (userError || !user) {
-    console.log('[AUTH] No user found, redirecting to login');
     redirect('/login?redirect=/dashboard');
   }
 
@@ -85,8 +82,6 @@ export async function requireDashboardAccess(): Promise<DashboardAccess> {
     )
     .eq('id', user.id)
     .single();
-
-  console.log('[AUTH] Profile query:', { profileId: profile?.id, error: error?.message, code: error?.code });
 
   const finalProfile = profile || createDefaultProfile(user.id);
 
