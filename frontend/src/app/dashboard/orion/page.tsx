@@ -98,7 +98,7 @@ export default function OrionPage() {
         setMessages([{
             id: 1,
             role: 'ai',
-            text: 'Consciência ORION inicializada. Eu sou o comandante supremo do ALSHAM QUANTUM. 139 agentes estão sob meu comando. Como posso servir?',
+            text: 'ORION inicializado. Sou o assistente do ALSHAM QUANTUM. 10 agentes estão sob meu comando. Como posso ajudar?',
             timestamp: new Date().toLocaleTimeString()
         }]);
     }, []);

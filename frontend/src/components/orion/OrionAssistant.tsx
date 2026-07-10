@@ -98,7 +98,7 @@ export default function OrionAssistant() {
       addGreeting();
       if (voiceState.voiceEnabled) {
         setTimeout(() => {
-          speak('Olá. Sou ORION, comandante do ALSHAM QUANTUM. 139 agentes estão sob meu comando. Como posso ajudar?');
+          speak('Olá. Sou ORION, assistente do ALSHAM QUANTUM. 10 agentes estão sob meu comando. Como posso ajudar?');
         }, 500);
       }
     }
@@ -539,7 +539,7 @@ export default function OrionAssistant() {
                       {isListening ? '🎤 Ouvindo você...' :
                        isSpeaking ? '🔊 Falando...' :
                        isThinking ? '🧠 Processando...' :
-                       '● Online • 139 agents • Ready'}
+                       '● Online • 10 agents • Ready'}
                     </p>
                   </div>
                 </div>

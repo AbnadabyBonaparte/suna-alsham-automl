@@ -87,7 +87,7 @@ export default function QuantumBrainPage() {
   
   // Stats ao vivo
   const [liveStats, setLiveStats] = useState({
-    agentsOnline: 139,
+    agentsOnline: 10,
     avgResponse: 4200,
     avgCost: 0.0032,
     tasksToday: 0,
@@ -156,7 +156,7 @@ export default function QuantumBrainPage() {
     if (dashboardStats.totalAgents) {
       setLiveStats(prev => ({
         ...prev,
-        agentsOnline: dashboardStats.totalAgents || 139,
+        agentsOnline: dashboardStats.totalAgents || 10,
         neuralPower: Math.round(dashboardStats.avgEfficiency) || 87,
       }));
     }
@@ -318,7 +318,7 @@ export default function QuantumBrainPage() {
                 </span>
               </h1>
               <p className="text-[10px] font-mono" style={{ color: 'var(--color-text-secondary)' }}>
-                O Trono do ALSHAM QUANTUM • 139 Agents Sincronizados
+                O Trono do ALSHAM QUANTUM • 10 Agents Sincronizados
               </p>
             </div>
           </div>
@@ -404,7 +404,7 @@ export default function QuantumBrainPage() {
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-2xl font-black flex items-center gap-3" style={{ color: 'var(--color-text)' }}>
               <Eye className="w-6 h-6" style={{ color: 'var(--color-primary)' }} />
-              GOD VIEW - {agents?.length || 139} AGENTS
+              GOD VIEW - {agents?.length || 10} AGENTS
             </h2>
             <button
               onClick={() => setGodViewMode(false)}
@@ -416,7 +416,7 @@ export default function QuantumBrainPage() {
           </div>
           
           <div className="grid grid-cols-4 md:grid-cols-6 lg:grid-cols-8 xl:grid-cols-10 gap-3">
-            {(agents || Array.from({ length: 139 }, (_, i) => ({
+            {(agents || Array.from({ length: 10 }, (_, i) => ({
               id: `agent_${i}`,
               name: `AGENT_${String(i).padStart(3, '0')}`,
               status: Math.random() > 0.1 ? 'active' : 'idle',

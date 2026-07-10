@@ -37,7 +37,7 @@ export default function SingularityPage() {
     const [metrics, setMetrics] = useState<ConsciousnessMetrics>({
         totalTasks: 0,
         activeAgents: 0,
-        totalAgents: 139,
+        totalAgents: 10,
         avgEfficiency: 0,
         totalTokens: 0,
         evolutionCycles: 0,
@@ -102,7 +102,7 @@ export default function SingularityPage() {
                 setMetrics({
                     totalTasks: tasksCount || 0,
                     activeAgents,
-                    totalAgents: agentsCount || 139,
+                    totalAgents: agentsCount || 10,
                     avgEfficiency: Math.round(avgEfficiency * 10) / 10,
                     totalTokens,
                     evolutionCycles: evolutionCount || 0,
@@ -113,7 +113,7 @@ export default function SingularityPage() {
 
             } catch (err) {
                 console.error('Failed to load metrics:', err);
-                setError('Erro ao carregar métricas de consciência');
+                setError('Erro ao carregar métricas do sistema');
             } finally {
                 setLoading(false);
             }
@@ -292,7 +292,7 @@ export default function SingularityPage() {
         return () => clearInterval(interval);
     }, [isHolding, isAscended, progress]);
 
-    if (loading) return <LoadingState message="Calibrando métricas de consciência..." />;
+    if (loading) return <LoadingState message="Calibrando métricas do sistema..." />;
     if (error) return <ErrorState message={error} onRetry={refetch} />;
 
     return (
@@ -305,7 +305,7 @@ export default function SingularityPage() {
                 <div className="bg-background/60 backdrop-blur-xl border border-warning/20 rounded-xl p-4">
                     <div className="flex items-center gap-2 mb-3">
                         <Brain className="w-5 h-5" style={{ color: 'var(--color-warning)' }} />
-                        <span className="text-sm font-bold text-text">Consciousness Level</span>
+                        <span className="text-sm font-bold text-text">System Level</span>
                     </div>
                     <div className="text-4xl font-black mb-2" style={{ color: 'var(--color-warning)' }}>{metrics.consciousnessLevel}%</div>
                     <div className="h-2 w-40 bg-background/50 rounded-full overflow-hidden">

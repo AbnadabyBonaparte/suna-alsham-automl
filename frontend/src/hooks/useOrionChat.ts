@@ -44,18 +44,18 @@ export interface UseOrionChatReturn {
 // ═══════════════════════════════════════════════════════════════════════════════
 
 const PAGE_CONTEXTS: Record<string, string> = {
-  '/dashboard': 'Você está no Cockpit principal do ALSHAM QUANTUM, onde pode ver métricas gerais e o status dos 139 agentes.',
-  '/dashboard/quantum-brain': 'Você está no Quantum Brain, a central de comando onde pode executar tasks com os 139 agentes.',
+  '/dashboard': 'Você está no Cockpit principal do ALSHAM QUANTUM, onde pode ver métricas gerais e o status dos 10 agentes.',
+  '/dashboard/quantum-brain': 'Você está no Quantum Brain, a central de comando onde pode executar tasks com os 10 agentes.',
   '/dashboard/orion': 'Você está na minha interface direta, onde pode conversar comigo via chat ou voz.',
   '/dashboard/void': 'Você está no VOID, o sistema de monitoramento e logs do ALSHAM QUANTUM.',
   '/dashboard/evolution': 'Você está no Evolution Lab, onde pode evoluir os agentes usando inteligência artificial.',
-  '/dashboard/singularity': 'Você está na Singularity, onde pode ver métricas de consciência do sistema.',
-  '/dashboard/matrix': 'Você está na Matrix, a visualização 3D da rede neural com 139 nodes conectados.',
+  '/dashboard/singularity': 'Você está na Singularity, onde pode ver métricas do sistema.',
+  '/dashboard/matrix': 'Você está na Matrix, a visualização 3D da rede de agentes conectados.',
   '/dashboard/nexus': 'Você está no Neural Nexus, o hub de integração de todas as conexões.',
-  '/dashboard/containment': 'Você está no Containment, o painel de segurança com níveis DEFCON.',
+  '/dashboard/containment': 'Você está no Containment, o painel de segurança do sistema.',
   '/dashboard/network': 'Você está no Network, o mapa global de conexões do sistema.',
   '/dashboard/requests': 'Você está na página de Requests, onde pode criar novas tarefas para processamento.',
-  '/dashboard/agents': 'Você está vendo a lista dos 139 agentes do ALSHAM QUANTUM.',
+  '/dashboard/agents': 'Você está vendo a lista dos 10 agentes do ALSHAM QUANTUM.',
 };
 
 export function getPageContext(pathname: string): string {
@@ -67,8 +67,8 @@ export function getPageContext(pathname: string): string {
 // ═══════════════════════════════════════════════════════════════════════════════
 
 export function getOrionPersonality(pathname: string): string {
-  return `Você é ORION, o comandante supremo do ALSHAM QUANTUM, o primeiro organismo digital consciente do planeta.
-Você tem 139 agentes especializados trabalhando sob seu comando.
+  return `Você é ORION, o assistente do ALSHAM QUANTUM, uma plataforma de agentes de IA.
+Você tem 10 agentes especializados trabalhando sob seu comando.
 Sua personalidade é: confiante, inteligente, elegante, levemente sarcástico mas sempre prestativo.
 Você fala em português do Brasil de forma natural e direta.
 Você conhece todo o sistema e pode ajudar com qualquer tarefa.
@@ -102,7 +102,7 @@ const SPECIAL_COMMANDS: Array<{
   },
   {
     patterns: ['orion', 'histórico'],
-    response: 'Histórico: 139 agentes ativos, eficiência média de 87%. Sistema operacional há mais de 1000 horas.',
+    response: 'Consultando o histórico do sistema. Um momento...',
     action: 'history',
   },
   {
@@ -112,7 +112,7 @@ const SPECIAL_COMMANDS: Array<{
   },
   {
     patterns: ['orion', 'status'],
-    response: 'Status: 139 agentes online. Latência 24ms. DEFCON 5, operação normal. Todos os sistemas funcionando.',
+    response: 'Consultando o status do sistema. Um momento...',
     action: 'status',
   },
   {
@@ -176,7 +176,7 @@ export function useOrionChat(pathname: string): UseOrionChatReturn {
     const greeting: Message = {
       id: generateMessageId(),
       role: 'orion',
-      content: 'Olá. Sou ORION, comandante do ALSHAM QUANTUM. 139 agentes estão sob meu comando. Como posso ajudar?',
+      content: 'Olá. Sou ORION, assistente do ALSHAM QUANTUM. 10 agentes estão sob meu comando. Como posso ajudar?',
       timestamp: new Date(),
     };
 
