@@ -94,9 +94,9 @@ export default function NexusPage() {
                 const totalTokens = requests?.reduce((sum, r) => sum + (r.tokens_used || 0), 0) || 0;
 
                 setStats({
-                    totalAgents: agentsCount || 139,
+                    totalAgents: agentsCount || 10,
                     totalAPIs: 4,
-                    activeConnections: Math.floor((agentsCount || 139) * 0.9),
+                    activeConnections: Math.floor((agentsCount || 10) * 0.9),
                     dataTransferred: Math.round(totalTokens * 0.004), // Aproximação em MB
                 });
 

@@ -12,7 +12,7 @@ import { NextResponse } from 'next/server';
 import Stripe from 'stripe';
 
 export async function POST(req: Request) {
-  const { priceId, userId } = await req.json();
+  const { priceId, userId, planId, billingCycle } = await req.json();
 
   // Verificar se as chaves estão configuradas
   const stripeSecretKey = process.env.STRIPE_SECRET_KEY;
@@ -38,7 +38,10 @@ export async function POST(req: Request) {
       success_url: `${req.headers.get('origin')}/dashboard?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${req.headers.get('origin')}/pricing`,
       client_reference_id: userId, // Pass user ID to webhook
-      metadata: { plan: 'enterprise' }, // Pass plan info to webhook
+      metadata: {
+        planId: planId || '',
+        billingCycle: billingCycle || 'monthly',
+      },
     });
 
     return NextResponse.json({ url: session.url });

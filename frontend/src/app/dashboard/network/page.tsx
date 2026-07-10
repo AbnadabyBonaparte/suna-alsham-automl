@@ -78,7 +78,7 @@ export default function NetworkPage() {
                 setStats({
                     packets: Math.floor(Math.random() * 100000),
                     latency,
-                    totalAgents: agentsCount || 139,
+                    totalAgents: agentsCount || 10,
                     totalRequests: requestsCount || 0,
                     activeConnections: networkServers.filter(s => s.status === 'online').length,
                 });

@@ -33,10 +33,11 @@ export function useDashboardStats() {
           .from('agents')
           .select('*', { count: 'exact', head: true });
 
+        // "Ativo" = operacional (não em falha). Enum real: IDLE|PROCESSING|LEARNING|WARNING|ERROR
         const { count: activeAgentsCount } = await supabase
           .from('agents')
           .select('*', { count: 'exact', head: true })
-          .eq('status', 'ACTIVE');
+          .in('status', ['IDLE', 'PROCESSING', 'LEARNING']);
 
         const { count: dealsCount } = await supabase
           .from('deals')

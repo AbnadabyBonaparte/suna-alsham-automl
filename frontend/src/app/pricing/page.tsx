@@ -24,7 +24,7 @@ const PLANS = [
         id: 'starter',
         name: 'STARTER',
         price: 990,
-        priceId: 'price_starter', // Substituir pelo ID real do Stripe
+        priceId: process.env.NEXT_PUBLIC_STRIPE_PRICE_STARTER || '',
         description: 'Ideal para pequenas operações',
         badge: null,
         color: 'from-blue-500 to-cyan-500',
@@ -47,7 +47,7 @@ const PLANS = [
         id: 'pro',
         name: 'PRO',
         price: 4900,
-        priceId: 'price_pro', // Substituir pelo ID real do Stripe
+        priceId: process.env.NEXT_PUBLIC_STRIPE_PRICE_PRO || '',
         description: 'Para empresas em crescimento',
         badge: 'MAIS POPULAR',
         color: 'from-purple-500 to-pink-500',
@@ -70,7 +70,7 @@ const PLANS = [
         id: 'enterprise',
         name: 'ENTERPRISE',
         price: 9900,
-        priceId: 'price_enterprise', // Substituir pelo ID real do Stripe
+        priceId: process.env.NEXT_PUBLIC_STRIPE_PRICE_ENTERPRISE || '',
         description: 'Para operações de escala global',
         badge: 'MAIS VENDIDO',
         color: 'from-yellow-400 to-orange-500',
@@ -177,6 +177,7 @@ export default function PricingPage() {
                     priceId: plan.priceId,
                     planId: plan.id,
                     billingCycle,
+                    userId: user?.id,
                 }),
             });
 
@@ -252,8 +253,8 @@ export default function PricingPage() {
 
                     <p className="text-xl text-textSecondary max-w-2xl mx-auto mb-8 leading-relaxed">
                         {user && !hasAccess
-                            ? 'Desbloqueie todo o potencial dos 139 agentes de IA trabalhando 24/7 para automatizar suas operações.'
-                            : '139 agentes de IA trabalhando 24/7 para automatizar suas operações. Sem código. Sem complexidade. Resultados em 24 horas.'
+                            ? 'Desbloqueie todo o potencial dos 10 agentes de IA trabalhando para automatizar suas operações.'
+                            : '10 agentes de IA para automatizar suas operações. Sem código. Sem complexidade.'
                         }
                     </p>
 
@@ -417,22 +418,18 @@ export default function PricingPage() {
             {/* Trust Section */}
             <section className="relative z-10 px-6 pb-24">
                 <div className="max-w-5xl mx-auto">
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-8 text-center">
                         <div className="p-6">
-                            <div className="text-4xl font-black text-text mb-2">139+</div>
-                            <div className="text-sm text-textSecondary">Agentes de IA Ativos</div>
+                            <div className="text-4xl font-black text-text mb-2">10</div>
+                            <div className="text-sm text-textSecondary">Agentes de IA</div>
                         </div>
                         <div className="p-6">
-                            <div className="text-4xl font-black text-text mb-2">99.9%</div>
-                            <div className="text-sm text-textSecondary">Uptime Garantido</div>
+                            <div className="text-4xl font-black text-text mb-2">Suporte</div>
+                            <div className="text-sm text-textSecondary">Dedicado</div>
                         </div>
                         <div className="p-6">
-                            <div className="text-4xl font-black text-text mb-2">24/7</div>
-                            <div className="text-sm text-textSecondary">Auto-Evolução</div>
-                        </div>
-                        <div className="p-6">
-                            <div className="text-4xl font-black text-text mb-2">&lt;50ms</div>
-                            <div className="text-sm text-textSecondary">Latência Média</div>
+                            <div className="text-4xl font-black text-text mb-2">LGPD</div>
+                            <div className="text-sm text-textSecondary">Compliance</div>
                         </div>
                     </div>
                 </div>
@@ -447,9 +444,9 @@ export default function PricingPage() {
                     
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                         {[
-                            { icon: Brain, title: 'IA que Evolui Sozinha', desc: 'Nossos agentes melhoram automaticamente a cada 10 minutos.' },
+                            { icon: Brain, title: 'Agentes de IA', desc: 'Agentes especializados para automatizar suas operações.' },
                             { icon: Shield, title: 'Segurança Enterprise', desc: 'Criptografia end-to-end e compliance com LGPD.' },
-                            { icon: Globe, title: 'Escala Global', desc: 'Infraestrutura distribuída em 3 continentes.' },
+                            { icon: Globe, title: 'Infraestrutura em Nuvem', desc: 'Hospedagem escalável na nuvem.' },
                             { icon: Activity, title: 'Monitoramento Real-time', desc: 'Dashboard com métricas em tempo real.' },
                             { icon: Users, title: 'Suporte Dedicado', desc: 'Time de especialistas disponível 24/7.' },
                             { icon: Database, title: 'Integrações Ilimitadas', desc: 'Conecte com qualquer sistema via API.' },

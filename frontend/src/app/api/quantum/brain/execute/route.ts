@@ -1,19 +1,29 @@
 /**
  * ═══════════════════════════════════════════════════════════════
- * ALSHAM QUANTUM - BRAIN EXECUTE API (ORION)
+ * ALSHAM QUANTUM - BRAIN EXECUTE API
  * ═══════════════════════════════════════════════════════════════
  * 📁 PATH: frontend/src/app/api/quantum/brain/execute/route.ts
- * 🧠 Cérebro do ORION — agora movido a Claude (Anthropic).
+ *
+ * Duas rotas de execução:
+ *  - ORION (chat) → Anthropic Claude, sem persistência.
+ *  - Agentes reais → executeTask() (OpenAI gpt-4o-mini), com
+ *    persistência em requests + quantum_tasks + agent_logs via
+ *    service role (server-side), roteando pelo agent_id escolhido.
  * ═══════════════════════════════════════════════════════════════
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { createClient as createServerSupabase } from '@/lib/supabase/server';
+import { executeTask } from '@/lib/quantum-brain/task-executor';
+import { ROLE_TO_SQUAD, AgentRole } from '@/lib/quantum-brain/types';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
 export const maxDuration = 60;
 
-const ORION_SYSTEM = `Você é ORION, a inteligência comandante do ALSHAM QUANTUM — um sistema que coordena um time de agentes de IA especializados para operações, CRM e produtividade.
+const ORION_IDS = new Set(['orion', 'orion-supreme']);
+
+const ORION_SYSTEM = `Você é ORION, a inteligência comandante do ALSHAM QUANTUM — um sistema que coordena um time de 10 agentes de IA especializados para operações, CRM e produtividade.
 
 Personalidade: confiante, direto, sofisticado e útil. Fala em português do Brasil.
 Estilo: respostas curtas e objetivas (2 a 4 frases), sem enrolação. Quando fizer sentido, sugira a próxima ação concreta.
@@ -38,72 +48,141 @@ async function getAnthropic(): Promise<any | null> {
   return new Anthropic({ apiKey });
 }
 
+// ─────────────────────────────────────────────────────────────
+// ORION (Anthropic) — usado pelo chat do ORION
+// ─────────────────────────────────────────────────────────────
+async function runOrion(body: any, startTime: number) {
+  const anthropic = await getAnthropic();
+
+  if (!anthropic) {
+    return NextResponse.json(
+      {
+        success: false,
+        error: 'IA não configurada',
+        details: 'Defina ANTHROPIC_API_KEY nas variáveis de ambiente do projeto no Vercel.',
+        execution_time_ms: Date.now() - startTime,
+        timestamp: new Date().toISOString(),
+      },
+      { status: 500 },
+    );
+  }
+
+  const userContent: string = body.description || body.title || 'Apresente-se em uma frase.';
+
+  const message = await anthropic.messages.create({
+    model: 'claude-sonnet-4-5-20250929',
+    max_tokens: 900,
+    temperature: 0.7,
+    system: ORION_SYSTEM,
+    messages: [{ role: 'user', content: userContent }],
+  });
+
+  const result =
+    (message.content || [])
+      .filter((b: any) => b.type === 'text')
+      .map((b: any) => b.text)
+      .join('\n')
+      .trim() || 'Estou online. Como posso ajudar?';
+
+  const tokensUsed = (message.usage?.input_tokens || 0) + (message.usage?.output_tokens || 0);
+
+  return NextResponse.json({
+    success: true,
+    task_id: `orion_${Date.now()}`,
+    agent_id: 'orion-supreme',
+    agent_name: 'ORION',
+    squad: 'COMMAND',
+    result,
+    execution_time_ms: Date.now() - startTime,
+    tokens_used: tokensUsed,
+    status: 'completed',
+    model: 'claude-sonnet-4-5-20250929',
+    timestamp: new Date().toISOString(),
+  });
+}
+
+// ─────────────────────────────────────────────────────────────
+// AGENTES REAIS (OpenAI + Supabase persistência)
+// ─────────────────────────────────────────────────────────────
+async function runAgent(body: any, startTime: number) {
+  // Precisa de um usuário autenticado para gravar requests.user_id (FK -> auth.users)
+  const supabase = await createServerSupabase();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    return NextResponse.json(
+      {
+        success: false,
+        error: 'Não autenticado',
+        details: 'Faça login para executar tarefas com os agentes.',
+        execution_time_ms: Date.now() - startTime,
+        timestamp: new Date().toISOString(),
+      },
+      { status: 401 },
+    );
+  }
+
+  const taskResult = await executeTask({
+    title: body.title || 'Tarefa',
+    description: body.description || body.title || '',
+    data: body.data,
+    priority: body.priority || 'normal',
+    user_id: user.id,
+    // 'auto' (ou vazio) => roteamento automático; caso contrário, o agente escolhido.
+    agent_id: body.agent_id && body.agent_id !== 'auto' ? body.agent_id : undefined,
+  });
+
+  const squad = ROLE_TO_SQUAD[taskResult.agent.role as AgentRole] || 'NEXUS';
+  const resultString =
+    typeof taskResult.result === 'string'
+      ? taskResult.result
+      : JSON.stringify(taskResult.result, null, 2);
+
+  return NextResponse.json({
+    success: taskResult.status === 'completed',
+    task_id: taskResult.task_id,
+    request_id: taskResult.request_id,
+    agent_id: taskResult.agent.id,
+    agent_name: taskResult.agent.name,
+    squad,
+    result: taskResult.status === 'completed' ? resultString : taskResult.error_message,
+    error: taskResult.error_message,
+    execution_time_ms: taskResult.execution_time_ms,
+    tokens_used: taskResult.tokens_used,
+    cost_usd: taskResult.cost_usd,
+    status: taskResult.status,
+    model: 'gpt-4o-mini',
+    timestamp: new Date().toISOString(),
+  });
+}
+
 export async function POST(request: NextRequest) {
   const startTime = Date.now();
 
   try {
     const body = await request.json();
-    const anthropic = await getAnthropic();
+    const agentId: string | undefined = body.agent_id;
 
-    if (!anthropic) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: 'IA não configurada',
-          details: 'Defina ANTHROPIC_API_KEY nas variáveis de ambiente do projeto no Vercel.',
-          execution_time_ms: Date.now() - startTime,
-          timestamp: new Date().toISOString(),
-        },
-        { status: 500 }
-      );
+    // O chat do ORION envia agent_id='orion' e continua no Anthropic.
+    if (agentId && ORION_IDS.has(agentId)) {
+      return await runOrion(body, startTime);
     }
 
-    const userContent: string = body.description || body.title || 'Apresente-se em uma frase.';
-
-    const message = await anthropic.messages.create({
-      model: 'claude-sonnet-4-5-20250929',
-      max_tokens: 900,
-      temperature: 0.7,
-      system: ORION_SYSTEM,
-      messages: [{ role: 'user', content: userContent }],
-    });
-
-    const result =
-      (message.content || [])
-        .filter((b: any) => b.type === 'text')
-        .map((b: any) => b.text)
-        .join('\n')
-        .trim() || 'Estou online. Como posso ajudar?';
-
-    const tokensUsed =
-      (message.usage?.input_tokens || 0) + (message.usage?.output_tokens || 0);
-    const executionTime = Date.now() - startTime;
-
-    return NextResponse.json({
-      success: true,
-      task_id: `quantum_task_${Date.now()}`,
-      agent_id: 'orion-supreme',
-      agent_name: 'ORION',
-      squad: 'COMMAND',
-      result,
-      execution_time_ms: executionTime,
-      tokens_used: tokensUsed,
-      status: 'completed',
-      model: 'claude-sonnet-4-5-20250929',
-      timestamp: new Date().toISOString(),
-    });
+    // Sem agent_id / 'auto' => roteamento automático; id específico => aquele agente.
+    return await runAgent(body, startTime);
   } catch (error: any) {
-    const executionTime = Date.now() - startTime;
-    console.error('[QUANTUM BRAIN] ❌ Erro na execução:', error);
+    console.error('[QUANTUM BRAIN] Erro na execução:', error);
     return NextResponse.json(
       {
         success: false,
         error: 'Falha no processamento',
         details: error?.message || 'Erro desconhecido',
-        execution_time_ms: executionTime,
+        execution_time_ms: Date.now() - startTime,
         timestamp: new Date().toISOString(),
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -113,10 +192,8 @@ export async function GET() {
     success: true,
     status: 'online',
     brain: 'ORION',
-    engine: 'anthropic/claude-sonnet-4-5',
+    engine: 'anthropic/claude-sonnet-4-5 + openai/gpt-4o-mini (agents)',
     message: 'ORION Brain online.',
     timestamp: new Date().toISOString(),
   });
 }
-
-// redeploy: bind ANTHROPIC_API_KEY (ORION)

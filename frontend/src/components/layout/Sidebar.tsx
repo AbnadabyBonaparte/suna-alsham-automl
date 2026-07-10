@@ -62,7 +62,7 @@ const MENU_GROUPS: { title: string; items: MenuItem[] }[] = [
   {
     title: "AGENTS",
     items: [
-      { name: 'Sentinelas', href: '/dashboard/agents', icon: Users, badge: '139' },
+      { name: 'Sentinelas', href: '/dashboard/agents', icon: Users, badge: '10' },
     ]
   },
   {
