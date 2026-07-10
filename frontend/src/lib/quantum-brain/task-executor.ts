@@ -42,7 +42,7 @@ const SYSTEM_USER_ID = '00000000-0000-0000-0000-000000000000';
 export interface TaskInput {
   title: string;
   description: string;
-  data?: Record<string, any>;
+  data?: Record<string, unknown>;
   priority?: 'low' | 'normal' | 'high' | 'critical';
   user_id?: string;
   agent_id?: string; // quando o usuário escolhe um agente específico no picker
@@ -57,7 +57,7 @@ export interface TaskResult {
     role: string;
     efficiency: number;
   };
-  result: any;
+  result: unknown;
   execution_time_ms: number;
   tokens_used: number;
   cost_usd: number;
@@ -133,7 +133,9 @@ export async function executeTask(input: TaskInput): Promise<TaskResult> {
   try {
     // 5. Obter system prompt (do metadata ou default)
     const systemPrompt =
-      agent.metadata?.system_prompt || DEFAULT_PROMPTS[agent.role] || DEFAULT_PROMPTS.SPECIALIST;
+      (agent.metadata?.system_prompt as string | undefined) ||
+      DEFAULT_PROMPTS[agent.role] ||
+      DEFAULT_PROMPTS.SPECIALIST;
 
     // 6. Executar via OpenAI
     const completion = await openai.chat.completions.create({
@@ -163,7 +165,7 @@ Execute a tarefa e responda em JSON estruturado.`,
       (inputTokens / 1000) * COST_PER_1K_INPUT + (outputTokens / 1000) * COST_PER_1K_OUTPUT;
 
     // 7. Parse resultado
-    let result: any;
+    let result: unknown;
     try {
       const content = completion.choices[0]?.message?.content || '{}';
       result = JSON.parse(content.replace(/```json\n?|\n?```/g, '').trim());

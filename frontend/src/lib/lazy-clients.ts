@@ -7,11 +7,13 @@
  */
 
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
+import type Anthropic from '@anthropic-ai/sdk';
+import type { Octokit } from '@octokit/rest';
 
 // Cached instances
 let supabaseInstance: SupabaseClient | null = null;
-let anthropicInstance: any = null;
-let octokitInstance: any = null;
+let anthropicInstance: Anthropic | null = null;
+let octokitInstance: Octokit | null = null;
 
 /**
  * Get Supabase client (lazy initialization)
@@ -33,7 +35,7 @@ export function getSupabase(): SupabaseClient {
 /**
  * Get Anthropic client (lazy initialization)
  */
-export async function getAnthropic(): Promise<any> {
+export async function getAnthropic(): Promise<Anthropic | null> {
   if (!anthropicInstance) {
     const apiKey = process.env.ANTHROPIC_API_KEY;
     
@@ -51,7 +53,7 @@ export async function getAnthropic(): Promise<any> {
 /**
  * Get Octokit client (lazy initialization)
  */
-export async function getOctokit(): Promise<any> {
+export async function getOctokit(): Promise<Octokit | null> {
   if (!octokitInstance) {
     const token = process.env.GITHUB_TOKEN;
     

@@ -42,7 +42,7 @@ export interface Agent {
   neural_load: number;           // numeric (0-100)
   uptime_seconds: number;        // bigint
   version: string;               // text
-  metadata: Record<string, any>; // jsonb - GUARDA system_prompt AQUI
+  metadata: Record<string, unknown>; // jsonb - GUARDA system_prompt AQUI
   created_at: string;
   updated_at: string;
 }
@@ -64,8 +64,8 @@ export interface QuantumTask {
   id: string;
   request_id?: string;
   agent_id: string;
-  input: Record<string, any>;
-  output?: Record<string, any>;
+  input: Record<string, unknown>;
+  output?: Record<string, unknown>;
   status: TaskStatus;
   error_message?: string;
   execution_time_ms?: number;

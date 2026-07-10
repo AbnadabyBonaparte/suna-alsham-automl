@@ -6,7 +6,7 @@
 
 import { loadStripe } from '@stripe/stripe-js';
 
-let stripePromise: Promise<any> | null = null;
+let stripePromise: ReturnType<typeof loadStripe> | null = null;
 
 export const getStripe = () => {
     if (!stripePromise) {

@@ -155,8 +155,10 @@ export async function processRequest(
         setTimeout(() => reject(new Error('Timeout ao processar request')), timeout * 1000)
       );
 
-      const completion = await Promise.race([completionPromise, timeoutPromise]) as any;
-      const result = completion.choices[0]?.message?.content || 'Sem resposta';
+      const completion = (await Promise.race([completionPromise, timeoutPromise])) as {
+        choices?: Array<{ message?: { content?: string | null } }>;
+      };
+      const result = completion.choices?.[0]?.message?.content || 'Sem resposta';
       console.log(`[PROCESS-SERVICE] OpenAI respondeu com sucesso`);
 
       // 6. Salvar resultado e atualizar status da request para 'completed'
@@ -188,7 +190,7 @@ export async function processRequest(
         result
       };
 
-    } catch (openaiError: any) {
+    } catch (openaiError: unknown) {
       console.error('[PROCESS-SERVICE] Erro ao chamar OpenAI:', openaiError);
 
       // Reverter status em caso de erro
@@ -213,17 +215,17 @@ export async function processRequest(
         success: false,
         request_id,
         error: 'Erro ao processar com OpenAI',
-        details: openaiError.message
+        details: openaiError instanceof Error ? openaiError.message : String(openaiError)
       };
     }
 
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('[PROCESS-SERVICE] Erro geral:', error);
     return {
       success: false,
       request_id,
       error: 'Erro ao processar request',
-      details: error.message
+      details: error instanceof Error ? error.message : String(error)
     };
   }
 }
