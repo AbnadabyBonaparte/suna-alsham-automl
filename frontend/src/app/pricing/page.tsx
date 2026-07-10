@@ -24,7 +24,7 @@ const PLANS = [
         id: 'starter',
         name: 'STARTER',
         price: 990,
-        priceId: 'price_starter', // Substituir pelo ID real do Stripe
+        priceId: process.env.NEXT_PUBLIC_STRIPE_PRICE_STARTER || '',
         description: 'Ideal para pequenas operações',
         badge: null,
         color: 'from-blue-500 to-cyan-500',
@@ -47,7 +47,7 @@ const PLANS = [
         id: 'pro',
         name: 'PRO',
         price: 4900,
-        priceId: 'price_pro', // Substituir pelo ID real do Stripe
+        priceId: process.env.NEXT_PUBLIC_STRIPE_PRICE_PRO || '',
         description: 'Para empresas em crescimento',
         badge: 'MAIS POPULAR',
         color: 'from-purple-500 to-pink-500',
@@ -70,7 +70,7 @@ const PLANS = [
         id: 'enterprise',
         name: 'ENTERPRISE',
         price: 9900,
-        priceId: 'price_enterprise', // Substituir pelo ID real do Stripe
+        priceId: process.env.NEXT_PUBLIC_STRIPE_PRICE_ENTERPRISE || '',
         description: 'Para operações de escala global',
         badge: 'MAIS VENDIDO',
         color: 'from-yellow-400 to-orange-500',
@@ -177,6 +177,7 @@ export default function PricingPage() {
                     priceId: plan.priceId,
                     planId: plan.id,
                     billingCycle,
+                    userId: user?.id,
                 }),
             });
 
