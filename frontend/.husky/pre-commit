@@ -1,1 +1,6 @@
-npm test
+# O produto vive em frontend/ (monorepo sem package.json na raiz).
+# O git invoca este hook com CWD = raiz do repo, então entramos em frontend/
+# antes de rodar o lint-staged. Sem este `cd`, o npm/lint-staged falha com
+# ENOENT (não acha package.json) e todo commit quebra — por isso commits
+# antigos usavam --no-verify.
+cd "$(dirname "$0")/.." && npx lint-staged
