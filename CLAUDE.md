@@ -282,3 +282,13 @@ npx tsc --noEmit
 **Atualizado:** 2025-12-23  
 **Mantido por:** ALSHAM GLOBAL
 
+## ⚖️ LEI INVIOLÁVEL — O MOTOR É RECEITA INTERNA
+
+NUNCA exponha, em texto visível ao cliente, o nome de fornecedores/modelos de IA de terceiros (Claude, Anthropic, GPT, ChatGPT, OpenAI, Gemini, Google AI, Llama, Mistral, DeepSeek, etc.) nem sua composição/pesos ou "powered by".
+
+- O cliente vê apenas o produto e o motor ALSHAM: "motor ALSHAM", "IA ALSHAM", "ensemble multi-modelo proprietário", "inteligência ALSHAM".
+- Proibido em: landing/marketing, hero, features, "como funciona", FAQ, pricing, badges "powered by", footers, labels de UI, loading states, toasts, empty states, i18n, respostas de API expostas ao cliente e docs voltados ao cliente.
+- Permitido apenas em: código não-visível (imports de SDK, env vars, parâmetro `model` server-side), config e docs internos de engenharia.
+
+Motivo: se o cliente vê que usamos GPT/Claude/Gemini, ele conclui que pode ir direto na ferramenta e dispensar a ALSHAM. Vendemos o produto e a orquestração ALSHAM; o fornecedor de IA por trás é segredo industrial.
+

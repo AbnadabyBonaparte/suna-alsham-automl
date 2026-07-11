@@ -3,7 +3,7 @@
  * ALSHAM QUANTUM - GLOBAL NETWORK (THE PANOPTICON)
  * ═══════════════════════════════════════════════════════════════
  * 📁 PATH: frontend/src/app/dashboard/network/page.tsx
- * 🌍 Mapa de conexões - Agents ↔ Banco ↔ OpenAI
+ * 🌍 Mapa de conexões - Agents ↔ Banco ↔ Motor IA
  * ═══════════════════════════════════════════════════════════════
  */
 
@@ -65,7 +65,7 @@ export default function NetworkPage() {
                 // Criar servers baseados em dados reais
                 const networkServers: NetworkServer[] = [
                     { id: 'SUPABASE', lat: -23, lon: -46, name: 'Supabase Database', type: 'database', load: Math.floor(Math.random() * 30 + 40), status: 'online', requests: agentsCount || 0 },
-                    { id: 'OPENAI', lat: 37, lon: -122, name: 'OpenAI API', type: 'api', load: Math.floor(Math.random() * 40 + 50), status: 'online', requests: requestsCount || 0 },
+                    { id: 'OPENAI', lat: 37, lon: -122, name: 'Motor IA', type: 'api', load: Math.floor(Math.random() * 40 + 50), status: 'online', requests: requestsCount || 0 },
                     { id: 'VERCEL', lat: 37, lon: -122, name: 'Vercel Edge', type: 'api', load: Math.floor(Math.random() * 20 + 30), status: 'online', requests: 0 },
                     { id: 'ORION', lat: 40, lon: -74, name: 'ORION Core', type: 'agent', load: Math.floor(Math.random() * 50 + 40), status: 'online', requests: Math.floor((requestsCount || 0) * 0.3) },
                     { id: 'VOID-HUB', lat: 51, lon: -0.1, name: 'VOID Squad Hub', type: 'agent', load: Math.floor(Math.random() * 30 + 20), status: 'online', requests: Math.floor((requestsCount || 0) * 0.2) },

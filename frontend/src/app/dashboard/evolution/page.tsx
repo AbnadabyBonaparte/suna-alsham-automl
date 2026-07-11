@@ -3,7 +3,7 @@
  * ALSHAM QUANTUM - AGENT AUTO-EVOLUTION LAB (THEME-AWARE)
  * ═══════════════════════════════════════════════════════════════
  * 📁 PATH: frontend/src/app/dashboard/evolution/page.tsx
- * 🧬 Sistema de Auto-Evolução de Agents usando Claude API
+ * 🧬 Sistema de Auto-Evolução de Agents usando o motor ALSHAM
  * 🎨 100% SUBMISSO AOS TEMAS - USA VARIÁVEIS CSS
  * ═══════════════════════════════════════════════════════════════
  */
@@ -132,7 +132,7 @@ export default function EvolutionPage() {
             }
         } catch (error) {
             console.error('Erro ao analisar agent:', error);
-            addNotification({ type: 'error', title: 'Erro ao analisar agent com Claude' });
+            addNotification({ type: 'error', title: 'Erro ao analisar agent com IA ALSHAM' });
         } finally {
             setProposing(false);
             setAnalyzing(false);
@@ -195,7 +195,7 @@ export default function EvolutionPage() {
                             EVOLUTION LAB
                         </h1>
                         <p className="text-sm font-mono" style={{ color: colors.textSecondary }}>
-                            Auto-evolução de agents com Claude API
+                            Auto-evolução de agents com o motor ALSHAM
                         </p>
                     </div>
                 </div>
@@ -341,7 +341,7 @@ export default function EvolutionPage() {
                                                 }}
                                             >
                                                 <Brain className="w-4 h-4" />
-                                                Analisar com Claude
+                                                Analisar com IA ALSHAM
                                                 <Sparkles className="w-4 h-4" />
                                             </button>
                                         </div>
@@ -468,7 +468,7 @@ export default function EvolutionPage() {
                             >
                                 <h3 className="text-lg font-bold mb-4 flex items-center gap-2" style={{ color: colors.text }}>
                                     <Brain className="w-5 h-5" style={{ color: colors.primary }} />
-                                    Análise do Claude
+                                    Análise da IA ALSHAM
                                 </h3>
 
                                 <div className="mb-4">
@@ -607,7 +607,7 @@ export default function EvolutionPage() {
                         }}
                     >
                         <Brain className="w-16 h-16 animate-pulse" style={{ color: colors.primary }} />
-                        <div className="text-xl font-bold" style={{ color: colors.text }}>Claude está analisando...</div>
+                        <div className="text-xl font-bold" style={{ color: colors.text }}>IA ALSHAM está analisando...</div>
                         <p className="text-sm" style={{ color: colors.textSecondary }}>Gerando proposta de evolução inteligente</p>
                     </div>
                 </div>

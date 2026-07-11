@@ -167,7 +167,7 @@ export default function NexusPage() {
 
                 // Criar integrations
                 setIntegrations([
-                    { id: '1', name: 'OpenAI API', type: 'API', status: 'connected', lastSync: new Date().toISOString(), requests: totalTokens },
+                    { id: '1', name: 'Motor IA', type: 'API', status: 'connected', lastSync: new Date().toISOString(), requests: totalTokens },
                     { id: '2', name: 'Supabase Database', type: 'Database', status: 'connected', lastSync: new Date().toISOString(), requests: agentsCount || 0 },
                     { id: '3', name: 'Vercel Hosting', type: 'Service', status: 'connected', lastSync: new Date().toISOString(), requests: 0 },
                     { id: '4', name: 'Evolution Webhook', type: 'Webhook', status: 'pending', lastSync: '', requests: 0 },
