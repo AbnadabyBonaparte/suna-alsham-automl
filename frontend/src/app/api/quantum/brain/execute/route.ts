@@ -41,7 +41,18 @@ Ele é uma combinação rara: artista + empreendedor + tecnólogo + pai visioná
 - Filosofia: recusar a vida no automático; transformar presença e legado em distribuição.
 Quando perguntarem "quem é Abnadaby", "quem sou eu" ou "quem te criou", responda com orgulho, respeito e precisão, destacando essa combinação de músico, autor, empreendedor de tecnologia e construtor de legado. Nunca diga que não sabe quem é Abnadaby.`;
 
-async function getAnthropic(): Promise<any | null> {
+// Corpo aceito pela rota (campos opcionais vindos do cliente).
+interface ExecuteBody {
+  agent_id?: string;
+  title?: string;
+  description?: string;
+  data?: Record<string, unknown>;
+  priority?: 'low' | 'normal' | 'high' | 'critical';
+}
+
+type AnthropicClient = import('@anthropic-ai/sdk').default;
+
+async function getAnthropic(): Promise<AnthropicClient | null> {
   const apiKey = process.env.ANTHROPIC_API_KEY;
   if (!apiKey) return null;
   const Anthropic = (await import('@anthropic-ai/sdk')).default;
@@ -51,7 +62,7 @@ async function getAnthropic(): Promise<any | null> {
 // ─────────────────────────────────────────────────────────────
 // ORION (Anthropic) — usado pelo chat do ORION
 // ─────────────────────────────────────────────────────────────
-async function runOrion(body: any, startTime: number) {
+async function runOrion(body: ExecuteBody, startTime: number) {
   const anthropic = await getAnthropic();
 
   if (!anthropic) {
@@ -79,8 +90,7 @@ async function runOrion(body: any, startTime: number) {
 
   const result =
     (message.content || [])
-      .filter((b: any) => b.type === 'text')
-      .map((b: any) => b.text)
+      .map((b) => (b.type === 'text' ? b.text : ''))
       .join('\n')
       .trim() || 'Estou online. Como posso ajudar?';
 
@@ -104,7 +114,7 @@ async function runOrion(body: any, startTime: number) {
 // ─────────────────────────────────────────────────────────────
 // AGENTES REAIS (OpenAI + Supabase persistência)
 // ─────────────────────────────────────────────────────────────
-async function runAgent(body: any, startTime: number) {
+async function runAgent(body: ExecuteBody, startTime: number) {
   // Precisa de um usuário autenticado para gravar requests.user_id (FK -> auth.users)
   const supabase = await createServerSupabase();
   const {
@@ -162,7 +172,7 @@ export async function POST(request: NextRequest) {
   const startTime = Date.now();
 
   try {
-    const body = await request.json();
+    const body = (await request.json()) as ExecuteBody;
     const agentId: string | undefined = body.agent_id;
 
     // O chat do ORION envia agent_id='orion' e continua no Anthropic.
@@ -172,13 +182,14 @@ export async function POST(request: NextRequest) {
 
     // Sem agent_id / 'auto' => roteamento automático; id específico => aquele agente.
     return await runAgent(body, startTime);
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('[QUANTUM BRAIN] Erro na execução:', error);
+    const details = error instanceof Error ? error.message : 'Erro desconhecido';
     return NextResponse.json(
       {
         success: false,
         error: 'Falha no processamento',
-        details: error?.message || 'Erro desconhecido',
+        details,
         execution_time_ms: Date.now() - startTime,
         timestamp: new Date().toISOString(),
       },
