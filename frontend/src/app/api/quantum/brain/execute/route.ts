@@ -15,6 +15,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient as createServerSupabase } from '@/lib/supabase/server';
 import { executeTask } from '@/lib/quantum-brain/task-executor';
+import { orchestrate } from '@/lib/quantum-brain/orchestrator';
 import { ROLE_TO_SQUAD, AgentRole } from '@/lib/quantum-brain/types';
 
 export const dynamic = 'force-dynamic';
@@ -48,7 +49,12 @@ interface ExecuteBody {
   description?: string;
   data?: Record<string, unknown>;
   priority?: 'low' | 'normal' | 'high' | 'critical';
+  /** Objetivo de alto nível → aciona o ORCHESTRATOR ALPHA (multi-agente). */
+  objective?: string;
+  mode?: 'orchestrate' | 'agent';
 }
+
+const ORCHESTRATOR_IDS = new Set(['orchestrator', 'orchestrator-alpha']);
 
 type AnthropicClient = import('@anthropic-ai/sdk').default;
 
@@ -107,6 +113,67 @@ async function runOrion(body: ExecuteBody, startTime: number) {
     tokens_used: tokensUsed,
     status: 'completed',
     model: 'claude-sonnet-4-5-20250929',
+    timestamp: new Date().toISOString(),
+  });
+}
+
+// ─────────────────────────────────────────────────────────────
+// ORQUESTRADOR (ORCHESTRATOR ALPHA) — multi-agente + skills
+// ─────────────────────────────────────────────────────────────
+async function runOrchestrator(body: ExecuteBody, startTime: number) {
+  const supabase = await createServerSupabase();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    return NextResponse.json(
+      {
+        success: false,
+        error: 'Não autenticado',
+        details: 'Faça login para orquestrar tarefas multi-agente.',
+        execution_time_ms: Date.now() - startTime,
+        timestamp: new Date().toISOString(),
+      },
+      { status: 401 },
+    );
+  }
+
+  const objective = (body.objective || body.description || body.title || '').trim();
+  if (!objective) {
+    return NextResponse.json(
+      {
+        success: false,
+        error: 'Objetivo ausente',
+        details: 'Envie "objective" (ou "description") com o objetivo de alto nível.',
+        execution_time_ms: Date.now() - startTime,
+        timestamp: new Date().toISOString(),
+      },
+      { status: 400 },
+    );
+  }
+
+  const planResult = await orchestrate({ objective, user_id: user.id, data: body.data });
+  // Produtivo se algum passo entregou resultado (concluído ou determinístico parcial).
+  const productive = planResult.steps.some(
+    (s) => s.status === 'completed' || s.status === 'partial',
+  );
+
+  return NextResponse.json({
+    success: productive,
+    mode: 'orchestration',
+    task_id: `orch_${Date.now()}`,
+    agent_id: 'orchestrator-alpha',
+    agent_name: 'ORCHESTRATOR ALPHA',
+    squad: 'COMMAND',
+    objective,
+    plan: planResult.plan,
+    steps: planResult.steps,
+    trace: planResult.trace,
+    configured: planResult.configured,
+    result: planResult.summary,
+    execution_time_ms: Date.now() - startTime,
+    model: 'gpt-4o-mini',
     timestamp: new Date().toISOString(),
   });
 }
@@ -178,6 +245,15 @@ export async function POST(request: NextRequest) {
     // O chat do ORION envia agent_id='orion' e continua no Anthropic.
     if (agentId && ORION_IDS.has(agentId)) {
       return await runOrion(body, startTime);
+    }
+
+    // Objetivo de alto nível (ou ORCHESTRATOR ALPHA) => orquestração multi-agente.
+    if (
+      body.objective ||
+      body.mode === 'orchestrate' ||
+      (agentId && ORCHESTRATOR_IDS.has(agentId))
+    ) {
+      return await runOrchestrator(body, startTime);
     }
 
     // Sem agent_id / 'auto' => roteamento automático; id específico => aquele agente.

@@ -14,6 +14,8 @@
 // testes unitários exercitam sem chamar o LLM.
 // ═══════════════════════════════════════════════════════════════
 
+import type { SkillId } from './skills';
+
 // ─────────────────────────────────────────────────────────────
 // Contexto passado para os comportamentos
 // ─────────────────────────────────────────────────────────────
@@ -221,6 +223,8 @@ export interface AgentBehavior {
   agentName: string;
   /** Descrição curta do que o agente faz (para docs/UI). */
   summary: string;
+  /** Skills que o agente provê (composabilidade — usado pelo orquestrador). */
+  provides: SkillId[];
   /** Se true, o executor injeta agentStats reais no contexto. */
   needsAgentStats?: boolean;
   systemPrompt: string;
@@ -243,6 +247,7 @@ const leadMagnet: AgentBehavior = {
   agentName: 'LEAD MAGNET',
   summary:
     'Qualifica e pontua leads (0-100), deriva a faixa (hot/warm/cold) e sugere a próxima ação de prospecção.',
+  provides: ['score-leads'],
   systemPrompt:
     'Você é LEAD MAGNET, especialista em qualificação de leads. A partir da tarefa e dos dados fornecidos, ' +
     'pontue cada lead de 0 a 100 e justifique. Responda SOMENTE em JSON válido no formato: ' +
@@ -291,6 +296,7 @@ const contentCreator: AgentBehavior = {
   agentName: 'CONTENT CREATOR',
   summary:
     'Gera conteúdo em múltiplos formatos (blog/social/email/ad), cada peça com título, corpo, hashtags e CTA.',
+  provides: ['generate-copy'],
   systemPrompt:
     'Você é CONTENT CREATOR, especialista em conteúdo. Produza peças em múltiplos formatos ' +
     '(blog, social, email, ad). Responda SOMENTE em JSON válido no formato: ' +
@@ -336,6 +342,7 @@ const emailSequenceBot: AgentBehavior = {
   agentName: 'EMAIL SEQUENCE BOT',
   summary:
     'Monta uma sequência de e-mails ordenada (passos reindexados, atraso em dias) e calcula a duração total.',
+  provides: ['build-sequence'],
   systemPrompt:
     'Você é EMAIL SEQUENCE BOT, especialista em sequências de e-mail. Crie uma cadência ordenada. ' +
     'Responda SOMENTE em JSON válido no formato: { "audience": string, "steps": [{ "delay_days": number, ' +
@@ -390,6 +397,7 @@ const dataMiner: AgentBehavior = {
   agentName: 'DATA MINER',
   summary:
     'Agrega métricas REAIS da frota de agentes (contagens, ativos, média de eficiência) e gera insights sobre elas.',
+  provides: ['aggregate-stats'],
   needsAgentStats: true,
   systemPrompt:
     'Você é DATA MINER, analista de dados. Você recebe MÉTRICAS REAIS já agregadas do banco. ' +
