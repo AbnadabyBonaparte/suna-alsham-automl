@@ -1,4 +1,4 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import { Inter, Orbitron, Rajdhani } from 'next/font/google';
 import './globals.css';
 import { ThemeHydrator } from '@/components/ThemeHydrator';
@@ -33,13 +33,23 @@ export const metadata: Metadata = {
     description: 'A Singularidade Chegou',
     type: 'website',
   },
+  manifest: '/manifest.webmanifest',
+  appleWebApp: {
+    capable: true,
+    title: 'Quantum',
+    statusBarStyle: 'black-translucent',
+  },
+  icons: {
+    icon: '/favicon-32.png',
+    apple: '/apple-touch-icon.png',
+  },
 };
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export const viewport: Viewport = {
+  themeColor: '#00ffd0',
+};
+
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html
       lang="pt-BR"
@@ -56,9 +66,7 @@ export default function RootLayout({
         <RealityBackground />
         <GlobalKeyListener />
 
-        <main className="relative z-10">
-          {children}
-        </main>
+        <main className="relative z-10">{children}</main>
 
         <ThemeSwitcher />
       </body>
