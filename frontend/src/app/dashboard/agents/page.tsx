@@ -7,38 +7,86 @@
  * ═══════════════════════════════════════════════════════════════
  */
 
-"use client";
+'use client';
 
-import { useState } from "react";
-import { useAgents } from "@/hooks/useAgents";
-import { X, Activity, Clock, Zap as ZapIcon, TrendingUp, Play, CheckCircle, AlertCircle } from "lucide-react";
-import { supabase } from "@/lib/supabase";
-
-
-
+import { useState } from 'react';
+import { useAgents } from '@/hooks/useAgents';
+import {
+  X,
+  Activity,
+  Clock,
+  Zap as ZapIcon,
+  TrendingUp,
+  Play,
+  CheckCircle,
+  AlertCircle,
+  Users,
+} from 'lucide-react';
+import { supabase } from '@/lib/supabase';
+import { PageHeader } from '@/components/ui/PageHeader';
 
 // ÍCONES SVG NATIVOS (Zero dependências externas)
 const IconSearch = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    width="24"
+    height="24"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
     <circle cx="11" cy="11" r="8" />
     <path d="m21 21-4.3-4.3" />
   </svg>
 );
 
 const IconShield = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    width="24"
+    height="24"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
     <path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z" />
   </svg>
 );
 
 const IconZap = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    width="24"
+    height="24"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
     <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
   </svg>
 );
 
 const IconBrain = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    width="24"
+    height="24"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
     <path d="M12 5a3 3 0 1 0-5.997.125 4 4 0 0 0-2.526 5.77 4 4 0 0 0 .556 6.588A4 4 0 1 0 12 18Z" />
     <path d="M12 5a3 3 0 1 1 5.997.125 4 4 0 0 1 2.526 5.77 4 4 0 0 1-.556 6.588A4 4 0 1 1 12 18Z" />
     <path d="M15 13a4.5 4.5 0 0 1-3-4 4.5 4.5 0 0 1-3 4" />
@@ -46,14 +94,34 @@ const IconBrain = () => (
 );
 
 const IconTerminal = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    width="24"
+    height="24"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
     <polyline points="4 17 10 11 4 5" />
     <line x1="12" x2="20" y1="19" y2="19" />
   </svg>
 );
 
 const IconServer = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    width="24"
+    height="24"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
     <rect width="20" height="8" x="2" y="2" rx="2" ry="2" />
     <rect width="20" height="8" x="2" y="14" rx="2" ry="2" />
     <line x1="6" x2="6.01" y1="6" y2="6" />
@@ -80,7 +148,7 @@ export default function AgentsPage() {
     filteredSquad,
     setSearchQuery,
     setFilteredSquad,
-    getFilteredAgents
+    getFilteredAgents,
   } = useAgents();
 
   const filteredAgents = getFilteredAgents();
@@ -102,9 +170,10 @@ export default function AgentsPage() {
         .insert({
           user_id: '00000000-0000-0000-0000-000000000000', // User demo
           title: `Teste de processamento - Agent ${agentId}`,
-          description: 'Request de teste para verificar se os agents estão funcionando corretamente',
+          description:
+            'Request de teste para verificar se os agents estão funcionando corretamente',
           status: 'queued',
-          priority: 'normal'
+          priority: 'normal',
         })
         .select()
         .single();
@@ -120,8 +189,8 @@ export default function AgentsPage() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          request_id: newRequest.id
-        })
+          request_id: newRequest.id,
+        }),
       });
 
       const data = await response.json();
@@ -137,7 +206,6 @@ export default function AgentsPage() {
       setTimeout(() => {
         window.location.reload();
       }, 2000);
-
     } catch (err: any) {
       console.error('Erro ao processar:', err);
       setError(err.message);
@@ -148,11 +216,16 @@ export default function AgentsPage() {
 
   const renderIcon = (role: string) => {
     switch (role) {
-      case "GUARD": return <IconShield />;
-      case "CORE": return <IconZap />;
-      case "ANALYST": return <IconBrain />;
-      case "SPECIALIST": return <IconTerminal />;
-      default: return <IconServer />;
+      case 'GUARD':
+        return <IconShield />;
+      case 'CORE':
+        return <IconZap />;
+      case 'ANALYST':
+        return <IconBrain />;
+      case 'SPECIALIST':
+        return <IconTerminal />;
+      default:
+        return <IconServer />;
     }
   };
 
@@ -160,40 +233,45 @@ export default function AgentsPage() {
     <div className="min-h-screen pb-20 font-sans">
       <div className="max-w-7xl mx-auto">
         {/* HEADER */}
-        <div className="flex flex-col md:flex-row justify-between items-start gap-8 mb-12">
-          <div>
-            <h1 className="text-5xl md:text-7xl font-black text-[var(--color-primary)] tracking-tighter orbitron drop-shadow-[0_0_15px_rgba(var(--color-primary-rgb),0.3)]">
-              SENTINELAS
-            </h1>
-            <p className="text-xl md:text-3xl text-[var(--color-text-secondary)] mt-4 font-mono tracking-widest">
-              {agents.length} UNIDADES NEURAIS ATIVAS
-            </p>
-          </div>
-
-          <div className="relative w-full md:w-96">
-            <div className="absolute left-4 top-1/2 -translate-y-1/2 text-textSecondary">
-              <IconSearch />
-            </div>
-            <input
-              type="text"
-              placeholder="Buscar unidade..."
-              className="w-full pl-14 pr-6 py-4 text-xl bg-background/40 border border-[var(--color-border)]/30 text-text placeholder:text-textSecondary focus:border-[var(--color-primary)] focus:outline-none focus:shadow-[0_0_20px_var(--color-primary)] transition-all rounded-lg"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
-          </div>
+        <div className="mb-10">
+          <PageHeader
+            eyebrow="Neural Agents"
+            live
+            title="Sentinelas"
+            subtitle={`${agents.length} unidades neurais sob comando da inteligência ALSHAM.`}
+            icon={Users}
+            actions={
+              <div className="relative w-full sm:w-80">
+                <div className="absolute left-4 top-1/2 -translate-y-1/2 text-textSecondary">
+                  <IconSearch />
+                </div>
+                <input
+                  type="text"
+                  placeholder="Buscar unidade..."
+                  className="w-full pl-12 pr-5 py-3 border text-text placeholder:text-textSecondary focus:border-[var(--color-primary)] focus:outline-none focus:shadow-[0_0_20px_var(--color-primary)] transition-all rounded-xl"
+                  style={{
+                    background: 'color-mix(in srgb, var(--color-background) 55%, transparent)',
+                    borderColor: 'color-mix(in srgb, var(--color-border) 30%, transparent)',
+                  }}
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                />
+              </div>
+            }
+          />
         </div>
 
         {/* FILTROS */}
-        <div className="flex gap-4 flex-wrap mb-12">
-          {["ALL", "CORE", "GUARD", "ANALYST", "SPECIALIST"].map((f) => (
+        <div className="flex gap-3 flex-wrap mb-10">
+          {['ALL', 'CORE', 'GUARD', 'ANALYST', 'SPECIALIST'].map((f) => (
             <button
               key={f}
               onClick={() => setFilteredSquad(f)}
-              className={`text-lg font-bold px-8 py-4 rounded border-2 transition-all uppercase tracking-wider ${filteredSquad === f
-                ? "bg-[var(--color-primary)]/10 text-[var(--color-primary)] border-[var(--color-primary)] shadow-[0_0_30px_var(--color-primary)]"
-                : "bg-transparent border-[var(--color-border)]/30 text-textSecondary hover:text-[var(--color-primary)] hover:border-[var(--color-primary)]/70"
-                }`}
+              className={`text-lg font-bold px-8 py-4 rounded border-2 transition-all uppercase tracking-wider ${
+                filteredSquad === f
+                  ? 'bg-[var(--color-primary)]/10 text-[var(--color-primary)] border-[var(--color-primary)] shadow-[0_0_30px_var(--color-primary)]'
+                  : 'bg-transparent border-[var(--color-border)]/30 text-textSecondary hover:text-[var(--color-primary)] hover:border-[var(--color-primary)]/70'
+              }`}
             >
               {f}
             </button>
@@ -208,7 +286,7 @@ export default function AgentsPage() {
                 key={agent.id}
                 onClick={() => setSelectedAgent(agent)}
                 style={{
-                  animation: `fadeInUp 0.6s ease-out ${index * 0.05}s both`
+                  animation: `fadeInUp 0.6s ease-out ${index * 0.05}s both`,
                 }}
                 className="group relative bg-[var(--color-surface)]/60 border-2 border-[var(--color-border)]/20 backdrop-blur-xl hover:border-[var(--color-primary)]/80 hover:shadow-[0_0_50px_var(--color-primary)] hover:scale-105 transition-all duration-500 rounded-xl overflow-hidden cursor-pointer transform hover:-translate-y-2"
               >
@@ -231,12 +309,13 @@ export default function AgentsPage() {
 
                   <div className="mb-6">
                     <span
-                      className={`inline-flex items-center px-4 py-1 rounded-full text-sm font-bold border ${agent.status === "ACTIVE"
-                        ? "bg-[var(--color-success)]/10 text-[var(--color-success)] border-[var(--color-success)]/50"
-                        : agent.status === "PROCESSING"
-                          ? "bg-[var(--color-warning)]/10 text-[var(--color-warning)] border-[var(--color-warning)]/50 animate-pulse"
-                          : "bg-surface/20 text-textSecondary border-border/50"
-                        }`}
+                      className={`inline-flex items-center px-4 py-1 rounded-full text-sm font-bold border ${
+                        agent.status === 'ACTIVE'
+                          ? 'bg-[var(--color-success)]/10 text-[var(--color-success)] border-[var(--color-success)]/50'
+                          : agent.status === 'PROCESSING'
+                            ? 'bg-[var(--color-warning)]/10 text-[var(--color-warning)] border-[var(--color-warning)]/50 animate-pulse'
+                            : 'bg-surface/20 text-textSecondary border-border/50'
+                      }`}
                     >
                       ● {agent.status}
                     </span>
@@ -246,7 +325,9 @@ export default function AgentsPage() {
                     <div>
                       <div className="flex justify-between text-sm mb-2 font-mono">
                         <span className="text-textSecondary">INTEGRIDADE NEURAL</span>
-                        <span className="text-[var(--color-primary)] font-bold">{agent.efficiency.toFixed(1)}%</span>
+                        <span className="text-[var(--color-primary)] font-bold">
+                          {agent.efficiency.toFixed(1)}%
+                        </span>
                       </div>
                       <div className="w-full bg-surface/5 h-2 rounded-full overflow-hidden">
                         <div
@@ -257,7 +338,9 @@ export default function AgentsPage() {
                     </div>
 
                     <div className="pt-6 border-t border-border/10">
-                      <p className="text-[10px] text-textSecondary uppercase tracking-widest mb-2">TAREFA ATUAL</p>
+                      <p className="text-[10px] text-textSecondary uppercase tracking-widest mb-2">
+                        TAREFA ATUAL
+                      </p>
                       <p className="text-lg text-textSecondary font-mono leading-relaxed border-l-2 border-[var(--color-primary)] pl-4">
                         &quot;{agent.currentTask || agent.current_task || 'Awaiting orders'}&quot;
                       </p>
@@ -311,9 +394,9 @@ export default function AgentsPage() {
                   </div>
                   <div
                     className={`text-2xl font-bold ${
-                      selectedAgent.status === "ACTIVE"
-                        ? "text-[var(--color-success)]"
-                        : "text-[var(--color-warning)]"
+                      selectedAgent.status === 'ACTIVE'
+                        ? 'text-[var(--color-success)]'
+                        : 'text-[var(--color-warning)]'
                     }`}
                   >
                     {selectedAgent.status}
@@ -323,7 +406,9 @@ export default function AgentsPage() {
                 <div className="bg-background/40 border border-border/10 rounded-xl p-6">
                   <div className="flex items-center gap-3 mb-3">
                     <TrendingUp className="w-5 h-5 text-[var(--color-secondary)]" />
-                    <span className="text-sm text-textSecondary uppercase font-mono">Efficiency</span>
+                    <span className="text-sm text-textSecondary uppercase font-mono">
+                      Efficiency
+                    </span>
                   </div>
                   <div className="text-2xl font-bold text-text">
                     {selectedAgent.efficiency.toFixed(1)}%
@@ -335,9 +420,7 @@ export default function AgentsPage() {
                     <Clock className="w-5 h-5 text-[var(--color-accent)]" />
                     <span className="text-sm text-textSecondary uppercase font-mono">Agent ID</span>
                   </div>
-                  <div className="text-xl font-mono text-text">
-                    #{selectedAgent.id}
-                  </div>
+                  <div className="text-xl font-mono text-text">#{selectedAgent.id}</div>
                 </div>
 
                 <div className="bg-background/40 border border-border/10 rounded-xl p-6">
@@ -345,9 +428,7 @@ export default function AgentsPage() {
                     <ZapIcon className="w-5 h-5" style={{ color: 'var(--color-warning)' }} />
                     <span className="text-sm text-textSecondary uppercase font-mono">Role</span>
                   </div>
-                  <div className="text-xl font-bold text-text">
-                    {selectedAgent.role}
-                  </div>
+                  <div className="text-xl font-bold text-text">{selectedAgent.role}</div>
                 </div>
               </div>
 
@@ -357,7 +438,9 @@ export default function AgentsPage() {
                   Current Task
                 </h3>
                 <p className="text-lg text-textSecondary font-mono leading-relaxed border-l-4 border-[var(--color-primary)] pl-4">
-                  &quot;{selectedAgent.currentTask || selectedAgent.current_task || 'Awaiting orders'}&quot;
+                  &quot;
+                  {selectedAgent.currentTask || selectedAgent.current_task || 'Awaiting orders'}
+                  &quot;
                 </p>
               </div>
 
@@ -406,26 +489,38 @@ export default function AgentsPage() {
 
               {/* Resultado/Erro */}
               {result && (
-                <div className="mt-6 rounded-xl p-6" style={{ background: 'var(--color-success)/10', border: '1px solid var(--color-success)/50' }}>
+                <div
+                  className="mt-6 rounded-xl p-6"
+                  style={{
+                    background: 'var(--color-success)/10',
+                    border: '1px solid var(--color-success)/50',
+                  }}
+                >
                   <div className="flex items-center gap-3 mb-3">
                     <CheckCircle className="w-6 h-6" style={{ color: 'var(--color-success)' }} />
-                    <h4 className="text-lg font-bold" style={{ color: 'var(--color-success)' }}>SUCESSO!</h4>
+                    <h4 className="text-lg font-bold" style={{ color: 'var(--color-success)' }}>
+                      SUCESSO!
+                    </h4>
                   </div>
-                  <p className="text-sm text-textSecondary font-mono leading-relaxed">
-                    {result}
-                  </p>
+                  <p className="text-sm text-textSecondary font-mono leading-relaxed">{result}</p>
                 </div>
               )}
 
               {error && (
-                <div className="mt-6 rounded-xl p-6" style={{ background: 'var(--color-error)/10', border: '1px solid var(--color-error)/50' }}>
+                <div
+                  className="mt-6 rounded-xl p-6"
+                  style={{
+                    background: 'var(--color-error)/10',
+                    border: '1px solid var(--color-error)/50',
+                  }}
+                >
                   <div className="flex items-center gap-3 mb-3">
                     <AlertCircle className="w-6 h-6" style={{ color: 'var(--color-error)' }} />
-                    <h4 className="text-lg font-bold" style={{ color: 'var(--color-error)' }}>ERRO!</h4>
+                    <h4 className="text-lg font-bold" style={{ color: 'var(--color-error)' }}>
+                      ERRO!
+                    </h4>
                   </div>
-                  <p className="text-sm text-textSecondary font-mono leading-relaxed">
-                    {error}
-                  </p>
+                  <p className="text-sm text-textSecondary font-mono leading-relaxed">{error}</p>
                 </div>
               )}
             </div>
@@ -461,6 +556,3 @@ export default function AgentsPage() {
     </div>
   );
 }
-
-
-

@@ -55,6 +55,9 @@ export function DashboardShell({
 
   return (
     <div className="min-h-screen relative flex">
+      {/* Camada de profundidade compartilhada — mesh + vignette coerente em TODAS as rotas */}
+      <div className="q-shell-depth" aria-hidden />
+
       {showSuccessModal && (
         <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-background/80 backdrop-blur-sm animate-fadeIn">
           <div className="bg-gradient-to-b from-green-900/50 to-black border border-green-500/50 rounded-3xl p-8 max-w-md mx-4 text-center shadow-2xl">
@@ -62,7 +65,9 @@ export function DashboardShell({
               <CheckCircle className="w-10 h-10 text-green-400" />
             </div>
             <h2 className="text-2xl font-black text-text mb-2">Pagamento Confirmado! 🎉</h2>
-            <p className="text-textSecondary mb-4">Bem-vindo ao ALSHAM QUANTUM. Seu acesso está sendo ativado.</p>
+            <p className="text-textSecondary mb-4">
+              Bem-vindo ao ALSHAM QUANTUM. Seu acesso está sendo ativado.
+            </p>
             <div className="text-xs text-textSecondary">Redirecionando automaticamente...</div>
           </div>
         </div>
@@ -89,7 +94,9 @@ export function DashboardShell({
         </header>
 
         <main className="flex-1 relative p-4 md:p-8 overflow-x-hidden">
-          <div className="mx-auto max-w-[1600px] w-full relative z-10 animate-fadeIn">{children}</div>
+          <div className="mx-auto max-w-[1600px] w-full relative z-10 animate-fadeIn">
+            {children}
+          </div>
         </main>
       </div>
 

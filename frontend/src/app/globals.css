@@ -15,188 +15,194 @@
    ROOT VARIABLES (Fallback/Padrão = Quantum Lab)
    ═══════════════════════════════════════════════════════════════ */
 :root {
-  --color-primary: #00FFD0;
-  --color-secondary: #0EA5E9;
-  --color-accent: #06B6D4;
+  --color-primary: #00ffd0;
+  --color-secondary: #0ea5e9;
+  --color-accent: #06b6d4;
   --color-background: #000000;
   --color-surface: #0a0a0a;
-  --color-text: #FFFFFF;
-  --color-text-secondary: #94A3B8;
-  --color-border: #00FFD0;
-  --color-success: #00FFD0;
-  --color-warning: #F59E0B;
-  --color-error: #EF4444;
-  --color-glow: #00FFD0;
+  --color-text: #ffffff;
+  --color-text-secondary: #94a3b8;
+  --color-border: #00ffd0;
+  --color-success: #00ffd0;
+  --color-warning: #f59e0b;
+  --color-error: #ef4444;
+  --color-glow: #00ffd0;
 }
 
 /* ═══════════════════════════════════════════════════════════════
    1. QUANTUM LAB (Ciano/Preto)
    ═══════════════════════════════════════════════════════════════ */
-[data-theme="quantum"] {
-  --color-primary: #00FFD0;
-  --color-secondary: #0EA5E9;
-  --color-accent: #06B6D4;
+[data-theme='quantum'] {
+  --color-primary: #00ffd0;
+  --color-secondary: #0ea5e9;
+  --color-accent: #06b6d4;
   --color-background: #000000;
   --color-surface: #0a0a0a;
-  --color-text: #FFFFFF;
-  --color-text-secondary: #94A3B8;
-  --color-border: #00FFD0;
-  --color-success: #00FFD0;
-  --color-warning: #F59E0B;
-  --color-error: #EF4444;
-  --color-glow: #00FFD0;
+  --color-text: #ffffff;
+  --color-text-secondary: #94a3b8;
+  --color-border: #00ffd0;
+  --color-success: #00ffd0;
+  --color-warning: #f59e0b;
+  --color-error: #ef4444;
+  --color-glow: #00ffd0;
 }
 
 /* ═══════════════════════════════════════════════════════════════
    2. LUMINOUS ASCENSION (Dourado/Branco)
    ═══════════════════════════════════════════════════════════════ */
-[data-theme="ascension"] {
-  --color-primary: #FFD700;
-  --color-secondary: #FFA500;
-  --color-accent: #FF8C00;
-  --color-background: #F8FAFC;
-  --color-surface: #FFFFFF;
-  --color-text: #1E293B;
-  --color-text-secondary: #64748B;
-  --color-border: #E2E8F0;
-  --color-success: #FFD700;
-  --color-warning: #F59E0B;
-  --color-error: #EF4444;
-  --color-glow: #FFD700;
+[data-theme='ascension'] {
+  --color-primary: #ffd700;
+  --color-secondary: #ffa500;
+  --color-accent: #ff8c00;
+  --color-background: #f8fafc;
+  --color-surface: #ffffff;
+  --color-text: #1e293b;
+  --color-text-secondary: #64748b;
+  --color-border: #e2e8f0;
+  --color-success: #ffd700;
+  --color-warning: #f59e0b;
+  --color-error: #ef4444;
+  --color-glow: #ffd700;
 }
 
 /* ═══════════════════════════════════════════════════════════════
    3. MILITARY OPS (Verde Night Vision/Preto)
    ═══════════════════════════════════════════════════════════════ */
-[data-theme="military"] {
-  --color-primary: #10B981;
-  --color-secondary: #064E3B;
-  --color-accent: #34D399;
+[data-theme='military'] {
+  --color-primary: #10b981;
+  --color-secondary: #064e3b;
+  --color-accent: #34d399;
   --color-background: #020604;
-  --color-surface: #090F0B;
-  --color-text: #ECFDF5;
-  --color-text-secondary: #6EE7B7;
-  --color-border: #10B981;
-  --color-success: #10B981;
-  --color-warning: #F59E0B;
-  --color-error: #EF4444;
-  --color-glow: #10B981;
+  --color-surface: #090f0b;
+  --color-text: #ecfdf5;
+  --color-text-secondary: #6ee7b7;
+  --color-border: #10b981;
+  --color-success: #10b981;
+  --color-warning: #f59e0b;
+  --color-error: #ef4444;
+  --color-glow: #10b981;
 }
 
 /* ═══════════════════════════════════════════════════════════════
    4. NEURAL SINGULARITY (Roxo/Preto)
    ═══════════════════════════════════════════════════════════════ */
-[data-theme="neural"] {
-  --color-primary: #8B5CF6;
-  --color-secondary: #A78BFA;
-  --color-accent: #EC4899;
+[data-theme='neural'] {
+  --color-primary: #8b5cf6;
+  --color-secondary: #a78bfa;
+  --color-accent: #ec4899;
   --color-background: #050008;
-  --color-surface: #0F0A14;
-  --color-text: #FFFFFF;
-  --color-text-secondary: #A78BFA;
-  --color-border: #8B5CF6;
-  --color-success: #8B5CF6;
-  --color-warning: #F59E0B;
-  --color-error: #EC4899;
-  --color-glow: #8B5CF6;
+  --color-surface: #0f0a14;
+  --color-text: #ffffff;
+  --color-text-secondary: #a78bfa;
+  --color-border: #8b5cf6;
+  --color-success: #8b5cf6;
+  --color-warning: #f59e0b;
+  --color-error: #ec4899;
+  --color-glow: #8b5cf6;
 }
 
 /* ═══════════════════════════════════════════════════════════════
    5. TITANIUM EXECUTIVE (Platina/Azul Marinho/Ouro)
    ═══════════════════════════════════════════════════════════════ */
-[data-theme="titanium"] {
-  --color-primary: #F8FAFC;
-  --color-secondary: #1E293B;
-  --color-accent: #D4AF37;
+[data-theme='titanium'] {
+  --color-primary: #f8fafc;
+  --color-secondary: #1e293b;
+  --color-accent: #d4af37;
   --color-background: #020617;
-  --color-surface: #0F172A;
-  --color-text: #F8FAFC;
-  --color-text-secondary: #94A3B8;
+  --color-surface: #0f172a;
+  --color-text: #f8fafc;
+  --color-text-secondary: #94a3b8;
   --color-border: #334155;
-  --color-success: #D4AF37;
-  --color-warning: #B45309;
-  --color-error: #991B1B;
-  --color-glow: #D4AF37;
+  --color-success: #d4af37;
+  --color-warning: #b45309;
+  --color-error: #991b1b;
+  --color-glow: #d4af37;
 }
 
 /* ═══════════════════════════════════════════════════════════════
    6. VINTAGE TERMINAL (Verde Fósforo/Preto)
    ═══════════════════════════════════════════════════════════════ */
-[data-theme="vintage"] {
-  --color-primary: #00FF00;
-  --color-secondary: #00D400;
-  --color-accent: #00FFFF;
-  --color-background: #001A00;
-  --color-surface: #000A00;
-  --color-text: #00FF00;
-  --color-text-secondary: #00A000;
-  --color-border: #00FF00;
-  --color-success: #00FF00;
-  --color-warning: #FFFF00;
-  --color-error: #FF0000;
-  --color-glow: #00FF00;
+[data-theme='vintage'] {
+  --color-primary: #00ff00;
+  --color-secondary: #00d400;
+  --color-accent: #00ffff;
+  --color-background: #001a00;
+  --color-surface: #000a00;
+  --color-text: #00ff00;
+  --color-text-secondary: #00a000;
+  --color-border: #00ff00;
+  --color-success: #00ff00;
+  --color-warning: #ffff00;
+  --color-error: #ff0000;
+  --color-glow: #00ff00;
   text-shadow: 0 0 5px var(--color-primary);
 }
 
 /* ═══════════════════════════════════════════════════════════════
    7. ZEN GARDEN (Verde Musgo/Papel)
    ═══════════════════════════════════════════════════════════════ */
-[data-theme="zen"] {
-  --color-primary: #4CAF50;
+[data-theme='zen'] {
+  --color-primary: #4caf50;
   --color-secondary: #795548;
-  --color-accent: #66BB6A;
-  --color-background: #F9F7F3;
-  --color-surface: #FFFFFF;
+  --color-accent: #66bb6a;
+  --color-background: #f9f7f3;
+  --color-surface: #ffffff;
   --color-text: #333333;
   --color-text-secondary: #708090;
-  --color-border: #D3D3D3;
-  --color-success: #4CAF50;
-  --color-warning: #FF9800;
-  --color-error: #F44336;
-  --color-glow: #D3D3D3;
+  --color-border: #d3d3d3;
+  --color-success: #4caf50;
+  --color-warning: #ff9800;
+  --color-error: #f44336;
+  --color-glow: #d3d3d3;
 }
 
 /* ═══════════════════════════════════════════════════════════════
    8. COBALT PRIME (Azul Enterprise/Navy)
    ═══════════════════════════════════════════════════════════════ */
-[data-theme="cobalt"] {
-  --color-primary: #3B82F6;
-  --color-secondary: #1E40AF;
-  --color-accent: #60A5FA;
-  --color-background: #0B1120;
+[data-theme='cobalt'] {
+  --color-primary: #3b82f6;
+  --color-secondary: #1e40af;
+  --color-accent: #60a5fa;
+  --color-background: #0b1120;
   --color-surface: #111827;
-  --color-text: #F9FAFB;
-  --color-text-secondary: #94A3B8;
-  --color-border: #1E3A8A;
+  --color-text: #f9fafb;
+  --color-text-secondary: #94a3b8;
+  --color-border: #1e3a8a;
   --color-success: #059669;
-  --color-warning: #F59E0B;
-  --color-error: #DC2626;
-  --color-glow: #3B82F6;
+  --color-warning: #f59e0b;
+  --color-error: #dc2626;
+  --color-glow: #3b82f6;
 }
 
 /* ═══════════════════════════════════════════════════════════════
    9. CRIMSON VELOCITY (Vermelho Performance/Carbono)
    ═══════════════════════════════════════════════════════════════ */
-[data-theme="crimson"] {
-  --color-primary: #EF4444;
-  --color-secondary: #991B1B;
-  --color-accent: #F87171;
-  --color-background: #0F0505;
-  --color-surface: #1C0505;
-  --color-text: #FFFFFF;
-  --color-text-secondary: #FECACA;
-  --color-border: #7F1D1D;
-  --color-success: #10B981;
-  --color-warning: #F59E0B;
-  --color-error: #FF0000;
-  --color-glow: #EF4444;
+[data-theme='crimson'] {
+  --color-primary: #ef4444;
+  --color-secondary: #991b1b;
+  --color-accent: #f87171;
+  --color-background: #0f0505;
+  --color-surface: #1c0505;
+  --color-text: #ffffff;
+  --color-text-secondary: #fecaca;
+  --color-border: #7f1d1d;
+  --color-success: #10b981;
+  --color-warning: #f59e0b;
+  --color-error: #ff0000;
+  --color-glow: #ef4444;
 }
 
 /* ═══════════════════════════════════════════════════════════════
    ANIMAÇÃO DE TRANSIÇÃO DE TEMA
    ═══════════════════════════════════════════════════════════════ */
-body, div, span, button, input, textarea, select {
-  transition: 
+body,
+div,
+span,
+button,
+input,
+textarea,
+select {
+  transition:
     background-color 0.5s cubic-bezier(0.4, 0, 0.2, 1),
     border-color 0.5s cubic-bezier(0.4, 0, 0.2, 1),
     color 0.5s cubic-bezier(0.4, 0, 0.2, 1),
@@ -215,7 +221,13 @@ body, div, span, button, input, textarea, select {
 html,
 body {
   height: 100%;
-  font-family: var(--font-inter), -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-family:
+    var(--font-inter),
+    -apple-system,
+    BlinkMacSystemFont,
+    'Segoe UI',
+    Roboto,
+    sans-serif;
   background-color: var(--color-background);
   color: var(--color-text);
   overflow-x: hidden;
@@ -252,8 +264,12 @@ body {
 
 /* Scanline (Usado no Military) */
 @keyframes scanline {
-  0% { transform: translateY(-100%); }
-  100% { transform: translateY(100vh); }
+  0% {
+    transform: translateY(-100%);
+  }
+  100% {
+    transform: translateY(100vh);
+  }
 }
 
 .animate-scanline {
@@ -268,11 +284,16 @@ body {
 
 /* Pulse Glow (Usado no Neural/Quantum) */
 @keyframes pulse-glow {
-  0%, 100% { 
-    box-shadow: 0 0 5px var(--color-glow), 0 0 10px var(--color-glow);
+  0%,
+  100% {
+    box-shadow:
+      0 0 5px var(--color-glow),
+      0 0 10px var(--color-glow);
   }
-  50% { 
-    box-shadow: 0 0 20px var(--color-glow), 0 0 30px var(--color-glow);
+  50% {
+    box-shadow:
+      0 0 20px var(--color-glow),
+      0 0 30px var(--color-glow);
   }
 }
 
@@ -287,16 +308,20 @@ body {
 
 /* Efeito CRT (Apenas Vintage) */
 .vintage-crt::before {
-  content: " ";
+  content: ' ';
   display: block;
   position: absolute;
   top: 0;
   left: 0;
   bottom: 0;
   right: 0;
-  background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+  background:
+    linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%),
+    linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
   z-index: 2;
-  background-size: 100% 2px, 3px 100%;
+  background-size:
+    100% 2px,
+    3px 100%;
   pointer-events: none;
 }
 
@@ -311,8 +336,14 @@ body {
    ANIMAÇÕES FADE IN
    ═══════════════════════════════════════════════════════════════ */
 @keyframes fadeIn {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .animate-fadeIn {
@@ -320,14 +351,189 @@ body {
 }
 
 /* ═══════════════════════════════════════════════════════════════
+   QUANTUM DESIGN SYSTEM — SHARED PRIMITIVES (gallery-grade)
+   Fonte única de verdade para a coerência visual de TODAS as rotas.
+   Usa color-mix p/ translucidez consistente sobre qualquer um dos 9 temas.
+   ═══════════════════════════════════════════════════════════════ */
+
+/* Painel padrão (glass) — reune bordas/fundo/blur do dashboard de referência */
+.q-panel {
+  position: relative;
+  border-radius: 1.5rem;
+  border: 1px solid color-mix(in srgb, var(--color-border) 18%, transparent);
+  background: color-mix(in srgb, var(--color-surface) 24%, transparent);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+}
+
+/* Painel de destaque (hero / seções principais) */
+.q-panel-hero {
+  position: relative;
+  overflow: hidden;
+  border-radius: 1.5rem;
+  border: 1px solid color-mix(in srgb, var(--color-primary) 22%, transparent);
+  background: color-mix(in srgb, var(--color-surface) 40%, transparent);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+}
+
+/* Card de métrica / item — elevação sutil no hover */
+.q-card {
+  position: relative;
+  overflow: hidden;
+  border-radius: 1rem;
+  border: 1px solid color-mix(in srgb, var(--color-border) 18%, transparent);
+  background: color-mix(in srgb, var(--color-surface) 30%, transparent);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  transition:
+    transform 0.3s cubic-bezier(0.22, 1, 0.36, 1),
+    background-color 0.3s ease,
+    box-shadow 0.3s ease,
+    border-color 0.3s ease;
+}
+.q-card--hover:hover {
+  transform: translateY(-4px);
+  background: color-mix(in srgb, var(--color-surface) 48%, transparent);
+  box-shadow: 0 18px 50px -20px color-mix(in srgb, var(--color-glow) 45%, transparent);
+}
+
+/* Chip / pílula de status */
+.q-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.35rem 0.85rem;
+  border-radius: 0.75rem;
+  border: 1px solid color-mix(in srgb, var(--color-border) 28%, transparent);
+  background: color-mix(in srgb, var(--color-background) 25%, transparent);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+/* Eyebrow / kicker */
+.q-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-family: var(--font-orbitron), monospace;
+  font-size: 0.68rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--color-primary);
+}
+
+/* Título com trecho em gradiente da marca */
+.q-title-gradient {
+  background: linear-gradient(100deg, var(--color-primary), var(--color-accent));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* Moldura de ícone padrão */
+.q-icon-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.85rem;
+  border: 1px solid color-mix(in srgb, var(--color-primary) 30%, transparent);
+  background: color-mix(in srgb, var(--color-primary) 12%, transparent);
+  color: var(--color-primary);
+}
+
+/* Glow volumétrico reutilizável (blob atrás de heros) */
+.q-glow-blob {
+  position: absolute;
+  border-radius: 9999px;
+  filter: blur(100px);
+  background: color-mix(in srgb, var(--color-primary) 16%, transparent);
+  pointer-events: none;
+}
+
+/* Grão de filme sutil */
+.q-grain::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.035;
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* Camada de profundidade do SHELL — mesh + vignette atrás de todo o dashboard */
+.q-shell-depth {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(
+      60% 55% at 82% 0%,
+      color-mix(in srgb, var(--color-primary) 12%, transparent),
+      transparent 70%
+    ),
+    radial-gradient(
+      55% 50% at 0% 100%,
+      color-mix(in srgb, var(--color-accent) 10%, transparent),
+      transparent 70%
+    ),
+    radial-gradient(
+      120% 120% at 50% 0%,
+      transparent 55%,
+      color-mix(in srgb, var(--color-background) 78%, black) 100%
+    );
+}
+
+/* Divisória com fade */
+.q-divider {
+  height: 1px;
+  width: 100%;
+  background: linear-gradient(
+    to right,
+    color-mix(in srgb, var(--color-border) 40%, transparent),
+    transparent
+  );
+}
+
+/* Entrada suave, escalonável via inline style --q-delay */
+@keyframes q-rise {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.q-rise {
+  animation: q-rise 0.55s cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation-delay: var(--q-delay, 0ms);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .q-rise,
+  .q-card,
+  .pulse-glow,
+  .animate-orion-breathe,
+  .animate-orion-ring-spin {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════
    ORION J.A.R.V.I.S. GLOBAL ANIMATIONS
    ═══════════════════════════════════════════════════════════════ */
 @keyframes orion-breathe {
-  0%, 100% { 
+  0%,
+  100% {
     transform: scale(1);
     box-shadow: 0 0 20px rgba(255, 215, 0, 0.3);
   }
-  50% { 
+  50% {
     transform: scale(1.02);
     box-shadow: 0 0 40px rgba(255, 215, 0, 0.5);
   }
@@ -338,8 +544,12 @@ body {
 }
 
 @keyframes orion-ring-spin {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .animate-orion-ring-spin {
