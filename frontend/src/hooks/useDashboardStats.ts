@@ -25,9 +25,13 @@ export function useDashboardStats() {
         if (agentsError) throw agentsError;
 
         const avgEfficiency = agents?.length
-          ? agents.reduce((sum: number, a: { efficiency?: number }) => sum + (a.efficiency || 0), 0) / agents.length
+          ? agents.reduce(
+              (sum: number, a: { efficiency?: number }) => sum + (a.efficiency || 0),
+              0,
+            ) / agents.length
           : 0;
-        const agentEfficiencies = agents?.map((a: { efficiency?: number }) => a.efficiency || 0) || [];
+        const agentEfficiencies =
+          agents?.map((a: { efficiency?: number }) => a.efficiency || 0) || [];
 
         const { count: totalAgentsCount } = await supabase
           .from('agents')
@@ -51,12 +55,6 @@ export function useDashboardStats() {
           .from('social_posts')
           .select('*', { count: 'exact', head: true });
 
-        const systemStartDate = new Date("2024-11-20T14:30:00-03:00");
-        const now = new Date();
-        const totalHours = (now.getTime() - systemStartDate.getTime()) / (1000 * 60 * 60);
-        const downtimeHours = 0.5;
-        const uptimePercent = ((totalHours - downtimeHours) / totalHours) * 100;
-
         const endTime = performance.now();
         const latency = Math.round(endTime - startTime);
 
@@ -68,7 +66,9 @@ export function useDashboardStats() {
           totalTickets: ticketsCount || 0,
           totalPosts: postsCount || 0,
           latencyMs: latency,
-          uptimePercent: Math.round(uptimePercent * 100) / 100,
+          // Sem fonte real de uptime (não há monitor de disponibilidade).
+          // Não inventamos "99,x%" a partir de data/downtime hardcoded.
+          uptimePercent: null,
           agentEfficiencies,
           loading: false,
           error: null,

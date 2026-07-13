@@ -57,6 +57,9 @@ export function useAdmin() {
     error,
     fetchUsers,
     totalUsers: users.length,
-    activeUsers: users.length, // Simplificado: todos contam como ativos
+    // Não há coluna de presença/status em `profiles`, então não sabemos
+    // quem está ativo. Retornamos null (desconhecido) em vez de afirmar
+    // que todos os usuários estão ativos.
+    activeUsers: null as number | null,
   };
 }

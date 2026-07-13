@@ -58,8 +58,8 @@ async function runOrion(body: any, startTime: number) {
     return NextResponse.json(
       {
         success: false,
-        error: 'IA não configurada',
-        details: 'Defina ANTHROPIC_API_KEY nas variáveis de ambiente do projeto no Vercel.',
+        error: 'Motor de IA não configurado',
+        details: 'O motor ALSHAM não está configurado neste ambiente. Contate o administrador.',
         execution_time_ms: Date.now() - startTime,
         timestamp: new Date().toISOString(),
       },
@@ -192,7 +192,7 @@ export async function GET() {
     success: true,
     status: 'online',
     brain: 'ORION',
-    engine: 'anthropic/claude-sonnet-4-5 + openai/gpt-4o-mini (agents)',
+    engine: 'motor ALSHAM (ensemble multi-modelo proprietário)',
     message: 'ORION Brain online.',
     timestamp: new Date().toISOString(),
   });

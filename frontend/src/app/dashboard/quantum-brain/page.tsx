@@ -14,13 +14,44 @@ import { useState, useEffect, useRef } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useAgents } from '@/hooks/useAgents';
 import { useDashboardStats } from '@/hooks/useDashboardStats';
-import { 
-  Brain, Zap, Activity, Cpu, Network, Sparkles, Crown,
-  Send, Loader2, CheckCircle, AlertTriangle, Terminal,
-  Clock, TrendingUp, Copy, FileDown, Mail, MessageSquare,
-  RefreshCw, Filter, Search, ChevronDown, Play, Pause,
-  AlertOctagon, Eye, Layers, Users, Target, History,
-  BarChart3, Gauge, Power, Radio, Wifi, Shield, X
+import {
+  Brain,
+  Zap,
+  Activity,
+  Cpu,
+  Network,
+  Sparkles,
+  Crown,
+  Send,
+  Loader2,
+  CheckCircle,
+  AlertTriangle,
+  Terminal,
+  Clock,
+  TrendingUp,
+  Copy,
+  FileDown,
+  Mail,
+  MessageSquare,
+  RefreshCw,
+  Filter,
+  Search,
+  ChevronDown,
+  Play,
+  Pause,
+  AlertOctagon,
+  Eye,
+  Layers,
+  Users,
+  Target,
+  History,
+  BarChart3,
+  Gauge,
+  Power,
+  Radio,
+  Wifi,
+  Shield,
+  X,
 } from 'lucide-react';
 
 // Tipos
@@ -62,12 +93,41 @@ const SQUADS = [
 
 // Quick Actions
 const QUICK_ACTIONS = [
-  { label: 'Analisar Contrato', prompt: 'Analise este contrato comercial e identifique pontos críticos, riscos e oportunidades de negociação.', icon: '📄' },
-  { label: 'Gerar Proposta', prompt: 'Crie uma proposta comercial profissional para um serviço de consultoria em IA para uma empresa de médio porte.', icon: '💼' },
-  { label: 'Campanha Marketing', prompt: 'Desenvolva uma campanha de marketing digital completa para lançamento de produto SaaS B2B.', icon: '📣' },
-  { label: 'Script Cold Call', prompt: 'Crie um script de cold call persuasivo para prospecção de clientes enterprise.', icon: '📞' },
-  { label: 'Análise de Mercado', prompt: 'Faça uma análise completa do mercado de Inteligência Artificial em 2025, incluindo tendências e oportunidades.', icon: '📊' },
-  { label: 'Otimizar Funil', prompt: 'Sugira otimizações para um funil de vendas B2B com baixa taxa de conversão no meio do funil.', icon: '🔄' },
+  {
+    label: 'Analisar Contrato',
+    prompt:
+      'Analise este contrato comercial e identifique pontos críticos, riscos e oportunidades de negociação.',
+    icon: '📄',
+  },
+  {
+    label: 'Gerar Proposta',
+    prompt:
+      'Crie uma proposta comercial profissional para um serviço de consultoria em IA para uma empresa de médio porte.',
+    icon: '💼',
+  },
+  {
+    label: 'Campanha Marketing',
+    prompt:
+      'Desenvolva uma campanha de marketing digital completa para lançamento de produto SaaS B2B.',
+    icon: '📣',
+  },
+  {
+    label: 'Script Cold Call',
+    prompt: 'Crie um script de cold call persuasivo para prospecção de clientes enterprise.',
+    icon: '📞',
+  },
+  {
+    label: 'Análise de Mercado',
+    prompt:
+      'Faça uma análise completa do mercado de Inteligência Artificial em 2025, incluindo tendências e oportunidades.',
+    icon: '📊',
+  },
+  {
+    label: 'Otimizar Funil',
+    prompt:
+      'Sugira otimizações para um funil de vendas B2B com baixa taxa de conversão no meio do funil.',
+    icon: '🔄',
+  },
 ];
 
 export default function QuantumBrainPage() {
@@ -82,23 +142,24 @@ export default function QuantumBrainPage() {
   const [showAgentDropdown, setShowAgentDropdown] = useState(false);
   const [agentSearch, setAgentSearch] = useState('');
   const [historyFilter, setHistoryFilter] = useState<'all' | 'today' | 'week'>('all');
-  const [statusFilter, setStatusFilter] = useState<'all' | 'completed' | 'failed' | 'processing'>('all');
+  const [statusFilter, setStatusFilter] = useState<'all' | 'completed' | 'failed' | 'processing'>(
+    'all',
+  );
   const [godViewMode, setGodViewMode] = useState(false);
-  
-  // Stats ao vivo
+
+  // Stats ao vivo — todos derivados de dados reais (zero quando não há dados)
   const [liveStats, setLiveStats] = useState({
-    agentsOnline: 10,
-    avgResponse: 4200,
-    avgCost: 0.0032,
+    agentsOnline: 0,
+    avgResponse: 0,
+    avgCost: 0,
     tasksToday: 0,
-    syncRate: 99.9,
-    neuralPower: 87,
+    neuralPower: 0,
   });
 
   // Hooks
   const { agents, loading: agentsLoading } = useAgents();
   const dashboardStats = useDashboardStats();
-  
+
   const terminalRef = useRef<HTMLTextAreaElement>(null);
   const resultRef = useRef<HTMLDivElement>(null);
 
@@ -111,10 +172,10 @@ export default function QuantumBrainPage() {
           .select('*')
           .order('created_at', { ascending: false })
           .limit(50);
-        
+
         if (error) throw error;
-        
-        const formattedHistory = (data || []).map(req => ({
+
+        const formattedHistory = (data || []).map((req) => ({
           id: req.id,
           success: req.status === 'completed',
           task_id: req.id,
@@ -130,50 +191,34 @@ export default function QuantumBrainPage() {
           title: req.title,
           priority: req.priority,
         }));
-        
+
         setTaskHistory(formattedHistory);
-        
+
         // Contar tasks de hoje
         const today = new Date();
         today.setHours(0, 0, 0, 0);
-        const tasksToday = formattedHistory.filter(t => new Date(t.timestamp) >= today).length;
-        setLiveStats(prev => ({ ...prev, tasksToday }));
-        
+        const tasksToday = formattedHistory.filter((t) => new Date(t.timestamp) >= today).length;
+        setLiveStats((prev) => ({ ...prev, tasksToday }));
       } catch (err) {
         console.error('Failed to load history:', err);
       }
     }
-    
+
     loadHistory();
-    
+
     // Refresh a cada 30s
     const interval = setInterval(loadHistory, 30000);
     return () => clearInterval(interval);
   }, []);
 
-  // Atualizar stats ao vivo
+  // Atualizar stats ao vivo a partir de dados reais do dashboard
   useEffect(() => {
-    if (dashboardStats.totalAgents) {
-      setLiveStats(prev => ({
-        ...prev,
-        agentsOnline: dashboardStats.totalAgents || 10,
-        neuralPower: Math.round(dashboardStats.avgEfficiency) || 87,
-      }));
-    }
+    setLiveStats((prev) => ({
+      ...prev,
+      agentsOnline: dashboardStats.activeAgents || 0,
+      neuralPower: Math.round(dashboardStats.avgEfficiency) || 0,
+    }));
   }, [dashboardStats]);
-
-  // Simular métricas ao vivo
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setLiveStats(prev => ({
-        ...prev,
-        syncRate: Math.min(100, Math.max(95, prev.syncRate + (Math.random() - 0.5) * 0.5)),
-        neuralPower: Math.min(100, Math.max(60, prev.neuralPower + (Math.random() - 0.5) * 3)),
-        avgResponse: Math.max(1000, prev.avgResponse + (Math.random() - 0.5) * 500),
-      }));
-    }, 3000);
-    return () => clearInterval(interval);
-  }, []);
 
   // Executar task
   const executeTask = async () => {
@@ -186,7 +231,7 @@ export default function QuantumBrainPage() {
       const response = await fetch('/api/quantum/brain/execute', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
+        body: JSON.stringify({
           title: prompt,
           description: prompt,
           agent_id: selectedAgent === 'auto' ? undefined : selectedAgent,
@@ -196,7 +241,7 @@ export default function QuantumBrainPage() {
       });
 
       const data = await response.json();
-      
+
       const result: TaskResult = {
         id: data.task_id || `task_${Date.now()}`,
         success: data.success,
@@ -213,20 +258,19 @@ export default function QuantumBrainPage() {
         title: prompt,
         priority,
       };
-      
+
       setCurrentResult(result);
-      setTaskHistory(prev => [result, ...prev]);
-      setLiveStats(prev => ({
+      setTaskHistory((prev) => [result, ...prev]);
+      setLiveStats((prev) => ({
         ...prev,
         tasksToday: prev.tasksToday + 1,
         avgResponse: Math.round((prev.avgResponse + result.execution_time_ms) / 2),
         avgCost: (prev.avgCost + result.cost_usd) / 2,
       }));
-      
+
       setTimeout(() => {
         resultRef.current?.scrollIntoView({ behavior: 'smooth' });
       }, 100);
-      
     } catch (error) {
       console.error('Error executing task:', error);
       setCurrentResult({
@@ -258,9 +302,9 @@ export default function QuantumBrainPage() {
   };
 
   // Filtrar histórico
-  const filteredHistory = taskHistory.filter(task => {
+  const filteredHistory = taskHistory.filter((task) => {
     if (statusFilter !== 'all' && task.status !== statusFilter) return false;
-    
+
     if (historyFilter === 'today') {
       const today = new Date();
       today.setHours(0, 0, 0, 0);
@@ -270,49 +314,59 @@ export default function QuantumBrainPage() {
       weekAgo.setDate(weekAgo.getDate() - 7);
       if (new Date(task.timestamp) < weekAgo) return false;
     }
-    
+
     return true;
   });
 
   // Filtrar agents para dropdown
-  const filteredAgents = ((agents || []) as Agent[]).filter(agent => 
-    agent.name?.toLowerCase().includes(agentSearch.toLowerCase()) ||
-    agent.role?.toLowerCase().includes(agentSearch.toLowerCase()) ||
-    agent.squad?.toLowerCase().includes(agentSearch.toLowerCase())
+  const filteredAgents = ((agents || []) as Agent[]).filter(
+    (agent) =>
+      agent.name?.toLowerCase().includes(agentSearch.toLowerCase()) ||
+      agent.role?.toLowerCase().includes(agentSearch.toLowerCase()) ||
+      agent.squad?.toLowerCase().includes(agentSearch.toLowerCase()),
   );
 
   return (
     <div className="min-h-screen relative overflow-hidden">
       {/* Background Neural Grid */}
       <div className="fixed inset-0 bg-[url('/grid.svg')] opacity-5 pointer-events-none" />
-      <div 
+      <div
         className="fixed inset-0 pointer-events-none"
-        style={{ background: 'linear-gradient(to bottom right, var(--color-primary)/10, transparent, var(--color-secondary)/10)' }}
+        style={{
+          background:
+            'linear-gradient(to bottom right, var(--color-primary)/10, transparent, var(--color-secondary)/10)',
+        }}
       />
-      
+
       {/* TOP BAR - Métricas ao Vivo */}
-      <div 
+      <div
         className="sticky top-0 z-40 backdrop-blur-xl px-6 py-3"
-        style={{ 
+        style={{
           background: 'var(--color-background)/80',
-          borderBottom: '1px solid var(--color-border)/10'
+          borderBottom: '1px solid var(--color-border)/10',
         }}
       >
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
             <div className="relative">
-              <div 
+              <div
                 className="absolute -inset-2 rounded-full blur-xl animate-pulse"
                 style={{ background: 'var(--color-primary)/20' }}
               />
               <Brain className="w-8 h-8 relative" style={{ color: 'var(--color-primary)' }} />
             </div>
             <div>
-              <h1 className="text-xl font-black tracking-tight flex items-center gap-2" style={{ color: 'var(--color-text)' }}>
+              <h1
+                className="text-xl font-black tracking-tight flex items-center gap-2"
+                style={{ color: 'var(--color-text)' }}
+              >
                 QUANTUM BRAIN
-                <span 
+                <span
                   className="px-2 py-0.5 text-[10px] font-bold text-text rounded-full animate-pulse"
-                  style={{ background: 'linear-gradient(to right, var(--color-primary), var(--color-accent))' }}
+                  style={{
+                    background:
+                      'linear-gradient(to right, var(--color-primary), var(--color-accent))',
+                  }}
                 >
                   GODMODE
                 </span>
@@ -322,65 +376,82 @@ export default function QuantumBrainPage() {
               </p>
             </div>
           </div>
-          
+
           {/* Live Stats */}
           <div className="hidden lg:flex items-center gap-6">
-            <div 
+            <div
               className="flex items-center gap-2 px-3 py-1 rounded-lg"
-              style={{ 
+              style={{
                 background: 'var(--color-success)/10',
-                border: '1px solid var(--color-success)/30'
+                border: '1px solid var(--color-success)/30',
               }}
             >
-              <div className="w-2 h-2 rounded-full animate-pulse" style={{ background: 'var(--color-success)' }} />
+              <div
+                className="w-2 h-2 rounded-full animate-pulse"
+                style={{ background: 'var(--color-success)' }}
+              />
               <span className="text-xs font-bold" style={{ color: 'var(--color-success)' }}>
                 {liveStats.agentsOnline} Agents Online
               </span>
             </div>
-            
+
             <div className="text-center">
               <div className="text-sm font-black" style={{ color: 'var(--color-accent)' }}>
                 {(liveStats.avgResponse / 1000).toFixed(1)}s
               </div>
-              <div className="text-[9px] uppercase" style={{ color: 'var(--color-text-secondary)' }}>Avg Response</div>
+              <div
+                className="text-[9px] uppercase"
+                style={{ color: 'var(--color-text-secondary)' }}
+              >
+                Avg Response
+              </div>
             </div>
-            
+
             <div className="text-center">
               <div className="text-sm font-black" style={{ color: 'var(--color-success)' }}>
                 R${(liveStats.avgCost * 5.5).toFixed(4)}
               </div>
-              <div className="text-[9px] uppercase" style={{ color: 'var(--color-text-secondary)' }}>Avg Cost</div>
+              <div
+                className="text-[9px] uppercase"
+                style={{ color: 'var(--color-text-secondary)' }}
+              >
+                Avg Cost
+              </div>
             </div>
-            
+
             <div className="text-center">
               <div className="text-sm font-black" style={{ color: 'var(--color-primary)' }}>
                 {liveStats.tasksToday}
               </div>
-              <div className="text-[9px] uppercase" style={{ color: 'var(--color-text-secondary)' }}>Tasks Today</div>
-            </div>
-            
-            <div className="text-center">
-              <div className="text-sm font-black" style={{ color: 'var(--color-warning)' }}>
-                {liveStats.syncRate.toFixed(1)}%
+              <div
+                className="text-[9px] uppercase"
+                style={{ color: 'var(--color-text-secondary)' }}
+              >
+                Tasks Today
               </div>
-              <div className="text-[9px] uppercase" style={{ color: 'var(--color-text-secondary)' }}>Sync Rate</div>
             </div>
-            
+
             <div className="flex items-center gap-2">
               <Gauge className="w-4 h-4" style={{ color: 'var(--color-warning)' }} />
-              <div className="w-20 h-2 rounded-full overflow-hidden" style={{ background: 'var(--color-surface)' }}>
-                <div 
+              <div
+                className="w-20 h-2 rounded-full overflow-hidden"
+                style={{ background: 'var(--color-surface)' }}
+              >
+                <div
                   className="h-full transition-all duration-500"
-                  style={{ 
+                  style={{
                     width: `${liveStats.neuralPower}%`,
-                    background: 'linear-gradient(to right, var(--color-warning), var(--color-error))'
+                    background:
+                      'linear-gradient(to right, var(--color-warning), var(--color-error))',
                   }}
                 />
               </div>
-              <span className="text-xs font-mono" style={{ color: 'var(--color-warning)' }}>{liveStats.neuralPower}%</span>
+              <span className="text-xs font-mono" style={{ color: 'var(--color-warning)' }}>
+                {liveStats.neuralPower}%
+              </span>
             </div>
           </div>
-          
+
           {/* God View Toggle */}
           <button
             onClick={() => setGodViewMode(!godViewMode)}
@@ -389,7 +460,7 @@ export default function QuantumBrainPage() {
               background: godViewMode ? 'var(--color-primary)' : 'var(--color-surface)',
               color: godViewMode ? 'var(--color-background)' : 'var(--color-text-secondary)',
               boxShadow: godViewMode ? '0 0 20px var(--color-glow)/50' : 'none',
-              border: `1px solid ${godViewMode ? 'var(--color-primary)' : 'var(--color-border)/20'}`
+              border: `1px solid ${godViewMode ? 'var(--color-primary)' : 'var(--color-border)/20'}`,
             }}
           >
             <Eye className="w-4 h-4" />
@@ -400,9 +471,15 @@ export default function QuantumBrainPage() {
 
       {/* GOD VIEW MODE */}
       {godViewMode && (
-        <div className="fixed inset-0 z-50 backdrop-blur-xl overflow-auto p-6" style={{ background: 'var(--color-background)/95' }}>
+        <div
+          className="fixed inset-0 z-50 backdrop-blur-xl overflow-auto p-6"
+          style={{ background: 'var(--color-background)/95' }}
+        >
           <div className="flex items-center justify-between mb-6">
-            <h2 className="text-2xl font-black flex items-center gap-3" style={{ color: 'var(--color-text)' }}>
+            <h2
+              className="text-2xl font-black flex items-center gap-3"
+              style={{ color: 'var(--color-text)' }}
+            >
               <Eye className="w-6 h-6" style={{ color: 'var(--color-primary)' }} />
               GOD VIEW - {agents?.length || 10} AGENTS
             </h2>
@@ -414,29 +491,45 @@ export default function QuantumBrainPage() {
               <X className="w-6 h-6" />
             </button>
           </div>
-          
+
           <div className="grid grid-cols-4 md:grid-cols-6 lg:grid-cols-8 xl:grid-cols-10 gap-3">
-            {(agents || Array.from({ length: 10 }, (_, i) => ({
-              id: `agent_${i}`,
-              name: `AGENT_${String(i).padStart(3, '0')}`,
-              status: Math.random() > 0.1 ? 'active' : 'idle',
-              efficiency: Math.floor(Math.random() * 40 + 60),
-              squad: SQUADS[Math.floor(Math.random() * SQUADS.length)].id,
-            }))).map((agent: any, i: number) => (
+            {(
+              agents ||
+              Array.from({ length: 10 }, (_, i) => ({
+                id: `agent_${i}`,
+                name: `AGENT_${String(i).padStart(3, '0')}`,
+                status: Math.random() > 0.1 ? 'active' : 'idle',
+                efficiency: Math.floor(Math.random() * 40 + 60),
+                squad: SQUADS[Math.floor(Math.random() * SQUADS.length)].id,
+              }))
+            ).map((agent: any, i: number) => (
               <div
                 key={agent.id || i}
                 className="p-3 rounded-xl transition-all hover:scale-105 cursor-pointer"
                 style={{
-                  background: agent.status === 'active' ? 'var(--color-success)/10' : 'var(--color-surface)',
-                  border: `1px solid ${agent.status === 'active' ? 'var(--color-success)/30' : 'var(--color-border)/10'}`
+                  background:
+                    agent.status === 'active' ? 'var(--color-success)/10' : 'var(--color-surface)',
+                  border: `1px solid ${agent.status === 'active' ? 'var(--color-success)/30' : 'var(--color-border)/10'}`,
                 }}
               >
-                <div 
+                <div
                   className={`w-3 h-3 rounded-full mb-2 ${agent.status === 'active' ? 'animate-pulse' : ''}`}
-                  style={{ background: agent.status === 'active' ? 'var(--color-success)' : 'var(--color-text-secondary)/30' }}
+                  style={{
+                    background:
+                      agent.status === 'active'
+                        ? 'var(--color-success)'
+                        : 'var(--color-text-secondary)/30',
+                  }}
                 />
-                <div className="text-[10px] font-bold truncate" style={{ color: 'var(--color-text)' }}>{agent.name}</div>
-                <div className="text-[9px]" style={{ color: 'var(--color-text-secondary)' }}>{agent.efficiency || 85}%</div>
+                <div
+                  className="text-[10px] font-bold truncate"
+                  style={{ color: 'var(--color-text)' }}
+                >
+                  {agent.name}
+                </div>
+                <div className="text-[9px]" style={{ color: 'var(--color-text-secondary)' }}>
+                  {agent.efficiency || 85}%
+                </div>
               </div>
             ))}
           </div>
@@ -445,36 +538,46 @@ export default function QuantumBrainPage() {
 
       {/* MAIN CONTENT - 3 Colunas */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 p-6">
-        
         {/* COLUNA ESQUERDA - Histórico */}
         <div className="lg:col-span-3 space-y-4">
-          <div 
+          <div
             className="backdrop-blur-xl rounded-2xl overflow-hidden"
-            style={{ 
+            style={{
               background: 'var(--color-surface)/40',
-              border: '1px solid var(--color-border)/10'
+              border: '1px solid var(--color-border)/10',
             }}
           >
             {/* Header */}
-            <div className="p-4" style={{ borderBottom: '1px solid var(--color-border)/10', background: 'var(--color-surface)/50' }}>
+            <div
+              className="p-4"
+              style={{
+                borderBottom: '1px solid var(--color-border)/10',
+                background: 'var(--color-surface)/50',
+              }}
+            >
               <div className="flex items-center justify-between mb-3">
-                <h2 className="text-sm font-bold uppercase tracking-wider flex items-center gap-2" style={{ color: 'var(--color-text)' }}>
+                <h2
+                  className="text-sm font-bold uppercase tracking-wider flex items-center gap-2"
+                  style={{ color: 'var(--color-text)' }}
+                >
                   <History className="w-4 h-4" style={{ color: 'var(--color-primary)' }} />
                   Histórico
                 </h2>
-                <span className="text-xs" style={{ color: 'var(--color-text-secondary)' }}>{filteredHistory.length} tasks</span>
+                <span className="text-xs" style={{ color: 'var(--color-text-secondary)' }}>
+                  {filteredHistory.length} tasks
+                </span>
               </div>
-              
+
               {/* Filtros */}
               <div className="flex gap-2">
                 <select
                   value={historyFilter}
                   onChange={(e) => setHistoryFilter(e.target.value as any)}
                   className="flex-1 px-2 py-1 text-xs rounded-lg"
-                  style={{ 
+                  style={{
                     background: 'var(--color-surface)',
                     border: '1px solid var(--color-border)/20',
-                    color: 'var(--color-text)'
+                    color: 'var(--color-text)',
                   }}
                 >
                   <option value="all">Todos</option>
@@ -485,10 +588,10 @@ export default function QuantumBrainPage() {
                   value={statusFilter}
                   onChange={(e) => setStatusFilter(e.target.value as any)}
                   className="flex-1 px-2 py-1 text-xs rounded-lg"
-                  style={{ 
+                  style={{
                     background: 'var(--color-surface)',
                     border: '1px solid var(--color-border)/20',
-                    color: 'var(--color-text)'
+                    color: 'var(--color-text)',
                   }}
                 >
                   <option value="all">Status</option>
@@ -498,7 +601,7 @@ export default function QuantumBrainPage() {
                 </select>
               </div>
             </div>
-            
+
             {/* Lista de Tasks */}
             <div className="max-h-[calc(100vh-400px)] overflow-y-auto">
               {filteredHistory.length === 0 ? (
@@ -514,29 +617,50 @@ export default function QuantumBrainPage() {
                     className="p-4 cursor-pointer transition-all"
                     style={{
                       borderBottom: '1px solid var(--color-border)/5',
-                      background: currentResult?.id === task.id ? 'var(--color-primary)/10' : 'transparent',
-                      borderLeft: currentResult?.id === task.id ? '2px solid var(--color-primary)' : 'none'
+                      background:
+                        currentResult?.id === task.id ? 'var(--color-primary)/10' : 'transparent',
+                      borderLeft:
+                        currentResult?.id === task.id ? '2px solid var(--color-primary)' : 'none',
                     }}
                   >
                     <div className="flex items-start justify-between mb-2">
-                      <div 
+                      <div
                         className={`w-2 h-2 rounded-full mt-1.5 ${task.status === 'processing' ? 'animate-pulse' : ''}`}
                         style={{
-                          background: task.status === 'completed' ? 'var(--color-success)' : 
-                                     task.status === 'failed' ? 'var(--color-error)' : 'var(--color-warning)'
+                          background:
+                            task.status === 'completed'
+                              ? 'var(--color-success)'
+                              : task.status === 'failed'
+                                ? 'var(--color-error)'
+                                : 'var(--color-warning)',
                         }}
                       />
-                      <span className="text-[10px] font-mono" style={{ color: 'var(--color-text-secondary)' }}>
-                        {new Date(task.timestamp).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+                      <span
+                        className="text-[10px] font-mono"
+                        style={{ color: 'var(--color-text-secondary)' }}
+                      >
+                        {new Date(task.timestamp).toLocaleTimeString('pt-BR', {
+                          hour: '2-digit',
+                          minute: '2-digit',
+                        })}
                       </span>
                     </div>
-                    <p className="text-sm font-medium truncate mb-1" style={{ color: 'var(--color-text)' }}>
+                    <p
+                      className="text-sm font-medium truncate mb-1"
+                      style={{ color: 'var(--color-text)' }}
+                    >
                       {task.title || task.result?.slice(0, 50)}
                     </p>
-                    <div className="flex items-center gap-2 text-[10px]" style={{ color: 'var(--color-text-secondary)' }}>
-                      <span 
+                    <div
+                      className="flex items-center gap-2 text-[10px]"
+                      style={{ color: 'var(--color-text-secondary)' }}
+                    >
+                      <span
                         className="px-1.5 py-0.5 rounded"
-                        style={{ background: 'var(--color-primary)/20', color: 'var(--color-primary)' }}
+                        style={{
+                          background: 'var(--color-primary)/20',
+                          color: 'var(--color-primary)',
+                        }}
                       >
                         {task.agent_name?.split(' ')[0] || 'ORION'}
                       </span>
@@ -552,18 +676,20 @@ export default function QuantumBrainPage() {
 
         {/* COLUNA CENTRAL - Command Terminal */}
         <div className="lg:col-span-5 space-y-4">
-          <div 
+          <div
             className="backdrop-blur-xl rounded-2xl p-6"
-            style={{ 
+            style={{
               background: 'var(--color-surface)/40',
-              border: '1px solid var(--color-border)/10'
+              border: '1px solid var(--color-border)/10',
             }}
           >
             {/* Header */}
             <div className="flex items-center justify-between mb-6">
               <div className="flex items-center gap-3">
                 <Terminal className="w-5 h-5" style={{ color: 'var(--color-primary)' }} />
-                <h2 className="text-lg font-bold" style={{ color: 'var(--color-text)' }}>Command Terminal</h2>
+                <h2 className="text-lg font-bold" style={{ color: 'var(--color-text)' }}>
+                  Command Terminal
+                </h2>
               </div>
               <button
                 onClick={() => setMultiAgentMode(!multiAgentMode)}
@@ -571,7 +697,7 @@ export default function QuantumBrainPage() {
                 style={{
                   background: multiAgentMode ? 'var(--color-primary)' : 'var(--color-surface)',
                   color: multiAgentMode ? 'var(--color-background)' : 'var(--color-text-secondary)',
-                  border: `1px solid ${multiAgentMode ? 'var(--color-primary)' : 'var(--color-border)/20'}`
+                  border: `1px solid ${multiAgentMode ? 'var(--color-primary)' : 'var(--color-border)/20'}`,
                 }}
               >
                 <Users className="w-3 h-3 inline mr-1" />
@@ -581,7 +707,10 @@ export default function QuantumBrainPage() {
 
             {/* Agent Selector */}
             <div className="mb-4 relative">
-              <label className="text-[10px] uppercase tracking-wider block mb-2" style={{ color: 'var(--color-text-secondary)' }}>
+              <label
+                className="text-[10px] uppercase tracking-wider block mb-2"
+                style={{ color: 'var(--color-text-secondary)' }}
+              >
                 Selecionar Agent
               </label>
               <button
@@ -590,22 +719,27 @@ export default function QuantumBrainPage() {
                 style={{
                   background: 'var(--color-surface)',
                   border: '1px solid var(--color-border)/20',
-                  color: 'var(--color-text)'
+                  color: 'var(--color-text)',
                 }}
               >
                 <span>
-                  {selectedAgent === 'auto' ? '🤖 Automático (ORION decide)' : 
-                   (agents as Agent[] | undefined)?.find(a => a.id === selectedAgent)?.name || selectedAgent}
+                  {selectedAgent === 'auto'
+                    ? '🤖 Automático (ORION decide)'
+                    : (agents as Agent[] | undefined)?.find((a) => a.id === selectedAgent)?.name ||
+                      selectedAgent}
                 </span>
-                <ChevronDown className={`w-4 h-4 transition-transform ${showAgentDropdown ? 'rotate-180' : ''}`} style={{ color: 'var(--color-text-secondary)' }} />
+                <ChevronDown
+                  className={`w-4 h-4 transition-transform ${showAgentDropdown ? 'rotate-180' : ''}`}
+                  style={{ color: 'var(--color-text-secondary)' }}
+                />
               </button>
-              
+
               {showAgentDropdown && (
-                <div 
+                <div
                   className="absolute top-full left-0 right-0 mt-2 rounded-xl overflow-hidden z-50 max-h-64 overflow-y-auto"
-                  style={{ 
+                  style={{
                     background: 'var(--color-background)/95',
-                    border: '1px solid var(--color-border)/20'
+                    border: '1px solid var(--color-border)/20',
                   }}
                 >
                   <input
@@ -614,18 +748,23 @@ export default function QuantumBrainPage() {
                     value={agentSearch}
                     onChange={(e) => setAgentSearch(e.target.value)}
                     className="w-full px-4 py-3"
-                    style={{ 
+                    style={{
                       background: 'var(--color-surface)',
                       borderBottom: '1px solid var(--color-border)/10',
-                      color: 'var(--color-text)'
+                      color: 'var(--color-text)',
                     }}
                   />
                   <button
-                    onClick={() => { setSelectedAgent('auto'); setShowAgentDropdown(false); }}
+                    onClick={() => {
+                      setSelectedAgent('auto');
+                      setShowAgentDropdown(false);
+                    }}
                     className="w-full px-4 py-3 text-left transition"
                     style={{
-                      background: selectedAgent === 'auto' ? 'var(--color-primary)/20' : 'transparent',
-                      color: selectedAgent === 'auto' ? 'var(--color-primary)' : 'var(--color-text)'
+                      background:
+                        selectedAgent === 'auto' ? 'var(--color-primary)/20' : 'transparent',
+                      color:
+                        selectedAgent === 'auto' ? 'var(--color-primary)' : 'var(--color-text)',
                     }}
                   >
                     🤖 Automático (ORION decide)
@@ -633,15 +772,22 @@ export default function QuantumBrainPage() {
                   {filteredAgents.slice(0, 20).map((agent) => (
                     <button
                       key={agent.id}
-                      onClick={() => { setSelectedAgent(agent.id); setShowAgentDropdown(false); }}
+                      onClick={() => {
+                        setSelectedAgent(agent.id);
+                        setShowAgentDropdown(false);
+                      }}
                       className="w-full px-4 py-3 text-left transition flex items-center justify-between"
                       style={{
-                        background: selectedAgent === agent.id ? 'var(--color-primary)/20' : 'transparent',
-                        color: selectedAgent === agent.id ? 'var(--color-primary)' : 'var(--color-text)'
+                        background:
+                          selectedAgent === agent.id ? 'var(--color-primary)/20' : 'transparent',
+                        color:
+                          selectedAgent === agent.id ? 'var(--color-primary)' : 'var(--color-text)',
                       }}
                     >
                       <span>{agent.name}</span>
-                      <span className="text-xs" style={{ color: 'var(--color-text-secondary)' }}>{agent.squad}</span>
+                      <span className="text-xs" style={{ color: 'var(--color-text-secondary)' }}>
+                        {agent.squad}
+                      </span>
                     </button>
                   ))}
                 </div>
@@ -650,7 +796,10 @@ export default function QuantumBrainPage() {
 
             {/* Priority Selector */}
             <div className="mb-4">
-              <label className="text-[10px] uppercase tracking-wider block mb-2" style={{ color: 'var(--color-text-secondary)' }}>
+              <label
+                className="text-[10px] uppercase tracking-wider block mb-2"
+                style={{ color: 'var(--color-text-secondary)' }}
+              >
                 Prioridade
               </label>
               <div className="flex gap-2">
@@ -660,14 +809,18 @@ export default function QuantumBrainPage() {
                     onClick={() => setPriority(p)}
                     className="flex-1 px-3 py-2 rounded-lg text-xs font-bold uppercase transition-all"
                     style={{
-                      background: priority === p 
-                        ? p === 'critical' ? 'var(--color-error)' :
-                          p === 'high' ? 'var(--color-warning)' :
-                          p === 'normal' ? 'var(--color-primary)' :
-                          'var(--color-text-secondary)'
-                        : 'var(--color-surface)',
+                      background:
+                        priority === p
+                          ? p === 'critical'
+                            ? 'var(--color-error)'
+                            : p === 'high'
+                              ? 'var(--color-warning)'
+                              : p === 'normal'
+                                ? 'var(--color-primary)'
+                                : 'var(--color-text-secondary)'
+                          : 'var(--color-surface)',
                       color: priority === p ? 'var(--color-text)' : 'var(--color-text-secondary)',
-                      border: `1px solid ${priority === p ? 'transparent' : 'var(--color-border)/20'}`
+                      border: `1px solid ${priority === p ? 'transparent' : 'var(--color-border)/20'}`,
                     }}
                   >
                     {p}
@@ -687,7 +840,7 @@ export default function QuantumBrainPage() {
                 style={{
                   background: 'var(--color-background)/60',
                   border: '1px solid var(--color-border)/10',
-                  color: 'var(--color-text)'
+                  color: 'var(--color-text)',
                 }}
                 disabled={isProcessing}
               />
@@ -695,7 +848,10 @@ export default function QuantumBrainPage() {
 
             {/* Quick Actions */}
             <div className="mb-6">
-              <label className="text-[10px] uppercase tracking-wider block mb-2" style={{ color: 'var(--color-text-secondary)' }}>
+              <label
+                className="text-[10px] uppercase tracking-wider block mb-2"
+                style={{ color: 'var(--color-text-secondary)' }}
+              >
                 Ações Rápidas
               </label>
               <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
@@ -707,7 +863,7 @@ export default function QuantumBrainPage() {
                     style={{
                       background: 'var(--color-surface)',
                       border: '1px solid var(--color-border)/10',
-                      color: 'var(--color-text-secondary)'
+                      color: 'var(--color-text-secondary)',
                     }}
                   >
                     <span>{action.icon}</span>
@@ -723,11 +879,11 @@ export default function QuantumBrainPage() {
               disabled={isProcessing || !prompt.trim()}
               className="w-full py-4 rounded-xl font-bold text-sm tracking-wider uppercase flex items-center justify-center gap-3 transition-all disabled:opacity-50"
               style={{
-                background: isProcessing 
+                background: isProcessing
                   ? 'var(--color-primary)/20'
                   : 'linear-gradient(to right, var(--color-primary), var(--color-accent))',
                 color: isProcessing ? 'var(--color-primary)' : 'var(--color-text)',
-                boxShadow: isProcessing ? 'none' : '0 0 30px var(--color-glow)/50'
+                boxShadow: isProcessing ? 'none' : '0 0 30px var(--color-glow)/50',
               }}
             >
               {isProcessing ? (
@@ -747,32 +903,39 @@ export default function QuantumBrainPage() {
 
         {/* COLUNA DIREITA - Response Output */}
         <div className="lg:col-span-4 space-y-4">
-          <div 
-            ref={resultRef} 
+          <div
+            ref={resultRef}
             className="backdrop-blur-xl rounded-2xl overflow-hidden"
-            style={{ 
+            style={{
               background: 'var(--color-surface)/40',
-              border: '1px solid var(--color-border)/10'
+              border: '1px solid var(--color-border)/10',
             }}
           >
             {/* Header */}
-            <div 
+            <div
               className="p-4 flex items-center justify-between"
-              style={{ 
+              style={{
                 borderBottom: '1px solid var(--color-border)/10',
-                background: 'var(--color-surface)/50'
+                background: 'var(--color-surface)/50',
               }}
             >
               <div className="flex items-center gap-3">
                 <Sparkles className="w-5 h-5" style={{ color: 'var(--color-accent)' }} />
-                <h2 className="text-sm font-bold uppercase tracking-wider" style={{ color: 'var(--color-text)' }}>Response Output</h2>
+                <h2
+                  className="text-sm font-bold uppercase tracking-wider"
+                  style={{ color: 'var(--color-text)' }}
+                >
+                  Response Output
+                </h2>
               </div>
               {currentResult && (
-                <span 
+                <span
                   className="px-2 py-1 rounded text-[10px] font-bold uppercase"
                   style={{
-                    background: currentResult.success ? 'var(--color-success)/20' : 'var(--color-error)/20',
-                    color: currentResult.success ? 'var(--color-success)' : 'var(--color-error)'
+                    background: currentResult.success
+                      ? 'var(--color-success)/20'
+                      : 'var(--color-error)/20',
+                    color: currentResult.success ? 'var(--color-success)' : 'var(--color-error)',
                   }}
                 >
                   {currentResult.success ? '✓ SUCCESS' : '✗ FAILED'}
@@ -786,44 +949,102 @@ export default function QuantumBrainPage() {
                 <div className="space-y-4">
                   {/* Métricas */}
                   <div className="grid grid-cols-4 gap-2 mb-4">
-                    <div className="rounded-lg p-2 text-center" style={{ background: 'var(--color-surface)' }}>
-                      <div className="text-lg font-black" style={{ color: 'var(--color-accent)' }}>{currentResult.execution_time_ms}ms</div>
-                      <div className="text-[9px] uppercase" style={{ color: 'var(--color-text-secondary)' }}>Tempo</div>
+                    <div
+                      className="rounded-lg p-2 text-center"
+                      style={{ background: 'var(--color-surface)' }}
+                    >
+                      <div className="text-lg font-black" style={{ color: 'var(--color-accent)' }}>
+                        {currentResult.execution_time_ms}ms
+                      </div>
+                      <div
+                        className="text-[9px] uppercase"
+                        style={{ color: 'var(--color-text-secondary)' }}
+                      >
+                        Tempo
+                      </div>
                     </div>
-                    <div className="rounded-lg p-2 text-center" style={{ background: 'var(--color-surface)' }}>
-                      <div className="text-lg font-black" style={{ color: 'var(--color-primary)' }}>{currentResult.tokens_used}</div>
-                      <div className="text-[9px] uppercase" style={{ color: 'var(--color-text-secondary)' }}>Tokens</div>
+                    <div
+                      className="rounded-lg p-2 text-center"
+                      style={{ background: 'var(--color-surface)' }}
+                    >
+                      <div className="text-lg font-black" style={{ color: 'var(--color-primary)' }}>
+                        {currentResult.tokens_used}
+                      </div>
+                      <div
+                        className="text-[9px] uppercase"
+                        style={{ color: 'var(--color-text-secondary)' }}
+                      >
+                        Tokens
+                      </div>
                     </div>
-                    <div className="rounded-lg p-2 text-center" style={{ background: 'var(--color-surface)' }}>
-                      <div className="text-lg font-black" style={{ color: 'var(--color-success)' }}>${currentResult.cost_usd?.toFixed(5)}</div>
-                      <div className="text-[9px] uppercase" style={{ color: 'var(--color-text-secondary)' }}>Custo</div>
+                    <div
+                      className="rounded-lg p-2 text-center"
+                      style={{ background: 'var(--color-surface)' }}
+                    >
+                      <div className="text-lg font-black" style={{ color: 'var(--color-success)' }}>
+                        ${currentResult.cost_usd?.toFixed(5)}
+                      </div>
+                      <div
+                        className="text-[9px] uppercase"
+                        style={{ color: 'var(--color-text-secondary)' }}
+                      >
+                        Custo
+                      </div>
                     </div>
-                    <div className="rounded-lg p-2 text-center" style={{ background: 'var(--color-surface)' }}>
-                      <div className="text-sm font-black truncate" style={{ color: 'var(--color-warning)' }}>{currentResult.agent_name?.split(' ')[0]}</div>
-                      <div className="text-[9px] uppercase" style={{ color: 'var(--color-text-secondary)' }}>Agent</div>
+                    <div
+                      className="rounded-lg p-2 text-center"
+                      style={{ background: 'var(--color-surface)' }}
+                    >
+                      <div
+                        className="text-sm font-black truncate"
+                        style={{ color: 'var(--color-warning)' }}
+                      >
+                        {currentResult.agent_name?.split(' ')[0]}
+                      </div>
+                      <div
+                        className="text-[9px] uppercase"
+                        style={{ color: 'var(--color-text-secondary)' }}
+                      >
+                        Agent
+                      </div>
                     </div>
                   </div>
 
                   {/* Agent Info */}
-                  <div className="flex items-center gap-2 text-xs mb-3" style={{ color: 'var(--color-text-secondary)' }}>
-                    <span className="px-2 py-0.5 rounded" style={{ background: 'var(--color-primary)/20', color: 'var(--color-primary)' }}>
+                  <div
+                    className="flex items-center gap-2 text-xs mb-3"
+                    style={{ color: 'var(--color-text-secondary)' }}
+                  >
+                    <span
+                      className="px-2 py-0.5 rounded"
+                      style={{
+                        background: 'var(--color-primary)/20',
+                        color: 'var(--color-primary)',
+                      }}
+                    >
                       {currentResult.agent_name}
                     </span>
                     <span>•</span>
-                    <span className="px-2 py-0.5 rounded" style={{ background: 'var(--color-accent)/20', color: 'var(--color-accent)' }}>
+                    <span
+                      className="px-2 py-0.5 rounded"
+                      style={{ background: 'var(--color-accent)/20', color: 'var(--color-accent)' }}
+                    >
                       {currentResult.squad}
                     </span>
                   </div>
-                  
+
                   {/* Resultado */}
-                  <div 
+                  <div
                     className="rounded-xl p-4"
                     style={{
                       background: 'var(--color-background)/40',
-                      border: '1px solid var(--color-border)/10'
+                      border: '1px solid var(--color-border)/10',
                     }}
                   >
-                    <p className="font-mono text-sm leading-relaxed whitespace-pre-wrap" style={{ color: 'var(--color-text)' }}>
+                    <p
+                      className="font-mono text-sm leading-relaxed whitespace-pre-wrap"
+                      style={{ color: 'var(--color-text)' }}
+                    >
                       {currentResult.result}
                     </p>
                   </div>
@@ -836,14 +1057,14 @@ export default function QuantumBrainPage() {
                       { icon: MessageSquare, label: 'WhatsApp' },
                       { icon: Mail, label: 'Email' },
                     ].map((btn, i) => (
-                      <button 
+                      <button
                         key={i}
                         onClick={btn.onClick}
                         className="flex items-center gap-2 px-3 py-2 rounded-lg text-xs transition-all"
                         style={{
                           background: 'var(--color-surface)',
                           border: '1px solid var(--color-border)/10',
-                          color: 'var(--color-text-secondary)'
+                          color: 'var(--color-text-secondary)',
                         }}
                       >
                         <btn.icon className="w-3 h-3" /> {btn.label}
@@ -853,19 +1074,26 @@ export default function QuantumBrainPage() {
 
                   {/* Neural Load Graph */}
                   <div className="mt-4">
-                    <div className="text-[10px] uppercase tracking-wider mb-2 flex items-center gap-2" style={{ color: 'var(--color-text-secondary)' }}>
+                    <div
+                      className="text-[10px] uppercase tracking-wider mb-2 flex items-center gap-2"
+                      style={{ color: 'var(--color-text-secondary)' }}
+                    >
                       <Activity className="w-3 h-3" />
                       Neural Load durante execução
                     </div>
-                    <div className="h-12 rounded-lg overflow-hidden flex items-end gap-px p-2" style={{ background: 'var(--color-surface)' }}>
+                    <div
+                      className="h-12 rounded-lg overflow-hidden flex items-end gap-px p-2"
+                      style={{ background: 'var(--color-surface)' }}
+                    >
                       {Array.from({ length: 30 }).map((_, i) => (
                         <div
                           key={i}
                           className="flex-1 rounded-t transition-all"
-                          style={{ 
+                          style={{
                             height: `${Math.random() * 60 + 40}%`,
-                            background: 'linear-gradient(to top, var(--color-primary), var(--color-accent))',
-                            animationDelay: `${i * 50}ms`
+                            background:
+                              'linear-gradient(to top, var(--color-primary), var(--color-accent))',
+                            animationDelay: `${i * 50}ms`,
                           }}
                         />
                       ))}
@@ -873,34 +1101,41 @@ export default function QuantumBrainPage() {
                   </div>
                 </div>
               ) : (
-                <div className="h-full flex flex-col items-center justify-center py-16" style={{ color: 'var(--color-text-secondary)' }}>
+                <div
+                  className="h-full flex flex-col items-center justify-center py-16"
+                  style={{ color: 'var(--color-text-secondary)' }}
+                >
                   <Brain className="w-20 h-20 mb-4 opacity-20" />
                   <p className="text-sm font-medium">Aguardando comando...</p>
-                  <p className="text-xs mt-1" style={{ color: 'var(--color-text-secondary)/70' }}>O Quantum Brain está pronto para processar</p>
+                  <p className="text-xs mt-1" style={{ color: 'var(--color-text-secondary)/70' }}>
+                    O Quantum Brain está pronto para processar
+                  </p>
                 </div>
               )}
             </div>
           </div>
 
           {/* Emergency Controls */}
-          <div 
+          <div
             className="backdrop-blur-xl rounded-2xl p-4"
-            style={{ 
+            style={{
               background: 'var(--color-surface)/40',
-              border: '1px solid var(--color-error)/20'
+              border: '1px solid var(--color-error)/20',
             }}
           >
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <AlertOctagon className="w-5 h-5" style={{ color: 'var(--color-error)' }} />
-                <span className="text-sm font-bold" style={{ color: 'var(--color-error)' }}>Emergency Controls</span>
+                <span className="text-sm font-bold" style={{ color: 'var(--color-error)' }}>
+                  Emergency Controls
+                </span>
               </div>
-              <button 
+              <button
                 className="px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-wider transition-all"
                 style={{
                   background: 'var(--color-error)/20',
                   border: '1px solid var(--color-error)',
-                  color: 'var(--color-error)'
+                  color: 'var(--color-error)',
                 }}
               >
                 EMERGENCY STOP

@@ -258,7 +258,7 @@ export default function CockpitPage() {
           { label: 'Latência', value: loading ? '...' : `${latencyMs}ms`, tone: 'primary' },
           {
             label: 'Uptime',
-            value: loading ? '...' : `${uptimePercent.toFixed(1)}%`,
+            value: loading ? '...' : uptimePercent != null ? `${uptimePercent.toFixed(1)}%` : '—',
             tone: 'success',
           },
         ]}
