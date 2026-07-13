@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
 import { OrbitControls, Sphere, Line, Html } from '@react-three/drei';
 import { useQuantumStore } from '@/lib/store';
@@ -10,17 +10,30 @@ const getStatusColor = (status: string) => {
   const style = typeof document !== 'undefined' ? getComputedStyle(document.documentElement) : null;
   const get = (v: string, fallback: string) => style?.getPropertyValue(v).trim() || fallback;
   switch (status) {
-    case 'ACTIVE': return get('--color-success', '#22c55e');
-    case 'PROCESSING': return get('--color-accent', '#a855f7');
-    case 'LEARNING': return get('--color-primary', '#3b82f6');
-    case 'WARNING': return get('--color-warning', '#f59e0b');
-    case 'ERROR': return get('--color-error', '#ef4444');
-    case 'CRITICAL': return get('--color-error', '#dc2626');
-    default: return get('--color-text-secondary', '#71717a');
+    case 'ACTIVE':
+      return get('--color-success', '#22c55e');
+    case 'PROCESSING':
+      return get('--color-accent', '#a855f7');
+    case 'LEARNING':
+      return get('--color-primary', '#3b82f6');
+    case 'WARNING':
+      return get('--color-warning', '#f59e0b');
+    case 'ERROR':
+      return get('--color-error', '#ef4444');
+    case 'CRITICAL':
+      return get('--color-error', '#dc2626');
+    default:
+      return get('--color-text-secondary', '#71717a');
   }
 };
 
-function Node({ agent, position }: { agent: { status: string; name: string; efficiency: number; role?: string }; position: [number, number, number] }) {
+function Node({
+  agent,
+  position,
+}: {
+  agent: { status: string; name: string; efficiency: number; role?: string };
+  position: [number, number, number];
+}) {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const ref = useRef<any>(null);
   const [hovered, setHover] = useState(false);
@@ -39,20 +52,20 @@ function Node({ agent, position }: { agent: { status: string; name: string; effi
 
   return (
     <group position={position}>
-      <Sphere 
-        ref={ref} 
-        args={[0.18, 16, 16]} 
+      <Sphere
+        ref={ref}
+        args={[0.18, 16, 16]}
         onPointerOver={() => setHover(true)}
         onPointerOut={() => setHover(false)}
       >
-        <meshStandardMaterial 
-          color={color} 
-          emissive={color} 
-          emissiveIntensity={hovered ? 3 : 1.5} 
-          toneMapped={false} 
+        <meshStandardMaterial
+          color={color}
+          emissive={color}
+          emissiveIntensity={hovered ? 3 : 1.5}
+          toneMapped={false}
         />
       </Sphere>
-      
+
       {/* Label Holográfico (Só aparece no hover) */}
       {hovered && (
         <Html distanceFactor={10}>
@@ -60,10 +73,10 @@ function Node({ agent, position }: { agent: { status: string; name: string; effi
             <h3 className="text-xs font-bold text-text whitespace-nowrap">{agent.name}</h3>
             <p className="text-[10px] font-mono text-textSecondary uppercase">{agent.role}</p>
             <div className="mt-1 h-0.5 w-full bg-surface rounded-full overflow-hidden">
-                <div 
-                    className="h-full bg-current transition-all duration-300" 
-                    style={{ width: `${agent.efficiency || 50}%`, color }}
-                />
+              <div
+                className="h-full bg-current transition-all duration-300"
+                style={{ width: `${agent.efficiency || 50}%`, color }}
+              />
             </div>
           </div>
         </Html>
@@ -78,14 +91,21 @@ function Connections({ nodes }: { nodes: any[] }) {
     // Conecta nós próximos (simulação de sinapses)
     for (let i = 0; i < nodes.length; i++) {
       // Limita conexões para performance (max 2 por nó)
-      const targets = nodes.slice(i + 1, i + 3); 
+      const targets = nodes.slice(i + 1, i + 3);
       for (const target of targets) {
-        connections.push({ 
-            start: nodes[i].position, 
-            end: target.position,
-            color: nodes[i].agent.status === 'PROCESSING' 
-                ? (typeof document !== 'undefined' ? getComputedStyle(document.documentElement).getPropertyValue('--color-accent').trim() : '#a855f7')
-                : (typeof document !== 'undefined' ? getComputedStyle(document.documentElement).getPropertyValue('--color-text').trim() : 'white')
+        connections.push({
+          start: nodes[i].position,
+          end: target.position,
+          color:
+            nodes[i].agent.status === 'PROCESSING'
+              ? typeof document !== 'undefined'
+                ? getComputedStyle(document.documentElement)
+                    .getPropertyValue('--color-accent')
+                    .trim()
+                : '#a855f7'
+              : typeof document !== 'undefined'
+                ? getComputedStyle(document.documentElement).getPropertyValue('--color-text').trim()
+                : 'white',
         });
       }
     }
@@ -110,7 +130,7 @@ function Connections({ nodes }: { nodes: any[] }) {
 
 function Brain() {
   const agents = useQuantumStore((state) => state.agents);
-  
+
   // Memoiza posições para que elas não mudem a cada render (evita "flicker")
   // Mas re-calcula se o número de agentes mudar
   const nodes = useMemo(() => {
@@ -119,8 +139,8 @@ function Brain() {
       position: [
         (Math.random() - 0.5) * 10,
         (Math.random() - 0.5) * 10,
-        (Math.random() - 0.5) * 10
-      ] as [number, number, number]
+        (Math.random() - 0.5) * 10,
+      ] as [number, number, number],
     }));
   }, [agents.length]); // Dependência apenas no tamanho, não no objeto inteiro
 
@@ -136,43 +156,69 @@ function Brain() {
 
 export default function NeuralGraph() {
   const agentCount = useQuantumStore((state) => state.agents.length);
+  const syncAgents = useQuantumStore((state) => state.syncAgents);
+
+  // Carrega SOMENTE agentes reais do banco ao montar.
+  useEffect(() => {
+    syncAgents();
+  }, [syncAgents]);
+
+  const hasAgents = agentCount > 0;
 
   return (
     <div className="h-[calc(100vh-6rem)] w-full bg-background relative overflow-hidden rounded-xl border border-border/10 shadow-2xl shadow-accent/20">
-      
       {/* HUD Overlay */}
       <div className="absolute top-6 left-6 z-10 pointer-events-none select-none">
         <h2 className="text-3xl font-bold text-text tracking-tighter">NEURAL NEXUS</h2>
         <div className="flex items-center gap-3 mt-1">
-            <span className="relative flex h-3 w-3">
+          <span className="relative flex h-3 w-3">
+            {hasAgents && (
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-accent/75 opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-3 w-3 bg-accent"></span>
-            </span>
-            <p className="text-sm text-accent/80 font-mono tracking-wide">
-                LIVE CONNECTION • {agentCount} ACTIVE NODES
-            </p>
+            )}
+            <span
+              className={`relative inline-flex rounded-full h-3 w-3 ${hasAgents ? 'bg-accent' : 'bg-textSecondary'}`}
+            ></span>
+          </span>
+          <p
+            className={`text-sm font-mono tracking-wide ${hasAgents ? 'text-accent/80' : 'text-textSecondary'}`}
+          >
+            {hasAgents
+              ? `LIVE CONNECTION • ${agentCount} ACTIVE NODES`
+              : 'SEM AGENTES ATIVOS • AGUARDANDO DADOS'}
+          </p>
         </div>
       </div>
 
-      <Canvas 
-        camera={{ position: [0, 0, 14], fov: 45 }} 
-        dpr={[1, 2]} 
+      {/* Empty state honesto: sem agentes reais, nada de nós/estatísticas inventadas */}
+      {!hasAgents && (
+        <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-3 pointer-events-none select-none text-center px-6">
+          <p className="text-lg font-semibold text-text">Nenhum agente ativo ainda</p>
+          <p className="text-sm text-textSecondary max-w-md">
+            A rede neural é renderizada apenas com agentes reais. Assim que houver dados, os nós
+            aparecem aqui automaticamente.
+          </p>
+        </div>
+      )}
+
+      <Canvas
+        camera={{ position: [0, 0, 14], fov: 45 }}
+        dpr={[1, 2]}
         gl={{ antialias: true, toneMappingExposure: 1.2 }}
       >
         {/* Iluminação Dramática */}
         <ambientLight intensity={0.2} />
         <pointLight position={[10, 10, 10]} intensity={1.5} color="#a855f7" />
         <pointLight position={[-10, -10, -10]} intensity={0.5} color="#3b82f6" />
-        
+
         <Brain />
-        
-        <OrbitControls 
-            autoRotate 
-            autoRotateSpeed={0.5} 
-            enableZoom={true} 
-            enablePan={false}
-            maxDistance={25}
-            minDistance={5}
+
+        <OrbitControls
+          autoRotate
+          autoRotateSpeed={0.5}
+          enableZoom={true}
+          enablePan={false}
+          maxDistance={25}
+          minDistance={5}
         />
       </Canvas>
     </div>

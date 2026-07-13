@@ -26,5 +26,5 @@ export interface QuantumState {
   toggleLiveMode: () => void;
   updateMetrics: (newMetrics: Partial<SystemMetrics>) => void;
   updateAgent: (id: string, data: Partial<Agent>) => void;
-  simulatePulse: () => void;
+  syncAgents: () => Promise<void>;
 }
