@@ -10,7 +10,7 @@ O corpo do caçador: um script TypeScript, sem framework de agente, que roda a l
 5. Dedup semântica (pgvector, similaridade > 0.92 = já visto).
 6. Análise profunda dos finalistas: resumo **próprio**, `relevance` + `relevance_why`, `single_source`, `license`, `kind`, arestas do grafo, e rascunho de Cápsula X.2 se `kind='soul'`.
 7. Fecha `hunter_hunts` com números honestos + `cost_usd` real dos tokens.
-8. Escreve `cacas/caca-AAAA-MM-DD.md` (formato do dossiê). O workflow abre o PR da caça = fila do tribunal.
+8. Escreve `caça/AAAA-MM-DD.md` na raiz do repo (caminho canônico do dossiê). O workflow abre o PR da caça = fila do tribunal.
 
 ## Blindagem (Lei 3 — prompt injection)
 - Todo conteúdo coletado entra nos prompts como **dado inerte** entre marcas `<<<DADO>>>`, com instrução explícita de ignorar comandos embutidos.
@@ -27,6 +27,7 @@ npm install
 # exporte as variáveis (ver seção Segredos)
 npm run hunt
 ```
+O relatório sai em `caça/AAAA-MM-DD.md` na raiz do repo (um nível acima de `hunter/`). Para mudar, use `HUNTER_REPORT_DIR`.
 
 ## Segredos / variáveis necessárias
 **Secrets (Actions → Secrets):**
