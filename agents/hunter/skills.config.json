@@ -1,0 +1,24 @@
+{
+  "autonomy_level": "supervised",
+  "auto_actions": {
+    "can_search_web": true,
+    "can_generate_files": false,
+    "can_write_production": false,
+    "can_deploy": false,
+    "can_open_pr": true
+  },
+  "schedule": {
+    "cron": "30 6 * * *",
+    "timezone": "America/Sao_Paulo",
+    "runs_after": "SENTINELA (06:00)"
+  },
+  "sources_policy": "somente fontes da missão ativa (hunter_missions.status='active'); fonte nova só por PR de missão aprovado (Lei 7)",
+  "cost_limits": {
+    "monthly_usd_cap": 20,
+    "triage_model": "modelo barato de triagem",
+    "analysis_model": "modelo forte de análise",
+    "note": "motor de IA server-side; o nome do fornecedor é receita interna (Lei do CLAUDE.md)"
+  },
+  "write_scopes": ["public.hunter_*", "branches: hunter/*"],
+  "fase_atual": 1
+}
