@@ -1,4 +1,5 @@
 import { mkdirSync, writeFileSync } from "node:fs";
+import { resolve } from "node:path";
 import { NL } from "./util.js";
 
 export type ReportItem = {
@@ -13,6 +14,9 @@ export type ReportItem = {
   suggest: string;
 };
 
+// Canon (dossie, Parte 6): o relatorio nasce em caca/AAAA-MM-DD.md (com c-cedilha,
+// nome = so a data), na raiz do repo. O runtime roda com cwd=hunter/, entao
+// subimos um nivel; HUNTER_REPORT_DIR permite override.
 export function writeReport(args: {
   date: string;
   itemsSeen: number;
@@ -28,7 +32,7 @@ export function writeReport(args: {
   findings: ReportItem[];
 }): string {
   const L: string[] = [];
-  L.push("# CACA — " + args.date);
+  L.push("# CAÇA — " + args.date);
   L.push("");
   L.push("## Resumo pro fundador (3 linhas)");
   L.push(
@@ -36,18 +40,18 @@ export function writeReport(args: {
   );
   L.push("- OURO DO DIA: " + (args.gold || "— sem ouro hoje (dia honesto)"));
   L.push(
-    "- Fontes: " + args.sourcesOk + " ok / " + args.sourcesFail + " falhas" + (args.failNotes.length ? " · NAO VERIFICADO: " + args.failNotes.join("; ") : "")
+    "- Fontes: " + args.sourcesOk + " ok / " + args.sourcesFail + " falhas" + (args.failNotes.length ? " · NÃO VERIFICADO: " + args.failNotes.join("; ") : "")
   );
   L.push("");
   L.push("> tokens: " + args.costNote);
   L.push("");
   L.push("## Fila de julgamento");
   const sorted = args.findings.slice().sort((a, b) => b.relevance - a.relevance);
-  if (!sorted.length) L.push("_(nada trazido nesta caca)_");
+  if (!sorted.length) L.push("_(nada trazido nesta caça)_");
   for (const f of sorted) {
     L.push("");
     L.push(
-      "### [" + f.relevance + "] " + f.title + " — " + f.kind + " · " + f.source + " · contra-prova:" + (f.single_source ? "nao (fonte unica)" : "sim") + " · licenca:" + (f.license ?? "?")
+      "### [" + f.relevance + "] " + f.title + " — " + f.kind + " · " + f.source + " · contra-prova:" + (f.single_source ? "não (fonte única)" : "sim") + " · licença:" + (f.license ?? "?")
     );
     L.push(f.summary_md);
     L.push(f.url);
@@ -55,10 +59,11 @@ export function writeReport(args: {
   }
   L.push("");
   L.push("---");
-  L.push("_Gerado pelo HUNTER X.1 · fila do tribunal · o veredito e o merge sao do fundador._");
+  L.push("_Gerado pelo HUNTER X.1 · fila do tribunal · o veredito e o merge são do fundador._");
   const md = L.join(NL);
-  mkdirSync("cacas", { recursive: true });
-  const path = "cacas/caca-" + args.date + ".md";
-  writeFileSync(path, md, "utf8");
-  return path;
+
+  const outDir = process.env.HUNTER_REPORT_DIR || resolve(process.cwd(), "..", "caça");
+  mkdirSync(outDir, { recursive: true });
+  writeFileSync(resolve(outDir, args.date + ".md"), md, "utf8");
+  return "caça/" + args.date + ".md";
 }

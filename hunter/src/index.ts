@@ -40,18 +40,7 @@ type Fin = {
 async function finalize(sb: any, huntId: number, r: Fin) {
   const costUsd = cost.usd();
   const gold = r.findings.slice().sort((a, b) => b.relevance - a.relevance)[0];
-  await closeHunt(sb, huntId, {
-    status: r.status,
-    sources_ok: r.sourcesOk,
-    sources_fail: r.sourcesFail,
-    items_seen: r.itemsSeen,
-    items_kept: r.itemsKept,
-    items_queued: r.itemsQueued,
-    cost_usd: Number(costUsd.toFixed(4)),
-    report_path: "cacas/caca-" + r.date + ".md",
-    notes: r.failNotes.join(" · ") || null,
-  });
-  writeReport({
+  const reportPath = writeReport({
     date: r.date,
     itemsSeen: r.itemsSeen,
     itemsKept: r.itemsKept,
@@ -64,6 +53,17 @@ async function finalize(sb: any, huntId: number, r: Fin) {
     costUsd,
     costNote: cost.tokensNote(),
     gold: gold ? "[" + gold.relevance + "] " + gold.title : "",
+  });
+  await closeHunt(sb, huntId, {
+    status: r.status,
+    sources_ok: r.sourcesOk,
+    sources_fail: r.sourcesFail,
+    items_seen: r.itemsSeen,
+    items_kept: r.itemsKept,
+    items_queued: r.itemsQueued,
+    cost_usd: Number(costUsd.toFixed(4)),
+    report_path: reportPath,
+    notes: r.failNotes.join(" · ") || null,
   });
   console.log("Caca " + r.date + " status=" + r.status + " vistos=" + r.itemsSeen + " trazidos=" + r.itemsKept + " quarentena=" + r.itemsQueued + " custo=US$" + costUsd.toFixed(4));
 }

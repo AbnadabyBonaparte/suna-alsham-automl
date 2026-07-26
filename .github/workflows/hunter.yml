@@ -56,7 +56,7 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           set -e
-          REPORT=$(ls -1 hunter/cacas/*.md 2>/dev/null | tail -1 || true)
+          REPORT=$(find "caça" -maxdepth 1 -name '*.md' 2>/dev/null | sort | tail -1 || true)
           if [ -z "$REPORT" ]; then
             echo "Sem relatorio gerado (caca abortada ou sem missao) - nada a abrir."
             exit 0
@@ -66,9 +66,9 @@ jobs:
           git config user.name "hunter-bot"
           git config user.email "hunter-bot@users.noreply.github.com"
           git checkout -b "$BR"
-          git add hunter/cacas
-          git commit -m "chore(hunter): caca $DATE (fila do tribunal)"
+          git add "caça"
+          git commit -m "chore(hunter): caça $DATE (fila do tribunal)"
           git push origin "$BR"
           gh pr create --base main --head "$BR" \
-            --title "CACA - $DATE (fila do tribunal)" \
+            --title "CAÇA - $DATE (fila do tribunal)" \
             --body-file "$REPORT"
