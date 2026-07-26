@@ -1,0 +1,74 @@
+name: HUNTER - Caca (manual)
+
+on:
+  workflow_dispatch:
+    inputs:
+      simulate_analysis_failure:
+        description: "Testar Lei 8: forcar falha na analise (itens vao pra quarentena, hunt fecha partial)"
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+  pull-requests: write
+  issues: write
+
+jobs:
+  hunt:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install deps
+        working-directory: hunter
+        run: npm install
+
+      - name: Rodar a caca
+        working-directory: hunter
+        env:
+          SUPABASE_URL: ${{ secrets.HUNTER_SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.HUNTER_SUPABASE_SERVICE_ROLE_KEY }}
+          HUNTER_AI_BASE_URL: ${{ secrets.HUNTER_AI_BASE_URL }}
+          HUNTER_AI_API_KEY: ${{ secrets.HUNTER_AI_API_KEY }}
+          HUNTER_TRIAGE_MODEL: ${{ vars.HUNTER_TRIAGE_MODEL }}
+          HUNTER_ANALYSIS_MODEL: ${{ vars.HUNTER_ANALYSIS_MODEL }}
+          HUNTER_EMBED_MODEL: ${{ vars.HUNTER_EMBED_MODEL }}
+          HUNTER_EMBED_DIMS: ${{ vars.HUNTER_EMBED_DIMS }}
+          HUNTER_PRICE_TRIAGE_IN: ${{ vars.HUNTER_PRICE_TRIAGE_IN }}
+          HUNTER_PRICE_TRIAGE_OUT: ${{ vars.HUNTER_PRICE_TRIAGE_OUT }}
+          HUNTER_PRICE_ANALYSIS_IN: ${{ vars.HUNTER_PRICE_ANALYSIS_IN }}
+          HUNTER_PRICE_ANALYSIS_OUT: ${{ vars.HUNTER_PRICE_ANALYSIS_OUT }}
+          HUNTER_PRICE_EMBED: ${{ vars.HUNTER_PRICE_EMBED }}
+          HUNTER_SIMULATE_ANALYSIS_FAILURE: ${{ inputs.simulate_analysis_failure }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+        run: npx tsx src/index.ts
+
+      - name: Abrir PR da caca (fila do tribunal)
+        if: always()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -e
+          REPORT=$(find "caça" -maxdepth 1 -name '*.md' 2>/dev/null | sort | tail -1 || true)
+          if [ -z "$REPORT" ]; then
+            echo "Sem relatorio gerado (caca abortada ou sem missao) - nada a abrir."
+            exit 0
+          fi
+          DATE=$(date -u +%Y-%m-%d)
+          BR="hunter/caca-$DATE-${{ github.run_id }}"
+          git config user.name "hunter-bot"
+          git config user.email "hunter-bot@users.noreply.github.com"
+          git checkout -b "$BR"
+          git add "caça"
+          git commit -m "chore(hunter): caça $DATE (fila do tribunal)"
+          git push origin "$BR"
+          gh pr create --base main --head "$BR" \
+            --title "CAÇA - $DATE (fila do tribunal)" \
+            --body-file "$REPORT"
