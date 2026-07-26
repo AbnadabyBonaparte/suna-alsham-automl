@@ -16,7 +16,7 @@ import { collectAll } from "./sources.js";
 import { triageBatch, analyze, embed, cost } from "./ai.js";
 import { writeReport, type ReportItem } from "./report.js";
 import { config } from "./config.js";
-import { todayUTC } from "./util.js";
+import { todayUTC, NL } from "./util.js";
 import type { RawItem } from "./types.js";
 
 function suggest(rel: number): string {
@@ -151,7 +151,7 @@ async function main() {
       if (!it) continue;
       try {
         if (config.simulateAnalysisFailure()) throw new Error("SIMULACAO: falha de analise provocada (teste Lei 8)");
-        const vec = await embed(it.title + NLX + it.rawText);
+        const vec = await embed(it.title + NL + it.rawText);
         if (await matchFinding(sb, vec, config.dedupThreshold())) continue;
         const a = await analyze(it);
         const fid = await insertFinding(sb, {
@@ -207,5 +207,4 @@ async function main() {
   }
 }
 
-import { NL as NLX } from "./util.js";
 main();
