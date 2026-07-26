@@ -4,7 +4,7 @@
   "version": "1.0.0",
   "description": "HUNTER X.1 runtime — a primeira caça (Fase 2)",
   "type": "module",
-  "engines": { "node": ">=20" },
+  "engines": { "node": ">=22" },
   "scripts": {
     "hunt": "tsx src/index.ts",
     "typecheck": "tsc --noEmit"
