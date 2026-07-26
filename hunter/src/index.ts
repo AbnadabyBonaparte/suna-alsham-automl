@@ -155,6 +155,7 @@ async function main() {
         const vec = await embed(it.title + NL + it.rawText);
         if (await matchFinding(sb, vec, config.dedupThreshold())) continue;
         const a = await analyze(it);
+        // insertFinding e a FRONTEIRA de sucesso: se gravou, o achado conta.
         const fid = await insertFinding(sb, {
           hunt_id: huntId,
           kind: a.kind,
@@ -168,8 +169,7 @@ async function main() {
           license: a.license ?? null,
           embedding: JSON.stringify(vec),
         });
-        await insertEdges(sb, fid, a.edges);
-        if (a.kind === "soul" && a.soul) await insertSoul(sb, fid, a.soul);
+        itemsKept++;
         reportItems.push({
           relevance: a.relevance,
           kind: a.kind,
@@ -181,7 +181,13 @@ async function main() {
           license: a.license ?? null,
           suggest: suggest(a.relevance),
         });
-        itemsKept++;
+        // Arestas e alma sao BEST-EFFORT: sua falha nao derruba o achado ja salvo.
+        try {
+          await insertEdges(sb, fid, a.edges);
+          if (a.kind === "soul" && a.soul) await insertSoul(sb, fid, a.soul);
+        } catch (ee) {
+          console.error("[hunter] arestas/alma falharam (finding salvo):", it.url, String(ee));
+        }
       } catch (e) {
         console.error("[hunter] finding falhou:", it.url, String(e));
         await enqueueRaw(sb, huntId, it.source, it.url, it, "llm_down");
