@@ -49,6 +49,20 @@ function inert(text: string): string {
   return ["<<<DADO>>>", safe, "<<</DADO>>>"].join(NL);
 }
 
+// Remove cercas de codigo (```json ... ```), caso o modelo as inclua apesar
+// do response_format. Evita quebrar o JSON.parse.
+function stripFences(s: string): string {
+  let t = s.trim();
+  if (t.startsWith("```")) {
+    const nl = t.indexOf(NL);
+    t = nl >= 0 ? t.slice(nl + 1) : t.slice(3);
+  }
+  if (t.endsWith("```")) {
+    t = t.slice(0, t.lastIndexOf("```"));
+  }
+  return t.trim();
+}
+
 async function chat(model: string, system: string, user: string): Promise<{ content: string; pin: number; pout: number }> {
   const res = await fetchRetry(config.aiBaseUrl() + "/chat/completions", {
     method: "POST",
@@ -86,7 +100,7 @@ export async function triageBatch(items: RawItem[]): Promise<z.infer<typeof Tria
   const { content, pin, pout } = await chat(config.triageModel(), GUARD, user);
   cost.triageIn += pin;
   cost.triageOut += pout;
-  return TriageSchema.parse(JSON.parse(content)).results;
+  return TriageSchema.parse(JSON.parse(stripFences(content))).results;
 }
 
 export async function analyze(item: RawItem): Promise<Analysis> {
@@ -102,7 +116,7 @@ export async function analyze(item: RawItem): Promise<Analysis> {
   const { content, pin, pout } = await chat(config.analysisModel(), GUARD, user);
   cost.analysisIn += pin;
   cost.analysisOut += pout;
-  return AnalysisSchema.parse(JSON.parse(content));
+  return AnalysisSchema.parse(JSON.parse(stripFences(content)));
 }
 
 export async function embed(text: string): Promise<number[]> {

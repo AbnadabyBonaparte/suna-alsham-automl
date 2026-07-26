@@ -135,6 +135,7 @@ async function main() {
         itemsQueued++;
       }
       failNotes.push("triagem caiu: " + String(e));
+      console.error("[hunter] triagem caiu:", String(e));
       await markProcessed(sb, quarantineIds);
       await finalize(sb, huntId, { date, itemsSeen, itemsKept: 0, itemsQueued, sourcesOk, sourcesFail, failNotes, status: "partial", findings: [] });
       return;
@@ -182,6 +183,7 @@ async function main() {
         });
         itemsKept++;
       } catch (e) {
+        console.error("[hunter] finding falhou:", it.url, String(e));
         await enqueueRaw(sb, huntId, it.source, it.url, it, "llm_down");
         itemsQueued++;
         analysisFailed = true;
