@@ -1,4 +1,4 @@
-# 🎯 HUNTER X.1 — Runtime da Caça (Fase 2)
+# 🎯 HUNTER X.1 — Runtime da Caça (Fase 3: O Relógio)
 
 O corpo do caçador: um script TypeScript, sem framework de agente, que roda a liturgia diária do dossiê e deixa a fila de julgamento pronta pro tribunal.
 
@@ -45,5 +45,41 @@ O relatório sai em `caça/AAAA-MM-DD.md` na raiz do repo (um nível acima de `h
 ## Antes da 1ª caça
 Aplicar a migration `supabase/migrations/20260726_hunter_x1_dedup_fn.sql` no `suna-core` (função de dedup). O embedding é `vector(1024)`; o `HUNTER_EMBED_MODEL` precisa entregar 1024 dimensões (o runtime pede `dimensions: 1024`).
 
-## Fora de escopo (Fase 3+)
-Cron 06:30, minas além das 3, auto-crítica da missão. Nada disso aqui.
+## Fase 3 — O RELÓGIO
+
+### 1. Cron 06:30 BRT
+`.github/workflows/hunter.yml` roda `cron: "30 9 * * *"` — **09:30 UTC = 06:30 America/Sao_Paulo** (BRT é UTC-3 o ano inteiro; o Brasil extinguiu o horário de verão em 2019). Depois da Ronda (06:00 BRT). O `workflow_dispatch` continua valendo.
+
+### 2. Fila pendente ressurge
+Todo relatório traz a seção **FILA PENDENTE DE JULGAMENTO**: todos os `hunter_findings` com `verdict='pending'` de caças **anteriores**, ordenados por relevância desc. Sem isso o pendente de ontem some no banco e nunca chega ao tribunal. A query falhar não derruba a caça — vira `NÃO VERIFICADO` no relatório (Lei 7).
+
+### 3. Ameaça abre issue na hora
+`kind='threat'` com `relevance >= 90` abre issue `[HUNTER] Ameaça: <title>` **na própria caça**, sem esperar o relatório. Idempotente pelo título exato: o runtime lista as issues com label `hunter` (open+closed) no começo da caça e não reabre o que já existe. Usa a API de **listagem**, não a de busca — busca tem atraso de indexação e deixaria passar duplicata.
+
+### 4. Checagens da Ronda
+`npm run ronda` (`src/ronda.ts`) roda as três provas do caçador:
+
+| Checagem | Promessa | Prova |
+|---|---|---|
+| HUNTER rodou nas últimas 24h | roda todo dia 06:30 | última `hunter_hunts` `done`/`partial` com `finished_at` < 24h |
+| RLS nega anônimo | migration declara `anon` NEGADO | query **anônima real** nas 6 tabelas `hunter_*` |
+| Quarentena não cresce sem limite | Lei 8: quarentena é transitória | `count` de `raw_queue` não processada ≤ teto (padrão **500**, via `HUNTER_QUARANTINE_MAX`) |
+
+Roda em `.github/workflows/ronda-hunter.yml` às **09:00 UTC = 06:00 BRT**, antes da caça.
+
+**`NÃO VERIFICADO` não é `OK`.** Sem `SUPABASE_ANON_KEY` a prova de RLS sai como não verificada — nunca como aprovada. Se **nenhuma** checagem puder ser provada, a Ronda está cega e **falha** (exit 1): ronda cega não passa por verde.
+
+Read-only por lei: detecta e relata (issue com `RONDA_OPEN_ISSUE=true`). Nunca corrige.
+
+### Prova das peças 2 e 3
+```bash
+cd hunter && npm run prova
+```
+Exercita `writeReport` e `openThreatIssue` reais, sem tocar no banco de produção.
+
+### Segredo/variável novos na Fase 3
+- `HUNTER_SUPABASE_ANON_KEY` (secret) — chave **anônima** do `suna-core`, só para a prova de RLS. Sem ela a checagem sai `NÃO VERIFICADO`.
+- `HUNTER_QUARANTINE_MAX` (variable, opcional) — teto da quarentena. Padrão 500.
+
+## Fora de escopo (Fase 4+)
+Minas além das 3, auto-crítica da missão. Nada disso aqui.

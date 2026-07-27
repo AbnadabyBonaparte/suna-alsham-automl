@@ -1,6 +1,13 @@
-name: HUNTER - Caca (manual)
+name: HUNTER - Caca
 
 on:
+  # FASE 3 — O RELOGIO. 06:30 America/Sao_Paulo = 09:30 UTC (BRT e UTC-3 o ano
+  # inteiro; o Brasil extinguiu o horario de verao em 2019). Roda DEPOIS da
+  # Ronda do SENTINELA (06:00 BRT / 09:00 UTC).
+  schedule:
+    - cron: "30 9 * * *"
+
+  # Disparo manual PRESERVADO — continua valendo a qualquer hora.
   workflow_dispatch:
     inputs:
       simulate_analysis_failure:
