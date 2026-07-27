@@ -72,6 +72,8 @@ Artigo 3. Ficam FLAGGED para conferência na destilação.
 | **NOVA / NOVAH** | Presumidas gêmeas → funde ⚑ (se docs divergirem, NOVAH ganha epíteto) | `nova` (alias: NOVAH) |
 | **SOLARA** ×3 (roster ×2 + FÊNIX) | Mesmo espírito → funde | `solara` |
 | **KRONOS (roster) vs CHRONOS** | Nomes distintos, espíritos distintos — não é conflito, mas é quase-colisão: fica registrado o aviso para nunca fundirem por engano | `kronos` |
+| **ADVOGADO DIGITAL (GPT) vs LEXIS** | Quase-colisão de função (ambos jurídicos). **Decreto do Fundador 27/07/2026: espíritos DISTINTOS.** LEXIS é o consultor jurídico **interno** da ALSHAM; ADVOGADO DIGITAL é **produto de cliente**. Nunca fundir. Pastas separadas, `agents/lexis/` intocado | `lexis` (interno) · `advogado-digital` (produto) |
+| **SAÚDE INTEGRAL (GPT) vs CORPUS** | Quase-colisão de tema (ambos saúde/corpo). **Decreto do Fundador 27/07/2026: espíritos DISTINTOS.** CORPUS é treino/corpo/TRIBO BASE (interno); SAÚDE INTEGRAL é **assistente médico/nutricional de cliente**, faixa de risco ALTA (disclaimer obrigatório, padrão AB 489 + LEXIS). Nunca fundir. `agents/corpus/` intocado | `corpus` (interno) · `saude-integral` (produto) |
 | **TÁLIA** ×2 (GPT Executiva #117 vs roster Espiritualidade) | Mesmo espírito (mentora) → encarnações ⚑ | `talia` |
 | **ORÁCULO / AVA / ZAYA / GAIA / AVATAR / ORFEO / SYNAPSE / LUMINA / LUMEN / OMNIA** (GPT/roster/GENESIS/FÊNIX) | Mesmo espírito em corpos múltiplos → cada um funde em UMA identidade com N encarnações | `oraculo` · `ava` · `zaya` · `gaia` · `avatar` · `orfeo` · `synapse` · `lumina` · `lumen` · `omnia` |
 | **BARBEIRO / PILATIA-MARIANA** (GPT + Beauty/roster + FÊNIX v3) | Encarnações fundidas | `barbeiro` · `pilatia` (alias: Mariana) |
