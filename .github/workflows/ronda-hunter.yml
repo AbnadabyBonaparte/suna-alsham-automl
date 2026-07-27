@@ -1,0 +1,53 @@
+# ============================================================================
+# RONDA · checagens do HUNTER (Lei da Contra-Prova)
+# ============================================================================
+# A Ronda das Duas Cascatas e DOUTRINA (skill/canon), nao um workflow deste
+# repo. Este workflow e o braco executavel das checagens do cacador: roda as
+# tres provas e falha ruidosamente se o mundo vivo divergir do canon.
+#
+# 06:00 America/Sao_Paulo = 09:00 UTC — roda ANTES da caca (06:30 BRT).
+# Por isso a checagem "rodou nas ultimas 24h" olha a caca de ONTEM: as 06:00
+# de hoje, a caca de ontem 06:30 fechou ha ~23,5h. Dentro da janela.
+#
+# Read-only por lei: detecta e relata. Nunca corrige.
+# ============================================================================
+name: RONDA - Checagens do HUNTER
+
+on:
+  schedule:
+    - cron: "0 9 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  ronda:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Install deps
+        working-directory: hunter
+        run: npm install
+
+      - name: Rodar as checagens do HUNTER
+        working-directory: hunter
+        env:
+          SUPABASE_URL: ${{ secrets.HUNTER_SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.HUNTER_SUPABASE_SERVICE_ROLE_KEY }}
+          # Chave anonima: sem ela a prova de RLS sai como NAO VERIFICADO
+          # (Lei 7) — nunca como OK.
+          SUPABASE_ANON_KEY: ${{ secrets.HUNTER_SUPABASE_ANON_KEY }}
+          HUNTER_QUARANTINE_MAX: ${{ vars.HUNTER_QUARANTINE_MAX }}
+          RONDA_OPEN_ISSUE: "true"
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+        run: npm run ronda

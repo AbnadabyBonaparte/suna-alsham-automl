@@ -2,6 +2,18 @@ import { mkdirSync, writeFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { NL } from "./util.js";
 
+// FASE 3 · peca 2: achados de cacas ANTERIORES ainda sem veredito.
+export type PendingItem = {
+  id: number;
+  hunt_id: number | null;
+  relevance: number;
+  kind: string;
+  title: string;
+  url: string;
+  source: string;
+  created_at: string;
+};
+
 export type ReportItem = {
   relevance: number;
   kind: string;
@@ -30,6 +42,8 @@ export function writeReport(args: {
   status: string;
   gold: string;
   findings: ReportItem[];
+  pending: PendingItem[];
+  pendingTotal: number;
 }): string {
   const L: string[] = [];
   L.push("# CAÇA — " + args.date);
@@ -57,6 +71,43 @@ export function writeReport(args: {
     L.push(f.url);
     L.push("**veredito sugerido: " + f.suggest + "**");
   }
+  // ── FASE 3 · peca 2 — FILA PENDENTE DE JULGAMENTO ─────────────────────────
+  // Sem esta secao, o pending de ontem fica invisivel no banco e nunca e
+  // julgado. Aqui ele ressurge todo dia ate receber veredito.
+  L.push("");
+  L.push("## FILA PENDENTE DE JULGAMENTO");
+  L.push("");
+  // Ordena aqui tambem, e nao so no SQL: o renderizador nao confia na ordem
+  // que recebe (a query pode mudar, um chamador de teste pode passar solto).
+  const pendSorted = args.pending.slice().sort((a, b) => b.relevance - a.relevance);
+  if (!pendSorted.length) {
+    L.push("_(nenhum achado de caça anterior aguardando veredito — fila limpa)_");
+  } else {
+    const truncou = args.pendingTotal > pendSorted.length;
+    L.push(
+      "**" + args.pendingTotal + " achado(s) de caças anteriores ainda sem veredito.** Ordenados por relevância."
+    );
+    // Teto que nao se declara vira achado perdido em silencio — o bug que esta
+    // secao existe para matar.
+    if (truncou) {
+      L.push("");
+      L.push(
+        "> ⚠️ **Mostrando os " + pendSorted.length + " mais relevantes de " + args.pendingTotal + ".** " +
+        "Os outros " + (args.pendingTotal - pendSorted.length) + " continuam pendentes no banco e voltam nas próximas caças. A fila está crescendo mais rápido do que o tribunal julga."
+      );
+    }
+    L.push("");
+    L.push("| # | Rel. | Tipo | Título | Fonte | Caça | Desde |");
+    L.push("|---|---|---|---|---|---|---|");
+    for (const p of pendSorted) {
+      const dia = (p.created_at || "").slice(0, 10);
+      const tit = p.title.length > 70 ? p.title.slice(0, 67) + "..." : p.title;
+      L.push(
+        "| " + p.id + " | " + p.relevance + " | " + p.kind + " | [" + tit.split("|").join("\\|") + "](" + p.url + ") | " + p.source + " | #" + (p.hunt_id ?? "?") + " | " + dia + " |"
+      );
+    }
+  }
+
   L.push("");
   L.push("---");
   L.push("_Gerado pelo HUNTER X.1 · fila do tribunal · o veredito e o merge são do fundador._");

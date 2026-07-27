@@ -11,13 +11,34 @@ import {
   insertEdges,
   insertSoul,
   createIssue,
+  getPendingFindings,
+  existingHunterIssueTitles,
+  openThreatIssue,
+  THREAT_RELEVANCE_MIN,
 } from "./db.js";
 import { collectAll } from "./sources.js";
 import { triageBatch, analyze, embed, cost } from "./ai.js";
-import { writeReport, type ReportItem } from "./report.js";
+import { writeReport, type ReportItem, type PendingItem } from "./report.js";
 import { config } from "./config.js";
 import { todayUTC, NL } from "./util.js";
 import type { RawItem } from "./types.js";
+
+// FASE 3 · peca 2: a fila pendente nunca derruba a caca — se a query falhar,
+// o relatorio sai com a secao vazia e a falha vira NAO VERIFICADO (Lei 7).
+async function pendentes(sb: any, huntId: number, failNotes: string[]): Promise<{ items: PendingItem[]; total: number }> {
+  try {
+    return await getPendingFindings(sb, huntId);
+  } catch (e) {
+    console.error("[hunter] fila pendente falhou:", String(e));
+    failNotes.push("fila pendente NAO VERIFICADA (" + String(e).slice(0, 80) + ")");
+    return { items: [], total: 0 };
+  }
+}
+
+async function pendentesFin(sb: any, huntId: number, failNotes: string[]) {
+  const p = await pendentes(sb, huntId, failNotes);
+  return { pending: p.items, pendingTotal: p.total };
+}
 
 function suggest(rel: number): string {
   if (rel >= 71) return "ADOTAR";
@@ -35,6 +56,8 @@ type Fin = {
   failNotes: string[];
   status: string;
   findings: ReportItem[];
+  pending: PendingItem[];
+  pendingTotal: number;
 };
 
 async function finalize(sb: any, huntId: number, r: Fin) {
@@ -50,6 +73,8 @@ async function finalize(sb: any, huntId: number, r: Fin) {
     failNotes: r.failNotes,
     status: r.status,
     findings: r.findings,
+    pending: r.pending,
+    pendingTotal: r.pendingTotal,
     costUsd,
     costNote: cost.tokensNote(),
     gold: gold ? "[" + gold.relevance + "] " + gold.title : "",
@@ -85,6 +110,19 @@ async function main() {
 
   const huntId = await createHunt(sb, mission.id);
   const failNotes: string[] = [];
+
+  // FASE 3 · peca 3: titulos de issues 'hunter' ja abertas, para nao duplicar.
+  let issuesConhecidas = new Set<string>();
+  try {
+    const r = await existingHunterIssueTitles();
+    issuesConhecidas = r.titles;
+    // Listagem incompleta = pode existir issue que nao vimos. Nao silencia:
+    // se uma ameaca duplicar, o relatorio ja avisa por que.
+    if (!r.completa) failNotes.push("listagem de issues INCOMPLETA (" + issuesConhecidas.size + " vistas) — ameaça pode duplicar");
+  } catch (e) {
+    console.error("[hunter] listagem de issues falhou:", String(e));
+    failNotes.push("listagem de issues NAO VERIFICADA");
+  }
 
   try {
     const quarantine = await getQuarantine(sb);
@@ -137,7 +175,7 @@ async function main() {
       failNotes.push("triagem caiu: " + String(e));
       console.error("[hunter] triagem caiu:", String(e));
       await markProcessed(sb, quarantineIds);
-      await finalize(sb, huntId, { date, itemsSeen, itemsKept: 0, itemsQueued, sourcesOk, sourcesFail, failNotes, status: "partial", findings: [] });
+      await finalize(sb, huntId, { date, itemsSeen, itemsKept: 0, itemsQueued, sourcesOk, sourcesFail, failNotes, status: "partial", findings: [], ...(await pendentesFin(sb, huntId, failNotes)) });
       return;
     }
 
@@ -181,6 +219,25 @@ async function main() {
           license: a.license ?? null,
           suggest: suggest(a.relevance),
         });
+        // FASE 3 · peca 3 — AMEACA ABRE ISSUE NA MESMA CACA, sem esperar o
+        // relatorio. Best-effort: falha aqui nao derruba o achado ja salvo.
+        if (a.kind === "threat" && a.relevance >= THREAT_RELEVANCE_MIN) {
+          try {
+            const r = await openThreatIssue(issuesConhecidas, {
+              title: it.title,
+              url: it.url,
+              source: it.source,
+              relevance: a.relevance,
+              relevance_why: a.relevance_why,
+              summary_md: a.summary_md,
+            });
+            console.log("[hunter] ameaca rel=" + a.relevance + " · " + r.reason + (r.issueUrl ? " · " + r.issueUrl : "") + " · " + it.title);
+          } catch (te) {
+            console.error("[hunter] issue de ameaca falhou:", it.url, String(te));
+            failNotes.push("issue de ameaca NAO ABERTA para: " + it.title.slice(0, 60));
+          }
+        }
+
         // Arestas e alma sao BEST-EFFORT: sua falha nao derruba o achado ja salvo.
         try {
           await insertEdges(sb, fid, a.edges);
@@ -207,6 +264,7 @@ async function main() {
       failNotes,
       status: analysisFailed ? "partial" : "done",
       findings: reportItems,
+      ...(await pendentesFin(sb, huntId, failNotes)),
     });
   } catch (e) {
     await closeHunt(sb, huntId, { status: "failed", notes: String(e), cost_usd: Number(cost.usd().toFixed(4)) });
