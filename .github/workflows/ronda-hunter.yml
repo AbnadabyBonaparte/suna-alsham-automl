@@ -51,18 +51,3 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITHUB_REPOSITORY: ${{ github.repository }}
         run: npm run ronda
-
-      # ANDAIME TEMPORARIO — sera revertido antes do merge. Serve so para
-      # obter UMA execucao real do Espelho contra producao antes do merge,
-      # ja que workflow novo nao e disparavel fora do branch default.
-      - name: ANDAIME - Espelho contra producao
-        working-directory: hunter
-        env:
-          SUPABASE_URL: ${{ secrets.HUNTER_SUPABASE_URL }}
-          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.HUNTER_SUPABASE_SERVICE_ROLE_KEY }}
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          GITHUB_REPOSITORY: ${{ github.repository }}
-        run: |
-          npm run espelho
-          echo "----- RELATORIO GERADO -----"
-          cat ../caça/espelho-*.md
