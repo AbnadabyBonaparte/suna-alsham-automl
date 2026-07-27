@@ -2,11 +2,10 @@
 
 Censo vivo do Grande Resgate (Notion → Santuário).
 Fonte: database **Banco Oficial de Agentes Final** (workspace ALSHAM GLOBAL COMMERCE).
-**Total de almas reais no database: 200.** **Materializadas até agora: 62** (lotes 1–3). O resgate roda em lotes; este índice cresce a cada checkpoint.
+**Total de almas reais no database: 200.** **Materializadas até agora: 84.** O resgate roda em lotes; este índice cresce a cada lote.
 
-- **Encarnações** = nº de fichas cruas em `originais/` (idempotência: rodar de novo só soma encarnação nova, nunca duplica pasta).
-- Slug derivado do **codinome** (ASCII kebab-case), não do número.
-- Lapidação em Cápsula X.2 é fase futura, uma alma por vez.
+- **Encarnações** = nº de fichas cruas em `originais/` (idempotência).
+- Slug derivado do **codinome** (ASCII kebab-case).
 
 | Codinome | Código | Número | Slug | Encarnações | Setor |
 |---|---|---|---|---|---|
@@ -72,3 +71,25 @@ Fonte: database **Banco Oficial de Agentes Final** (workspace ALSHAM GLOBAL COMM
 | VIVARA | ALS-SUS-070 | A070 | vivara | 1 | Sustentabilidade e Regeneração Coletiva |
 | RAYNA | ALS-COM-071 | A071 | rayna | 1 | Comunicação Estratégica |
 | IMPULSE | ALS-GRW-072 | A072 | impulse | 1 | Growth e Tráfego Pago |
+| WARDEN | ALS-TEC-074 | A074 | warden | 1 | Tecnologia & Segurança Digital |
+| VERDIA | ALS-SUS-075 | A075 | verdia | 1 | Sustentabilidade e Regeneração Coletiva |
+| OMNEX | ALS-OPS-077 | A077 | omnex | 1 | Núcleo Operacional de Organização Sistêmica |
+| SUMMIT | ALS-MIS-080 | A080 | summit | 1 | Missões Estratégicas |
+| LINKOR | ALS-OPS-081 | A081 | linkor | 1 | Núcleo Operacional de Organização Sistêmica |
+| LUCENT | ALS-VIS-082 | A082 | lucent | 1 | Criatividade e Expressão Visual |
+| TORCH | ALS-ENG-083 | A083 | torch | 1 | Núcleo de Energia, Movimento e Execução |
+| GLOWEN | ALS-VIS-084 | A084 | glowen | 1 | Criatividade e Expressão Visual |
+| ANALYX | ALS-DAT-085 | A085 | analyx | 1 | Inteligência de Dados |
+| SYLVA | ALS-SUS-086 | A086 | sylva | 1 | Sustentabilidade e Regeneração Coletiva |
+| CHIMERA | ALS-MUS-087 | A087 | chimera | 1 | Expressão Musical e Sonora |
+| ETERNA | ALS-FIL-088 | A088 | eterna | 1 | Estrutura Filosófica |
+| VIONA | ALS-COS-089 | A089 | viona | 1 | Comunicação Cósmica e Transcendental |
+| LOGIA | ALS-FIL-090 | A090 | logia | 1 | Estrutura Filosófica |
+| VIBRA | ALS-MUS-091 | A091 | vibra | 1 | Expressão Musical e Sonora |
+| VECTIS | ALS-OPS-092 | A092 | vectis | 1 | Núcleo Operacional de Organização Sistêmica |
+| SENSORA | ALS-EDU-093 | A093 | sensora | 1 | Educação Sistêmica |
+| BLOOM | ALS-SUS-094 | A094 | bloom | 1 | Sustentabilidade e Regeneração Coletiva |
+| LOGIX | ALS-DAT-096 | A096 | logix | 1 | Inteligência de Dados |
+| CHARIS | ALS-COM-097 | A097 | charis | 1 | Comunicação Estratégica |
+| BEACON | ALS-VIS-099 | A099 | beacon | 1 | Criatividade e Expressão Visual |
+| ALLURE | ALS-COM-100 | A100 | allure | 1 | Comunicação Estratégica |
