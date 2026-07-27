@@ -27,33 +27,29 @@
 | 7 | **ZOAN** | `agents/zoan/originais/` | ✅ pasta nova criada |
 | 8 | **ARCANUS** | `agents/arcanus/originais/` | ✅ pasta nova criada |
 | 9 | **VENDAS AUTOMÁTICAS** | `agents/vendas-automaticas/originais/` | ✅ pasta nova criada |
-| — | **ADVOGADO DIGITAL** | ⚠️ **decidir antes** — ver §3 | 🟠 possível colisão com LEXIS |
+| 10 | **ADVOGADO DIGITAL** | `agents/advogado-digital/originais/` | ✅ pasta nova criada |
 
-> São **9 prontas** dos 10. O 10º (Advogado Digital) está na §3 porque provavelmente já existe como **LEXIS** — decida antes de subir.
+> Os **10 prontos**. Advogado Digital foi decidido: é **produto distinto** do LEXIS (ver §3).
 
 ## 2. OS 3 QUE VOCÊ JÁ MOSTROU
 
 | GPT | Arraste para → | Estado |
 |---|---|---|
 | **GENESIS X.0** | `agents/genesis/originais/` | ✅ pasta pronta |
-| **ADVOGADO DIGITAL X.0** | ⚠️ ver §3 | 🟠 colisão com LEXIS |
-| **SAÚDE INTEGRAL X.0** | ⚠️ ver §3 | 🟠 colisão com CORPUS |
+| **ADVOGADO DIGITAL X.0** | `agents/advogado-digital/originais/` | ✅ pasta nova criada |
+| **SAÚDE INTEGRAL X.0** | `agents/saude-integral/originais/` | ✅ pasta nova criada |
 
-## 3. ⚠️ DECISÃO DE NOME — 2 colisões, sua palavra (Lei dos Nomes)
+## 3. ✅ DECISÃO DE NOME — resolvida: são PRODUTOS DISTINTOS (Lei dos Nomes)
 
-Antes de criar pasta, a Lei dos Nomes manda parar: **nome não se duplica.** Dois GPTs seus batem com almas que **já existem**. Não criei pasta nova para não gerar uma alma gêmea — você decide:
+O fundador decidiu (27/jul/2026): os dois GPTs **não** são as almas existentes. São **identidades próprias**, com pasta própria. `agents/lexis/` e `agents/corpus/` ficaram **intocados**.
 
-### 🟠 ADVOGADO DIGITAL X.0  ↔  já existe **LEXIS**
-`agents/lexis/` é a skill `lexis-x0-consultor-juridico-alsham` — **"Consultor Jurídico Digital"**. É quase certamente o mesmo espírito.
-- **Se é o mesmo:** suba os arquivos do Advogado Digital em **`agents/lexis/originais/`** — o GPT (linhagem viva) enriquece a alma que já está lá.
-- **Se é um GPT distinto** (ex.: produto cliente vs. filtro interno): me diga o slug novo pela Lei dos Nomes e eu crio a pasta.
+### ✅ ADVOGADO DIGITAL X.0 — identidade própria (≠ LEXIS)
+Espíritos distintos: **LEXIS** é o consultor jurídico **interno** da ALSHAM; **Advogado Digital** é **produto de cliente**. Registrado na Lei dos Nomes como alma própria.
+- **Suba em:** `agents/advogado-digital/originais/`
 
-### 🟠 SAÚDE INTEGRAL X.0  ↔  já existe **CORPUS**
-`agents/corpus/` é a skill `corpus-x3-tribo-base-bonaparte` — corpo, saúde, treino, **TRIBO BASE**. Mesmo domínio.
-- **Se é o mesmo:** suba em **`agents/corpus/originais/`**.
-- **Se é distinto:** me diga o slug novo e eu crio `agents/saude-integral/`.
-
-> Não decidi por você porque casar alma errada é o erro que a Lei dos Nomes existe para impedir. Uma palavra sua e eu executo o que faltar.
+### ✅ SAÚDE INTEGRAL X.0 — identidade própria (≠ CORPUS)
+Distintos: **CORPUS** é treino/corpo/**TRIBO BASE**; **Saúde Integral** é **assistente médico/nutricional** — **faixa de risco ALTA** (saúde clínica, disclaimer obrigatório na lapidação, padrão AB 489 + LEXIS).
+- **Suba em:** `agents/saude-integral/originais/`
 
 ## 4. QUALQUER OUTRO GPT (fora destes 12)
 
