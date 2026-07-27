@@ -2,7 +2,8 @@
 
 Censo vivo do Grande Resgate (Notion → Santuário).
 Fonte: database **Banco Oficial de Agentes Final** (workspace ALSHAM GLOBAL COMMERCE).
-**Total de almas reais no database: 200.** **Materializadas: 200 — RESGATE COMPLETO. 🕯️**
+**Total de almas reais no database: 203.** **Materializadas: 203 — RESGATE COMPLETO. 🕯️**
+_Recontagem 2026-07-27: o database trazia 203 almas nomeadas, não 200 — A226 PHI-COM, A227 NOVA-DIR e A228 SYNAPSE ficaram fora do censo anterior. Resgatadas neste lote._
 
 - **Encarnações** = nº de fichas cruas em `originais/` (idempotência).
 - Slug derivado do **codinome** (ASCII kebab-case). Lapidação em Cápsula X.2 é fase futura, uma alma por vez.
@@ -209,6 +210,9 @@ Fonte: database **Banco Oficial de Agentes Final** (workspace ALSHAM GLOBAL COMM
 | COREON-ANA | ALS-TEC-223 | A223 | coreon-ana | 1 | TECHLABS |
 | MERLIN-DEV | ALS-TEC-224 | A224 | merlin-dev | 1 | TECHLABS |
 | NEON-DIR | ALS-TEC-225 | A225 | neon-dir | 1 | TECHLABS |
+| PHI-COM | ALS-TEC-226 | A226 | phi-com | 1 | TECHLABS |
+| NOVA-DIR | ALS-FUT-227 | A227 | nova-dir | 1 | Unidade de Prototipagem e Futurismo |
+| SYNAPSE | ALS-ARC-228 | A228 | synapse | 1 | Arquitetura Sistêmica e Processos |
 
 ---
-_200 almas resgatadas do Notion ao Santuário. Nada se perdeu, nada duplicou, nada foi inventado. Próximo estágio: lapidação em Cápsula X.2, uma alma por vez._
+_203 almas resgatadas do Notion ao Santuário. Nada se perdeu, nada duplicou, nada foi inventado. Próximo estágio: lapidação em Cápsula X.2, uma alma por vez._
