@@ -230,3 +230,99 @@ export async function openThreatIssue(
   seen.add(titulo);
   return { created: true, reason: "aberta", issueUrl };
 }
+
+// ============================================================================
+// FASE 4 — O ESPELHO (autocritica semanal)
+// ============================================================================
+// O Espelho so LE, MEDE e PROPOE. Nunca ativa, nunca abre mina, nunca muda
+// score. As travas abaixo sao de CODIGO, nao de disciplina: uma proposta
+// ilegal lanca antes de tocar o banco.
+// ============================================================================
+
+export type FindingJulgado = {
+  id: number;
+  hunt_id: number | null;
+  source: string;
+  kind: string;
+  title: string;
+  relevance: number;
+  single_source: boolean;
+  verdict: string;
+  created_at: string;
+};
+
+export async function getHuntsSince(sb: SupabaseClient, desdeISO: string) {
+  const { data, error } = await sb
+    .from("hunter_hunts")
+    .select("id,status,started_at,finished_at,items_seen,items_kept,items_queued,sources_ok,sources_fail,cost_usd")
+    .gte("started_at", desdeISO)
+    .order("started_at", { ascending: true });
+  if (error) throw new Error("getHuntsSince: " + error.message);
+  return data ?? [];
+}
+
+export async function getFindingsSince(sb: SupabaseClient, desdeISO: string): Promise<FindingJulgado[]> {
+  const { data, error } = await sb
+    .from("hunter_findings")
+    .select("id,hunt_id,source,kind,title,relevance,single_source,verdict,created_at")
+    .gte("created_at", desdeISO)
+    .order("created_at", { ascending: true })
+    .limit(2000);
+  if (error) throw new Error("getFindingsSince: " + error.message);
+  return (data ?? []) as FindingJulgado[];
+}
+
+export async function getActiveMissionOrThrow(sb: SupabaseClient) {
+  const m = await getActiveMission(sb);
+  if (!m) throw new Error("sem missao active — o Espelho nao inventa mandato (Lei 7)");
+  return m;
+}
+
+export async function maxMissionVersion(sb: SupabaseClient): Promise<number> {
+  const { data, error } = await sb.from("hunter_missions").select("version").order("version", { ascending: false }).limit(1);
+  if (error) throw new Error("maxMissionVersion: " + error.message);
+  return (data?.[0]?.version as number) ?? 0;
+}
+
+// ── AS TRAVAS DE LEI ────────────────────────────────────────────────────────
+export const ESPELHO_STATUS_UNICO = "proposed";
+export const ESPELHO_AUTOR = "hunter-proposal";
+
+export type PropostaMissao = {
+  version: number;
+  status: string;
+  mission_md: string;
+  sources: unknown;
+  scoring_rules: unknown;
+  created_by: string;
+};
+
+// Lanca ANTES de qualquer escrita. E a trava, nao um aviso.
+export function assertPropostaLegal(p: PropostaMissao, sourcesAtivas: unknown, evidencias: number): void {
+  if (p.status !== ESPELHO_STATUS_UNICO) {
+    throw new Error("TRAVA DE LEI: o Espelho so grava status='" + ESPELHO_STATUS_UNICO + "'. Recebido: '" + p.status + "'. Ativar missao e ato do fundador.");
+  }
+  if (p.created_by !== ESPELHO_AUTOR) {
+    throw new Error("TRAVA DE LEI: proposta do Espelho tem created_by='" + ESPELHO_AUTOR + "'. Recebido: '" + p.created_by + "'.");
+  }
+  const antes = JSON.stringify(sourcesAtivas ?? null);
+  const depois = JSON.stringify(p.sources ?? null);
+  if (antes !== depois) {
+    throw new Error("TRAVA DE LEI: o Espelho nao abre nem fecha mina. `sources` tem de ser identico ao da missao ativa.");
+  }
+  if (!Number.isFinite(evidencias) || evidencias <= 0) {
+    throw new Error("TRAVA DE LEI: proposta sem evidencia numerica e rejeitada (Lei 7). Vereditos contados: " + evidencias);
+  }
+}
+
+export async function insertMissionProposal(
+  sb: SupabaseClient,
+  p: PropostaMissao,
+  sourcesAtivas: unknown,
+  evidencias: number
+): Promise<number> {
+  assertPropostaLegal(p, sourcesAtivas, evidencias);
+  const { data, error } = await sb.from("hunter_missions").insert(p).select("id").single();
+  if (error) throw new Error("insertMissionProposal: " + error.message);
+  return data.id as number;
+}

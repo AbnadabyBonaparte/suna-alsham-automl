@@ -1,0 +1,74 @@
+# ============================================================================
+# ESPELHO — autocritica semanal do HUNTER (Fase 4)
+# ============================================================================
+# Sexta 07:00 America/Sao_Paulo = 10:00 UTC — DEPOIS da caca de sexta (06:30
+# BRT / 09:30 UTC), para ler a semana ja fechada.
+#
+# NAO altera o cron diario da caca (hunter.yml, 09:30 UTC) nem o da Ronda
+# (ronda-hunter.yml, 09:00 UTC). Sao tres relogios independentes.
+#
+# O Espelho LE, MEDE e PROPOE. Nunca ativa missao, nunca abre mina.
+# ============================================================================
+name: ESPELHO - Autocritica semanal do HUNTER
+
+on:
+  schedule:
+    - cron: "0 10 * * 5"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+  issues: write
+
+jobs:
+  espelho:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Install deps
+        working-directory: hunter
+        run: npm install
+
+      - name: Rodar o Espelho
+        working-directory: hunter
+        env:
+          SUPABASE_URL: ${{ secrets.HUNTER_SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.HUNTER_SUPABASE_SERVICE_ROLE_KEY }}
+          HUNTER_ESPELHO_DIAS: ${{ vars.HUNTER_ESPELHO_DIAS }}
+          HUNTER_ESPELHO_MIN_TOTAL: ${{ vars.HUNTER_ESPELHO_MIN_TOTAL }}
+          HUNTER_ESPELHO_MIN_FONTE: ${{ vars.HUNTER_ESPELHO_MIN_FONTE }}
+          ESPELHO_OPEN_ISSUE: "true"
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+        run: npm run espelho
+
+      - name: Abrir PR do Espelho (juizo do fundador)
+        if: always()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -e
+          REPORT=$(find "caça" -maxdepth 1 -name 'espelho-*.md' 2>/dev/null | sort | tail -1 || true)
+          if [ -z "$REPORT" ]; then
+            echo "Sem relatorio do Espelho — nada a abrir."
+            exit 0
+          fi
+          DATE=$(date -u +%Y-%m-%d)
+          BR="hunter/espelho-$DATE-${{ github.run_id }}"
+          git config user.name "hunter-bot"
+          git config user.email "hunter-bot@users.noreply.github.com"
+          git checkout -b "$BR"
+          git add "caça"
+          git commit -m "chore(espelho): autocrítica semanal $DATE"
+          git push origin "$BR"
+          gh pr create --base main --head "$BR" \
+            --title "ESPELHO - $DATE (autocrítica semanal)" \
+            --body-file "$REPORT"

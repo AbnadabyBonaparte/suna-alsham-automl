@@ -1,4 +1,4 @@
-# 🎯 HUNTER X.1 — Runtime da Caça (Fase 3: O Relógio)
+# 🎯 HUNTER X.1 — Runtime da Caça (Fase 4: O Espelho)
 
 O corpo do caçador: um script TypeScript, sem framework de agente, que roda a liturgia diária do dossiê e deixa a fila de julgamento pronta pro tribunal.
 
@@ -81,5 +81,40 @@ Exercita `writeReport` e `openThreatIssue` reais, sem tocar no banco de produç�
 - `HUNTER_SUPABASE_ANON_KEY` (secret) — chave **anônima** do `suna-core`, só para a prova de RLS. Sem ela a checagem sai `NÃO VERIFICADO`.
 - `HUNTER_QUARANTINE_MAX` (variable, opcional) — teto da quarentena. Padrão 500.
 
-## Fora de escopo (Fase 4+)
-Minas além das 3, auto-crítica da missão. Nada disso aqui.
+## Fase 4 — O ESPELHO (autocrítica semanal)
+
+`npm run espelho` (`src/espelho.ts`) · workflow `.github/workflows/espelho.yml` · **sexta 10:00 UTC = 07:00 BRT**, depois da caça de sexta.
+
+O caçador olha as próprias decisões da semana, cruza o **seu** score (`relevance`) com o **veredito do tribunal** (`verdict`), e presta contas em `caça/espelho-AAAA-MM-DD.md`.
+
+### O que mede
+- **Por mina:** taxa de adoção e de descarte (qual fonte traz ouro, qual traz lixo). Achado `pending` **não entra no denominador** — taxa sem veredito é `—`, nunca 0%.
+- **Calibração:** `relevance>=71` que o tribunal DESCARTOU (superestimou) e `relevance<41` que o tribunal ADOTOU (subestimou).
+- **Aderência à regra v2** (fonte única = teto OBSERVAR): quantos de fonte única passaram de 71 e foram adotados.
+
+### As travas de lei (código, não disciplina)
+| Trava | Como é imposta |
+|---|---|
+| Nunca ativa missão | `assertPropostaLegal` lança se `status !== 'proposed'` |
+| Nunca abre/fecha mina | `sources` da proposta tem de ser **idêntico** ao da missão ativa |
+| Nunca propõe sem evidência | rejeita se a contagem de vereditos não for > 0 |
+| Não forja autoria | exige `created_by='hunter-proposal'` |
+
+A trava roda **antes** de qualquer escrita — provado em teste: com `status='active'` nenhuma chamada ao banco acontece.
+
+### Limiar de evidência (Lei 7)
+- **20** vereditos na janela para propor qualquer coisa (`HUNTER_ESPELHO_MIN_TOTAL`)
+- **5** vereditos por mina para citá-la nominalmente (`HUNTER_ESPELHO_MIN_FONTE`)
+- Janela padrão **7 dias** (`HUNTER_ESPELHO_DIAS`)
+
+Abaixo do limiar: relata **"amostra insuficiente"** e **não propõe**. O Espelho presta contas mesmo em semana sem mudança.
+
+### Limite declarado
+A regra v2 fala em *fonte única **+ baixa tração***. O schema guarda `single_source` mas **não guarda tração** (estrelas, pontos, votos). Só a metade mensurável é medida; o relatório marca a outra como **NÃO VERIFICÁVEL**. Medir tração exige coluna nova — decisão de dono.
+
+```bash
+cd hunter && npm run prova-espelho   # travas + medição + relatório
+```
+
+## Fora de escopo (Fase 5+)
+Minas além das 3. Ativação automática de missão — nunca.
