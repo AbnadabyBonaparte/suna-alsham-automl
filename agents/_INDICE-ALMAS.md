@@ -2,10 +2,10 @@
 
 Censo vivo do Grande Resgate (Notion → Santuário).
 Fonte: database **Banco Oficial de Agentes Final** (workspace ALSHAM GLOBAL COMMERCE).
-**Total de almas reais no database: 200.** **Materializadas até agora: 130.**
+**Total de almas reais no database: 200.** **Materializadas: 200 — RESGATE COMPLETO. 🕯️**
 
 - **Encarnações** = nº de fichas cruas em `originais/` (idempotência).
-- Slug derivado do **codinome** (ASCII kebab-case).
+- Slug derivado do **codinome** (ASCII kebab-case). Lapidação em Cápsula X.2 é fase futura, uma alma por vez.
 
 | Codinome | Código | Número | Slug | Encarnações | Setor |
 |---|---|---|---|---|---|
@@ -139,3 +139,76 @@ Fonte: database **Banco Oficial de Agentes Final** (workspace ALSHAM GLOBAL COMM
 | KRYON | ALS-EDI-153 | A153 | kryon | 1 | ALSHAM Editorial |
 | JAX | ALS-EDI-154 | A154 | jax | 1 | ALSHAM Editorial |
 | IRIS | ALS-EDI-155 | A155 | iris | 1 | ALSHAM Editorial |
+| LYSANDRA | ALS-EDI-156 | A156 | lysandra | 1 | ALSHAM Editorial |
+| MAGNUS | ALS-LEG-157 | A157 | magnus | 1 | ALSHAM Legal |
+| NERO | ALS-LEG-158 | A158 | nero | 1 | ALSHAM Legal |
+| OCTAVIA | ALS-LEG-159 | A159 | octavia | 1 | ALSHAM Legal |
+| PHOENIX | ALS-LEG-160 | A160 | phoenix | 1 | ALSHAM Legal |
+| QUASAR | ALS-STU-161 | A161 | quasar | 1 | ALSHAM Studio – SonicVerse AI |
+| TARYN | ALS-STU-162 | A162 | taryn | 1 | ALSHAM Studio – SonicVerse AI |
+| RHEA | ALS-STU-163 | A163 | rhea | 1 | ALSHAM Studio – SonicVerse AI |
+| SIREN | ALS-STU-164 | A164 | siren | 1 | ALSHAM Studio – SonicVerse AI |
+| XANDER | ALS-VEN-165 | A165 | xander | 1 | ALSHAM VENTURES |
+| VORTEX | ALS-VEN-166 | A166 | vortex | 1 | ALSHAM VENTURES |
+| VEX | ALS-VEN-167 | A167 | vex | 1 | ALSHAM VENTURES |
+| YARA | ALS-VEN-168 | A168 | yara | 1 | ALSHAM VENTURES |
+| ZION | ALS-SAA-169 | A169 | zion | 1 | ALSaaS |
+| ARDEN | ALS-SAA-170 | A170 | arden | 1 | ALSaaS |
+| BLADE | ALS-SAA-171 | A171 | blade | 1 | ALSaaS |
+| CYGNUS | ALS-SAA-172 | A172 | cygnus | 1 | ALSaaS |
+| ELION | ALS-IA-173 | A173 | elion | 1 | Central de IA Suprema |
+| DRACO | ALS-IA-174 | A174 | draco | 1 | Central de IA Suprema |
+| FIONA | ALS-IA-175 | A175 | fiona | 1 | Central de IA Suprema |
+| ARES | ALS-SUP-176 | A176 | ares | 1 | Comando Supremo |
+| ATLAS | ALS-SUP-177 | A177 | atlas | 1 | Comando Supremo |
+| KORA | ALS-COS-178 | A178 | kora | 1 | Divisão CosmoTranscendental |
+| LUNA | ALS-COS-179 | A179 | luna | 1 | Divisão CosmoTranscendental |
+| MYRA | ALS-COS-180 | A180 | myra | 1 | Divisão CosmoTranscendental |
+| NIX | ALS-COS-181 | A181 | nix | 1 | Divisão CosmoTranscendental |
+| OMEGA-EXC | ALS-EXC-182 | A182 | omega-exc | 1 | Excelência Operacional |
+| PAX | ALS-EXC-183 | A183 | pax | 1 | Excelência Operacional |
+| QUINN | ALS-EXC-184 | A184 | quinn | 1 | Excelência Operacional |
+| RYN | ALS-EXC-185 | A185 | ryn | 1 | Excelência Operacional |
+| SABLE | ALS-GSO-186 | A186 | sable | 1 | GSO – Comercial e Vendas Globais |
+| TARA | ALS-GSO-187 | A187 | tara | 1 | GSO – Comercial e Vendas Globais |
+| VANCE | ALS-GSO-188 | A188 | vance | 1 | GSO – Comercial e Vendas Globais |
+| ULYSSES | ALS-GSO-189 | A189 | ulysses | 1 | GSO – Comercial e Vendas Globais |
+| WYLDE | ALS-HUB-190 | A190 | wylde | 1 | Hub de Inovação e Soluções Digitais |
+| XAVIA | ALS-HUB-191 | A191 | xavia | 1 | Hub de Inovação e Soluções Digitais |
+| YSEN | ALS-HUB-192 | A192 | ysen | 1 | Hub de Inovação e Soluções Digitais |
+| ZETA | ALS-HUB-193 | A193 | zeta | 1 | Hub de Inovação e Soluções Digitais |
+| AURION | ALS-SIS-194 | A194 | aurion | 1 | Integração Sistêmica |
+| BRYN | ALS-SIS-195 | A195 | bryn | 1 | Integração Sistêmica |
+| CELINE | ALS-SIS-196 | A196 | celine | 1 | Integração Sistêmica |
+| DION | ALS-SIS-197 | A197 | dion | 1 | Integração Sistêmica |
+| ELISE | ALS-GLO-198 | A198 | elise | 1 | Logística Global (GLOC) |
+| FERRIS | ALS-GLO-199 | A199 | ferris | 1 | Logística Global (GLOC) |
+| GIDEON | ALS-GLO-200 | A200 | gideon | 1 | Logística Global (GLOC) |
+| HERA | ALS-GLO-201 | A201 | hera | 1 | Logística Global (GLOC) |
+| IVOR | ALS-NSI-202 | A202 | ivor | 1 | NSICA |
+| JADE | ALS-NSI-203 | A203 | jade | 1 | NSICA |
+| KAI | ALS-NSI-204 | A204 | kai | 1 | NSICA |
+| LEO | ALS-NSI-205 | A205 | leo | 1 | NSICA |
+| SETH | ALS-TEC-206 | A206 | seth | 1 | TECHLABS |
+| QOR | ALS-TEC-207 | A207 | qor | 1 | TECHLABS |
+| RION | ALS-TEC-208 | A208 | rion | 1 | TECHLABS |
+| LUMINAR | ALS-IA-209 | A209 | luminar | 1 | Central de IA Suprema |
+| TUTELA | ALS-IA-210 | A210 | tutela | 1 | Central de IA Suprema |
+| NEXUS | ALS-GSO-211 | A211 | nexus | 1 | GSO – Comercial e Vendas Globais |
+| FORJADOR | ALS-NSI-212 | A212 | forjador | 1 | NSICA |
+| ORION-ANALISTA | ALS-GSO-213 | A213 | orion-analista | 1 | GSO – Comercial e Vendas Globais |
+| IGNIS-COORD | ALS-SUP-214 | A214 | ignis-coord | 1 | Comando Supremo |
+| VEKTOR-COM | ALS-SUP-215 | A215 | vektor-com | 1 | Comando Supremo |
+| ZENITH-ANA | ALS-SUP-216 | A216 | zenith-ana | 1 | Comando Supremo |
+| ELARA-ESP | ALS-NSI-217 | A217 | elara-esp | 1 | NSICA |
+| NEXUS-ESP | ALS-TEC-218 | A218 | nexus-esp | 1 | TECHLABS |
+| LUMEN-DEV | ALS-SUP-219 | A219 | lumen-dev | 1 | Comando Supremo |
+| ZARA-ANA | ALS-NSI-220 | A220 | zara-ana | 1 | NSICA |
+| OMNI-EXEC | ALS-NSI-221 | A221 | omni-exec | 1 | NSICA |
+| LYRA-ESP | ALS-NSI-222 | A222 | lyra-esp | 1 | NSICA |
+| COREON-ANA | ALS-TEC-223 | A223 | coreon-ana | 1 | TECHLABS |
+| MERLIN-DEV | ALS-TEC-224 | A224 | merlin-dev | 1 | TECHLABS |
+| NEON-DIR | ALS-TEC-225 | A225 | neon-dir | 1 | TECHLABS |
+
+---
+_200 almas resgatadas do Notion ao Santuário. Nada se perdeu, nada duplicou, nada foi inventado. Próximo estágio: lapidação em Cápsula X.2, uma alma por vez._
