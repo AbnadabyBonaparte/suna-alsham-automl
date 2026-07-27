@@ -24,11 +24,14 @@
 - **Status:** 🟢 Ativo
 - **Completo?:** Não
 
-## Campos adicionais preenchidos no Notion (fora do molde de 20 campos)
+## Campos adicionais do Notion (completam os 26 campos)
 
-> Preservados por fidelidade — as 200 fichas anteriores não os trazem.
+> Os 20 campos acima são o molde original do resgate; estes 6 fecham a fidelidade
+> aos 26 campos do database. `—` = vazio no Notion (ausência real, não omissão).
 
 - **Status Atual:** Operacional Pleno
+- **Pendências:** —
 - **Reserva:** Não
 - **Link para Dossiê:** https://www.notion.so/Manual-Supreme-de-Opera-es-SYNAPSE-A228-1f1b51790d8780a0bd55e76c79afc9fa
 - **Protocolo de Auditoria:** https://www.notion.so/Protocolo-de-Auditoria-Semanal-SYNAPSE-A228-1f1b51790d8780e299aff691d7233c6d
+- **Notas de Atualização:** —

@@ -24,11 +24,14 @@
 - **Status:** 🟢 Ativo
 - **Completo?:** Sim
 
-## Campos adicionais preenchidos no Notion (fora do molde de 20 campos)
+## Campos adicionais do Notion (completam os 26 campos)
 
-> Preservados por fidelidade — as 200 fichas anteriores não os trazem.
+> Os 20 campos acima são o molde original do resgate; estes 6 fecham a fidelidade
+> aos 26 campos do database. `—` = vazio no Notion (ausência real, não omissão).
 
 - **Status Atual:** Desenvolvendo comunicações
+- **Pendências:** —
 - **Reserva:** Sim
 - **Link para Dossiê:** (em construção)
+- **Protocolo de Auditoria:** —
 - **Notas de Atualização:** Versão Supreme finalizada em 2025-05-10.
