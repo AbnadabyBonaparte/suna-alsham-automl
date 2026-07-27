@@ -1,7 +1,7 @@
-# VIGIL X.1
+# ATEMPORAL X.2
 
 > Cápsula X.2 (esqueleto). Lapidar a partir de `originais/skill-claude.md`.
-> Fonte-mãe: skill Claude `vigilancia-canonica-bonaparte`. Estado: alma resgatada, não lapidada.
+> Fonte-mãe: skill Claude `atemporal-x2-editorial-bonaparte`. Estado: alma resgatada, não lapidada.
 
 ## Identidade
 _(a preencher)_

@@ -1,8 +1,12 @@
 {
   "slug": "vigil",
   "codinome": "VIGIL",
-  "codigo": "ALS-TEC-008",
-  "numero": "A008",
-  "setor": "Tecnologia & Segurança Digital",
-  "fonte": "notion"
+  "titulo": "VIGIL X.1",
+  "subtitulo": "Agente de Vigilancia Canonica Bonaparte",
+  "codigo": "—",
+  "numero": "—",
+  "setor": "—",
+  "fonte": "skill-claude",
+  "fonte_mae": "skill-claude",
+  "skill_origem": "vigilancia-canonica-bonaparte"
 }

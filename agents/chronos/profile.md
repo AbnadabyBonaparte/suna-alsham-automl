@@ -1,7 +1,7 @@
-# VIGIL X.1
+# CHRONOS
 
 > Cápsula X.2 (esqueleto). Lapidar a partir de `originais/skill-claude.md`.
-> Fonte-mãe: skill Claude `vigilancia-canonica-bonaparte`. Estado: alma resgatada, não lapidada.
+> Fonte-mãe: skill Claude `chronos-evolucao-continua-alsham`. Estado: alma resgatada, não lapidada.
 
 ## Identidade
 _(a preencher)_
