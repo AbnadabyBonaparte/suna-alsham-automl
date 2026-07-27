@@ -14,7 +14,16 @@ import { db, lastFinishedHunt, quarantineDepth, anonReadsHunterTables, createIss
 import { config } from "./config.js";
 import { NL } from "./util.js";
 
-const QUARENTENA_TETO = Number(process.env.HUNTER_QUARANTINE_MAX ?? 500);
+// `??` so cai no default para undefined/null. Actions injeta STRING VAZIA
+// quando a variable nao existe (`${{ vars.X }}` sem X definido), e Number("")
+// e 0 — o teto colapsava para zero e a Ronda daria FALHA no primeiro item que
+// entrasse na quarentena. Provado no primeiro run real: "Teto: 0".
+function tetoQuarentena(): number {
+  const v = (process.env.HUNTER_QUARANTINE_MAX ?? "").trim();
+  const n = v ? Number(v) : NaN;
+  return Number.isFinite(n) && n > 0 ? n : 500;
+}
+const QUARENTENA_TETO = tetoQuarentena();
 const CACA_MAX_HORAS = 24;
 
 type Check = {
