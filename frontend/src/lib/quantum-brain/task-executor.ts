@@ -131,8 +131,26 @@ export async function executeTask(input: TaskInput): Promise<TaskResult> {
   await incrementNeuralLoad(agent.id, 15);
 
   try {
-    // 5. Obter system prompt (do metadata ou default)
+    // 5. Obter system prompt — COFRE primeiro, depois os antigos, depois default.
+    //    `public.agent_prompts` só é alcançável pelo service_role (migration
+    //    20260727_agent_prompts_cofre). Este módulo usa createAdminClient, que
+    //    carrega SUPABASE_SERVICE_ROLE_KEY — por isso o cofre abre aqui e não
+    //    abre para nenhum cliente logado.
+    let promptDoCofre: string | undefined;
+    try {
+      const { data: cofre } = await createAdminClient()
+        .from('agent_prompts')
+        .select('system_prompt')
+        .eq('agent_id', agent.id)
+        .maybeSingle();
+      promptDoCofre = cofre?.system_prompt ?? undefined;
+    } catch (e) {
+      // Cofre indisponível não derruba a execução: cai no fallback.
+      console.error('[task-executor] cofre inacessivel, usando fallback:', String(e));
+    }
+
     const systemPrompt =
+      promptDoCofre ||
       (agent.metadata?.system_prompt as string | undefined) ||
       DEFAULT_PROMPTS[agent.role] ||
       DEFAULT_PROMPTS.SPECIALIST;
