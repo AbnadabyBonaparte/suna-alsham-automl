@@ -2,7 +2,7 @@
 
 Censo vivo do Grande Resgate (Notion → Santuário).
 Fonte: database **Banco Oficial de Agentes Final** (workspace ALSHAM GLOBAL COMMERCE).
-**Total de almas reais no database: 200.** **Materializadas até agora: 84.** O resgate roda em lotes; este índice cresce a cada lote.
+**Total de almas reais no database: 200.** **Materializadas até agora: 106.**
 
 - **Encarnações** = nº de fichas cruas em `originais/` (idempotência).
 - Slug derivado do **codinome** (ASCII kebab-case).
@@ -93,3 +93,25 @@ Fonte: database **Banco Oficial de Agentes Final** (workspace ALSHAM GLOBAL COMM
 | CHARIS | ALS-COM-097 | A097 | charis | 1 | Comunicação Estratégica |
 | BEACON | ALS-VIS-099 | A099 | beacon | 1 | Criatividade e Expressão Visual |
 | ALLURE | ALS-COM-100 | A100 | allure | 1 | Comunicação Estratégica |
+| ELIXIR | ALS-SUS-101 | A101 | elixir | 1 | Sustentabilidade e Regeneração Coletiva |
+| ZENEX | ALS-MIS-104 | A104 | zenex | 1 | Missões Estratégicas |
+| EMBER | ALS-ENG-105 | A105 | ember | 1 | Núcleo de Energia, Movimento e Execução |
+| LYRIC | ALS-MUS-106 | A106 | lyric | 1 | Expressão Musical e Sonora |
+| GLAMOR | ALS-COM-107 | A107 | glamor | 1 | Comunicação Estratégica |
+| METRIX | ALS-DAT-108 | A108 | metrix | 1 | Inteligência de Dados |
+| SHADOW | ALS-TEC-109 | A109 | shadow | 1 | Tecnologia & Segurança Digital |
+| SUPERNOVA | ALS-MIS-112 | A112 | supernova | 1 | Missões Estratégicas |
+| GUARDIA | ALS-TEC-113 | A113 | guardia | 1 | Tecnologia & Segurança Digital |
+| NYMBUS | ALS-MUS-114 | A114 | nymbus | 1 | Expressão Musical e Sonora |
+| COSMOS | ALS-FUT-115 | A115 | cosmos | 1 | Futurismo e Prototipagem |
+| GROVIA | ALS-SUS-116 | A116 | grovia | 1 | Sustentabilidade e Regeneração Coletiva |
+| SYNTHEX | ALS-OPS-118 | A118 | synthex | 1 | Núcleo Operacional de Organização Sistêmica |
+| VISION | ALS-MTH-119 | A119 | vision | 1 | Inteligência Metahistórica |
+| DATAVIS | ALS-DAT-120 | A120 | datavis | 1 | Inteligência de Dados |
+| FLORA | ALS-SUS-121 | A121 | flora | 1 | Sustentabilidade e Regeneração Coletiva |
+| ORIGEN | ALS-FIL-123 | A123 | origen | 1 | Estrutura Filosófica |
+| NUCLEON | ALS-TEC-126 | A126 | nucleon | 1 | Tecnologia & Segurança Digital |
+| SYMETRA | ALS-HAR-127 | A127 | symetra | 1 | Harmonia Sistêmica e Geometria Estratégica |
+| SAGEON | ALS-FUT-128 | A128 | sageon | 1 | Futurismo e Prototipagem |
+| VOLTEX | ALS-VIS-129 | A129 | voltex | 1 | Criatividade e Expressão Visual |
+| FLARE | ALS-VIS-130 | A130 | flare | 1 | Criatividade e Expressão Visual |
