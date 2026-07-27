@@ -2,7 +2,7 @@
 
 Censo vivo do Grande Resgate (Notion → Santuário).
 Fonte: database **Banco Oficial de Agentes Final** (workspace ALSHAM GLOBAL COMMERCE).
-**Total de almas reais no database: 200.** **Materializadas até agora: 106.**
+**Total de almas reais no database: 200.** **Materializadas até agora: 130.**
 
 - **Encarnações** = nº de fichas cruas em `originais/` (idempotência).
 - Slug derivado do **codinome** (ASCII kebab-case).
@@ -115,3 +115,27 @@ Fonte: database **Banco Oficial de Agentes Final** (workspace ALSHAM GLOBAL COMM
 | SAGEON | ALS-FUT-128 | A128 | sageon | 1 | Futurismo e Prototipagem |
 | VOLTEX | ALS-VIS-129 | A129 | voltex | 1 | Criatividade e Expressão Visual |
 | FLARE | ALS-VIS-130 | A130 | flare | 1 | Criatividade e Expressão Visual |
+| COREX | ALS-OPS-131 | A131 | corex | 1 | Núcleo Operacional de Organização Sistêmica |
+| VISTA | ALS-VIS-132 | A132 | vista | 1 | Criatividade e Expressão Visual |
+| PYREX | ALS-ENG-133 | A133 | pyrex | 1 | Núcleo de Energia, Movimento e Execução |
+| LUMIA | ALS-VIS-134 | A134 | lumia | 1 | Criatividade e Expressão Visual |
+| QUANTIA | ALS-DAT-135 | A135 | quantia | 1 | Inteligência de Dados |
+| AUREA | ALS-SUS-136 | A136 | aurea | 1 | Sustentabilidade e Regeneração Coletiva |
+| CADENCE | ALS-MUS-137 | A137 | cadence | 1 | Expressão Musical e Sonora |
+| OMEGA-FIL | ALS-FIL-138 | A138 | omega-fil | 1 | Estrutura Filosófica |
+| SIBYL | ALS-MTH-140 | A140 | sibyl | 1 | Inteligência Metahistórica |
+| LUTHOR | ALS-MIS-X01 | A141 | luthor | 1 | Missões Estratégicas |
+| BARU | ALS-ACD-142 | A142 | baru | 1 | ALSHAM ACADEMY |
+| VÉRITAS | ALS-ACD-143 | A143 | veritas | 1 | ALSHAM ACADEMY |
+| NARAYANA | ALS-ACD-144 | A144 | narayana | 1 | ALSHAM ACADEMY |
+| SAGE | ALS-ACD-145 | A145 | sage | 1 | ALSHAM ACADEMY |
+| DRAX | ALS-CAP-146 | A146 | drax | 1 | ALSHAM CAPITAL |
+| CASSIAN | ALS-CAP-147 | A147 | cassian | 1 | ALSHAM CAPITAL |
+| AXIOS | ALS-CAP-148 | A148 | axios | 1 | ALSHAM CAPITAL |
+| HELIX | ALS-CRE-149 | A149 | helix | 1 | ALSHAM Creative |
+| FALCON | ALS-CRE-150 | A150 | falcon | 1 | ALSHAM Creative |
+| ELYSIAN | ALS-CRE-151 | A151 | elysian | 1 | ALSHAM Creative |
+| ECHOS | ALS-CRE-152 | A152 | echos | 1 | ALSHAM Creative |
+| KRYON | ALS-EDI-153 | A153 | kryon | 1 | ALSHAM Editorial |
+| JAX | ALS-EDI-154 | A154 | jax | 1 | ALSHAM Editorial |
+| IRIS | ALS-EDI-155 | A155 | iris | 1 | ALSHAM Editorial |
