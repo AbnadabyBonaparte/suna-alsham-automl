@@ -29,3 +29,13 @@ MCP · blogs oficiais de labs · Product Hunt (AI). A caça é na LUZ, nunca na 
 - ADOTADO (semente): GraphRAG mínimo (tabela hunter_edges).
 - REJEITADO na v1: modelos locais (exigem GPU/servidor); sanitização RDF/Protobuf;
   MCP dinâmico (fonte nova só por PR); toda linguagem de "infalibilidade".
+
+## Regras para a missão v2 (decretos do tribunal)
+- **Fonte única + baixa tração = teto de OBSERVAR** (nunca ADOTAR direto). — decreto de 2026-07-26.
+
+## Vereditos por caça
+### Caça 2026-07-26 (hunt #1 — 20 achados)
+- **ADOTAR (2):** OptMem (memória de agente → issue #37, Quantum) · ig-card-generator (conteúdo → issue #38, avaliar Kraken).
+- **OBSERVAR (5):** terminai · Teycir/Assumptions · Boffin · verchestra · open-research-lite.
+- **DESCARTAR (13):** o restante do hunt #1.
+- Padrão observado: quase todo achado veio `single_source: true` (fonte única) — daí o decreto do teto de OBSERVAR acima.
