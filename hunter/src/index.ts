@@ -25,14 +25,19 @@ import type { RawItem } from "./types.js";
 
 // FASE 3 · peca 2: a fila pendente nunca derruba a caca — se a query falhar,
 // o relatorio sai com a secao vazia e a falha vira NAO VERIFICADO (Lei 7).
-async function pendentes(sb: any, huntId: number, failNotes: string[]): Promise<PendingItem[]> {
+async function pendentes(sb: any, huntId: number, failNotes: string[]): Promise<{ items: PendingItem[]; total: number }> {
   try {
     return await getPendingFindings(sb, huntId);
   } catch (e) {
     console.error("[hunter] fila pendente falhou:", String(e));
     failNotes.push("fila pendente NAO VERIFICADA (" + String(e).slice(0, 80) + ")");
-    return [];
+    return { items: [], total: 0 };
   }
+}
+
+async function pendentesFin(sb: any, huntId: number, failNotes: string[]) {
+  const p = await pendentes(sb, huntId, failNotes);
+  return { pending: p.items, pendingTotal: p.total };
 }
 
 function suggest(rel: number): string {
@@ -52,6 +57,7 @@ type Fin = {
   status: string;
   findings: ReportItem[];
   pending: PendingItem[];
+  pendingTotal: number;
 };
 
 async function finalize(sb: any, huntId: number, r: Fin) {
@@ -68,6 +74,7 @@ async function finalize(sb: any, huntId: number, r: Fin) {
     status: r.status,
     findings: r.findings,
     pending: r.pending,
+    pendingTotal: r.pendingTotal,
     costUsd,
     costNote: cost.tokensNote(),
     gold: gold ? "[" + gold.relevance + "] " + gold.title : "",
@@ -107,7 +114,11 @@ async function main() {
   // FASE 3 · peca 3: titulos de issues 'hunter' ja abertas, para nao duplicar.
   let issuesConhecidas = new Set<string>();
   try {
-    issuesConhecidas = await existingHunterIssueTitles();
+    const r = await existingHunterIssueTitles();
+    issuesConhecidas = r.titles;
+    // Listagem incompleta = pode existir issue que nao vimos. Nao silencia:
+    // se uma ameaca duplicar, o relatorio ja avisa por que.
+    if (!r.completa) failNotes.push("listagem de issues INCOMPLETA (" + issuesConhecidas.size + " vistas) — ameaça pode duplicar");
   } catch (e) {
     console.error("[hunter] listagem de issues falhou:", String(e));
     failNotes.push("listagem de issues NAO VERIFICADA");
@@ -164,7 +175,7 @@ async function main() {
       failNotes.push("triagem caiu: " + String(e));
       console.error("[hunter] triagem caiu:", String(e));
       await markProcessed(sb, quarantineIds);
-      await finalize(sb, huntId, { date, itemsSeen, itemsKept: 0, itemsQueued, sourcesOk, sourcesFail, failNotes, status: "partial", findings: [], pending: await pendentes(sb, huntId, failNotes) });
+      await finalize(sb, huntId, { date, itemsSeen, itemsKept: 0, itemsQueued, sourcesOk, sourcesFail, failNotes, status: "partial", findings: [], ...(await pendentesFin(sb, huntId, failNotes)) });
       return;
     }
 
@@ -253,7 +264,7 @@ async function main() {
       failNotes,
       status: analysisFailed ? "partial" : "done",
       findings: reportItems,
-      pending: await pendentes(sb, huntId, failNotes),
+      ...(await pendentesFin(sb, huntId, failNotes)),
     });
   } catch (e) {
     await closeHunt(sb, huntId, { status: "failed", notes: String(e), cost_usd: Number(cost.usd().toFixed(4)) });

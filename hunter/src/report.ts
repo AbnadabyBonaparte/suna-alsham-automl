@@ -43,6 +43,7 @@ export function writeReport(args: {
   gold: string;
   findings: ReportItem[];
   pending: PendingItem[];
+  pendingTotal: number;
 }): string {
   const L: string[] = [];
   L.push("# CAÇA — " + args.date);
@@ -82,9 +83,19 @@ export function writeReport(args: {
   if (!pendSorted.length) {
     L.push("_(nenhum achado de caça anterior aguardando veredito — fila limpa)_");
   } else {
+    const truncou = args.pendingTotal > pendSorted.length;
     L.push(
-      "**" + pendSorted.length + " achado(s) de caças anteriores ainda sem veredito.** Ordenados por relevância."
+      "**" + args.pendingTotal + " achado(s) de caças anteriores ainda sem veredito.** Ordenados por relevância."
     );
+    // Teto que nao se declara vira achado perdido em silencio — o bug que esta
+    // secao existe para matar.
+    if (truncou) {
+      L.push("");
+      L.push(
+        "> ⚠️ **Mostrando os " + pendSorted.length + " mais relevantes de " + args.pendingTotal + ".** " +
+        "Os outros " + (args.pendingTotal - pendSorted.length) + " continuam pendentes no banco e voltam nas próximas caças. A fila está crescendo mais rápido do que o tribunal julga."
+      );
+    }
     L.push("");
     L.push("| # | Rel. | Tipo | Título | Fonte | Caça | Desde |");
     L.push("|---|---|---|---|---|---|---|");

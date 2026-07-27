@@ -83,16 +83,27 @@ export type PendingFinding = {
   created_at: string;
 };
 
-export async function getPendingFindings(sb: SupabaseClient, currentHuntId: number): Promise<PendingFinding[]> {
-  const { data, error } = await sb
+export const PENDING_PAGE = 500;
+
+// Devolve os pendentes E o total real. Sem o total, um teto silencioso
+// reintroduziria o proprio bug que esta secao existe para matar: achado some
+// da fila e ninguem percebe. Se truncar, o relatorio DIZ que truncou (Lei 7).
+export async function getPendingFindings(
+  sb: SupabaseClient,
+  currentHuntId: number
+): Promise<{ items: PendingFinding[]; total: number }> {
+  const { data, error, count } = await sb
     .from("hunter_findings")
-    .select("id,hunt_id,kind,title,url,source,relevance,created_at")
+    .select("id,hunt_id,kind,title,url,source,relevance,created_at", { count: "exact" })
+    // hunt_id NULL nao e "a caca atual": em SQL, NULL <> x da NULL e a linha
+    // sumiria. Achado inserido a mao com hunt_id vazio tem de aparecer.
+    .or("hunt_id.neq." + currentHuntId + ",hunt_id.is.null")
     .eq("verdict", "pending")
-    .neq("hunt_id", currentHuntId)
     .order("relevance", { ascending: false })
-    .limit(200);
+    .limit(PENDING_PAGE);
   if (error) throw new Error("getPendingFindings: " + error.message);
-  return (data ?? []) as PendingFinding[];
+  const items = (data ?? []) as PendingFinding[];
+  return { items, total: count ?? items.length };
 }
 
 // ── FASE 3 · peca 4 — CHECAGENS DA RONDA ────────────────────────────────────
@@ -137,25 +148,33 @@ export async function anonReadsHunterTables(url: string, anonKey: string): Promi
 // Titulos ja existentes com label 'hunter' (open+closed). Usa a API de listagem,
 // nao a de busca: listagem e imediata, busca tem atraso de indexacao e
 // deixaria passar duplicata na mesma caca.
-export async function existingHunterIssueTitles(): Promise<Set<string>> {
+export async function existingHunterIssueTitles(): Promise<{ titles: Set<string>; completa: boolean }> {
   const tok = config.ghToken();
   const repo = config.repo();
   const titles = new Set<string>();
-  if (!tok || !repo) return titles;
-  for (let page = 1; page <= 5; page++) {
+  if (!tok || !repo) return { titles, completa: false };
+  const MAX_PAGINAS = 10;
+  let completa = false;
+  for (let page = 1; page <= MAX_PAGINAS; page++) {
     const res = await fetch(
       "https://api.github.com/repos/" + repo + "/issues?labels=hunter&state=all&per_page=100&page=" + page,
       { headers: { Authorization: "Bearer " + tok, Accept: "application/vnd.github+json", "User-Agent": "HunterX1" } }
     );
     if (!res.ok) {
       console.error("existingHunterIssueTitles HTTP " + res.status);
-      break;
+      return { titles, completa: false };
     }
     const arr = (await res.json()) as any[];
     for (const i of arr) if (i?.title) titles.add(String(i.title));
-    if (arr.length < 100) break;
+    // So e completa se a ultima pagina veio curta. Estourar o teto de paginas
+    // significa que existem issues que nao vimos — e dai poderiamos reabrir
+    // uma ameaca ja aberta. Melhor declarar do que fingir que viu tudo.
+    if (arr.length < 100) {
+      completa = true;
+      break;
+    }
   }
-  return titles;
+  return { titles, completa };
 }
 
 export async function createIssue(title: string, body: string): Promise<string | null> {

@@ -30,7 +30,7 @@ process.env.HUNTER_REPORT_DIR = dir;
 writeReport({
   date: "2026-07-27", itemsSeen: 0, itemsKept: 0, itemsQueued: 0,
   sourcesOk: 3, sourcesFail: 0, failNotes: [], costUsd: 0, costNote: "teste",
-  status: "done", gold: "", findings: [], pending: pendentes,
+  status: "done", gold: "", findings: [], pending: pendentes, pendingTotal: pendentes.length,
 });
 const md = readFileSync(join(dir, "2026-07-27.md"), "utf8");
 console.log(md.slice(md.indexOf("## FILA PENDENTE")).trim() + NL);
@@ -39,6 +39,22 @@ for (const id of [21, 22, 23, 24]) ok(new RegExp("\\| " + id + " \\|").test(md),
 const ordem = [21, 22, 23, 24].map((i) => md.indexOf("| " + i + " |"));
 ok(ordem[2] < ordem[0] && ordem[0] < ordem[1] && ordem[1] < ordem[3], "ordenado por relevancia desc (23:91 > 21:88 > 22:74 > 24:55)");
 ok(md.includes("4 achado(s) de caças anteriores"), "contagem honesta no cabecalho da secao");
+
+// ── TETO SILENCIOSO: se a fila nao cabe, o relatorio TEM de dizer ──────────
+console.log(NL + "=== TETO DA FILA PENDENTE — truncamento declarado ===" + NL);
+const dir2 = mkdtempSync(join(tmpdir(), "hunter-teto-"));
+process.env.HUNTER_REPORT_DIR = dir2;
+writeReport({
+  date: "2026-07-27", itemsSeen: 0, itemsKept: 0, itemsQueued: 0,
+  sourcesOk: 3, sourcesFail: 0, failNotes: [], costUsd: 0, costNote: "teste",
+  status: "done", gold: "", findings: [], pending: pendentes, pendingTotal: 731,
+});
+const md2 = readFileSync(join(dir2, "2026-07-27.md"), "utf8");
+console.log(md2.slice(md2.indexOf("## FILA PENDENTE"), md2.indexOf("| # |")).trim() + NL);
+ok(md2.includes("**731 achado(s)"), "cabecalho mostra o TOTAL real (731), nao o exibido");
+ok(md2.includes("Mostrando os 4 mais relevantes de 731"), "declara explicitamente que truncou");
+ok(md2.includes("Os outros 727 continuam pendentes"), "diz quantos ficaram de fora");
+ok(!md.includes("Mostrando os"), "sem truncamento, nao inventa aviso");
 
 // ── PECA 3: ameaca >=90 abre issue, e nao reabre a mesma ────────────────────
 console.log(NL + "=== PECA 3 — ISSUE AUTOMATICA DE AMEACA ===" + NL);
