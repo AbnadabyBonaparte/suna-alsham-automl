@@ -1,0 +1,124 @@
+-- ============================================================================
+-- MODELO — MARCAR UM USUÁRIO COMO FUNDADOR
+-- ============================================================================
+-- ⚠️ ESTE ARQUIVO NÃO É UMA MIGRATION. Extensão `.exemplo` de propósito:
+--    o Supabase CLI o ignora e ele NUNCA roda sozinho.
+--
+-- ⚠️ NENHUM USUÁRIO E NENHUMA SENHA SÃO CRIADOS POR CÓDIGO. Senha não passa
+--    por repositório, por commit, por log ou por chat. Quem cria a conta é o
+--    fundador, na tela do Supabase, com senha que ninguém registra.
+--
+-- Este arquivo só prepara o CAMINHO: dado um UUID que o fundador copia do
+-- painel, marca `founder_access = true`.
+-- ============================================================================
+
+-- ────────────────────────────────────────────────────────────────────────────
+-- PASSO A PASSO DO FUNDADOR
+-- ────────────────────────────────────────────────────────────────────────────
+--
+-- (a) CRIAR A CONTA — pela tela, nunca por código
+--     Supabase → projeto `suna-core` → Authentication → Users → "Add user"
+--     · e-mail: o seu
+--     · senha: você define ali. Não escreva em lugar nenhum deste repositório.
+--     · marque "Auto Confirm User" para não depender de e-mail de confirmação
+--     Copie o UUID que aparece na coluna `id` do usuário criado.
+--
+--     👉 O trigger `handle_new_user()` cria o `profiles` automaticamente,
+--        com `id = auth_user_id = <UUID>` e `founder_access = false`.
+--        Verificado nos 8 perfis existentes: os 8 batem com `auth.users.id`.
+--
+-- (b) MARCAR COMO FUNDADOR — rode o bloco abaixo trocando o UUID
+--     SQL Editor do Supabase, ou `supabase db execute`.
+--
+-- (c) CONFERIR — o bloco de verificação no final devolve o estado.
+--     `is_founder()` deve retornar true quando logado com essa conta, e o
+--     painel deve abrir sem passar pelo paywall.
+-- ────────────────────────────────────────────────────────────────────────────
+
+-- ╔══════════════════════════════════════════════════════════════════════════╗
+-- ║  PASSO (b) — TROQUE O UUID E RODE                                        ║
+-- ╚══════════════════════════════════════════════════════════════════════════╝
+/*
+
+do $$
+declare
+  -- 👇 ÚNICA COISA A TROCAR: o UUID copiado no passo (a)
+  v_user_id uuid := '00000000-0000-0000-0000-000000000000';
+begin
+  if not exists (select 1 from auth.users where id = v_user_id) then
+    raise exception 'UUID % não existe em auth.users. Crie a conta pelo painel primeiro (passo a).', v_user_id;
+  end if;
+
+  -- rede de segurança: se o trigger não tiver criado o profile, cria agora
+  insert into public.profiles (id, auth_user_id, founder_access, subscription_plan, subscription_status, onboarding_completed)
+  values (v_user_id, v_user_id, true, 'founder', 'active', true)
+  on conflict (id) do update
+    set founder_access      = true,
+        subscription_plan   = 'founder',
+        subscription_status = 'active',
+        updated_at          = now();
+
+  raise notice 'Fundador marcado: %', v_user_id;
+end $$;
+
+*/
+
+-- ╔══════════════════════════════════════════════════════════════════════════╗
+-- ║  PASSO (c) — CONFERÊNCIA (pode rodar sempre, não altera nada)            ║
+-- ╚══════════════════════════════════════════════════════════════════════════╝
+/*
+
+select p.id, u.email, p.founder_access, p.subscription_plan, p.subscription_status
+from public.profiles p
+join auth.users u on u.id = p.id
+where p.founder_access
+order by p.created_at;
+
+*/
+
+-- ============================================================================
+-- ESTADO DE HOJE (27/jul/2026) — leia antes de rodar qualquer coisa
+-- ============================================================================
+--
+-- ✅ `public.is_founder()` JÁ EXISTE e funciona:
+--        SELECT coalesce((SELECT founder_access FROM profiles WHERE id = auth.uid()), false)
+--    A trava (20260727_rls_lockdown_suna_core) fixou seu `search_path` e
+--    revogou o EXECUTE de `anon`. Toda policy de dono usa `or public.is_founder()`,
+--    então o fundador enxerga tudo por RLS.
+--
+-- ✅ O PAINEL JÁ RESPEITA O FUNDADOR — nenhuma alteração de código necessária.
+--    `frontend/src/lib/auth/server.ts`:
+--        hasFounderAccess = finalProfile.founder_access === true
+--                           || user.email === 'casamondestore@gmail.com';
+--        hasAccess = hasFounderAccess || (isEnterprise && hasActiveSubscription)
+--                                     || hasActiveSubscription;
+--    O fundador entra por `hasFounderAccess`, sem tocar no paywall de assinatura.
+--
+-- ✅ A CONTA MESTRE JÁ EXISTE. `casamondestore@gmail.com` já tem
+--    `founder_access = true` + plano enterprise ativo, desde 06/dez/2025.
+--    Talvez você não precise do passo (a) — confira com o PASSO (c) primeiro.
+--
+-- ⚠️ DOIS PONTOS QUE PRECISAM DA SUA DECISÃO (nada foi alterado):
+--
+--    1. `demo@quantum.ai` TEM `founder_access = true` (criada 08/jul/2026).
+--       Uma conta de demonstração com privilégio de fundador enxerga, por RLS,
+--       TODAS as linhas de TODAS as tabelas com dono. Se a senha dela for
+--       fraca ou conhecida, o `or public.is_founder()` das policies vira porta
+--       aberta. Revogar é uma linha — mas é alteração de dado em produção,
+--       e eu não faço isso sem sua ordem:
+--           update public.profiles set founder_access = false
+--            where id = 'cd837954-57b6-4d76-9ca7-449688b0b247';
+--
+--    2. `abnadabybonaparte@gmail.com` NÃO tem `founder_access` (tem enterprise
+--       ativo). Se essa também é sua, marque com o bloco do passo (b) usando
+--       o UUID 'b2fe7078-8e5d-423c-a566-8c6bb6bcfcbf'.
+--
+-- ⚠️ ARMADILHA LATENTE (não corrigida — não quis mexer em schema sem ordem):
+--    `public.profiles.id` tem DEFAULT `gen_random_uuid()`. Hoje isso não faz
+--    mal porque `handle_new_user()` grava `id = new.id` explicitamente. Mas um
+--    INSERT manual em `profiles` SEM passar `id` gera um UUID aleatório que
+--    não corresponde a nenhum `auth.users.id` — e `is_founder()` (que casa por
+--    `id = auth.uid()`) nunca retornaria true para essa linha.
+--    Correção sugerida, para decisão sua: remover o default e apontar a FK
+--    de `profiles.id` para `auth.users.id`.
+-- ============================================================================
