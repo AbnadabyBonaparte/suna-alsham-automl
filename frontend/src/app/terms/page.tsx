@@ -44,7 +44,7 @@ export default function TermsPage() {
           Há a opção de cobrança anual com desconto, quando ofertada no ato da contratação. Os limites
           de cada plano (número de agentes, requisições e recursos) são os descritos na página de
           planos no momento da contratação. Reajustes de preço serão comunicados com antecedência
-          mínima de <Pendente>definir: fundador — sugestão 30 dias</Pendente> e não afetam o ciclo já pago.
+          mínima de <strong>30 dias</strong> e não afetam o ciclo já pago.
         </p>
       </LegalSection>
 
@@ -105,9 +105,10 @@ export default function TermsPage() {
       <LegalSection n="7." title="Disponibilidade e suporte">
         <p>
           A ALSHAM empenha-se em manter a Plataforma disponível, mas não garante operação
-          ininterrupta — pode haver manutenção, atualização ou indisponibilidade de terceiros. Os
-          canais e prazos de suporte de cada plano são os anunciados na contratação
-          {' '}<Pendente>definir: fundador — SLA e horários reais de atendimento por plano</Pendente>.
+          ininterrupta — pode haver manutenção, atualização ou indisponibilidade de terceiros. O
+          suporte é prestado por e-mail (<a href="mailto:comercial@alshamglobal.com.br" className="text-[var(--color-primary)] hover:underline">comercial@alshamglobal.com.br</a>),
+          em horário comercial, com prioridade de atendimento crescente nos planos Pro e Enterprise. Os
+          prazos de resposta são os anunciados na página de planos no momento da contratação.
         </p>
       </LegalSection>
 

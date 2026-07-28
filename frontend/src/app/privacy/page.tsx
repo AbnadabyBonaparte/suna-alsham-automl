@@ -9,7 +9,7 @@
  */
 
 import type { Metadata } from 'next';
-import LegalShell, { LegalSection, Pendente } from '@/components/legal/LegalShell';
+import LegalShell, { LegalSection } from '@/components/legal/LegalShell';
 
 export const metadata: Metadata = {
   title: 'Política de Privacidade — ALSHAM QUANTUM',
@@ -71,9 +71,11 @@ export default function PrivacyPage() {
 
       <LegalSection n="6." title="Retenção">
         <p>
-          Mantemos os dados enquanto durar a conta e pelos prazos legais aplicáveis após o encerramento
-          (obrigações fiscais e registros de acesso do Marco Civil). Depois disso, são eliminados ou
-          anonimizados. Prazos específicos: <Pendente>definir: fundador — política de retenção por tipo de dado</Pendente>.
+          Mantemos os dados enquanto durar a conta e, após o encerramento, pelos prazos legais: dados
+          de conta e transação por até 5 anos (prescrição do CDC e obrigações fiscais); registros de
+          acesso por no mínimo 6 meses (Marco Civil, art. 15). O conteúdo enviado aos agentes é
+          eliminado ou anonimizado após o encerramento da conta. Depois dos prazos, os dados são
+          eliminados ou anonimizados.
         </p>
       </LegalSection>
 
@@ -97,10 +99,10 @@ export default function PrivacyPage() {
 
       <LegalSection n="9." title="Encarregado (DPO) e contato">
         <p>
-          Controlador: ALSHAM Global Commerce Ltda., CNPJ 59.332.265/0001-30. Contato do encarregado
-          pelo tratamento de dados:{' '}
-          <a href="mailto:comercial@alshamglobal.com.br" className="text-[var(--color-primary)] hover:underline">comercial@alshamglobal.com.br</a>{' '}
-          <Pendente>definir: fundador — indicar DPO nomeado, se houver</Pendente>.
+          Controlador: ALSHAM Global Commerce Ltda., CNPJ 59.332.265/0001-30. O canal do encarregado
+          pelo tratamento de dados (DPO) é{' '}
+          <a href="mailto:comercial@alshamglobal.com.br" className="text-[var(--color-primary)] hover:underline">comercial@alshamglobal.com.br</a>,
+          por onde recebemos e respondemos pedidos de titulares.
         </p>
       </LegalSection>
     </LegalShell>

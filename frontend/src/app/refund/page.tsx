@@ -9,7 +9,7 @@
  */
 
 import type { Metadata } from 'next';
-import LegalShell, { LegalSection, Pendente } from '@/components/legal/LegalShell';
+import LegalShell, { LegalSection } from '@/components/legal/LegalShell';
 
 export const metadata: Metadata = {
   title: 'Política de Reembolso — ALSHAM QUANTUM',
@@ -34,17 +34,30 @@ export default function RefundPage() {
         </p>
       </LegalSection>
 
-      <LegalSection n="2." title="Garantia de satisfação — 30 dias">
+      <LegalSection n="2." title="Garantia de satisfação — 30 dias (com cota de avaliação)">
         <p>
           Além do direito legal, a ALSHAM oferece uma garantia de satisfação de{' '}
-          <strong>30 dias corridos</strong> a partir da primeira contratação: se a Plataforma não
-          atender você nesse período, pode solicitar o reembolso do valor pago no ciclo vigente.
+          <strong>30 dias corridos</strong> a partir da primeira contratação. Nesse período, se a
+          Plataforma não atender você, pode solicitar o <strong>reembolso integral</strong> do valor
+          pago. A garantia aplica-se à <strong>primeira assinatura</strong> de cada conta.
         </p>
         <p>
-          Esta garantia vale <Pendente>definir: fundador — reembolso integral ou proporcional após os
-          7 dias legais</Pendente> e aplica-se <Pendente>definir: fundador — apenas à primeira
-          assinatura ou a todo novo ciclo</Pendente>. Enquanto o fundador não definir, honramos o que a
-          página de planos anuncia: &quot;Garantia de 30 dias&quot;.
+          Para que a garantia seja justa dos dois lados, ela vale enquanto o uso ficar dentro de uma{' '}
+          <strong>cota de avaliação</strong> — uma quantidade de execuções generosa para testar de
+          verdade, mas que impede o uso intensivo seguido de pedido de reembolso. As cotas no período
+          de garantia são:
+        </p>
+        <ul className="list-disc pl-6 space-y-1">
+          <li><strong>Starter:</strong> 100 execuções.</li>
+          <li><strong>Pro:</strong> 300 execuções.</li>
+          <li><strong>Enterprise:</strong> 500 execuções.</li>
+        </ul>
+        <p>
+          Se você atingir a cota antes dos 30 dias e quiser seguir usando em capacidade plena, basta{' '}
+          <strong>confirmar que fica</strong> — isso encerra a garantia de 30 dias (não o seu direito
+          legal de 7 dias) e libera o uso completo do plano. Sem confirmar, o uso segue no limite da
+          cota até o fim da janela de garantia. <strong>O direito de arrependimento de 7 dias (item 1)
+          é sempre integral e independe da cota.</strong>
         </p>
       </LegalSection>
 
@@ -66,8 +79,7 @@ export default function RefundPage() {
           <li>A ALSHAM confirma o pedido e verifica o prazo aplicável (7 ou 30 dias).</li>
           <li>
             Aprovado, o estorno é feito pelo mesmo meio de pagamento (via Stripe). O valor costuma
-            retornar em <Pendente>definir: fundador — prazo real, sugestão 5 a 10 dias úteis</Pendente>,
-            conforme o prazo da operadora do cartão.
+            retornar em <strong>5 a 10 dias úteis</strong>, conforme o prazo da operadora do cartão.
           </li>
         </ol>
       </LegalSection>
