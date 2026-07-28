@@ -167,8 +167,22 @@ export default function PricingPage() {
     }, []);
 
     const handleCheckout = async (plan: typeof PLANS[0]) => {
+        // Guarda 1: sem usuário logado, manda pro login antes de cobrar — é o
+        // login que permite liberar o acesso depois do pagamento.
+        if (!user?.id) {
+            router.push('/login?redirect=/pricing');
+            return;
+        }
+
+        // Guarda 2: sem priceId configurado (env NEXT_PUBLIC_STRIPE_PRICE_* ausente
+        // na Vercel), NÃO chama a cobrança — mostra erro claro em vez de falhar mudo.
+        if (!plan.priceId) {
+            alert('Este plano ainda não está disponível para compra. Já estamos ativando — tente novamente em instantes.');
+            return;
+        }
+
         setIsLoading(plan.id);
-        
+
         try {
             const response = await fetch('/api/stripe/checkout', {
                 method: 'POST',
@@ -177,20 +191,21 @@ export default function PricingPage() {
                     priceId: plan.priceId,
                     planId: plan.id,
                     billingCycle,
-                    userId: user?.id,
+                    userId: user.id,
                 }),
             });
 
-            const data = await response.json();
+            const data = await response.json().catch(() => ({}));
 
-            if (data.url) {
+            if (response.ok && data.url) {
                 window.location.href = data.url;
             } else {
-                throw new Error(data.error || 'Erro ao criar checkout');
+                // Surfacea a mensagem real do servidor (plano não configurado, etc.)
+                alert(data.error || 'Não foi possível processar o pagamento. Tente novamente.');
             }
         } catch (error) {
             console.error('Checkout error:', error);
-            alert('Erro ao processar pagamento. Tente novamente.');
+            alert('Não foi possível processar o pagamento. Tente novamente.');
         } finally {
             setIsLoading(null);
         }
