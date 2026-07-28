@@ -1,19 +1,35 @@
 /**
  * ═══════════════════════════════════════════════════════════════════════════
- * CARGA DAS ALMAS — pastas agents/<slug>/ → public.agent_prompts
+ * CARGA DAS ALMAS — OPÇÃO B — pastas agents/<slug>/ → public.agents (linha
+ * nova) + public.agent_prompts (cofre)
  * ═══════════════════════════════════════════════════════════════════════════
- * ⛔ NÃO EXECUTADO. Aguarda a DECISÃO DE MAPEAMENTO do fundador (ver §MAPA).
+ * ⛔ NÃO EXECUTAR sem ordem do fundador. Roda em DRY-RUN por padrão.
  *
- * Roda só com --confirmar. Sem a flag, faz DRY-RUN e não toca no banco.
+ *   npx tsx scripts/carregar-almas.ts                 # dry-run (padrão, sem banco)
+ *   npx tsx scripts/carregar-almas.ts --confirmar     # grava (exige service_role)
  *
- *   npx tsx scripts/carregar-almas.ts                 # dry-run (padrão)
- *   npx tsx scripts/carregar-almas.ts --confirmar     # grava
+ * ── DECRETO DO FUNDADOR: OPÇÃO B ────────────────────────────────────────────
+ * Cada alma LAPIDADA (profile.md pronto no molde Cápsula X.2) vira uma LINHA
+ * NOVA em public.agents, com o nome real da alma. Os 139 registros-fantasma
+ * pré-existentes NÃO são tocados — a linha nova nasce com id próprio, prefixo
+ * `alma-<slug>`, que não colide com nenhum id de fantasma. Depois, o
+ * system_prompt (o conteúdo do profile.md) é gravado no cofre agent_prompts,
+ * vinculado a essa linha nova.
  *
- * Exige SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY: o cofre `agent_prompts` não
- * tem grant para anon nem authenticated (migration 20260727_agent_prompts_cofre).
+ * ── IDEMPOTENTE ─────────────────────────────────────────────────────────────
+ * O id é determinístico (`alma-<slug>`). Antes de inserir em agents, o script
+ * CHECA se o id já existe — se existe, não duplica (só garante o vínculo no
+ * cofre). Rodar duas vezes não cria linha nova nem prompt duplicado.
  *
- * IDEMPOTENTE: upsert por `agent_id` (PK). Rodar duas vezes não duplica; a
- * segunda passada só reescreve o mesmo conteúdo.
+ * ── FONTE ───────────────────────────────────────────────────────────────────
+ * O prompt é o profile.md LAPIDADO (a alma no molde), não a ficha crua. Só
+ * entra alma cujo profile.md já saiu do esqueleto (sem "_(a preencher)_" e com
+ * as 6 seções fixas). Ficha notion-só e esqueleto ficam de fora — Lei 7.
+ *
+ * ── SEGURANÇA ───────────────────────────────────────────────────────────────
+ * Exige SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY: o cofre não tem grant para
+ * anon/authenticated (migration 20260727_agent_prompts_cofre). O DRY-RUN não
+ * abre conexão nenhuma — roda em qualquer lugar, só lendo o disco.
  * ═══════════════════════════════════════════════════════════════════════════
  */
 import { readFileSync, existsSync, readdirSync } from 'node:fs';
@@ -23,113 +39,131 @@ const RAIZ = resolve(process.cwd(), 'agents');
 const CONFIRMAR = process.argv.includes('--confirmar');
 
 // ═══════════════════════════════════════════════════════════════════════════
-// §MAPA — A DECISÃO QUE FALTA
+// PAPÉIS — public.agents.role tem CHECK (CORE | GUARD | SPECIALIST | ANALYST).
+// Default sensato por alma; o fundador pode reclassificar. Não muda a alma.
 // ═══════════════════════════════════════════════════════════════════════════
-// Preencher DEPOIS do veredito do fundador. Cada entrada casa uma alma (pasta)
-// com uma linha de public.agents (agent_id).
-//
-// Enquanto estiver vazio, o script roda em dry-run e relata "sem mapeamento".
-// NÃO invente o casamento: alma trocada = agente com a instrução errada.
-const MAPA: Array<{ slug: string; agentId: string }> = [
-  // exemplo (NÃO ativo): { slug: 'stylus', agentId: 'orc-alpha' },
-];
+const PAPEL: Record<string, 'CORE' | 'GUARD' | 'SPECIALIST' | 'ANALYST'> = {
+  genesis: 'CORE', vertex: 'CORE',
+  crivo: 'GUARD', sentinela: 'GUARD', vigil: 'GUARD', arbiter: 'GUARD',
+  chronos: 'ANALYST',
+  // todo o resto: SPECIALIST (stylus, maestro, lexis, humanizer, corpus,
+  // atemporal, auteur, e futuras almas de domínio)
+};
+const papelDe = (slug: string) => PAPEL[slug] ?? 'SPECIALIST';
 
 // ═══════════════════════════════════════════════════════════════════════════
-// A FONTE-MÃE de cada linhagem
+// LEITURA DA ALMA LAPIDADA (o profile.md no molde)
 // ═══════════════════════════════════════════════════════════════════════════
-// Medido no repo hoje:
-//   · linhagem SKILL  → originais/skill-claude.md   5.4 KB a 15.8 KB de
-//                        instrução real. É prompt de verdade.
-//   · linhagem NOTION → originais/notion-A*.md      ~1.5 KB de FICHA (26 campos
-//                        de metadado). `profile.md` é esqueleto de 280 bytes
-//                        com "_(a preencher)_". NÃO é prompt.
-function lerAlma(slug: string): { prompt: string; arquivo: string; linhagem: 'skill-claude' | 'notion' } | null {
+// Uma alma está PRONTA PRA CARGA quando:
+//   · agents/<slug>/profile.md existe,
+//   · não contém "_(a preencher)_" (não é esqueleto),
+//   · tem as seções fixas do molde (marcador "## 1. IDENTIDADE").
+// O nome real vem do H1 do profile.md ("# STYLUS X.1" -> "STYLUS X.1").
+type Alma = { slug: string; id: string; nome: string; role: string; prompt: string; arquivo: string };
+
+function lerAlmaLapidada(slug: string): Alma | null {
+  const arquivoAbs = join(RAIZ, slug, 'profile.md');
+  if (!existsSync(arquivoAbs)) return null;
+  const bruto = readFileSync(arquivoAbs, 'utf8');
+  if (bruto.includes('_(a preencher)_')) return null;          // esqueleto
+  if (!/^##\s*1\.\s*IDENTIDADE/m.test(bruto)) return null;      // não está no molde
+  const h1 = bruto.match(/^#\s+(.+?)\s*$/m);
+  const nome = (h1?.[1] ?? slug.toUpperCase()).trim();
+  return {
+    slug,
+    id: `alma-${slug}`,
+    nome,
+    role: papelDe(slug),
+    prompt: bruto.trim(),
+    arquivo: `agents/${slug}/profile.md`,
+  };
+}
+
+// Classifica TODA pasta de agents/ para o painel honesto (Lei 7).
+function classificar(slug: string): 'lapidada' | 'esqueleto' | 'so-notion' | 'aguarda-upload' | 'vazia' {
   const dir = join(RAIZ, slug);
-  if (!existsSync(dir)) return null;
-
-  const skill = join(dir, 'originais', 'skill-claude.md');
-  if (existsSync(skill)) {
-    const bruto = readFileSync(skill, 'utf8');
-    // corta o cabeçalho do resgate; o prompt é o SKILL.md a partir do 1º ---
-    const i = bruto.indexOf('\n---\n\n');
-    return {
-      prompt: (i >= 0 ? bruto.slice(i + 6) : bruto).trim(),
-      arquivo: `agents/${slug}/originais/skill-claude.md`,
-      linhagem: 'skill-claude',
-    };
-  }
-
+  const profile = join(dir, 'profile.md');
   const originais = join(dir, 'originais');
-  const notion = existsSync(originais)
-    ? readdirSync(originais).find((f) => f.startsWith('notion-') && f.endsWith('.md'))
-    : undefined;
-  if (notion) {
-    return {
-      prompt: readFileSync(join(originais, notion), 'utf8').trim(),
-      arquivo: `agents/${slug}/originais/${notion}`,
-      linhagem: 'notion',
-    };
-  }
-  return null;
+  if (lerAlmaLapidada(slug)) return 'lapidada';
+  const temSkill = existsSync(join(originais, 'skill-claude.md'));
+  const temNotion = existsSync(originais) &&
+    readdirSync(originais).some((f) => f.startsWith('notion-') && f.endsWith('.md'));
+  const temGpt = existsSync(originais) &&
+    readdirSync(originais).some((f) => !f.startsWith('notion-') && f !== '_SOBE-AQUI.md' && f !== 'skill-claude.md' && f.endsWith('.md'));
+  if (temSkill || temGpt) return 'esqueleto';   // tem prompt cru, falta lapidar
+  if (temNotion) return 'so-notion';            // só ficha, aguarda GPT
+  if (existsSync(profile)) return 'aguarda-upload';
+  return 'vazia';
+}
+
+function todosOsSlugs(): string[] {
+  return readdirSync(RAIZ, { withFileTypes: true })
+    .filter((d) => d.isDirectory())
+    .map((d) => d.name)
+    .sort();
 }
 
 async function main() {
-  console.log(CONFIRMAR ? '=== CARGA DAS ALMAS (GRAVANDO) ===' : '=== CARGA DAS ALMAS — DRY-RUN (nada será gravado) ===');
+  const slugs = todosOsSlugs();
+  const prontas = slugs.map(lerAlmaLapidada).filter((a): a is Alma => a !== null);
 
-  if (MAPA.length === 0) {
-    console.log('\n⛔ MAPA VAZIO — o casamento alma→agente ainda não foi decidido.');
-    console.log('   Sem ele o script não grava nada. Ver §MAPA no topo do arquivo.\n');
-    console.log('   Almas com PROMPT REAL disponíveis hoje (linhagem skill-claude):');
-    for (const d of readdirSync(RAIZ)) {
-      const a = lerAlma(d);
-      if (a?.linhagem === 'skill-claude') {
-        console.log(`     · ${d.padEnd(24)} ${String(a.prompt.length).padStart(6)} chars  ${a.arquivo}`);
-      }
-    }
+  console.log(CONFIRMAR
+    ? '=== CARGA DAS ALMAS · OPÇÃO B · GRAVANDO ==='
+    : '=== CARGA DAS ALMAS · OPÇÃO B · DRY-RUN (nada será gravado, sem conexão) ===');
+  console.log(`\nAlmas LAPIDADAS prontas pra carga: ${prontas.length}\n`);
+  for (const a of prontas) {
+    console.log(`  ${a.slug.padEnd(22)} → agents.id="${a.id}"  role=${a.role.padEnd(10)} ${String(a.prompt.length).padStart(5)} chars  "${a.nome}"`);
+  }
+
+  if (!CONFIRMAR) {
+    console.log('\n  Cada linha acima seria:');
+    console.log('    1. INSERT em public.agents (id, name, role) — só se o id ainda não existir (idempotente).');
+    console.log('    2. UPSERT em public.agent_prompts (agent_id=id, system_prompt=profile.md).');
+    console.log('    Os 139 registros-fantasma NÃO são tocados: id "alma-<slug>" não colide com eles.');
+    console.log('\n  Rode com --confirmar (e service_role no ambiente) para gravar de verdade.');
     process.exit(0);
   }
 
-  // import tardio de propósito: o DRY-RUN não deve exigir dependência alguma.
+  // ─── GRAVAÇÃO (só com --confirmar) ────────────────────────────────────────
+  const url = process.env.SUPABASE_URL, key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!url || !key) {
+    console.error('\n⛔ Faltam SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY. O cofre só abre com service_role.');
+    process.exit(1);
+  }
   const { createClient } = await import('@supabase/supabase-js');
-  const sb = createClient(process.env.SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!, {
-    auth: { persistSession: false },
-  });
+  const sb = createClient(url, key, { auth: { persistSession: false } });
 
-  let ok = 0, pulados = 0;
-  for (const { slug, agentId } of MAPA) {
-    const alma = lerAlma(slug);
-    if (!alma) { console.log(`  [PULADO] ${slug}: pasta ou fonte-mãe não encontrada`); pulados++; continue; }
-    if (alma.linhagem === 'notion') {
-      // Lei 7: ficha de metadado não é instrução. Não vira prompt por decreto.
-      console.log(`  [PULADO] ${slug}: linhagem notion — é FICHA, não prompt. Lapidar antes.`);
-      pulados++; continue;
+  let linhasNovas = 0, jaExistiam = 0, prompts = 0, erros = 0;
+  for (const a of prontas) {
+    // (1) linha nova em agents — idempotente: checa por id antes de inserir
+    const { data: existe, error: eSel } = await sb.from('agents').select('id').eq('id', a.id).maybeSingle();
+    if (eSel) { console.error(`  [ERRO]  ${a.slug}: select agents falhou — ${eSel.message}`); erros++; continue; }
+
+    if (!existe) {
+      const { error: eIns } = await sb.from('agents').insert({ id: a.id, name: a.nome, role: a.role });
+      if (eIns) { console.error(`  [ERRO]  ${a.slug}: insert agents falhou — ${eIns.message}`); erros++; continue; }
+      linhasNovas++;
+      console.log(`  [NOVA]  agents "${a.id}" (${a.nome}, ${a.role})`);
+    } else {
+      jaExistiam++;
+      console.log(`  [existe] agents "${a.id}" — não duplico`);
     }
 
-    // confere que o agente existe antes de escrever
-    const { data: existe } = await sb.from('agents').select('id,name').eq('id', agentId).maybeSingle();
-    if (!existe) { console.log(`  [PULADO] ${slug} → ${agentId}: agente inexistente em public.agents`); pulados++; continue; }
-
-    if (!CONFIRMAR) {
-      console.log(`  [DRY]    ${slug} → ${agentId} (${existe.name}) · ${alma.prompt.length} chars · ${alma.arquivo}`);
-      ok++; continue;
-    }
-
-    const { error } = await sb.from('agent_prompts').upsert({
-      agent_id: agentId,
-      system_prompt: alma.prompt,
-      fonte_slug: slug,
-      fonte_arquivo: alma.arquivo,
-      fonte_linhagem: alma.linhagem,
+    // (2) prompt no cofre — upsert por agent_id (PK) é idempotente
+    const { error: eUp } = await sb.from('agent_prompts').upsert({
+      agent_id: a.id,
+      system_prompt: a.prompt,
+      fonte_slug: a.slug,
+      fonte_arquivo: a.arquivo,
+      fonte_linhagem: 'manual',            // profile.md lapidado (não é a ficha crua)
       atualizado_em: new Date().toISOString(),
-      atualizado_por: 'carga-almas',
+      atualizado_por: 'carga-almas-opcao-b',
     }, { onConflict: 'agent_id' });
-
-    if (error) { console.error(`  [ERRO]   ${slug} → ${agentId}: ${error.message}`); pulados++; }
-    else { console.log(`  [OK]     ${slug} → ${agentId} (${existe.name}) · ${alma.prompt.length} chars`); ok++; }
+    if (eUp) { console.error(`  [ERRO]  ${a.slug}: upsert cofre falhou — ${eUp.message}`); erros++; continue; }
+    prompts++;
   }
 
-  console.log(`\n${CONFIRMAR ? 'gravados' : 'seriam gravados'}: ${ok} · pulados: ${pulados}`);
-  if (!CONFIRMAR) console.log('Rode com --confirmar para gravar.');
+  console.log(`\nlinhas novas em agents: ${linhasNovas} · já existiam: ${jaExistiam} · prompts no cofre: ${prompts} · erros: ${erros}`);
 }
 
 main();
