@@ -14,8 +14,46 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient as createServerSupabase } from '@/lib/supabase/server';
+import { createAdminClient } from '@/lib/supabase/admin';
 import { executeTask } from '@/lib/quantum-brain/task-executor';
 import { ROLE_TO_SQUAD, AgentRole } from '@/lib/quantum-brain/types';
+import { evaluateUsage, type PlanId } from '@/lib/quota';
+
+const FOUNDER_EMAIL = 'casamondestore@gmail.com';
+
+// Conta o uso do usuário na janela de garantia e decide se pode executar.
+// Roda ANTES de qualquer gasto de token — a trava anti-vazamento.
+async function checkQuota(userId: string, userEmail: string | undefined) {
+  const admin = createAdminClient();
+  const { data: profile } = await admin
+    .from('profiles')
+    .select('subscription_plan, founder_access, guarantee_started_at, guarantee_waived')
+    .eq('id', userId)
+    .maybeSingle();
+
+  const founderAccess = profile?.founder_access === true || userEmail === FOUNDER_EMAIL;
+  const guaranteeStartedAt = (profile?.guarantee_started_at as string | null) ?? null;
+
+  // Uso = execuções desde o início da janela (barato: índice user_id+created_at).
+  let usageInWindow = 0;
+  if (!founderAccess && guaranteeStartedAt) {
+    const { count } = await admin
+      .from('requests')
+      .select('id', { count: 'exact', head: true })
+      .eq('user_id', userId)
+      .gte('created_at', guaranteeStartedAt);
+    usageInWindow = count ?? 0;
+  }
+
+  return evaluateUsage({
+    plan: ((profile?.subscription_plan as PlanId) || 'free'),
+    founderAccess,
+    guaranteeStartedAt,
+    guaranteeWaived: profile?.guarantee_waived === true,
+    usageInWindow,
+    nowMs: Date.now(),
+  });
+}
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
@@ -52,6 +90,32 @@ async function getAnthropic(): Promise<any | null> {
 // ORION (Anthropic) — usado pelo chat do ORION
 // ─────────────────────────────────────────────────────────────
 async function runOrion(body: any, startTime: number) {
+  // Trava de cota também no chat ORION (caminho de token mais caro — Claude).
+  // Usuário logado sobre a cota é barrado; anônimo segue como hoje (exposição
+  // pré-existente separada, sinalizada no PR).
+  try {
+    const supabase = await createServerSupabase();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user) {
+      const quota = await checkQuota(user.id, user.email);
+      if (!quota.allowed) {
+        return NextResponse.json(
+          {
+            success: false,
+            error: 'Cota de avaliação atingida',
+            details: quota.message,
+            quota: { usage: quota.usage, limit: quota.quota, canWaive: quota.canWaive },
+            execution_time_ms: Date.now() - startTime,
+            timestamp: new Date().toISOString(),
+          },
+          { status: 429 },
+        );
+      }
+    }
+  } catch {
+    // Falha ao avaliar cota não derruba o chat — apenas não bloqueia.
+  }
+
   const anthropic = await getAnthropic();
 
   if (!anthropic) {
@@ -121,6 +185,22 @@ async function runAgent(body: any, startTime: number) {
         timestamp: new Date().toISOString(),
       },
       { status: 401 },
+    );
+  }
+
+  // ── TRAVA DE COTA (anti-vazamento) — antes de gastar qualquer token ──
+  const quota = await checkQuota(user.id, user.email);
+  if (!quota.allowed) {
+    return NextResponse.json(
+      {
+        success: false,
+        error: 'Cota de avaliação atingida',
+        details: quota.message,
+        quota: { usage: quota.usage, limit: quota.quota, canWaive: quota.canWaive },
+        execution_time_ms: Date.now() - startTime,
+        timestamp: new Date().toISOString(),
+      },
+      { status: 429 },
     );
   }
 

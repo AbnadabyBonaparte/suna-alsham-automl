@@ -8,7 +8,7 @@
  */
 
 import type { Metadata } from 'next';
-import LegalShell, { LegalSection, Pendente } from '@/components/legal/LegalShell';
+import LegalShell, { LegalSection } from '@/components/legal/LegalShell';
 
 export const metadata: Metadata = {
   title: 'Termos de Assinatura — ALSHAM QUANTUM',
@@ -44,7 +44,7 @@ export default function TermsPage() {
           Há a opção de cobrança anual com desconto, quando ofertada no ato da contratação. Os limites
           de cada plano (número de agentes, requisições e recursos) são os descritos na página de
           planos no momento da contratação. Reajustes de preço serão comunicados com antecedência
-          mínima de <Pendente>definir: fundador — sugestão 30 dias</Pendente> e não afetam o ciclo já pago.
+          mínima de <strong>30 dias</strong> e não afetam o ciclo já pago.
         </p>
       </LegalSection>
 
@@ -104,10 +104,15 @@ export default function TermsPage() {
 
       <LegalSection n="7." title="Disponibilidade e suporte">
         <p>
-          A ALSHAM empenha-se em manter a Plataforma disponível, mas não garante operação
-          ininterrupta — pode haver manutenção, atualização ou indisponibilidade de terceiros. Os
-          canais e prazos de suporte de cada plano são os anunciados na contratação
-          {' '}<Pendente>definir: fundador — SLA e horários reais de atendimento por plano</Pendente>.
+          A <strong>operação da Plataforma é automatizada e funciona 24 horas por dia, 7 dias por
+          semana</strong> — os agentes, o motor e as automações da ALSHAM não têm expediente. A ALSHAM
+          empenha-se em manter essa operação disponível, mas não garante funcionamento ininterrupto:
+          pode haver manutenção, atualização ou indisponibilidade de terceiros.
+        </p>
+        <p>
+          O <strong>atendimento humano</strong> é prestado por e-mail (<a href="mailto:comercial@alshamglobal.com.br" className="text-[var(--color-primary)] hover:underline">comercial@alshamglobal.com.br</a>),
+          em horário comercial, com prioridade crescente nos planos Pro e Enterprise. Os prazos de
+          resposta do atendimento humano são os anunciados na página de planos no momento da contratação.
         </p>
       </LegalSection>
 
@@ -131,9 +136,16 @@ export default function TermsPage() {
 
       <LegalSection n="10." title="Lei aplicável e foro">
         <p>
-          Aplica-se a lei brasileira. Fica eleito o foro da comarca da sede da ALSHAM Global, no Estado
-          de Goiás <Pendente>definir: fundador — comarca exata</Pendente>, ressalvado o direito do
-          consumidor de demandar no foro de seu domicílio (art. 101, I, do CDC).
+          Aplica-se a <strong>lei brasileira</strong>. A ALSHAM é uma empresa digital de operação
+          nômade, sem estabelecimento físico de atendimento ao público. Por isso, e em favor do
+          consumidor, fica eleito o <strong>foro do domicílio do Assinante</strong> para dirimir
+          questões oriundas destes Termos — o que a lei já assegura ao consumidor (art. 101, I, do CDC).
+        </p>
+        <p>
+          Antes da via judicial, as partes buscarão solução amigável pelos canais de atendimento da
+          ALSHAM (<a href="mailto:comercial@alshamglobal.com.br" className="text-[var(--color-primary)] hover:underline">comercial@alshamglobal.com.br</a>).
+          Em qualquer processo ou notificação, a ALSHAM informará o endereço de apresentação vigente à
+          época, mantido junto ao seu registro empresarial (CNPJ 59.332.265/0001-30).
         </p>
       </LegalSection>
     </LegalShell>
