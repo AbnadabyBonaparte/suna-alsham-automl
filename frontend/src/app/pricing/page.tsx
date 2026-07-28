@@ -57,7 +57,7 @@ const PLANS = [
             '50 Agentes de IA',
             '10.000 requests/mês',
             'Dashboard completo',
-            'Suporte prioritário 24/7',
+            'Suporte prioritário (atendimento humano em horário comercial)',
             'API REST + WebSocket',
             'Relatórios em tempo real',
             'Auto-evolução básica',
@@ -493,7 +493,7 @@ export default function PricingPage() {
                             { icon: Shield, title: 'Segurança Enterprise', desc: 'Criptografia end-to-end e compliance com LGPD.' },
                             { icon: Globe, title: 'Infraestrutura em Nuvem', desc: 'Hospedagem escalável na nuvem.' },
                             { icon: Activity, title: 'Monitoramento Real-time', desc: 'Dashboard com métricas em tempo real.' },
-                            { icon: Users, title: 'Suporte Dedicado', desc: 'Time de especialistas disponível 24/7.' },
+                            { icon: Users, title: 'Operação 24/7', desc: 'Agentes e automações rodando dia e noite; atendimento humano em horário comercial.' },
                             { icon: Database, title: 'Integrações Ilimitadas', desc: 'Conecte com qualquer sistema via API.' },
                         ].map((feature, i) => (
                             <div 
@@ -539,7 +539,7 @@ export default function PricingPage() {
                         </button>
                         
                         <p className="text-xs text-textSecondary mt-4 relative z-10">
-                            Garantia de 30 dias • Cancele quando quiser • Suporte 24/7
+                            Garantia de 30 dias • Cancele quando quiser • Operação automatizada 24/7
                         </p>
                     </div>
                 </div>

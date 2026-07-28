@@ -63,7 +63,7 @@ Reproduza: `npx tsx scripts/prova-cota-garantia.ts` (não gasta token, não toca
 ## Limites honestos (Lei 7)
 
 - A migration **não foi aplicada** aqui (o MCP do banco caiu no meio da missão). É aditiva e segura; aplicar é ato do fundador ou de um passo seguinte.
-- A UI de `/pricing` diz **"Suporte 24/7"**. Os Termos adotam suporte por e-mail em horário comercial (realista). **Decisão de honestidade:** ou o fundador passa a oferecer 24/7 de verdade, ou o texto "24/7" na UI deve ser ajustado. Sinalizado, não corrigido sozinho.
+- **Suporte 24/7 — resolvido (decreto do fundador):** a operação é automatizada e roda 24/7; o atendimento **humano** é em horário comercial. Termos (cláusula 7) e UI de `/pricing` já refletem a distinção, sem contradição.
 - A cota bloqueia o **caminho autenticado**. O chat ORION acessível a **anônimo** (sem login) é uma exposição pré-existente e separada — recomenda-se exigir login no chat.
 
 ---
