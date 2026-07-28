@@ -67,11 +67,21 @@ export async function POST(req: Request) {
 
     return NextResponse.json({ url: session.url });
   } catch (error: any) {
-    console.error('Error creating checkout session:', error);
-    return NextResponse.json(
-      { error: 'Não foi possível iniciar o pagamento. Tente novamente em instantes.' },
-      { status: 500 },
-    );
+    // Revela a causa real (nunca engole). O erro cru vai pro log do servidor.
+    const code = error?.code || error?.type || 'unknown';
+    const raw = error?.raw?.message || error?.message || 'erro desconhecido';
+    console.error('❌ Stripe checkout.sessions.create falhou:', code, '—', raw);
+
+    // Causa comum: chave restrita (rk_live de billing) sem permissão de Checkout.
+    const isPermission = error?.type === 'StripePermissionError' || error?.statusCode === 403;
+    const isAuth = error?.type === 'StripeAuthenticationError' || error?.statusCode === 401;
+    const message = isPermission
+      ? 'A chave do Stripe não tem permissão para criar Checkout Sessions. Use a secret key padrão (sk_live_…) ou uma chave restrita com "Checkout Sessions: Write".'
+      : isAuth
+        ? 'A chave do Stripe (STRIPE_SECRET_KEY) é inválida ou de outro modo (test/live). Confira o valor na Vercel.'
+        : `Não foi possível iniciar o pagamento: ${raw}`;
+
+    return NextResponse.json({ error: message, code }, { status: error?.statusCode || 500 });
   }
 }
 
