@@ -136,6 +136,14 @@ export async function POST(req: Request) {
           console.error('Erro ao atualizar profile (checkout):', error.message);
           return new NextResponse('Error updating profile', { status: 500 });
         }
+
+        // Marca o início da janela de garantia na PRIMEIRA ativação (só se null).
+        // É a âncora da cota de experimentação (frontend/src/lib/quota.ts).
+        await supabaseAdmin
+          .from('profiles')
+          .update({ guarantee_started_at: new Date().toISOString() })
+          .eq('id', userId)
+          .is('guarantee_started_at', null);
         break;
       }
 
