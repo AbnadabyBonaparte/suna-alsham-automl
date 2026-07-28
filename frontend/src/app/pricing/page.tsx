@@ -103,6 +103,9 @@ export default function PricingPage() {
     const [selectedPlan, setSelectedPlan] = useState<string | null>(null);
     const [isLoading, setIsLoading] = useState<string | null>(null);
     const [billingCycle, setBillingCycle] = useState<'monthly' | 'yearly'>('monthly');
+    // Consentimento aos Termos/Privacidade/Reembolso — exigido por LGPD e CDC
+    // antes de cobrar. Registrado no metadata da sessão Stripe (data/hora).
+    const [acceptedTerms, setAcceptedTerms] = useState(false);
 
     // Partículas de fundo
     useEffect(() => {
@@ -174,7 +177,13 @@ export default function PricingPage() {
             return;
         }
 
-        // Guarda 2: sem priceId configurado (env NEXT_PUBLIC_STRIPE_PRICE_* ausente
+        // Guarda 2: consentimento aos termos é obrigatório antes de cobrar (LGPD/CDC).
+        if (!acceptedTerms) {
+            alert('Para assinar, aceite os Termos de Assinatura, a Política de Privacidade e a Política de Reembolso.');
+            return;
+        }
+
+        // Guarda 3: sem priceId configurado (env NEXT_PUBLIC_STRIPE_PRICE_* ausente
         // na Vercel), NÃO chama a cobrança — mostra erro claro em vez de falhar mudo.
         if (!plan.priceId) {
             alert('Este plano ainda não está disponível para compra. Já estamos ativando — tente novamente em instantes.');
@@ -192,6 +201,8 @@ export default function PricingPage() {
                     planId: plan.id,
                     billingCycle,
                     userId: user.id,
+                    termsAccepted: true,
+                    termsAcceptedAt: new Date().toISOString(),
                 }),
             });
 
@@ -299,6 +310,25 @@ export default function PricingPage() {
                             </span>
                         </button>
                     </div>
+
+                    {/* Consentimento aos termos — exigido por LGPD/CDC antes de cobrar */}
+                    <label className="flex items-start gap-3 max-w-xl mx-auto text-left cursor-pointer select-none">
+                        <input
+                            type="checkbox"
+                            checked={acceptedTerms}
+                            onChange={(e) => setAcceptedTerms(e.target.checked)}
+                            className="mt-1 w-4 h-4 shrink-0 accent-[var(--color-primary)] cursor-pointer"
+                            aria-label="Aceito os termos"
+                        />
+                        <span className="text-sm text-textSecondary leading-relaxed">
+                            Li e aceito os{' '}
+                            <Link href="/terms" target="_blank" className="text-[var(--color-primary)] hover:underline">Termos de Assinatura</Link>,
+                            a{' '}
+                            <Link href="/privacy" target="_blank" className="text-[var(--color-primary)] hover:underline">Política de Privacidade</Link>{' '}
+                            e a{' '}
+                            <Link href="/refund" target="_blank" className="text-[var(--color-primary)] hover:underline">Política de Reembolso</Link>.
+                        </span>
+                    </label>
                 </div>
             </section>
 
@@ -522,13 +552,13 @@ export default function PricingPage() {
                         <Hexagon className="w-6 h-6 text-[var(--color-primary)]" />
                         <span className="text-sm font-bold">ALSHAM QUANTUM</span>
                     </div>
-                    <div className="flex items-center gap-6 text-sm text-textSecondary">
+                    <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-sm text-textSecondary">
                         <Link href="/terms" className="hover:text-text transition-colors">Termos</Link>
                         <Link href="/privacy" className="hover:text-text transition-colors">Privacidade</Link>
-                        <Link href="/contact" className="hover:text-text transition-colors">Contato</Link>
+                        <Link href="/refund" className="hover:text-text transition-colors">Reembolso</Link>
                     </div>
                     <div className="text-sm text-textSecondary">
-                        © 2024 ALSHAM Global. Todos os direitos reservados.
+                        © 2026 ALSHAM Global. Todos os direitos reservados.
                     </div>
                 </div>
             </footer>
