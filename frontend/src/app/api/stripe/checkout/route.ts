@@ -14,11 +14,30 @@ import Stripe from 'stripe';
 export async function POST(req: Request) {
   const { priceId, userId, planId, billingCycle } = await req.json();
 
+  // ── Guarda 1: sem priceId válido, NÃO cobra. Erro claro, não Stripe 500 opaco.
+  // Sem os NEXT_PUBLIC_STRIPE_PRICE_* na Vercel, priceId chega '' — barra aqui.
+  if (!priceId || typeof priceId !== 'string' || !priceId.startsWith('price_')) {
+    console.error('❌ priceId ausente/inválido — plano não configurado (falta env NEXT_PUBLIC_STRIPE_PRICE_*)');
+    return NextResponse.json(
+      { error: 'Plano ainda não está disponível para compra. Tente novamente em instantes ou fale com o suporte.' },
+      { status: 400 },
+    );
+  }
+
+  // ── Guarda 2: sem userId, o webhook não sabe QUEM pagou → pagaria sem ganhar
+  // acesso. Exige usuário logado antes de cobrar.
+  if (!userId || typeof userId !== 'string') {
+    return NextResponse.json(
+      { error: 'Entre na sua conta antes de assinar — assim liberamos seu acesso após o pagamento.' },
+      { status: 401 },
+    );
+  }
+
   // Verificar se as chaves estão configuradas
   const stripeSecretKey = process.env.STRIPE_SECRET_KEY;
   if (!stripeSecretKey) {
     console.error('❌ STRIPE_SECRET_KEY não configurada');
-    return new NextResponse('Sistema não configurado', { status: 500 });
+    return NextResponse.json({ error: 'Sistema de pagamento não configurado.' }, { status: 500 });
   }
 
   const stripe = new Stripe(stripeSecretKey, {
@@ -47,7 +66,10 @@ export async function POST(req: Request) {
     return NextResponse.json({ url: session.url });
   } catch (error: any) {
     console.error('Error creating checkout session:', error);
-    return new NextResponse(`Error creating checkout session: ${error.message}`, { status: 500 });
+    return NextResponse.json(
+      { error: 'Não foi possível iniciar o pagamento. Tente novamente em instantes.' },
+      { status: 500 },
+    );
   }
 }
 
