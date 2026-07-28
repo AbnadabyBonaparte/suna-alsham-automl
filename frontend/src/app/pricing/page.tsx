@@ -94,6 +94,50 @@ const PLANS = [
     }
 ];
 
+/**
+ * Consentimento LGPD/CDC — SEMPRE renderizado, junto de cada botão de plano.
+ * Uma única aceitação (estado compartilhado); marcar aqui libera todos os botões.
+ * Caixa custom bem visível no tema escuro (borda clara, check cyan).
+ */
+function ConsentCheckbox({
+    accepted,
+    onToggle,
+}: {
+    accepted: boolean;
+    onToggle: () => void;
+}) {
+    return (
+        <button
+            type="button"
+            onClick={onToggle}
+            aria-pressed={accepted}
+            className={`w-full flex items-start gap-2.5 text-left rounded-xl px-4 py-3 border transition-all ${
+                accepted
+                    ? 'bg-[var(--color-primary)]/10 border-[var(--color-primary)]/50'
+                    : 'bg-surface/60 border-border/40 hover:border-border/70'
+            }`}
+        >
+            <span
+                className={`mt-0.5 shrink-0 w-5 h-5 rounded border-2 flex items-center justify-center transition-all ${
+                    accepted
+                        ? 'bg-[var(--color-primary)] border-[var(--color-primary)]'
+                        : 'border-textSecondary/70 bg-transparent'
+                }`}
+            >
+                {accepted && <Check className="w-3.5 h-3.5 text-background" strokeWidth={3} />}
+            </span>
+            <span className="text-xs text-text/90 leading-relaxed">
+                Li e aceito os{' '}
+                <Link href="/terms" target="_blank" onClick={(e) => e.stopPropagation()} className="text-[var(--color-primary)] font-medium hover:underline">Termos</Link>,
+                a{' '}
+                <Link href="/privacy" target="_blank" onClick={(e) => e.stopPropagation()} className="text-[var(--color-primary)] font-medium hover:underline">Privacidade</Link>{' '}
+                e o{' '}
+                <Link href="/refund" target="_blank" onClick={(e) => e.stopPropagation()} className="text-[var(--color-primary)] font-medium hover:underline">Reembolso</Link>.
+            </span>
+        </button>
+    );
+}
+
 export default function PricingPage() {
     const router = useRouter();
     const user = useAuthStore((s) => s.user);
@@ -108,6 +152,8 @@ export default function PricingPage() {
     const [acceptedTerms, setAcceptedTerms] = useState(false);
     // Erro de checkout mostrado inline (na pele Quantum) — nunca mais alert() feio.
     const [checkoutError, setCheckoutError] = useState<string | null>(null);
+    // Qual card mostra o erro (contexto: o erro aparece no plano que foi clicado).
+    const [errorPlanId, setErrorPlanId] = useState<string | null>(null);
 
     // Partículas de fundo
     useEffect(() => {
@@ -173,6 +219,7 @@ export default function PricingPage() {
 
     const handleCheckout = async (plan: typeof PLANS[0]) => {
         setCheckoutError(null);
+        setErrorPlanId(null);
 
         // Guarda 1: sem usuário logado, manda pro login antes de cobrar — é o
         // login que permite liberar o acesso depois do pagamento.
@@ -184,13 +231,15 @@ export default function PricingPage() {
         // Guarda 2: consentimento obrigatório (LGPD/CDC). Os botões já ficam
         // desabilitados até marcar; isto é só a rede de segurança.
         if (!acceptedTerms) {
-            setCheckoutError('Marque o aceite dos Termos, Privacidade e Reembolso para continuar.');
+            setErrorPlanId(plan.id);
+            setCheckoutError('Marque o aceite dos Termos, Privacidade e Reembolso acima para continuar.');
             return;
         }
 
         // Guarda 3: sem priceId configurado (env NEXT_PUBLIC_STRIPE_PRICE_* ausente
         // na Vercel), NÃO chama a cobrança — mostra erro claro em vez de falhar mudo.
         if (!plan.priceId) {
+            setErrorPlanId(plan.id);
             setCheckoutError('Este plano ainda não está disponível para compra. Já estamos ativando — tente novamente em instantes.');
             return;
         }
@@ -217,10 +266,12 @@ export default function PricingPage() {
                 window.location.href = data.url;
             } else {
                 // Mostra a causa REAL do servidor inline (nunca redireciona mudo).
+                setErrorPlanId(plan.id);
                 setCheckoutError(data.error || 'Não foi possível processar o pagamento. Tente novamente.');
             }
         } catch (error) {
             console.error('Checkout error:', error);
+            setErrorPlanId(plan.id);
             setCheckoutError('Não foi possível processar o pagamento. Verifique sua conexão e tente novamente.');
         } finally {
             setIsLoading(null);
@@ -316,46 +367,8 @@ export default function PricingPage() {
                         </button>
                     </div>
 
-                    {/* Consentimento aos termos — exigido por LGPD/CDC antes de cobrar.
-                        Caixa custom, bem visível no tema escuro; o botão só libera ao marcar. */}
-                    <div id="consent-anchor" className="max-w-xl mx-auto">
-                        <button
-                            type="button"
-                            onClick={() => { setAcceptedTerms((v) => !v); setCheckoutError(null); }}
-                            aria-pressed={acceptedTerms}
-                            className={`w-full flex items-start gap-3 text-left rounded-2xl px-5 py-4 border transition-all ${
-                                acceptedTerms
-                                    ? 'bg-[var(--color-primary)]/10 border-[var(--color-primary)]/50'
-                                    : 'bg-surface/60 border-border/30 hover:border-border/60'
-                            }`}
-                        >
-                            <span
-                                className={`mt-0.5 shrink-0 w-6 h-6 rounded-md border-2 flex items-center justify-center transition-all ${
-                                    acceptedTerms
-                                        ? 'bg-[var(--color-primary)] border-[var(--color-primary)]'
-                                        : 'border-textSecondary/60 bg-transparent'
-                                }`}
-                            >
-                                {acceptedTerms && <Check className="w-4 h-4 text-background" strokeWidth={3} />}
-                            </span>
-                            <span className="text-sm text-text/90 leading-relaxed">
-                                Li e aceito os{' '}
-                                <Link href="/terms" target="_blank" onClick={(e) => e.stopPropagation()} className="text-[var(--color-primary)] font-medium hover:underline">Termos de Assinatura</Link>,
-                                a{' '}
-                                <Link href="/privacy" target="_blank" onClick={(e) => e.stopPropagation()} className="text-[var(--color-primary)] font-medium hover:underline">Política de Privacidade</Link>{' '}
-                                e a{' '}
-                                <Link href="/refund" target="_blank" onClick={(e) => e.stopPropagation()} className="text-[var(--color-primary)] font-medium hover:underline">Política de Reembolso</Link>.
-                            </span>
-                        </button>
-                        {!acceptedTerms && (
-                            <p className="mt-2 text-xs text-textSecondary">Marque acima para liberar os botões de assinatura.</p>
-                        )}
-                        {checkoutError && (
-                            <div className="mt-4 rounded-2xl px-5 py-4 bg-[var(--color-error)]/10 border border-[var(--color-error)]/40 text-sm text-text/90 text-left" role="alert">
-                                {checkoutError}
-                            </div>
-                        )}
-                    </div>
+                    {/* O consentimento LGPD/CDC agora vive DENTRO de cada card,
+                        logo acima do botão — sempre visível, sem beco sem saída. */}
                 </div>
             </section>
 
@@ -450,13 +463,21 @@ export default function PricingPage() {
                                     )}
                                 </div>
 
+                                {/* Consentimento — SEMPRE visível, logo acima do botão */}
+                                <div className="mt-8">
+                                    <ConsentCheckbox
+                                        accepted={acceptedTerms}
+                                        onToggle={() => { setAcceptedTerms((v) => !v); setCheckoutError(null); setErrorPlanId(null); }}
+                                    />
+                                </div>
+
                                 {/* CTA Button */}
                                 <button
                                     onClick={() => handleCheckout(plan)}
                                     disabled={isLoading !== null || !acceptedTerms}
-                                    title={!acceptedTerms ? 'Aceite os termos acima para assinar' : undefined}
+                                    title={!acceptedTerms ? 'Marque o aceite acima para assinar' : undefined}
                                     className={`
-                                        relative w-full mt-8 py-4 rounded-xl font-bold text-sm tracking-wider uppercase
+                                        relative w-full mt-3 py-4 rounded-xl font-bold text-sm tracking-wider uppercase
                                         transition-all overflow-hidden group/btn
                                         ${plan.id === 'enterprise' 
                                             ? 'bg-gradient-to-r from-yellow-400 to-orange-500 text-black hover:shadow-[0_0_40px_rgba(250,204,21,0.5)]' 
@@ -482,6 +503,18 @@ export default function PricingPage() {
                                         </span>
                                     )}
                                 </button>
+
+                                {/* Motivo do bloqueio + erro contextual, no próprio card */}
+                                {!acceptedTerms && (
+                                    <p className="mt-3 text-xs text-textSecondary text-center">
+                                        Marque o aceite acima para liberar.
+                                    </p>
+                                )}
+                                {checkoutError && errorPlanId === plan.id && (
+                                    <div className="mt-3 rounded-xl px-4 py-3 bg-[var(--color-error)]/10 border border-[var(--color-error)]/40 text-xs text-text/90 text-left" role="alert">
+                                        {checkoutError}
+                                    </div>
+                                )}
                             </div>
                         </div>
                     ))}
@@ -556,9 +589,18 @@ export default function PricingPage() {
                             }
                         </p>
 
+                        {/* Consentimento próprio desta seção — visível antes do clique */}
+                        <div className="max-w-md mx-auto mb-5 relative z-10">
+                            <ConsentCheckbox
+                                accepted={acceptedTerms}
+                                onToggle={() => { setAcceptedTerms((v) => !v); setCheckoutError(null); setErrorPlanId(null); }}
+                            />
+                        </div>
+
                         <button
-                            onClick={() => { if (!acceptedTerms) { document.getElementById('consent-anchor')?.scrollIntoView({ behavior: 'smooth', block: 'center' }); setCheckoutError('Marque o aceite dos Termos, Privacidade e Reembolso para continuar.'); return; } handleCheckout(PLANS[2]); }}
-                            disabled={isLoading !== null}
+                            onClick={() => handleCheckout(PLANS[2])}
+                            disabled={isLoading !== null || !acceptedTerms}
+                            title={!acceptedTerms ? 'Marque o aceite acima para assinar' : undefined}
                             className="px-12 py-5 bg-gradient-to-r from-yellow-400 to-orange-500 text-black font-black text-lg rounded-xl hover:shadow-[0_0_60px_rgba(250,204,21,0.5)] transition-all relative z-10 disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                             {user && !hasAccess
@@ -566,7 +608,13 @@ export default function PricingPage() {
                                 : 'Começar com Enterprise • R$9.900/mês'
                             }
                         </button>
-                        
+
+                        {checkoutError && errorPlanId === 'enterprise' && (
+                            <div className="mt-4 max-w-md mx-auto rounded-xl px-4 py-3 bg-[var(--color-error)]/10 border border-[var(--color-error)]/40 text-xs text-text/90 text-left relative z-10" role="alert">
+                                {checkoutError}
+                            </div>
+                        )}
+
                         <p className="text-xs text-textSecondary mt-4 relative z-10">
                             Garantia de 30 dias • Cancele quando quiser • Operação automatizada 24/7
                         </p>
