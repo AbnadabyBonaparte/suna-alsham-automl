@@ -12,7 +12,7 @@ import { NextResponse } from 'next/server';
 import Stripe from 'stripe';
 
 export async function POST(req: Request) {
-  const { priceId, userId, planId, billingCycle } = await req.json();
+  const { priceId, userId, planId, billingCycle, termsAcceptedAt } = await req.json();
 
   // ── Guarda 1: sem priceId válido, NÃO cobra. Erro claro, não Stripe 500 opaco.
   // Sem os NEXT_PUBLIC_STRIPE_PRICE_* na Vercel, priceId chega '' — barra aqui.
@@ -60,6 +60,8 @@ export async function POST(req: Request) {
       metadata: {
         planId: planId || '',
         billingCycle: billingCycle || 'monthly',
+        // Registro de consentimento aos termos (LGPD/CDC) — data/hora do aceite.
+        termsAcceptedAt: typeof termsAcceptedAt === 'string' ? termsAcceptedAt : new Date().toISOString(),
       },
     });
 
