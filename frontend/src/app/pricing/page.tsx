@@ -106,6 +106,8 @@ export default function PricingPage() {
     // Consentimento aos Termos/Privacidade/Reembolso — exigido por LGPD e CDC
     // antes de cobrar. Registrado no metadata da sessão Stripe (data/hora).
     const [acceptedTerms, setAcceptedTerms] = useState(false);
+    // Erro de checkout mostrado inline (na pele Quantum) — nunca mais alert() feio.
+    const [checkoutError, setCheckoutError] = useState<string | null>(null);
 
     // Partículas de fundo
     useEffect(() => {
@@ -170,6 +172,8 @@ export default function PricingPage() {
     }, []);
 
     const handleCheckout = async (plan: typeof PLANS[0]) => {
+        setCheckoutError(null);
+
         // Guarda 1: sem usuário logado, manda pro login antes de cobrar — é o
         // login que permite liberar o acesso depois do pagamento.
         if (!user?.id) {
@@ -177,16 +181,17 @@ export default function PricingPage() {
             return;
         }
 
-        // Guarda 2: consentimento aos termos é obrigatório antes de cobrar (LGPD/CDC).
+        // Guarda 2: consentimento obrigatório (LGPD/CDC). Os botões já ficam
+        // desabilitados até marcar; isto é só a rede de segurança.
         if (!acceptedTerms) {
-            alert('Para assinar, aceite os Termos de Assinatura, a Política de Privacidade e a Política de Reembolso.');
+            setCheckoutError('Marque o aceite dos Termos, Privacidade e Reembolso para continuar.');
             return;
         }
 
         // Guarda 3: sem priceId configurado (env NEXT_PUBLIC_STRIPE_PRICE_* ausente
         // na Vercel), NÃO chama a cobrança — mostra erro claro em vez de falhar mudo.
         if (!plan.priceId) {
-            alert('Este plano ainda não está disponível para compra. Já estamos ativando — tente novamente em instantes.');
+            setCheckoutError('Este plano ainda não está disponível para compra. Já estamos ativando — tente novamente em instantes.');
             return;
         }
 
@@ -211,12 +216,12 @@ export default function PricingPage() {
             if (response.ok && data.url) {
                 window.location.href = data.url;
             } else {
-                // Surfacea a mensagem real do servidor (plano não configurado, etc.)
-                alert(data.error || 'Não foi possível processar o pagamento. Tente novamente.');
+                // Mostra a causa REAL do servidor inline (nunca redireciona mudo).
+                setCheckoutError(data.error || 'Não foi possível processar o pagamento. Tente novamente.');
             }
         } catch (error) {
             console.error('Checkout error:', error);
-            alert('Não foi possível processar o pagamento. Tente novamente.');
+            setCheckoutError('Não foi possível processar o pagamento. Verifique sua conexão e tente novamente.');
         } finally {
             setIsLoading(null);
         }
@@ -311,24 +316,46 @@ export default function PricingPage() {
                         </button>
                     </div>
 
-                    {/* Consentimento aos termos — exigido por LGPD/CDC antes de cobrar */}
-                    <label className="flex items-start gap-3 max-w-xl mx-auto text-left cursor-pointer select-none">
-                        <input
-                            type="checkbox"
-                            checked={acceptedTerms}
-                            onChange={(e) => setAcceptedTerms(e.target.checked)}
-                            className="mt-1 w-4 h-4 shrink-0 accent-[var(--color-primary)] cursor-pointer"
-                            aria-label="Aceito os termos"
-                        />
-                        <span className="text-sm text-textSecondary leading-relaxed">
-                            Li e aceito os{' '}
-                            <Link href="/terms" target="_blank" className="text-[var(--color-primary)] hover:underline">Termos de Assinatura</Link>,
-                            a{' '}
-                            <Link href="/privacy" target="_blank" className="text-[var(--color-primary)] hover:underline">Política de Privacidade</Link>{' '}
-                            e a{' '}
-                            <Link href="/refund" target="_blank" className="text-[var(--color-primary)] hover:underline">Política de Reembolso</Link>.
-                        </span>
-                    </label>
+                    {/* Consentimento aos termos — exigido por LGPD/CDC antes de cobrar.
+                        Caixa custom, bem visível no tema escuro; o botão só libera ao marcar. */}
+                    <div id="consent-anchor" className="max-w-xl mx-auto">
+                        <button
+                            type="button"
+                            onClick={() => { setAcceptedTerms((v) => !v); setCheckoutError(null); }}
+                            aria-pressed={acceptedTerms}
+                            className={`w-full flex items-start gap-3 text-left rounded-2xl px-5 py-4 border transition-all ${
+                                acceptedTerms
+                                    ? 'bg-[var(--color-primary)]/10 border-[var(--color-primary)]/50'
+                                    : 'bg-surface/60 border-border/30 hover:border-border/60'
+                            }`}
+                        >
+                            <span
+                                className={`mt-0.5 shrink-0 w-6 h-6 rounded-md border-2 flex items-center justify-center transition-all ${
+                                    acceptedTerms
+                                        ? 'bg-[var(--color-primary)] border-[var(--color-primary)]'
+                                        : 'border-textSecondary/60 bg-transparent'
+                                }`}
+                            >
+                                {acceptedTerms && <Check className="w-4 h-4 text-background" strokeWidth={3} />}
+                            </span>
+                            <span className="text-sm text-text/90 leading-relaxed">
+                                Li e aceito os{' '}
+                                <Link href="/terms" target="_blank" onClick={(e) => e.stopPropagation()} className="text-[var(--color-primary)] font-medium hover:underline">Termos de Assinatura</Link>,
+                                a{' '}
+                                <Link href="/privacy" target="_blank" onClick={(e) => e.stopPropagation()} className="text-[var(--color-primary)] font-medium hover:underline">Política de Privacidade</Link>{' '}
+                                e a{' '}
+                                <Link href="/refund" target="_blank" onClick={(e) => e.stopPropagation()} className="text-[var(--color-primary)] font-medium hover:underline">Política de Reembolso</Link>.
+                            </span>
+                        </button>
+                        {!acceptedTerms && (
+                            <p className="mt-2 text-xs text-textSecondary">Marque acima para liberar os botões de assinatura.</p>
+                        )}
+                        {checkoutError && (
+                            <div className="mt-4 rounded-2xl px-5 py-4 bg-[var(--color-error)]/10 border border-[var(--color-error)]/40 text-sm text-text/90 text-left" role="alert">
+                                {checkoutError}
+                            </div>
+                        )}
+                    </div>
                 </div>
             </section>
 
@@ -426,7 +453,8 @@ export default function PricingPage() {
                                 {/* CTA Button */}
                                 <button
                                     onClick={() => handleCheckout(plan)}
-                                    disabled={isLoading !== null}
+                                    disabled={isLoading !== null || !acceptedTerms}
+                                    title={!acceptedTerms ? 'Aceite os termos acima para assinar' : undefined}
                                     className={`
                                         relative w-full mt-8 py-4 rounded-xl font-bold text-sm tracking-wider uppercase
                                         transition-all overflow-hidden group/btn
@@ -529,8 +557,9 @@ export default function PricingPage() {
                         </p>
 
                         <button
-                            onClick={() => handleCheckout(PLANS[2])}
-                            className="px-12 py-5 bg-gradient-to-r from-yellow-400 to-orange-500 text-black font-black text-lg rounded-xl hover:shadow-[0_0_60px_rgba(250,204,21,0.5)] transition-all relative z-10"
+                            onClick={() => { if (!acceptedTerms) { document.getElementById('consent-anchor')?.scrollIntoView({ behavior: 'smooth', block: 'center' }); setCheckoutError('Marque o aceite dos Termos, Privacidade e Reembolso para continuar.'); return; } handleCheckout(PLANS[2]); }}
+                            disabled={isLoading !== null}
+                            className="px-12 py-5 bg-gradient-to-r from-yellow-400 to-orange-500 text-black font-black text-lg rounded-xl hover:shadow-[0_0_60px_rgba(250,204,21,0.5)] transition-all relative z-10 disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                             {user && !hasAccess
                                 ? 'Upgrade para Enterprise • R$9.900/mês'
