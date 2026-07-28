@@ -1,0 +1,36 @@
+name: Stripe Setup (produtos + webhook)
+
+# Disparo manual apenas. Roda scripts/stripe-setup.mjs lendo o secret
+# STRIPE_API_KEY (chave restrita rk_live). O script cria/reusa os 3 produtos e
+# preços mensais BRL + o webhook, e imprime os 4 valores pra colar na Vercel.
+# A CHAVE NUNCA é ecoada — o script só a usa no header Authorization; o GitHub
+# ainda mascara automaticamente o valor do secret nos logs.
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  setup:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Rodar stripe-setup.mjs
+        env:
+          STRIPE_API_KEY: ${{ secrets.STRIPE_API_KEY }}
+        run: |
+          set -o pipefail
+          node scripts/stripe-setup.mjs | tee "$RUNNER_TEMP/stripe-out.txt"
+      - name: Publicar saída no resumo do job
+        if: always()
+        run: |
+          {
+            echo '### Stripe setup — saída (cole na Vercel)'
+            echo '```'
+            cat "$RUNNER_TEMP/stripe-out.txt" 2>/dev/null || echo '(sem saída — ver log do passo anterior)'
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
