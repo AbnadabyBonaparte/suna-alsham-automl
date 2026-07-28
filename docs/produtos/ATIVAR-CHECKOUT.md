@@ -12,7 +12,9 @@ A auditoria achou que faltavam só os price IDs. Achamos **um bloqueio maior**: 
 
 ---
 
-## Passo 1 — Aplicar a migration do banco (o elo pós-pagamento)
+## Passo 1 — Aplicar a migration do banco (o elo pós-pagamento) — ✅ JÁ FEITO
+
+> **Atualização (28/jul, via MCP):** as DUAS migrations do checkout já foram **aplicadas** no `suna-core` — `20260728_profiles_subscription_columns` (elo pós-pagamento) e `20260728_quota_garantia` (cota de garantia). Contra-prova, RLS intacta e advisors 0 ERROR em `docs/produtos/ATIVACAO-STRIPE-MCP.md`. **Você pode pular para o Passo 2.** O texto abaixo fica como registro.
 
 O arquivo já está no repo: `supabase/migrations/20260728_profiles_subscription_columns.sql`.
 
