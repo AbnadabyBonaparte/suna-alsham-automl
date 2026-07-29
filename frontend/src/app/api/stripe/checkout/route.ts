@@ -44,6 +44,14 @@ export async function POST(req: Request) {
     apiVersion: '2023-10-16' as Stripe.LatestApiVersion,
   });
 
+  // origin do browser (enviado no fetch same-origin). Fallback pra URL canônica
+  // se o header vier ausente — sem isso o Stripe recusa com 'url_invalid' porque
+  // success_url/cancel_url ficariam sem scheme (ex.: "null/dashboard...").
+  const origin =
+    req.headers.get('origin') ||
+    process.env.NEXT_PUBLIC_SITE_URL ||
+    'https://alsham-quantum.vercel.app';
+
   try {
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ['card'],
@@ -54,8 +62,8 @@ export async function POST(req: Request) {
         },
       ],
       mode: 'subscription',
-      success_url: `${req.headers.get('origin')}/dashboard?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${req.headers.get('origin')}/pricing`,
+      success_url: `${origin}/dashboard?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${origin}/pricing`,
       client_reference_id: userId, // Pass user ID to webhook
       metadata: {
         planId: planId || '',
