@@ -6,12 +6,14 @@
 [![Next.js 16](https://img.shields.io/badge/Next.js-16.0.3-black?logo=next.js)](https://nextjs.org/)
 [![React 19](https://img.shields.io/badge/React-19.2.0-blue?logo=react)](https://react.dev/)
 [![Supabase](https://img.shields.io/badge/Supabase-PostgreSQL-green?logo=supabase)](https://supabase.com/)
+[![HUNTER X.1](https://img.shields.io/badge/HUNTER%20X.1-ca%C3%A7a%20di%C3%A1ria%20ativa-brightgreen)](caça/)
 
 ---
 
 ## 📋 Table of Contents
 
 - [Overview](#overview)
+- [🏹 HUNTER X.1 — O Caçador está vivo](#-hunter-x1--o-caçador-está-vivo)
 - [Features](#features)
 - [Tech Stack](#tech-stack)
 - [Project Status](#project-status)
@@ -31,6 +33,46 @@ ALSHAM QUANTUM is an enterprise-grade CRM platform featuring:
 - **Multi-module Architecture** (Sales, Support, Social, Analytics)
 
 **Current Status:** Phase 4.2 Complete | ~40% Total Progress
+
+---
+
+## 🏹 HUNTER X.1 — O Caçador está vivo
+
+> *"Um caçador roda todos os dias os lugares mais propícios do mundo, lê a sua missão,
+> executa, traz alimento — novas almas, novas tecnologias — e ao voltar sugere melhorias
+> na própria missão. E nós somos os juízes."* — Abnadaby Bonaparte
+
+O **HUNTER X.1** é o Caçador do Santuário: uma infraestrutura de inteligência que roda
+**sozinha, todos os dias**, via GitHub Actions. Ele varre Hacker News, GitHub e arXiv,
+faz triagem + análise + embeddings de cada achado, e abre um **PR "fila do tribunal"** —
+o veredito e o merge são sempre do fundador (Lei 7: nada entra sem julgamento humano).
+
+### ⏰ Está rodando agora (crons reais)
+
+| Rotina | Workflow | Cron (UTC) | Horário BRT | O que faz |
+|---|---|---|---|---|
+| **Caça diária** | `.github/workflows/hunter.yml` | `30 9 * * *` | 06:30 | Sai, caça, abre o PR da fila do tribunal |
+| **Ronda** | `.github/workflows/ronda-hunter.yml` | `0 9 * * *` | 06:00 | Checagens de saúde antes da caça |
+| **O Espelho** | `.github/workflows/espelho.yml` | `0 10 * * 5` | sex 07:00 | Autocrítica semanal do próprio Hunter |
+
+### 🩸 Provas de vida (caças reais, verificáveis no repo)
+
+| Data | Vistos | Trazidos | Custo | 🥇 OURO DO DIA | Registro |
+|---|---|---|---|---|---|
+| **2026-07-29** | 165 | 18 | US$ 0,0488 | `cracken-ai/blacksea` (honeypot anti-LLM) | [PR #68](https://github.com/AbnadabyBonaparte/suna-alsham-automl/pull/68) |
+| **2026-07-27** | 89 | 14 | US$ 0,0291 | *Distill & serve models at half the cost* | [`caça/2026-07-27.md`](caça/2026-07-27.md) |
+| **2026-07-26** | 84 | 20 | US$ 0,0381 | *Integrate any CLI agent into any terminal* | [`caça/2026-07-26.md`](caça/2026-07-26.md) |
+
+Cada relatório traz o custo real em dólar, os tokens gastos e as fontes que falharam
+(ex.: em 27/07 o arXiv caiu com `HTTP 503` e foi marcado **NÃO VERIFICADO** — honestidade
+brutal, não se maquia falha). Os relatórios ficam em [`caça/`](caça/); a alma do agente
+em [`agents/hunter/`](agents/hunter/) e o dossiê em [`docs/DOSSIE-HUNTER-X1.md`](docs/DOSSIE-HUNTER-X1.md).
+
+### 🛠️ Como foi construído (PRs reais, mergeados)
+
+Fase 2 (#28) → runner em Node 22 (#29) → análise resiliente (#31) → arestas best-effort
+(#33) → regra da missão v2 (#39) → Fase 3 "O Relógio" / cron (#45) → tetos & quarentena
+da fila (#46) → **Fase 4 "O Espelho"** — autocrítica semanal (#47).
 
 ---
 
