@@ -1,8 +1,16 @@
 # Lei canônica — A RONDA — AS DUAS CASCATAS E O SENTINELA
 
-> Cópia fiel da skill instalada `ronda-das-duas-cascatas` (SKILL.md).
 > Isto é LEI do Universo Bonaparte, não um agente — por isso vive em `canon/`, não em `agents/`.
-> Não editar à mão.
+>
+> **Origem:** cópia da skill instalada `ronda-das-duas-cascatas` (SKILL.md).
+>
+> ⚠️ **Este arquivo deixou de ser espelho puro em 04/08/2026.** Ele carrega, a partir
+> desta data, decreto do fundador que ainda **não** foi refletido na SKILL.md — a
+> **Lei da Reverificação Semestral** (§3, lei 5; checagens 13–15 em §4.1). A skill vive
+> fora de repositório (`~/.claude/skills/`) e não é versionável por PR; **re-sincronizá-la
+> é ação do dono.** Enquanto isso, a fonte da verdade desta lei é ESTE arquivo.
+>
+> Fora dos decretos datados marcados como tal, não editar à mão — reflita a skill.
 
 ---
 
@@ -78,6 +86,35 @@ O Sentinela e o agente da Ronda. Suas leis:
    em `rondas/AAAA-MM-DD.md` e enviado ao fundador (e-mail/WhatsApp). Divergencias viram issues no repo
    do mundo afetado (sem duplicar issue ja aberta).
 
+5. **LEI DA REVERIFICAÇÃO SEMESTRAL** — _decreto do fundador, 04/08/2026._
+
+   > Toda pesquisa de compliance de tenant tem validade de **6 meses**. A cada ciclo, a Ronda
+   > re-verifica **na fonte oficial** as normas que governam cada tenant — CFM para
+   > `dra-fernanda`, OAB para `dr-juliano`, CFO/CRO-MT para `dra-bela`, e o órgão da profissão
+   > de todo tenant futuro —, comparando o que o site **pratica** com o que a norma **vigente**
+   > exige. Achado de norma revogada, alterada ou nova gera **issue com o artigo citado** —
+   > nunca correção silenciosa.
+   >
+   > **Origem:** em 08/2026 a pesquisa de compliance da Dra. Bela rodou sobre a Res. CFO-226/2020,
+   > revogada 8 meses antes pela Res. CFO-278/2025, custando reescrita integral do compliance.
+
+   É a Lei da Contra-Prova aplicada ao tempo: **a norma é a receita, o site é o bolo** — e uma
+   receita pode ser revogada sem que o bolo saiba.
+
+   **Corolário da fonte (aprendido no mesmo caso).** Idade não é o único gatilho, e nem é o
+   principal. A pesquisa da Bela que falhou tinha **um dia** de idade: ela errou porque foi feita
+   de memória, sem abrir o ato normativo. Portanto a Ronda distingue dois estados, e **os dois
+   disparam issue**:
+
+   - `VENCIDO` — verificada na fonte, mas há mais de 6 meses.
+   - `NUNCA-VERIFICADO-NA-FONTE` — nunca houve leitura do ato normativo oficial, qualquer que
+     seja a idade. Este é o estado mais perigoso, porque não vence: ele nasce vencido e não
+     aparece em nenhum calendário.
+
+   Só conta como verificação **a leitura do ato no portal do órgão** (ou Diário Oficial), com a
+   URL registrada no par. Blog, cartilha de terceiro e conhecimento prévio do agente **não são
+   fonte** — foi exatamente essa a falha de 08/2026.
+
 ---
 
 ## 4. AS CHECAGENS (cada uma com suas duas pontas)
@@ -96,9 +133,48 @@ O Sentinela e o agente da Ronda. Suas leis:
 | 10 | Codigo: webhook Stripe verifica assinatura | POST com assinatura FORJADA no endpoint vivo → esperar 400 |
 | 11 | So as Edge Functions canonicas deployadas (familia-checkout, familia-webhook, travessia-checkout, travessia-webhook) | Listar as functions vivas no Supabase; funcao a mais ou a menos = alerta |
 | 12 | Paleta: cada mundo na sua pele (obsidian so ALSHAM; Familia = papel/verde) | CSS/HTML renderizado das paginas no ar, nao so o fonte |
+| 13 | `dra-fernanda`: o site pratica a **Res. CFM 2.336/2023** vigente (publicidade médica) | Abrir o ato no portal do CFM → conferir se segue vigente e sem alteração; comparar artigo a artigo com o que a landing publicada exibe |
+| 14 | `dr-juliano`: o site pratica o **Prov. OAB 205/2021** vigente (publicidade da advocacia) | Abrir o ato no portal do CFOAB → conferir vigência/alteração; comparar com a landing publicada |
+| 15 | `dra-bela`: o site pratica **Res. CFO-118/2012, 196/2019, 271/2025 e 278/2025** vigentes | Abrir os atos no portal da transparência do CFO → conferir vigência/revogação; comparar com a landing e com `/consulta-online` publicadas |
 
 A lista cresce com o universo. Toda checagem nova DECLARA suas duas pontas (`promessa:` / `prova:`) —
 checagem de uma ponta so e rejeitada por definicao.
+
+Todo tenant novo entra nesta tabela **no dia em que nasce**, com o órgão da sua profissão. Tenant
+sem par de reverificação é tenant fora da Ronda.
+
+---
+
+### 4.1 Estado da reverificação semestral
+
+Vigência: **6 meses** a contar da última verificação **na fonte oficial** (§3, lei 5).
+
+| Tenant | Órgão | Última verificação NA FONTE | Vence em | Status |
+|---|---|---|---|---|
+| `dra-bela` | CFO / CRO-MT | **04/08/2026** — [transparencia.cfo.org.br/ato-normativo/?id=4626](https://transparencia.cfo.org.br/ato-normativo/?id=4626) | **04/02/2027** | ✅ VERIFICADO |
+| `dra-fernanda` | CFM / CRM | **nunca** | — | 🔴 NUNCA-VERIFICADO-NA-FONTE |
+| `dr-juliano` | OAB | **nunca** | — | 🔴 NUNCA-VERIFICADO-NA-FONTE |
+
+**Prova das datas** (Lei da Contra-Prova aplicada ao próprio decreto — 04/08/2026):
+
+- `dra-fernanda` — histórico do repo: auditoria LEXIS sobre a CFM 2.336/2023 entre `3277301`
+  (02/07/2026) e `b7dd257` (16/07/2026). Pesquisa com **~3 semanas**, não com mais de 6 meses.
+  Nenhum commit registra leitura do ato no portal do CFM.
+- `dr-juliano` — repo instanciado em `a3db086` (12/07/2026), commit único. Mesma idade.
+  Nenhum registro de leitura do Provimento no portal do CFOAB.
+
+Ou seja: **os dois não estão vencidos por idade — estão no estado pior, o de nunca terem sido
+conferidos na fonte.** Foi por isso que a proposta original do decreto os marcava como vencidos:
+o instinto estava certo, a métrica é que era outra. O gatilho que vale para eles é o corolário
+da fonte (§3, lei 5), não o calendário.
+
+Enquanto o estado for 🔴, não há data de vencimento a cumprir: a issue já está aberta e o débito
+é imediato.
+
+Issues abertas por este decreto:
+
+- `dra-fernanda-conversion-os` [#27](https://github.com/AbnadabyBonaparte/dra-fernanda-conversion-os/issues/27) — reverificação da Res. CFM 2.336/2023 na fonte
+- `Dr_Juliano-Sguizardisguizardi` [#2](https://github.com/AbnadabyBonaparte/Dr_Juliano-Sguizardisguizardi/issues/2) — reverificação do Prov. OAB 205/2021 na fonte
 
 ---
 
