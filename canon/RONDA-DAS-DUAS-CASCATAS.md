@@ -196,3 +196,116 @@ Exemplo de divergencia relatada:
 ```
 
 A Ronda nunca "melhora" o numero pra agradar. Relatorio feio e verdadeiro vale mais que bonito e falso.
+
+---
+
+## 6. FASE D.9 — A LEI DA REGUA MAIS ALTA (decreto de 12/08/2026)
+
+> A melhoria que nasce num filho sobe pra casa antes de virar permanente nele.
+
+A Ronda Reversa ja dizia "nada que ja nasceu fica pra tras". A Regua Mais Alta diz COMO isso
+acontece quando existe um motor compartilhado servindo varios tenants: o tenant e laboratorio,
+o motor e casa. Descoberta boa feita num cliente **sobe pro motor** e desce equalizada pros
+outros — nao fica represada onde nasceu.
+
+**Os quatro artigos:**
+
+1. **O motor tem endereco proprio.** Motor que mora dentro do repo do primeiro cliente nao e
+   motor — e copia com sorte. Fork sem casa foi o que produziu tres tenants com cores
+   divergentes editados a mao e nenhum dono.
+2. **Versao semantica e CHANGELOG obrigatorios.** MAJOR quebra o contrato do tenant; MINOR
+   acrescenta capacidade retrocompativel; PATCH corrige sem mexer no contrato. Cada tenant
+   declara qual versao consome — sem numero declarado, nao existe defasagem mensuravel.
+3. **Nenhuma mudanca de comportamento visivel sem interruptor.** Campo novo NASCE opcional, e o
+   default preserva a saida historica byte a byte. Quem quiser a capacidade, declara. Mudanca
+   sem opt-in e proibida mesmo quando a mudanca e "obviamente melhor".
+4. **Defasagem vira issue, nao conversa.** A Ronda compara a versao do motor com a versao
+   efetiva de cada tenant e abre issue no tenant atrasado. Paridade nao se combina — se audita.
+
+**Corolario do laboratorio:** um tenant PODE ir na frente do motor. O que ele nao pode e ficar na
+frente em silencio. Capacidade que provou valor num cliente e nao subiu pro motor em ate uma
+Ronda vira divergencia relatada — a mesma regra da promessa vs prova, aplicada a arquitetura.
+
+### Checagens que este decreto acrescenta
+
+A numeracao continua a da secao 4; as 13-15 sao da Lei da Reverificacao Semestral (secao 3, lei 5).
+
+| # | PROMESSA (a receita) | PROVA (o bolo vivo) |
+|---|---|---|
+| 16 | Motor tem repo proprio, `VERSION` e `CHANGELOG.md` na main | Ler os tres arquivos na main real do repo do motor via API |
+| 17 | Cada tenant declara a versao do motor que consome | Ler a declaracao no repo de CADA tenant; ausente = DIVERGENCIA, nao "provavelmente atual" |
+| 18 | `src/core/` do tenant identico ao do motor na versao declarada | Comparacao blob a blob (SHA-1) arquivo por arquivo; divergente = core editado a mao = issue no tenant |
+
+A checagem 18 e a unica da Ronda que nao precisa da internet: SHA-1 de blob e prova viva o
+bastante — dois arquivos com o mesmo hash sao o mesmo arquivo, e nenhum relatorio desmente isso.
+
+---
+
+## 7. O DECRETO DA JUNTA DE JUIZES (12/08/2026)
+
+> Quem constroi nao se absolve. Quem julga nao le a defesa de quem construiu.
+
+A Ronda prova o que esta no ar. A Junta julga o que ainda vai entrar. Sao dois crivos
+diferentes e nenhum substitui o outro: a Ronda olha pra tras (o que defasou), a Junta olha
+pra frente (o que esta prestes a virar producao).
+
+### 7.1 O protocolo cego
+
+O juiz recebe **exatamente tres coisas**:
+
+1. o **PR** — diff, arquivos, commits;
+2. as **normas na fonte** — texto oficial do conselho, lei ou spec aplicavel;
+3. o **canon** — este documento e o que ele referencia.
+
+O juiz **NAO recebe**:
+
+- o relatorio de quem construiu (a defesa contamina o julgamento — e o pedido implicito de
+  concordancia que produz bajulacao);
+- o parecer do outro juiz (dois juizes que se leem viram um juiz e um eco).
+
+Cegueira nao e desconfianca do construtor. E o que faz o veredito valer alguma coisa: parecer
+que so podia sair "aprovado" nao e parecer, e carimbo.
+
+### 7.2 O veredito
+
+Tres saidas, sem meio-termo inventado:
+
+- **APROVADO** — entra como esta.
+- **REPROVADO** — nao entra; o juiz aponta o artigo, a linha ou a prova que sustenta a recusa.
+- **RESSALVAS** — entra depois de correcao nomeada, item a item.
+
+Veredito sem citacao de fonte (artigo, linha de codigo, resposta viva) e nulo por definicao —
+e a Lei da Contra-Prova aplicada ao julgamento.
+
+### 7.3 Quorum
+
+| Situacao | Bancada |
+|---|---|
+| Core do motor · compliance de conselho · pagamento · dado de paciente | **Bancada cheia** |
+| Todo o resto | **1 juiz** |
+
+Os quatro assuntos da bancada cheia tem uma coisa em comum: erro neles nao volta atras sozinho.
+Core quebra N tenants de uma vez; compliance vira processo; pagamento vira dinheiro perdido;
+dado de paciente vira dano que nenhum rollback desfaz.
+
+### 7.4 Divergencia e soberania
+
+- **Unanimidade** → merge tranquilo, pelo dono.
+- **Divergencia** → NAO se decide no voto. Sobe pro dono com os pareceres inteiros, lado a lado.
+  Juiz nao e urna; divergencia entre juizes e informacao, nao empate a desempatar.
+- **O dono e soberano.** Pode mergear contra a Junta inteira. O que ele nao pode e nao saber —
+  por isso o parecer sobe antes do merge, sempre.
+
+### 7.5 Anti-bajulacao
+
+O criterio que ordena a bancada e o mesmo da Missao HUNTER: raciocinio primeiro,
+**anti-bajulacao logo depois**. Juiz que so aprova nao esta sendo gentil — esta sendo inutil,
+e sai da bancada. A composicao vivente da bancada e a prova de bancada cega vivem em
+`docs/JUNTA-DOS-JUIZES.md`.
+
+### Checagens que este decreto acrescenta
+
+| # | PROMESSA (a receita) | PROVA (o bolo vivo) |
+|---|---|---|
+| 19 | PR de core/compliance/pagamento/dado de paciente so mergeia com bancada cheia | Ler os pareceres anexados ao PR mergeado; ausente = DIVERGENCIA relatada, mesmo com o merge ja feito |
+| 20 | Juiz nao aprova tudo | Taxa de APROVADO por juiz na janela da Ronda; 100% de aprovacao e alerta, nao elogio |
