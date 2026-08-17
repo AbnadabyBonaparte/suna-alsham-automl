@@ -119,6 +119,49 @@ export async function lastFinishedHunt(sb: SupabaseClient) {
   return data?.[0] ?? null;
 }
 
+// A COLHEITA, nao a porta. lastFinishedHunt responde "rodou?"; esta responde
+// "trouxe alguma coisa?". Sao perguntas diferentes: 17 cacas seguidas rodaram
+// (status partial, exit 0, PR aberto) e nao trouxeram nada — e todo vigia
+// passou verde porque so perguntava a primeira.
+export type HuntYield = {
+  id: number;
+  status: string;
+  finished_at: string;
+  items_kept: number;
+  items_queued: number;
+  cost_usd: number;
+};
+
+export async function recentHunts(sb: SupabaseClient, limit = 7): Promise<HuntYield[]> {
+  const { data, error } = await sb
+    .from("hunter_hunts")
+    .select("id,status,finished_at,items_kept,items_queued,cost_usd")
+    .in("status", ["done", "partial"])
+    .not("finished_at", "is", null)
+    .order("finished_at", { ascending: false })
+    .limit(limit);
+  if (error) throw new Error("recentHunts: " + error.message);
+  return (data ?? []).map((h) => ({
+    id: Number(h.id),
+    status: String(h.status),
+    finished_at: String(h.finished_at),
+    items_kept: Number(h.items_kept ?? 0),
+    items_queued: Number(h.items_queued ?? 0),
+    cost_usd: Number(h.cost_usd ?? 0),
+  }));
+}
+
+// Quantas cacas fechadas seguidas, a partir da mais recente, vieram vazias.
+// Vazia = nada mantido E custo zero (o custo zero prova que a analise nem rodou).
+export function streakVazio(hunts: HuntYield[]): number {
+  let n = 0;
+  for (const h of hunts) {
+    if (h.items_kept === 0 && h.cost_usd === 0) n++;
+    else break;
+  }
+  return n;
+}
+
 export async function quarantineDepth(sb: SupabaseClient): Promise<number> {
   const { count, error } = await sb
     .from("hunter_raw_queue")

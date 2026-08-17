@@ -30,6 +30,25 @@ export type Calibracao = {
 
 const pct = (v: number | null) => (v === null ? "—" : Math.round(v * 100) + "%");
 
+// A partir de quantas caças vazias seguidas o Espelho abre alerta vermelho.
+export const ESPELHO_STREAK_ALERTA = 3;
+
+// Conta caças vazias consecutivas terminando na MAIS RECENTE. Vazia = nada
+// trazido E custo zero.
+// `hunts` chega de getHuntsSince ordenado por started_at ASCENDENTE (mais
+// antiga primeiro), entao a varredura vai do FIM para o comeco. Ler na ordem
+// errada daria streak 0 sempre que a janela comecasse com uma caça boa — o
+// alerta nunca dispararia, que e exatamente a cegueira que isto conserta.
+export function contarVaziasSeguidas(hunts: { itemsKept: number; custo: number }[]): number {
+  let n = 0;
+  for (let i = hunts.length - 1; i >= 0; i--) {
+    const h = hunts[i];
+    if (h.itemsKept === 0 && h.custo === 0) n++;
+    else break;
+  }
+  return n;
+}
+
 export function writeEspelho(a: {
   date: string;
   janelaDias: number;
@@ -47,6 +66,24 @@ export function writeEspelho(a: {
   const L: string[] = [];
   L.push("# ESPELHO — " + a.date);
   L.push("");
+
+  // ALERTA VERMELHO — anti-cegueira (licao da 1a Curadoria Mensal, 17/08/2026).
+  // A janela de 2026-08-01 a 2026-08-17 teve 17 caças seguidas com 0 trazidos e
+  // custo US$ 0,0000 — e o Espelho daquela semana nao gritou, porque so olhava
+  // taxa de adocao por mina. Sem colheita nao ha o que calibrar: a autocritica
+  // precisa dizer PRIMEIRO que o cacador parou de caçar.
+  const vazias = contarVaziasSeguidas(a.hunts);
+  if (vazias >= ESPELHO_STREAK_ALERTA) {
+    L.push("> ## 🔴 ALERTA VERMELHO — O CAÇADOR ESTÁ CEGO");
+    L.push("> ");
+    L.push("> **" + vazias + " caças seguidas trouxeram ZERO** com custo **US$ 0,0000**.");
+    L.push("> Custo zero prova que a etapa de análise não chegou a rodar — não é caça pobre, é caça que não aconteceu.");
+    L.push("> ");
+    L.push("> Enquanto isso a caça fecha como `partial`, sai com exit 0 e abre PR diário: **verde em todo lugar, nada no banco.**");
+    L.push("> Ler `hunter_hunts.notes` e `hunter_raw_queue.queued_reason` antes de qualquer leitura de calibração — as taxas abaixo estão medindo o vazio.");
+    L.push("");
+  }
+
   L.push("_Autocritica semanal do HUNTER X.1. O caçador olha as próprias decisões e presta contas._");
   L.push("_Ele **lê, mede e propõe**. Nunca ativa, nunca abre mina, nunca muda score sozinho._");
   L.push("");
