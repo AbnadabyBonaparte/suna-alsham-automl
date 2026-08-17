@@ -23,7 +23,6 @@ export type ReportItem = {
   summary_md: string;
   single_source: boolean;
   license: string | null;
-  suggest: string;
 };
 
 // Canon (dossie, Parte 6): o relatorio nasce em caca/AAAA-MM-DD.md (com c-cedilha,
@@ -69,7 +68,7 @@ export function writeReport(args: {
     );
     L.push(f.summary_md);
     L.push(f.url);
-    L.push("**veredito sugerido: " + f.suggest + "**");
+    L.push("_sem veredito sugerido — o julgamento e do tribunal (missao v1)._");
   }
   // ── FASE 3 · peca 2 — FILA PENDENTE DE JULGAMENTO ─────────────────────────
   // Sem esta secao, o pending de ontem fica invisivel no banco e nunca e

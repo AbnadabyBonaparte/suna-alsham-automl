@@ -61,7 +61,11 @@ export function medirPorFonte(fs: FindingJulgado[]): PorFonte[] {
 
 export function medirCalibracao(fs: FindingJulgado[]): Calibracao {
   const julgados = fs.filter((f) => JULGADOS.includes(f.verdict));
-  // Faixas do proprio HUNTER (suggest(): >=71 ADOTAR · 41-70 OBSERVAR · <41 DESCARTAR)
+  // Faixas historicas do HUNTER (a antiga suggest(): >=71 ADOTAR · 41-70 OBSERVAR
+  // · <41 DESCARTAR). suggest() foi REMOVIDA — o limiar de 71 ficava abaixo do
+  // piso da triagem (72), entao 100% dos achados saiam sugeridos como ADOTAR.
+  // As faixas seguem valendo AQUI, onde medem calibracao contra o veredito real
+  // do tribunal: e a unica leitura em que o numero tem significado.
   const superestimou = julgados.filter((f) => f.relevance >= 71 && f.verdict === "discard");
   const subestimou = julgados.filter((f) => f.relevance < 41 && f.verdict === "adopt");
   const acertouAlto = julgados.filter((f) => f.relevance >= 71 && f.verdict === "adopt");
