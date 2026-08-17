@@ -40,12 +40,6 @@ async function pendentesFin(sb: any, huntId: number, failNotes: string[]) {
   return { pending: p.items, pendingTotal: p.total };
 }
 
-function suggest(rel: number): string {
-  if (rel >= 71) return "ADOTAR";
-  if (rel >= 41) return "OBSERVAR";
-  return "DESCARTAR";
-}
-
 type Fin = {
   date: string;
   itemsSeen: number;
@@ -217,7 +211,6 @@ async function main() {
           summary_md: a.summary_md,
           single_source: a.single_source,
           license: a.license ?? null,
-          suggest: suggest(a.relevance),
         });
         // FASE 3 · peca 3 — AMEACA ABRE ISSUE NA MESMA CACA, sem esperar o
         // relatorio. Best-effort: falha aqui nao derruba o achado ja salvo.
