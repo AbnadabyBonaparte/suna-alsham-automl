@@ -10,7 +10,7 @@
 //
 // Read-only por lei: detecta e relata. Nao corrige, nao escreve, nao deleta.
 // ============================================================================
-import { db, lastFinishedHunt, quarantineDepth, anonReadsHunterTables, createIssue } from "./db.js";
+import { db, lastFinishedHunt, quarantineDepth, anonReadsHunterTables, createIssue, recentHunts, streakVazio } from "./db.js";
 import { config } from "./config.js";
 import { NL } from "./util.js";
 
@@ -43,6 +43,30 @@ async function checarCacaRecente(sb: any): Promise<Check> {
     return { nome: "HUNTER rodou nas ultimas 24h", promessa, prova: detalhe, status: horas < CACA_MAX_HORAS ? "OK" : "FALHA" };
   } catch (e) {
     return { nome: "HUNTER rodou nas ultimas 24h", promessa, prova: "query falhou: " + String(e).slice(0, 120), status: "NAO VERIFICADO" };
+  }
+}
+
+// ANTI-CEGUEIRA (licao da 1a Curadoria Mensal, 17/08/2026).
+// checarCacaRecente pergunta "a caca rodou?" — e por 17 dias a resposta foi
+// SIM enquanto a colheita era ZERO: a triagem caia com HTTP 429, o codigo
+// engolia, fechava a caca como `partial`, saia com exit 0 e ainda abria o PR
+// diario. Verde em todo lugar, nada no banco.
+// Esta checagem pergunta a outra metade: "a caca TROUXE alguma coisa?".
+// Custo zero e a prova de que a analise nem chegou a rodar — uma caca que
+// pensou custa dinheiro. Falha ja no DIA 1, nao no decimo setimo.
+async function checarColheita(sb: any): Promise<Check> {
+  const promessa = "toda caca fechada traz colheita — items_kept > 0, ou custo > 0 provando que a analise rodou";
+  try {
+    const hunts = await recentHunts(sb, 7);
+    if (!hunts.length) return { nome: "HUNTER trouxe colheita", promessa, prova: "nenhuma caca fechada no banco", status: "FALHA" };
+    const ultima = hunts[0];
+    const vazia = ultima.items_kept === 0 && ultima.cost_usd === 0;
+    const streak = streakVazio(hunts);
+    const detalhe =
+      "caca #" + ultima.id + " status=" + ultima.status + " items_kept=" + ultima.items_kept + " items_queued=" + ultima.items_queued + " custo=US$ " + ultima.cost_usd.toFixed(4) + (streak > 1 ? " · " + streak + " cacas vazias seguidas" : "");
+    return { nome: "HUNTER trouxe colheita", promessa, prova: detalhe, status: vazia ? "FALHA" : "OK" };
+  } catch (e) {
+    return { nome: "HUNTER trouxe colheita", promessa, prova: "query falhou: " + String(e).slice(0, 120), status: "NAO VERIFICADO" };
   }
 }
 
@@ -82,7 +106,7 @@ async function checarQuarentena(sb: any): Promise<Check> {
 
 async function main() {
   const sb = db();
-  const checks: Check[] = [await checarCacaRecente(sb), await checarRls(), await checarQuarentena(sb)];
+  const checks: Check[] = [await checarCacaRecente(sb), await checarColheita(sb), await checarRls(), await checarQuarentena(sb)];
 
   const L: string[] = [];
   L.push("=== RONDA · CHECAGENS DO HUNTER X.1 ===");
